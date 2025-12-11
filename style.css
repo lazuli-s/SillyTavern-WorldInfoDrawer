@@ -1,0 +1,559 @@
+body #WorldInfo > .stwid--body {
+  display: none;
+}
+body.stwid--.stwid--nonDiscord #WorldInfo {
+  width: 100vw;
+  height: calc(100dvh - var(--topBarBlockSize));
+  max-height: unset;
+}
+body.stwid-- #WorldInfo {
+  flex-direction: column;
+  overflow: hidden;
+}
+body.stwid-- #WorldInfo.openDrawer {
+  display: flex !important;
+}
+body.stwid-- #WorldInfo #wi-holder {
+  display: none;
+}
+body.stwid-- #WorldInfo > .stwid--body {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 1em;
+  overflow: hidden;
+}
+body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading {
+  pointer-events: none;
+}
+body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
+  content: 'Loading...';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(4px) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5em;
+}
+body.stwid-- #WorldInfo .stwid--list {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 300px;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  align-items: stretch;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow {
+  --stwid-control-height: 2.35em;
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
+  flex-wrap: wrap;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
+  flex-wrap: nowrap;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .text_pole {
+  height: var(--stwid-control-height);
+  min-height: var(--stwid-control-height);
+  padding: 0.35em;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid--bookSortToggle,
+body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid--clearBookSorts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35em;
+  min-height: var(--stwid-control-height);
+  height: var(--stwid-control-height);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--active {
+  color: var(--SmartThemeQuoteColor);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--filter {
+  display: flex;
+  gap: 0.75em;
+  align-items: center;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--searchEntries,
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterActive {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book {
+  border-bottom: 2px solid var(--SmartThemeBorderColor);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget .stwid--head {
+  background-color: rgb(from orange r g b / 0.125);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-active,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-query {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active) .stwid--head {
+  background-color: var(--white20a);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
+  display: flex;
+  gap: 0.5em;
+  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--title {
+  flex: 1 1 auto;
+  cursor: pointer;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions {
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: 200ms;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
+  opacity: 1;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entryList.stwid--isCollapsed {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
+  display: flex;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--SmartThemeBorderColor);
+  margin-left: 0.25em;
+  overflow: hidden;
+  transition: 200ms;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
+  pointer-events: none;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected {
+  background-color: rgb(from orange r g b / 0.125);
+  cursor: grab;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected:hover,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected.stwid--active {
+  background-color: rgb(from orange r g b / 0.25);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected *:not(:is(.stwid--selector)) {
+  pointer-events: none;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--filter-query {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--active {
+  background-color: var(--white20a);
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover .stwid--status,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--active .stwid--status {
+  opacity: 1;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
+  opacity: 0.5;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--selector {
+  display: flex;
+  align-items: center;
+  opacity: 0.25;
+  transition: 200ms;
+  cursor: pointer;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--selector:hover {
+  opacity: 1;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body {
+  flex: 1 1 auto;
+  cursor: pointer;
+  overflow: hidden;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--comment {
+  height: 1lh;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--key {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+  font-style: italic;
+  height: 1lh;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--status {
+  align-self: center;
+  display: flex;
+  gap: 0.5em;
+  align-items: baseline;
+  opacity: 0.5;
+  transition: 200ms;
+}
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--status .stwid--enabled {
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+}
+body.stwid-- #WorldInfo .stwid--editor {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.stwid-- #WorldInfo .stwid--editor:empty::after {
+  content: "\f558";
+  font-family: "Font Awesome 6 Free";
+  font-size: 20em;
+  opacity: 0.125;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings {
+  flex-wrap: nowrap;
+}
+body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings #wiCheckboxes {
+  flex: 0 0 auto;
+  width: unset;
+}
+body.stwid-- #WorldInfo .stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
+body.stwid-- #WorldInfo .stwid--editor.stwid--focus .world_entry *:not(:has([name="content"])):not([name="content"]):not(:has([class*="stwim--"])):not([class*="stwim--"]) {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--editor.stwid--focus .stwid--unfocusToggle {
+  display: flex;
+}
+body.stwid-- #WorldInfo .stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
+  justify-content: end;
+}
+body.stwid-- #WorldInfo .stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) .stwim--pickerTriggerWrap {
+  position: absolute;
+  top: -3em;
+  right: 0;
+}
+body.stwid-- #WorldInfo .stwid--editor .stwid--unfocusToggle {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--editor .stwid--focusToggle {
+  margin-left: 1em;
+}
+body.stwid-- #WorldInfo .stwid--editor .world_entry,
+body.stwid-- #WorldInfo .stwid--editor .world_entry_form,
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
+  height: 100%;
+}
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
+  display: flex;
+  flex-direction: column;
+}
+body.stwid-- #WorldInfo .stwid--editor .drag-handle,
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-toggle {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
+  flex: 1 1 auto;
+  display: flex !important;
+  flex-direction: column;
+}
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > :nth-child(1) {
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+}
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer:has(> .userSettingsInnerExpandable) {
+  display: none;
+}
+body.stwid-- #WorldInfo .stwid--editor [name="contentAndCharFilterBlock"] {
+  flex: 1 1 auto !important;
+}
+body.stwid-- #WorldInfo .stwid--editor [name="content"] {
+  flex: 1 1 auto;
+}
+body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
+  display: none;
+}
+.stwid--blocker {
+    position: fixed;
+    inset: 0;
+    z-index: 30000;
+}
+.stwid--blocker .stwid--menu {
+    --stwid-menu-item-height: 2.35em;
+
+  position: fixed;
+  position-anchor: --stwid--ctxAnchor;
+  position-area: bottom right;
+  position-try-fallbacks: flip-block, flip-inline;
+  margin-top: -1lh;
+  filter: drop-shadow(1px 1px 2px var(--black50a));
+  z-index: 30000;
+  overflow-x: clip;
+  overflow-y: auto;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(32 33 36 / 90%);
+}
+.stwid--blocker .stwid--menu .stwid--item {
+  min-height: var(--stwid-menu-item-height);
+  height: var(--stwid-menu-item-height);
+  opacity: 0.5;
+  background-color: rgba(255, 255, 255, 0);
+  cursor: pointer;
+  transition: 200ms;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 5px;
+}
+.stwid--blocker .stwid--menu .stwid--item:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.0625);
+}
+.stwid--blocker .stwid--menu .stwid--item .stwid--icon {
+  flex: 0 0 auto;
+  width: 1.25em;
+  text-align: center;
+}
+.stwid--blocker .stwid--menu .stwid--item .stwid--label {
+    flex: 1 1 auto;
+    min-width: fit-content;
+}
+.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
+    opacity: 1;
+    cursor: default;
+}
+.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
+    width: fit-content;
+    color: inherit;
+    background-color: rgba(255, 255, 255, 0.05);
+    min-height: var(--stwid-menu-item-height);
+    height: 100%;
+    margin: 0;
+}
+.stwid--orderHelper {
+    display: flex;
+    flex-direction: column;
+  overflow: hidden;
+}
+.stwid--orderHelper.stwid--hideKeys .stwid--key {
+  display: none;
+}
+.stwid--orderHelper .stwid--actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 1.5em;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--SmartThemeBlurTintColor);
+}
+.stwid--orderHelper .stwid--actions .stwid--inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+}
+.stwid--orderHelper .stwid--filter {
+  background-color: var(--SmartThemeBlurTintColor);
+  display: none;
+  gap: 1em;
+  height: 20vh;
+}
+.stwid--orderHelper .stwid--filter.stwid--active {
+  display: flex;
+}
+.stwid--orderHelper .stwid--filter .stwid--main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--hint {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--hint code {
+  font-size: smaller;
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--syntax,
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input {
+  grid-column: 1;
+  grid-row: 1;
+  height: 100%;
+  width: 100%;
+  font-family: var(--monoFontFamily, monospace);
+  padding: 0.75em;
+  margin: 0;
+  border: none;
+  line-height: 1.2;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 5px;
+  white-space: pre;
+  resize: none;
+  tab-size: 4;
+  max-height: unset;
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input {
+  caret-color: var(--ac-style-color-text);
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar,
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar-thumb {
+  visibility: hidden;
+}
+.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::selection {
+  color: transparent;
+  background-color: rgba(108 171 251 / 0.25);
+}
+@supports (rgb(from var(--ac-style-color-matchedText) r g b / 0.25)) {
+  .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::selection {
+    background-color: rgb(from var(--ac-style-color-matchedText) r g b / 0.25);
+  }
+}
+.stwid--orderHelper .stwid--filter .stwid--preview {
+  font-family: var(--monoFontFamily, monospace);
+  font-size: 0.6em;
+  white-space: pre;
+  max-width: 30%;
+  overflow: auto;
+  height: 100%;
+}
+.stwid--orderHelper .stwid--input {
+  width: auto;
+}
+.stwid--orderTableWrap {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+.stwid--orderTable {
+  border: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-align: left;
+  white-space: normal;
+  width: 100%;
+}
+.stwid--orderTable thead {
+  background-color: var(--SmartThemeBlurTintColor);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: smaller;
+}
+.stwid--orderTable tr {
+  border-bottom: 5px solid var(--SmartThemeBorderColor);
+  transition: 200ms;
+  background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
+}
+.stwid--orderTable tr:hover {
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
+}
+.stwid--orderTable tr.stwid--isFiltered {
+  display: none;
+}
+.stwid--orderTable tr:not(.stwid--applySelected) {
+  opacity: 0.6;
+}
+.stwid--orderTable tr:has(.stwid--enabled.fa-toggle-off) {
+  opacity: 0.5;
+}
+.stwid--orderTable tr th,
+.stwid--orderTable tr td {
+  text-align: left;
+  padding: 0 0.5em;
+  width: 0;
+}
+.stwid--orderTable tr td {
+  color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
+  font-size: small;
+}
+.stwid--orderTable tr td .stwid--sortableHandle {
+  cursor: pointer;
+  opacity: 0.5;
+  padding: 4px;
+  transition: 200ms;
+}
+.stwid--orderTable tr td .stwid--sortableHandle:hover {
+  opacity: 1;
+}
+.stwid--orderTable tr td .stwid--orderSelect {
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em;
+  transition: 200ms;
+}
+.stwid--orderTable tr td .stwid--orderSelect:hover {
+  opacity: 0.8;
+}
+.stwid--orderTable tr td .stwid--orderSelect .stwid--icon {
+  pointer-events: none;
+}
+.stwid--orderTable tr td [name="depth"] {
+  display: none;
+}
+.stwid--orderTable tr td:has([name="position"] > [value="4"]:checked) + td > [name="depth"] {
+  display: inline-block;
+}
+.stwid--orderTable tr td:has(.stwid--entry) {
+  width: 100%;
+}
+.stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
+  color: var(--SmartThemeEmColor);
+  font-size: 0.6em;
+  line-height: 1;
+}
+.stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
+  color: var(--SmartThemeEmColor);
+  font-size: 0.75em;
+  font-style: italic;
+  line-height: 1;
+}
+.stwid--orderTable tr td .stwid--enabled {
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+}
+.stwid--helpToast {
+  margin: 0;
+  padding-left: 0.5em;
+  font-size: small;
+}

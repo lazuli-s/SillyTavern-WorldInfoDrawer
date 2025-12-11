@@ -1,0 +1,11 @@
+{
+    "display_name": "WorldInfo Drawer",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Lazuli",
+    "version": "1.4.2",
+    "homePage": "https://github.com/lazuli-s/SillyTavern-WIDrawer_Lazuli"
+}
