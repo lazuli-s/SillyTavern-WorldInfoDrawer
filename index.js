@@ -1400,6 +1400,33 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                     }
                                     menu.append(fillTitles);
                                 }
+                                if (extensionNames.includes('third-party/SillyTavern-LorebookOrdering')) {
+                                    const lorebookOrdering = document.createElement('div'); {
+                                        lorebookOrdering.classList.add('stwid--item');
+                                        lorebookOrdering.classList.add('stwid--lorebookOrdering');
+                                        lorebookOrdering.addEventListener('click', async()=>{
+                                            const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+                                            const option = /**@type {HTMLOptionElement | undefined}*/([...select?.options ?? []].find(opt=>opt.textContent === name));
+                                            if (select && option) {
+                                                select.value = option.value;
+                                                select.dispatchEvent(new Event('change', { bubbles:true }));
+                                                await delay(500);
+                                            }
+                                            document.querySelector('#lorebook_ordering_button')?.click();
+                                        });
+                                        const i = document.createElement('i'); {
+                                            i.classList.add('stwid--icon');
+                                            i.classList.add('fa-solid', 'fa-fw', 'fa-bars-staggered');
+                                            lorebookOrdering.append(i);
+                                        }
+                                        const txt = document.createElement('span'); {
+                                            txt.classList.add('stwid--label');
+                                            txt.textContent = 'Lorebook Ordering';
+                                            lorebookOrdering.append(txt);
+                                        }
+                                        menu.append(lorebookOrdering);
+                                    }
+                                }
                                 const bookSort = document.createElement('div'); {
                                     bookSort.classList.add('stwid--item');
                                     bookSort.classList.add('stwid--bookSort');
