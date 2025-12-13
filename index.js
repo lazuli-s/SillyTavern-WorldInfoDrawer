@@ -92,6 +92,7 @@ const dom = {
 
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
+const STLO_EXTENSION_PRESENT = extensionNames.some((name)=>name.toLowerCase().includes('stlo'));
 /**
  * Sort options available to dropdowns. Each tuple is
  * [Label, Sort Logic, Sort Direction].
@@ -128,6 +129,34 @@ const getSortLabel = (sort, direction)=>SORT_OPTIONS.find(([label, s, d])=>s ===
 const safeToSorted = (array, comparator)=>typeof array.toSorted === 'function'
     ? array.toSorted(comparator)
     : array.slice().sort(comparator);
+const runStloCommand = async(bookName)=>{
+    const command = `/stlo ${bookName}`;
+    try {
+        if (typeof SlashCommandParser?.parseAndSend === 'function') {
+            await SlashCommandParser.parseAndSend(command);
+            return;
+        }
+    } catch { /* empty */ }
+
+    try {
+        const Scope = await SlashCommandParser?.getScope?.();
+        if (Scope) {
+            const scope = new Scope();
+            if (typeof scope?.parseAndSend === 'function') {
+                await scope.parseAndSend(command);
+                return;
+            }
+            if (typeof scope?.execute === 'function') {
+                await scope.execute(command);
+                return;
+            }
+            if (typeof scope?.invoke === 'function') {
+                await scope.invoke(command);
+                return;
+            }
+        }
+    } catch { /* empty */ }
+};
 const orderHelperState = (()=>{
     const state = { sort:SORT.TITLE, direction:SORT_DIRECTION.ASCENDING, book:null, hideKeys:false };
     try {
@@ -1399,6 +1428,27 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                         fillTitles.append(txt);
                                     }
                                     menu.append(fillTitles);
+                                }
+                                if (STLO_EXTENSION_PRESENT) {
+                                    const stlo = document.createElement('div'); {
+                                        stlo.classList.add('stwid--item');
+                                        stlo.classList.add('stwid--stlo');
+                                        stlo.title = 'Configure STLO Priority & Budget';
+                                        stlo.addEventListener('click', async()=>{
+                                            await runStloCommand(name);
+                                        });
+                                        const i = document.createElement('i'); {
+                                            i.classList.add('stwid--icon');
+                                            i.classList.add('fa-solid', 'fa-fw', 'fa-bars-staggered');
+                                            stlo.append(i);
+                                        }
+                                        const txt = document.createElement('span'); {
+                                            txt.classList.add('stwid--label');
+                                            txt.textContent = 'Configure STLO';
+                                            stlo.append(txt);
+                                        }
+                                        menu.append(stlo);
+                                    }
                                 }
                                 const bookSort = document.createElement('div'); {
                                     bookSort.classList.add('stwid--item');
