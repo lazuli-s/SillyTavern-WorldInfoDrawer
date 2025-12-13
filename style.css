@@ -351,6 +351,12 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
     flex: 1 1 auto;
     min-width: fit-content;
 }
+.stwid--blocker .stwid--menu .stwid--item #lorebook_ordering_button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5em;
+}
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
     opacity: 1;
     cursor: default;

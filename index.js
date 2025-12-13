@@ -1471,7 +1471,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                 const stloButton = document.createElement('div'); {
                                     stloButton.id = 'lorebook_ordering_button';
                                     stloButton.classList.add('stwid--item');
-                                    stloButton.classList.add('menu_button', 'fa-solid', 'fa-bars-staggered', 'interactable');
+                                    stloButton.classList.add('stwid--stlo');
                                     stloButton.dataset.i18n = '[title]stlo.button.configure; [aria-label]stlo.button.configure';
                                     stloButton.title = 'Configure STLO Priority & Budget';
                                     stloButton.setAttribute('aria-label', 'Configure STLO Priority & Budget');
@@ -1490,6 +1490,16 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                             stloButton.click();
                                         }
                                     });
+                                    const i = document.createElement('i'); {
+                                        i.classList.add('stwid--icon');
+                                        i.classList.add('fa-solid', 'fa-fw', 'fa-bars-staggered');
+                                        stloButton.append(i);
+                                    }
+                                    const txt = document.createElement('span'); {
+                                        txt.classList.add('stwid--label');
+                                        txt.textContent = 'Configure STLO';
+                                        stloButton.append(txt);
+                                    }
                                     menu.append(stloButton);
                                 }
                                 const exp = document.createElement('div'); {
