@@ -1354,6 +1354,49 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                         menu.append(bulk);
                                     }
                                 }
+                                if (extensionNames.includes('third-party/SillyTavern-LorebookOrdering')) {
+                                    const ordering = document.createElement('div'); {
+                                        ordering.classList.add('stwid--item');
+                                        ordering.classList.add('stwid--lorebookOrdering');
+                                        ordering.dataset.i18n = '[title]lorebook_ordering;[aria-label]lorebook_ordering';
+                                        ordering.title = 'Lorebook Ordering';
+                                        ordering.setAttribute('aria-label', 'Lorebook Ordering');
+                                        ordering.addEventListener('click', async()=>{
+                                            const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+                                            if (sel) {
+                                                const target = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name);
+                                                if (target) {
+                                                    sel.value = target.value;
+                                                    sel.dispatchEvent(new Event('change', { bubbles:true }));
+                                                }
+                                            }
+                                            await delay(500);
+                                            try {
+                                                const stloApi = window?.sillyTavernLorebookOrdering;
+                                                if (stloApi && typeof stloApi.openOrderingModal === 'function') {
+                                                /**@ts-ignore*/
+                                                    await stloApi.openOrderingModal(name);
+                                                } else {
+                                                    /**@type {HTMLElement}*/(document.querySelector('[data-i18n*="lorebook_ordering"]') ?? document.querySelector('.stlo--trigger'))?.click();
+                                                }
+                                            } finally {
+                                                blocker.remove();
+                                                menuTrigger.style.anchorName = '';
+                                            }
+                                        });
+                                        const i = document.createElement('i'); {
+                                            i.classList.add('stwid--icon');
+                                            i.classList.add('fa-solid', 'fa-fw', 'fa-bars-staggered');
+                                            ordering.append(i);
+                                        }
+                                        const txt = document.createElement('span'); {
+                                            txt.classList.add('stwid--label');
+                                            txt.textContent = 'Lorebook Ordering';
+                                            ordering.append(txt);
+                                        }
+                                        menu.append(ordering);
+                                    }
+                                }
                                 if (extensionNames.includes('third-party/SillyTavern-WorldInfoExternalEditor')) {
                                     const editor = document.createElement('div'); {
                                         editor.classList.add('stwid--item');
