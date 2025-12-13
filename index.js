@@ -1458,6 +1458,19 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                     }
                                     menu.append(orderHelper);
                                 }
+                                if (extensionNames.includes('third-party/SillyTavern-LorebookOrdering')) {
+                                    const stlo = document.createElement('div'); {
+                                        stlo.id = 'lorebook_ordering_button';
+                                        stlo.classList.add('stwid--item');
+                                        stlo.classList.add('menu_button', 'fa-solid', 'fa-fw', 'fa-bars-staggered', 'interactable');
+                                        stlo.setAttribute('data-i18n', '[title]stlo.button.configure; [aria-label]stlo.button.configure');
+                                        stlo.title = 'Configure STLO Priority & Budget';
+                                        stlo.ariaLabel = 'Configure STLO Priority & Budget';
+                                        stlo.tabIndex = 0;
+                                        stlo.role = 'button';
+                                        menu.append(stlo);
+                                    }
+                                }
                                 const exp = document.createElement('div'); {
                                     exp.classList.add('stwid--item');
                                     exp.classList.add('stwid--export');
