@@ -1458,6 +1458,23 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                     }
                                     menu.append(orderHelper);
                                 }
+                                const stlo = document.createElement('div'); {
+                                    stlo.id = 'lorebook_ordering_button';
+                                    stlo.classList.add('stwid--item', 'stwid--stlo', 'menu_button', 'fa-solid', 'fa-fw', 'fa-bars-staggered', 'interactable');
+                                    stlo.dataset.i18n = '[title]stlo.button.configure; [aria-label]stlo.button.configure';
+                                    stlo.title = 'Configure STLO Priority & Budget';
+                                    stlo.setAttribute('aria-label', 'Configure STLO Priority & Budget');
+                                    const i = document.createElement('i'); {
+                                        i.classList.add('stwid--icon', 'fa-solid', 'fa-fw', 'fa-bars-staggered');
+                                        stlo.append(i);
+                                    }
+                                    const txt = document.createElement('span'); {
+                                        txt.classList.add('stwid--label');
+                                        txt.textContent = 'STLO Priority & Budget';
+                                        stlo.append(txt);
+                                    }
+                                    menu.append(stlo);
+                                }
                                 const exp = document.createElement('div'); {
                                     exp.classList.add('stwid--item');
                                     exp.classList.add('stwid--export');
