@@ -441,6 +441,11 @@ body.stwid-- #WorldInfo {
 
                         color: var(--SmartThemeEmColor);
                         font-size: smaller;
+
+                        .stwid--input {
+                                width: 33%;
+                                min-width: 4em;
+                        }
                 }
         }
 
@@ -561,7 +566,7 @@ body.stwid-- #WorldInfo {
                 }
                 td {
                         color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
-			font-size: small;
+                        font-size: small;
 
                         .stwid--sortableHandle {
                                 cursor: pointer;
@@ -612,6 +617,12 @@ body.stwid-- #WorldInfo {
                                 font-size: 0.9em;
                                 min-width: 6em;
                                 word-break: break-word;
+                        }
+                        input[name="depth"],
+                        input[name="order"],
+                        input[name="selective_probability"] {
+                                width: 33%;
+                                min-width: 4em;
                         }
                         .stwid--enabled {
                                 color: var(--SmartThemeQuoteColor);

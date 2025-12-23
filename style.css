@@ -398,6 +398,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
 }
+.stwid--orderHelper .stwid--actions .stwid--inputWrap .stwid--input {
+  width: 33%;
+  min-width: 4em;
+}
 .stwid--orderHelper .stwid--filter {
   background-color: var(--SmartThemeBlurTintColor);
   display: none;
@@ -565,6 +569,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   font-size: 0.9em;
   min-width: 6em;
   word-break: break-word;
+}
+.stwid--orderTable tr td input[name="depth"], .stwid--orderTable tr td input[name="order"], .stwid--orderTable tr td input[name="selective_probability"] {
+  width: 33%;
+  min-width: 4em;
 }
 .stwid--orderTable tr td .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
