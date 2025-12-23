@@ -152,6 +152,12 @@ const orderHelperState = (()=>{
     } catch { /* empty */ }
     return state;
 })();
+const getOutletPositionValue = () => document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
+const isOutletPosition = (position) => {
+    const outletValue = getOutletPositionValue();
+    if (outletValue === undefined) return false;
+    return String(position) === String(outletValue);
+};
 /**@type {{name:string, uid:string}} */
 let currentEditor;
 
@@ -926,7 +932,7 @@ const renderOrderHelper = (book = null)=>{
                 tbl.classList.add('stwid--orderTable');
                 const thead = document.createElement('thead'); {
                     const tr = document.createElement('tr'); {
-                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Order', 'Trigg %']) {
+                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Outlet', 'Order', 'Trigg %']) {
                             const th = document.createElement('th'); {
                                 th.textContent = col;
                                 tr.append(th);
@@ -1054,19 +1060,21 @@ const renderOrderHelper = (book = null)=>{
                                 }
                                 tr.append(strategy);
                             }
+                            let updateOutlet;
+                            const pos = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="position"]').cloneNode(true));
                             const position = document.createElement('td'); {
-                                const pos = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="position"]').cloneNode(true)); {
-                                    cache[e.book].dom.entry[e.data.uid].position = pos;
-                                    pos.classList.add('stwid--position');
-                                    pos.value = e.data.position;
-                                    pos.addEventListener('change', async()=>{
-                                        const value = pos.value;
-                                        cache[e.book].dom.entry[e.data.uid].position.value = value;
-                                        cache[e.book].entries[e.data.uid].position = value;
-                                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
-                                    });
-                                    position.append(pos);
-                                }
+                                cache[e.book].dom.entry[e.data.uid].position = pos;
+                                pos.classList.add('stwid--position');
+                                pos.value = e.data.position;
+                                pos.addEventListener('change', async()=>{
+                                    const value = pos.value;
+                                    cache[e.book].dom.entry[e.data.uid].position.value = value;
+                                    cache[e.book].entries[e.data.uid].position = value;
+                                    e.data.position = value;
+                                    updateOutlet?.();
+                                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                });
+                                position.append(pos);
                                 tr.append(position);
                             }
                             const depth = document.createElement('td'); {
@@ -1086,6 +1094,24 @@ const renderOrderHelper = (book = null)=>{
                                     depth.append(inp);
                                 }
                                 tr.append(depth);
+                            }
+                            const outlet = document.createElement('td'); {
+                                const wrap = document.createElement('div'); {
+                                    wrap.classList.add('stwid--colwrap');
+                                    wrap.classList.add('stwid--outlet');
+                                    const label = document.createElement('span'); {
+                                        updateOutlet = ()=>{
+                                            const entryData = cache[e.book].entries[e.data.uid];
+                                            const currentPosition = entryData.position ?? pos.value;
+                                            const outletName = entryData.outletName ?? e.data.outletName ?? '';
+                                            label.textContent = isOutletPosition(currentPosition) ? outletName : '';
+                                        };
+                                        updateOutlet();
+                                        wrap.append(label);
+                                    }
+                                    outlet.append(wrap);
+                                }
+                                tr.append(outlet);
                             }
                             const order = document.createElement('td'); {
                                 const inp = document.createElement('input'); {

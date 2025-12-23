@@ -593,25 +593,31 @@ body.stwid-- #WorldInfo {
             &:has([name="position"] > [value="4"]:checked) + td > [name="depth"] {
                 display: inline-block;
             }
-			&:has(.stwid--entry) {
-				width: 100%;
-				.stwid--book {
-					color: var(--SmartThemeEmColor);
-					font-size: 0.6em;
-					line-height: 1;
-				}
-				.stwid--key {
-					color: var(--SmartThemeEmColor);
-					font-size: 0.75em;
-					font-style: italic;
-					line-height: 1;
-				}
-			}
-			.stwid--enabled {
-				color: var(--SmartThemeQuoteColor);
-				cursor: pointer;
-			}
-		}
+                        &:has(.stwid--entry) {
+                                width: 100%;
+                                .stwid--book {
+                                        color: var(--SmartThemeEmColor);
+                                        font-size: 0.6em;
+                                        line-height: 1;
+                                }
+                                .stwid--key {
+                                        color: var(--SmartThemeEmColor);
+                                        font-size: 0.75em;
+                                        font-style: italic;
+                                        line-height: 1;
+                                }
+                        }
+                        .stwid--outlet {
+                                color: var(--SmartThemeBodyColor);
+                                font-size: 0.9em;
+                                min-width: 6em;
+                                word-break: break-word;
+                        }
+                        .stwid--enabled {
+                                color: var(--SmartThemeQuoteColor);
+                                cursor: pointer;
+                        }
+                }
 	}
 }
 

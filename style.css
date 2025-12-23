@@ -560,6 +560,12 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   font-style: italic;
   line-height: 1;
 }
+.stwid--orderTable tr td .stwid--outlet {
+  color: var(--SmartThemeBodyColor);
+  font-size: 0.9em;
+  min-width: 6em;
+  word-break: break-word;
+}
 .stwid--orderTable tr td .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
