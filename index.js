@@ -638,22 +638,18 @@ const renderOrderHelper = (book = null)=>{
         body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
         const actions = document.createElement('div'); {
             actions.classList.add('stwid--actions');
-            const sortWrap = document.createElement('label'); {
-                sortWrap.classList.add('stwid--inputWrap');
-                sortWrap.append('Sort: ');
-                const sortSel = document.createElement('select'); {
-                    sortSel.classList.add('text_pole');
-                    appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
-                    sortSel.addEventListener('change', ()=>{
-                        const value = JSON.parse(sortSel.value);
-                        orderHelperState.sort = value.sort;
-                        orderHelperState.direction = value.direction;
-                        localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, JSON.stringify(value));
-                        applyOrderHelperSortToDom();
-                    });
-                    sortWrap.append(sortSel);
-                }
-                actions.append(sortWrap);
+            const selectAll = document.createElement('div'); {
+                dom.order.selectAll = selectAll;
+                selectAll.classList.add('menu_button');
+                selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
+                selectAll.title = 'Select/unselect all entries for applying Order values';
+                selectAll.addEventListener('click', ()=>{
+                    const rows = getOrderHelperRows();
+                    const shouldSelect = !rows.length || rows.some(row=>!isOrderHelperRowSelected(row));
+                    setAllOrderHelperRowSelected(shouldSelect);
+                    updateOrderHelperSelectAllButton();
+                });
+                actions.append(selectAll);
             }
             const keyToggle = document.createElement('div'); {
                 keyToggle.classList.add('menu_button');
@@ -673,6 +669,30 @@ const renderOrderHelper = (book = null)=>{
                 });
                 actions.append(keyToggle);
             }
+            const addDivider = ()=>{
+                const divider = document.createElement('div');
+                divider.classList.add('stwid--actionsDivider');
+                actions.append(divider);
+            };
+            addDivider();
+            const sortWrap = document.createElement('label'); {
+                sortWrap.classList.add('stwid--inputWrap');
+                sortWrap.append('Sort: ');
+                const sortSel = document.createElement('select'); {
+                    sortSel.classList.add('text_pole');
+                    appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
+                    sortSel.addEventListener('change', ()=>{
+                        const value = JSON.parse(sortSel.value);
+                        orderHelperState.sort = value.sort;
+                        orderHelperState.direction = value.direction;
+                        localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, JSON.stringify(value));
+                        applyOrderHelperSortToDom();
+                    });
+                    sortWrap.append(sortSel);
+                }
+                actions.append(sortWrap);
+            }
+            addDivider();
             const filterToggle = document.createElement('div'); {
                 filterToggle.classList.add('menu_button');
                 filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -684,19 +704,6 @@ const renderOrderHelper = (book = null)=>{
                     }
                 });
                 actions.append(filterToggle);
-            }
-            const selectAll = document.createElement('div'); {
-                dom.order.selectAll = selectAll;
-                selectAll.classList.add('menu_button');
-                selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
-                selectAll.title = 'Select/unselect all entries for applying Order values';
-                selectAll.addEventListener('click', ()=>{
-                    const rows = getOrderHelperRows();
-                    const shouldSelect = !rows.length || rows.some(row=>!isOrderHelperRowSelected(row));
-                    setAllOrderHelperRowSelected(shouldSelect);
-                    updateOrderHelperSelectAllButton();
-                });
-                actions.append(selectAll);
             }
             const startLbl = document.createElement('label'); {
                 startLbl.classList.add('stwid--inputWrap');

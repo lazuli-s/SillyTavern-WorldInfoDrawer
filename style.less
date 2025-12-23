@@ -420,22 +420,29 @@ body.stwid-- #WorldInfo {
         .stwid--actions {
                 flex: 0 0 auto;
 
-		display: flex;
-		gap: 1.5em;
-		justify-content: center;
-		align-items: center;
+                display: flex;
+                gap: 1.5em;
+                justify-content: flex-start;
+                align-items: center;
 
-		background-color: var(--SmartThemeBlurTintColor);
+                background-color: var(--SmartThemeBlurTintColor);
 
-		.stwid--inputWrap {
-			display: flex;
-			align-items: center;
-			gap: 0.5em;
+                .stwid--actionsDivider {
+                        align-self: stretch;
+                        width: 1px;
+                        background-color: var(--SmartThemeBorderColor);
+                        opacity: 0.5;
+                }
 
-			color: var(--SmartThemeEmColor);
-			font-size: smaller;
-		}
-	}
+                .stwid--inputWrap {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5em;
+
+                        color: var(--SmartThemeEmColor);
+                        font-size: smaller;
+                }
+        }
 
 	.stwid--filter {
 		background-color: var(--SmartThemeBlurTintColor);
