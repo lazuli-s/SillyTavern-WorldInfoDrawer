@@ -152,6 +152,22 @@ const orderHelperState = (()=>{
     } catch { /* empty */ }
     return state;
 })();
+
+/**
+ * Returns true when a position value corresponds to an Outlet entry.
+ * Falls back to matching common Outlet values when an explicit option isn't found.
+ * @param {string|number} positionValue
+ * @param {HTMLSelectElement} positionSelect
+ */
+const isOutletPosition = (positionValue, positionSelect)=>{
+    const normalizedPosition = String(positionValue ?? '').toLowerCase();
+    const outletOption = Array.from(positionSelect?.options ?? [])
+        .find(opt=>opt.textContent?.trim().toLowerCase() === 'outlet');
+    if (outletOption) {
+        return String(outletOption.value).toLowerCase() === normalizedPosition;
+    }
+    return normalizedPosition === '4' || normalizedPosition === 'outlet';
+};
 /**@type {{name:string, uid:string}} */
 let currentEditor;
 
@@ -926,7 +942,7 @@ const renderOrderHelper = (book = null)=>{
                 tbl.classList.add('stwid--orderTable');
                 const thead = document.createElement('thead'); {
                     const tr = document.createElement('tr'); {
-                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Order', 'Trigg %']) {
+                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Outlet', 'Order', 'Trigg %']) {
                             const th = document.createElement('th'); {
                                 th.textContent = col;
                                 tr.append(th);
@@ -1086,6 +1102,20 @@ const renderOrderHelper = (book = null)=>{
                                     depth.append(inp);
                                 }
                                 tr.append(depth);
+                            }
+                            const outlet = document.createElement('td'); {
+                                const outletLabel = document.createElement('span'); {
+                                    outletLabel.classList.add('stwid--outletName');
+                                    const updateOutletLabel = ()=>{
+                                        outletLabel.textContent = isOutletPosition(pos.value, pos)
+                                            ? (cache[e.book].entries[e.data.uid].outletName ?? e.data.outletName ?? '')
+                                            : '';
+                                    };
+                                    updateOutletLabel();
+                                    pos.addEventListener('change', updateOutletLabel);
+                                    outlet.append(outletLabel);
+                                }
+                                tr.append(outlet);
                             }
                             const order = document.createElement('td'); {
                                 const inp = document.createElement('input'); {
