@@ -570,6 +570,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   min-width: 6em;
   word-break: break-word;
 }
+.stwid--orderTable tr td .stwid--outlet input[name="outletName"] {
+  width: 100%;
+  min-width: 6em;
+}
 .stwid--orderTable tr td input[name="depth"], .stwid--orderTable tr td input[name="order"], .stwid--orderTable tr td input[name="selective_probability"] {
   width: 33%;
   min-width: 4em;

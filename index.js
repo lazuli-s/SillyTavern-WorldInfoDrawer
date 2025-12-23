@@ -1099,15 +1099,28 @@ const renderOrderHelper = (book = null)=>{
                                 const wrap = document.createElement('div'); {
                                     wrap.classList.add('stwid--colwrap');
                                     wrap.classList.add('stwid--outlet');
-                                    const label = document.createElement('span'); {
+                                    const input = document.createElement('input'); {
+                                        input.classList.add('stwid--input');
+                                        input.classList.add('text_pole');
+                                        input.name = 'outletName';
+                                        input.type = 'text';
+                                        input.value = cache[e.book].entries[e.data.uid].outletName ?? e.data.outletName ?? '';
                                         updateOutlet = ()=>{
                                             const entryData = cache[e.book].entries[e.data.uid];
                                             const currentPosition = entryData.position ?? pos.value;
                                             const outletName = entryData.outletName ?? e.data.outletName ?? '';
-                                            label.textContent = isOutletPosition(currentPosition) ? outletName : '';
+                                            input.value = outletName;
+                                            wrap.hidden = !isOutletPosition(currentPosition);
                                         };
                                         updateOutlet();
-                                        wrap.append(label);
+                                        input.addEventListener('change', async()=>{
+                                            const value = input.value;
+                                            cache[e.book].entries[e.data.uid].outletName = value;
+                                            e.data.outletName = value;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                            updateOutlet();
+                                        });
+                                        wrap.append(input);
                                     }
                                     outlet.append(wrap);
                                 }
