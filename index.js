@@ -692,7 +692,6 @@ const renderOrderHelper = (book = null)=>{
                 }
                 actions.append(sortWrap);
             }
-            addDivider();
             const filterToggle = document.createElement('div'); {
                 filterToggle.classList.add('menu_button');
                 filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -705,6 +704,7 @@ const renderOrderHelper = (book = null)=>{
                 });
                 actions.append(filterToggle);
             }
+            addDivider();
             const startLbl = document.createElement('label'); {
                 startLbl.classList.add('stwid--inputWrap');
                 startLbl.title = 'Starting Order (topmost entry in list)';
@@ -712,6 +712,7 @@ const renderOrderHelper = (book = null)=>{
                 const start = document.createElement('input'); {
                     dom.order.start = start;
                     start.classList.add('stwid--input');
+                    start.classList.add('stwid--orderInput');
                     start.classList.add('text_pole');
                     start.type = 'number';
                     start.min = '1';
@@ -730,6 +731,7 @@ const renderOrderHelper = (book = null)=>{
                 const step = document.createElement('input'); {
                     dom.order.step = step;
                     step.classList.add('stwid--input');
+                    step.classList.add('stwid--orderInput');
                     step.classList.add('text_pole');
                     step.type = 'number';
                     step.min = '1';
@@ -789,8 +791,13 @@ const renderOrderHelper = (book = null)=>{
                 }
                 actions.append(dir);
             }
+            const spacer = document.createElement('div'); {
+                spacer.classList.add('stwid--actionsSpacer');
+                actions.append(spacer);
+            }
             const apply = document.createElement('div'); {
                 apply.classList.add('menu_button');
+                apply.classList.add('stwid--orderApply');
                 apply.classList.add('fa-solid', 'fa-fw');
                 if ((localStorage.getItem('stwid--order-direction') ?? 'down') == 'up') {
                     apply.classList.add('fa-arrow-up-9-1');
