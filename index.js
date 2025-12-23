@@ -638,22 +638,27 @@ const renderOrderHelper = (book = null)=>{
         body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
         const actions = document.createElement('div'); {
             actions.classList.add('stwid--actions');
-            const sortWrap = document.createElement('label'); {
-                sortWrap.classList.add('stwid--inputWrap');
-                sortWrap.append('Sort: ');
-                const sortSel = document.createElement('select'); {
-                    sortSel.classList.add('text_pole');
-                    appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
-                    sortSel.addEventListener('change', ()=>{
-                        const value = JSON.parse(sortSel.value);
-                        orderHelperState.sort = value.sort;
-                        orderHelperState.direction = value.direction;
-                        localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, JSON.stringify(value));
-                        applyOrderHelperSortToDom();
-                    });
-                    sortWrap.append(sortSel);
-                }
-                actions.append(sortWrap);
+            const leftActions = document.createElement('div');
+            leftActions.classList.add('stwid--actionsGroup');
+            const rightActions = document.createElement('div');
+            rightActions.classList.add('stwid--actionsGroup', 'stwid--actionsGroupRight');
+            const addDivider = (target = leftActions)=>{
+                const divider = document.createElement('div');
+                divider.classList.add('stwid--actionsDivider');
+                target.append(divider);
+            };
+            const selectAll = document.createElement('div'); {
+                dom.order.selectAll = selectAll;
+                selectAll.classList.add('menu_button');
+                selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
+                selectAll.title = 'Select/unselect all entries for applying Order values';
+                selectAll.addEventListener('click', ()=>{
+                    const rows = getOrderHelperRows();
+                    const shouldSelect = !rows.length || rows.some(row=>!isOrderHelperRowSelected(row));
+                    setAllOrderHelperRowSelected(shouldSelect);
+                    updateOrderHelperSelectAllButton();
+                });
+                leftActions.append(selectAll);
             }
             const keyToggle = document.createElement('div'); {
                 keyToggle.classList.add('menu_button');
@@ -671,8 +676,27 @@ const renderOrderHelper = (book = null)=>{
                     body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
                     applyKeyToggleStyle();
                 });
-                actions.append(keyToggle);
+                leftActions.append(keyToggle);
             }
+            addDivider(leftActions);
+            const sortWrap = document.createElement('label'); {
+                sortWrap.classList.add('stwid--inputWrap');
+                sortWrap.append('Sort: ');
+                const sortSel = document.createElement('select'); {
+                    sortSel.classList.add('text_pole');
+                    appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
+                    sortSel.addEventListener('change', ()=>{
+                        const value = JSON.parse(sortSel.value);
+                        orderHelperState.sort = value.sort;
+                        orderHelperState.direction = value.direction;
+                        localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, JSON.stringify(value));
+                        applyOrderHelperSortToDom();
+                    });
+                    sortWrap.append(sortSel);
+                }
+                leftActions.append(sortWrap);
+            }
+            addDivider(leftActions);
             const filterToggle = document.createElement('div'); {
                 filterToggle.classList.add('menu_button');
                 filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -683,21 +707,9 @@ const renderOrderHelper = (book = null)=>{
                         updateOrderHelperPreview(getOrderHelperEntries(orderHelperState.book, true));
                     }
                 });
-                actions.append(filterToggle);
+                leftActions.append(filterToggle);
             }
-            const selectAll = document.createElement('div'); {
-                dom.order.selectAll = selectAll;
-                selectAll.classList.add('menu_button');
-                selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
-                selectAll.title = 'Select/unselect all entries for applying Order values';
-                selectAll.addEventListener('click', ()=>{
-                    const rows = getOrderHelperRows();
-                    const shouldSelect = !rows.length || rows.some(row=>!isOrderHelperRowSelected(row));
-                    setAllOrderHelperRowSelected(shouldSelect);
-                    updateOrderHelperSelectAllButton();
-                });
-                actions.append(selectAll);
-            }
+            addDivider(rightActions);
             const startLbl = document.createElement('label'); {
                 startLbl.classList.add('stwid--inputWrap');
                 startLbl.title = 'Starting Order (topmost entry in list)';
@@ -705,6 +717,7 @@ const renderOrderHelper = (book = null)=>{
                 const start = document.createElement('input'); {
                     dom.order.start = start;
                     start.classList.add('stwid--input');
+                    start.classList.add('stwid--smallInput');
                     start.classList.add('text_pole');
                     start.type = 'number';
                     start.min = '1';
@@ -715,7 +728,7 @@ const renderOrderHelper = (book = null)=>{
                     });
                     startLbl.append(start);
                 }
-                actions.append(startLbl);
+                rightActions.append(startLbl);
             }
             const stepLbl = document.createElement('label'); {
                 stepLbl.classList.add('stwid--inputWrap');
@@ -723,6 +736,7 @@ const renderOrderHelper = (book = null)=>{
                 const step = document.createElement('input'); {
                     dom.order.step = step;
                     step.classList.add('stwid--input');
+                    step.classList.add('stwid--smallInput');
                     step.classList.add('text_pole');
                     step.type = 'number';
                     step.min = '1';
@@ -733,7 +747,7 @@ const renderOrderHelper = (book = null)=>{
                     });
                     stepLbl.append(step);
                 }
-                actions.append(stepLbl);
+                rightActions.append(stepLbl);
             }
             const dir = document.createElement('div'); {
                 dir.classList.add('stwid--inputWrap');
@@ -780,7 +794,7 @@ const renderOrderHelper = (book = null)=>{
                     }
                     dir.append(wrap);
                 }
-                actions.append(dir);
+                rightActions.append(dir);
             }
             const apply = document.createElement('div'); {
                 apply.classList.add('menu_button');
@@ -813,8 +827,9 @@ const renderOrderHelper = (book = null)=>{
                         await saveWorldInfo(bookName, buildSavePayload(bookName), true);
                     }
                 });
-                actions.append(apply);
+                rightActions.append(apply);
             }
+            actions.append(leftActions, rightActions);
             body.append(actions);
         }
         const filter = document.createElement('div'); {

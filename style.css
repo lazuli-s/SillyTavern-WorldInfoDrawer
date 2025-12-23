@@ -381,9 +381,23 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   flex: 0 0 auto;
   display: flex;
   gap: 1.5em;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   background-color: var(--SmartThemeBlurTintColor);
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsGroup.stwid--actionsGroupRight {
+  margin-left: auto;
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsDivider {
+  align-self: stretch;
+  width: 1px;
+  background-color: var(--SmartThemeBorderColor);
+  opacity: 0.5;
 }
 .stwid--orderHelper .stwid--actions .stwid--inputWrap {
   display: flex;
@@ -391,6 +405,12 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   gap: 0.5em;
   color: var(--SmartThemeEmColor);
   font-size: smaller;
+}
+.stwid--orderHelper .stwid--actions .stwid--input {
+  width: auto;
+}
+.stwid--orderHelper .stwid--actions .stwid--input.stwid--smallInput {
+  width: 6ch;
 }
 .stwid--orderHelper .stwid--filter {
   background-color: var(--SmartThemeBlurTintColor);
