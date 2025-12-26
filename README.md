@@ -1,7 +1,6 @@
 # SillyTavern-WorldInfoDrawer
-This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTavern. I've been using this extension since I discovered SillyTavern, but I felt it was missing some features that might make playing around with lorebooks easier.
 
-A warning: I have no idea what I'm doing with my life, and this was completely vibe coded using Codex. But it seems to work! I've been testing it for a while, and no console errors so far.
+This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTavern. I've been using this extension since I discovered SillyTavern, but I felt it was missing some features that might make playing around with lorebooks easier.
 
 ## What this extension does
 
@@ -54,6 +53,13 @@ A warning: I have no idea what I'm doing with my life, and this was completely v
 
 ## Contributing
 
-Like I said, I have no idea what I'm doing! So if you find a bug or a potential issue, please tell me and I'll do my best to ask GPT 5.1 to fix it (or please do the git thing if you actually know something about coding and want to fix the issue yourself).
+A warning: I have no idea what I'm doing with my life, and this was completely vibe coded using Codex. But it seems to work! I've been testing it for a while, and no console errors so far.
+
+So if you find a bug or a potential issue, please tell me and I'll do my best to ask GPT 5.2 to fix it (or please do the git thing if you actually know something about coding and want to fix the issue yourself).
 
 Please tell me if you have any ideas or suggestions as well. I think World Info is probably the best ST feature so far, and I've probably spent a very shameful amount of hours editing lore on this extension drawer. I'm very glad Lenny made this, and I hope more users become aware of this great extension.
+
+## Updates
+
+### Version 2.0.1
+Added support to ⁠the extension 📚 ST Lorebook Ordering
