@@ -63,3 +63,9 @@ Please tell me if you have any ideas or suggestions as well. I think World Info 
 
 ### Version 2.0.1
 Added support to ⁠the extension 📚 ST Lorebook Ordering
+
+### Version 2.0.2
+- Reworked the Order Helper layout to make the controls and columns easier to scan.
+- Added an outlet name column and tightened column labels for clearer ordering context.
+- Made Order Helper comments clickable links to jump directly to entries.
+- Added a draggable splitter between the World Info list and editor, allowing to change the width
