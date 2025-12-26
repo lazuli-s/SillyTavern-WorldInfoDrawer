@@ -940,7 +940,7 @@ const renderOrderHelper = (book = null)=>{
                 tbl.classList.add('stwid--orderTable');
                 const thead = document.createElement('thead'); {
                     const tr = document.createElement('tr'); {
-                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Outlet', 'Order', 'Trigg %']) {
+                        for (const col of ['', '', '', 'Entry', 'Strategy', 'Position', 'Depth', 'Outlet', 'Order', 'Trigger %']) {
                             const th = document.createElement('th'); {
                                 th.textContent = col;
                                 tr.append(th);
