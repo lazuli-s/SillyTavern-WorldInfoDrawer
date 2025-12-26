@@ -11,11 +11,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check for lockfile
+        id: lockfile
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Node.js
+        if: steps.lockfile.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            npm-shrinkwrap.json
+            yarn.lock
+      - name: Set up Node.js (no cache)
+        if: steps.lockfile.outputs.present != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
       - name: Check JavaScript syntax
         run: node scripts/check-js-syntax.cjs
 
@@ -24,11 +42,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check for lockfile
+        id: lockfile
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Node.js
+        if: steps.lockfile.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            npm-shrinkwrap.json
+            yarn.lock
+      - name: Set up Node.js (no cache)
+        if: steps.lockfile.outputs.present != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
