@@ -399,6 +399,12 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   align-items: center;
   background-color: var(--SmartThemeBlurTintColor);
 }
+.stwid--orderHelper .stwid--actions .stwid--actionsRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+}
 .stwid--orderHelper .stwid--actions .stwid--actionsDivider {
   align-self: stretch;
   width: 1px;
