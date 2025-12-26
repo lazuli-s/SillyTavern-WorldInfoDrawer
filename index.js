@@ -92,6 +92,17 @@ const dom = {
 
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
+const ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY = 'stwid--order-helper-column-widths';
+const ORDER_HELPER_MIN_COLUMN_WIDTH = 20;
+const ORDER_HELPER_RESIZABLE_COLUMNS = [
+    { key: 'entry', label: 'Entry' },
+    { key: 'strategy', label: 'Strat' },
+    { key: 'position', label: 'Position' },
+    { key: 'depth', label: 'Depth' },
+    { key: 'outlet', label: 'Outlet' },
+    { key: 'order', label: 'Order' },
+    { key: 'trigger', label: 'Trigg %' },
+];
 /**
  * Sort options available to dropdowns. Each tuple is
  * [Label, Sort Logic, Sort Direction].
@@ -152,6 +163,76 @@ const orderHelperState = (()=>{
     } catch { /* empty */ }
     return state;
 })();
+const getOrderHelperColumnWidths = ()=>{
+    try {
+        const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY));
+        if (!stored || typeof stored !== 'object') return {};
+        const widths = {};
+        for (const { key } of ORDER_HELPER_RESIZABLE_COLUMNS) {
+            const value = stored[key];
+            if (Number.isFinite(value) && value >= ORDER_HELPER_MIN_COLUMN_WIDTH) {
+                widths[key] = value;
+            }
+        }
+        return widths;
+    } catch {
+        return {};
+    }
+};
+const setOrderHelperColumnWidths = (widths)=>{
+    try {
+        localStorage.setItem(ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY, JSON.stringify(widths));
+    } catch { /* empty */ }
+};
+const applyOrderHelperColumnWidth = (col, width)=>{
+    col.style.width = `${width}px`;
+};
+const setupOrderHelperColumnResizers = (table, headerRow, colgroup)=>{
+    if (!headerRow || !colgroup) return;
+    const widths = getOrderHelperColumnWidths();
+    const columns = [...colgroup.children];
+    for (const [key, width] of Object.entries(widths)) {
+        const col = columns.find((column)=>column.dataset?.colKey === key);
+        if (col) {
+            applyOrderHelperColumnWidth(col, width);
+        }
+    }
+    for (const th of headerRow.querySelectorAll('th[data-col-key]')) {
+        const splitter = document.createElement('div');
+        splitter.classList.add('stwid--colSplitter');
+        splitter.addEventListener('mousedown', (evt)=>{
+            evt.preventDefault();
+            const colIndex = th.cellIndex;
+            const col = columns[colIndex];
+            if (!col) return;
+            const key = th.dataset.colKey;
+            const startX = evt.clientX;
+            const startWidth = col.getBoundingClientRect().width;
+            const onMouseMove = (moveEvt)=>{
+                const nextWidth = Math.max(
+                    ORDER_HELPER_MIN_COLUMN_WIDTH,
+                    Math.round(startWidth + (moveEvt.clientX - startX)),
+                );
+                applyOrderHelperColumnWidth(col, nextWidth);
+            };
+            const onMouseUp = ()=>{
+                document.body.classList.remove('stwid--colResizing');
+                document.removeEventListener('mousemove', onMouseMove);
+                const finalWidth = Math.max(
+                    ORDER_HELPER_MIN_COLUMN_WIDTH,
+                    Math.round(col.getBoundingClientRect().width),
+                );
+                widths[key] = finalWidth;
+                setOrderHelperColumnWidths(widths);
+            };
+            document.body.classList.add('stwid--colResizing');
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp, { once: true });
+        });
+        th.classList.add('stwid--orderColHeader');
+        th.append(splitter);
+    }
+};
 const getOutletPositionValue = () => document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
 const isOutletPosition = (position) => {
     const outletValue = getOutletPositionValue();
@@ -936,13 +1017,41 @@ const renderOrderHelper = (book = null)=>{
         }
         const wrap = document.createElement('div'); {
             wrap.classList.add('stwid--orderTableWrap');
+            const columnKeyMap = new Map(ORDER_HELPER_RESIZABLE_COLUMNS.map(({ key, label })=>[label, key]));
+            const columnDefinitions = [
+                { label: '', key: null },
+                { label: '', key: null },
+                { label: '', key: null },
+                { label: 'Entry', key: columnKeyMap.get('Entry') },
+                { label: 'Strat', key: columnKeyMap.get('Strat') },
+                { label: 'Position', key: columnKeyMap.get('Position') },
+                { label: 'Depth', key: columnKeyMap.get('Depth') },
+                { label: 'Outlet', key: columnKeyMap.get('Outlet') },
+                { label: 'Order', key: columnKeyMap.get('Order') },
+                { label: 'Trigg %', key: columnKeyMap.get('Trigg %') },
+            ];
             const tbl = document.createElement('table'); {
                 tbl.classList.add('stwid--orderTable');
+                const colgroup = document.createElement('colgroup'); {
+                    for (const column of columnDefinitions) {
+                        const col = document.createElement('col');
+                        if (column.key) {
+                            col.dataset.colKey = column.key;
+                        }
+                        colgroup.append(col);
+                    }
+                    tbl.append(colgroup);
+                }
+                let headerRow;
                 const thead = document.createElement('thead'); {
                     const tr = document.createElement('tr'); {
-                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Outlet', 'Order', 'Trigg %']) {
+                        headerRow = tr;
+                        for (const column of columnDefinitions) {
                             const th = document.createElement('th'); {
-                                th.textContent = col;
+                                th.textContent = column.label;
+                                if (column.key) {
+                                    th.dataset.colKey = column.key;
+                                }
                                 tr.append(th);
                             }
                         }
@@ -1182,6 +1291,7 @@ const renderOrderHelper = (book = null)=>{
                     updateOrderHelperSelectAllButton();
                     tbl.append(tbody);
                 }
+                setupOrderHelperColumnResizers(tbl, headerRow, colgroup);
                 wrap.append(tbl);
             }
             body.append(wrap);

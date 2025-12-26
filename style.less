@@ -548,9 +548,35 @@ body.stwid-- #WorldInfo {
         border: 0;
         border-collapse: collapse;
         border-spacing: 0;
+        table-layout: fixed;
         text-align: left;
         white-space: normal;
         width: 100%;
+        th.stwid--orderColHeader {
+                position: relative;
+                .stwid--colSplitter {
+                        position: absolute;
+                        right: -3px;
+                        top: 0;
+                        width: 6px;
+                        height: 100%;
+                        cursor: col-resize;
+                        &::after {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                bottom: 0;
+                                left: 2px;
+                                width: 1px;
+                                background: var(--SmartThemeBorderColor);
+                                opacity: 0;
+                                transition: opacity 120ms;
+                        }
+                }
+                &:hover .stwid--colSplitter::after {
+                        opacity: 0.9;
+                }
+        }
         thead {
 		background-color: var(--SmartThemeBlurTintColor);
 		position: sticky;
@@ -614,7 +640,7 @@ body.stwid-- #WorldInfo {
                 display: inline-block;
             }
                         &:has(.stwid--entry) {
-                                width: 100%;
+                                width: auto;
                                 .stwid--book {
                                         color: var(--SmartThemeEmColor);
                                         font-size: 0.6em;
@@ -661,7 +687,14 @@ body.stwid-- #WorldInfo {
 
 
 .stwid--helpToast {
-    margin: 0;
-    padding-left: 0.5em;
-    font-size: small;
+	margin: 0;
+	padding-left: 0.5em;
+	font-size: small;
+}
+.stwid--colResizing {
+        cursor: col-resize;
+        user-select: none;
+        * {
+                cursor: col-resize !important;
+        }
 }

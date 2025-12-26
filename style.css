@@ -496,6 +496,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border: 0;
   border-collapse: collapse;
   border-spacing: 0;
+  table-layout: fixed;
   text-align: left;
   white-space: normal;
   width: 100%;
@@ -529,6 +530,38 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   text-align: left;
   padding: 0 0.5em;
   width: 0;
+}
+.stwid--orderTable th.stwid--orderColHeader {
+  position: relative;
+}
+.stwid--orderTable .stwid--colSplitter {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+.stwid--orderTable .stwid--colSplitter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 1px;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.stwid--orderTable th.stwid--orderColHeader:hover .stwid--colSplitter::after {
+  opacity: 0.9;
+}
+.stwid--colResizing {
+  cursor: col-resize;
+  user-select: none;
+}
+.stwid--colResizing * {
+  cursor: col-resize !important;
 }
 .stwid--orderTable tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
@@ -565,7 +598,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   display: inline-block;
 }
 .stwid--orderTable tr td:has(.stwid--entry) {
-  width: 100%;
+  width: auto;
 }
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
   color: var(--SmartThemeEmColor);
