@@ -719,6 +719,10 @@ const renderOrderHelper = (book = null)=>{
                 });
                 actions.append(filterToggle);
             }
+            const actionsRight = document.createElement('div'); {
+                actionsRight.classList.add('stwid--actionsRight');
+                actions.append(actionsRight);
+            }
             const startLbl = document.createElement('label'); {
                 startLbl.classList.add('stwid--inputWrap');
                 startLbl.title = 'Starting Order (topmost entry in list)';
@@ -736,7 +740,7 @@ const renderOrderHelper = (book = null)=>{
                     });
                     startLbl.append(start);
                 }
-                actions.append(startLbl);
+                actionsRight.append(startLbl);
             }
             const stepLbl = document.createElement('label'); {
                 stepLbl.classList.add('stwid--inputWrap');
@@ -754,7 +758,7 @@ const renderOrderHelper = (book = null)=>{
                     });
                     stepLbl.append(step);
                 }
-                actions.append(stepLbl);
+                actionsRight.append(stepLbl);
             }
             const dir = document.createElement('div'); {
                 dir.classList.add('stwid--inputWrap');
@@ -801,7 +805,7 @@ const renderOrderHelper = (book = null)=>{
                     }
                     dir.append(wrap);
                 }
-                actions.append(dir);
+                actionsRight.append(dir);
             }
             const apply = document.createElement('div'); {
                 apply.classList.add('menu_button');
@@ -834,7 +838,7 @@ const renderOrderHelper = (book = null)=>{
                         await saveWorldInfo(bookName, buildSavePayload(bookName), true);
                     }
                 });
-                actions.append(apply);
+                actionsRight.append(apply);
             }
             body.append(actions);
         }
