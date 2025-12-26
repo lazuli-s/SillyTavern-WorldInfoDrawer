@@ -979,66 +979,90 @@ const renderOrderHelper = (book = null)=>{
         }
         const wrap = document.createElement('div'); {
             wrap.classList.add('stwid--orderTableWrap');
-            const tbl = document.createElement('table'); {
-                tbl.classList.add('stwid--orderTable');
-                const columnWidths = getOrderHelperColumnWidths();
-                const columnElements = {};
-                const colgroup = document.createElement('colgroup'); {
-                    for (const spec of ORDER_HELPER_COLUMN_SPECS) {
-                        const col = document.createElement('col');
-                        if (spec.resizable) {
-                            col.style.width = `${columnWidths[spec.key]}px`;
-                            columnElements[spec.key] = col;
-                        } else if (spec.defaultWidth) {
-                            col.style.width = `${spec.defaultWidth}px`;
-                        }
-                        colgroup.append(col);
-                    }
-                }
-                tbl.append(colgroup);
-                const thead = document.createElement('thead'); {
-                    const tr = document.createElement('tr'); {
+            const scroller = document.createElement('div'); {
+                scroller.classList.add('stwid--orderTableScroller');
+                const tbl = document.createElement('table'); {
+                    tbl.classList.add('stwid--orderTable');
+                    const columnWidths = getOrderHelperColumnWidths();
+                    const columnElements = {};
+                    const colgroup = document.createElement('colgroup'); {
                         for (const spec of ORDER_HELPER_COLUMN_SPECS) {
-                            const th = document.createElement('th'); {
-                                th.textContent = spec.label;
-                                if (spec.resizable) {
-                                    th.classList.add('stwid--resizableCol');
-                                    const splitter = document.createElement('div'); {
-                                        splitter.classList.add('stwid--colSplitter');
-                                        splitter.title = 'Drag to resize column';
-                                        splitter.addEventListener('pointerdown', (evt)=>{
-                                            evt.preventDefault();
-                                            const startX = evt.clientX;
-                                            const startWidth = columnWidths[spec.key];
-                                            document.body.classList.add('stwid--isResizingColumns');
-                                            splitter.setPointerCapture(evt.pointerId);
-                                            const onMove = (moveEvt)=>{
-                                                const delta = moveEvt.clientX - startX;
-                                                const nextWidth = Math.max(spec.minWidth, startWidth + delta);
-                                                columnWidths[spec.key] = nextWidth;
-                                                columnElements[spec.key].style.width = `${nextWidth}px`;
-                                            };
-                                            const onUp = ()=>{
-                                                document.removeEventListener('pointermove', onMove);
-                                                document.removeEventListener('pointerup', onUp);
-                                                document.body.classList.remove('stwid--isResizingColumns');
-                                                splitter.releasePointerCapture(evt.pointerId);
-                                                saveOrderHelperColumnWidths(columnWidths);
-                                            };
-                                            document.addEventListener('pointermove', onMove);
-                                            document.addEventListener('pointerup', onUp);
-                                        });
-                                        th.append(splitter);
-                                    }
-                                }
-                                tr.append(th);
+                            const col = document.createElement('col');
+                            if (spec.resizable) {
+                                col.style.width = `${columnWidths[spec.key]}px`;
+                                columnElements[spec.key] = col;
+                            } else if (spec.defaultWidth) {
+                                col.style.width = `${spec.defaultWidth}px`;
                             }
+                            colgroup.append(col);
                         }
-                        thead.append(tr);
                     }
-                    tbl.append(thead);
-                }
-                const tbody = document.createElement('tbody'); {
+                    tbl.append(colgroup);
+                    const splitters = document.createElement('div'); {
+                        splitters.classList.add('stwid--orderTableSplitters');
+                        const resizableSpecs = ORDER_HELPER_COLUMN_SPECS.filter((spec)=>spec.resizable);
+                        const splitterElements = resizableSpecs.slice(0, -1).map((spec)=>{
+                            const splitter = document.createElement('div');
+                            splitter.classList.add('stwid--colSplitter');
+                            splitter.title = 'Drag to resize column';
+                            splitter.addEventListener('pointerdown', (evt)=>{
+                                evt.preventDefault();
+                                const startX = evt.clientX;
+                                const startWidth = columnWidths[spec.key];
+                                document.body.classList.add('stwid--isResizingColumns');
+                                splitter.setPointerCapture(evt.pointerId);
+                                const onMove = (moveEvt)=>{
+                                    const delta = moveEvt.clientX - startX;
+                                    const nextWidth = Math.max(spec.minWidth, startWidth + delta);
+                                    columnWidths[spec.key] = nextWidth;
+                                    columnElements[spec.key].style.width = `${nextWidth}px`;
+                                    updateSplitterPositions();
+                                };
+                                const onUp = ()=>{
+                                    document.removeEventListener('pointermove', onMove);
+                                    document.removeEventListener('pointerup', onUp);
+                                    document.body.classList.remove('stwid--isResizingColumns');
+                                    splitter.releasePointerCapture(evt.pointerId);
+                                    saveOrderHelperColumnWidths(columnWidths);
+                                };
+                                document.addEventListener('pointermove', onMove);
+                                document.addEventListener('pointerup', onUp);
+                            });
+                            splitters.append(splitter);
+                            return splitter;
+                        });
+                        const updateSplitterPositions = ()=>{
+                            let offset = 0;
+                            const widths = ORDER_HELPER_COLUMN_SPECS.map((spec)=>{
+                                if (spec.resizable) return columnWidths[spec.key];
+                                return spec.defaultWidth ?? 0;
+                            });
+                            for (const [index, spec] of ORDER_HELPER_COLUMN_SPECS.entries()) {
+                                offset += widths[index];
+                                if (!spec.resizable || spec.key === resizableSpecs.at(-1)?.key) {
+                                    continue;
+                                }
+                                const splitterIndex = resizableSpecs.findIndex((item)=>item.key === spec.key);
+                                const splitter = splitterElements[splitterIndex];
+                                if (!splitter) continue;
+                                splitter.style.left = `${offset}px`;
+                            }
+                        };
+                        updateSplitterPositions();
+                    }
+                    const thead = document.createElement('thead'); {
+                        const tr = document.createElement('tr'); {
+                            for (const spec of ORDER_HELPER_COLUMN_SPECS) {
+                                const th = document.createElement('th'); {
+                                    th.textContent = spec.label;
+                                    tr.append(th);
+                                }
+                            }
+                            thead.append(tr);
+                        }
+                        tbl.append(thead);
+                    }
+                    const tbody = document.createElement('tbody'); {
                     dom.order.tbody = tbody;
                     $(tbody).sortable({
                         // handle: 'stwid--sortableHandle',
@@ -1270,8 +1294,10 @@ const renderOrderHelper = (book = null)=>{
                     updateOrderHelperSelectAllButton();
                     tbl.append(tbody);
                 }
-                wrap.append(tbl);
+                scroller.append(tbl);
+                scroller.append(splitters);
             }
+            wrap.append(scroller);
             body.append(wrap);
         }
     }

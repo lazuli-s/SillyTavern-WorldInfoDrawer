@@ -492,6 +492,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   flex: 1 1 auto;
   overflow: auto;
 }
+.stwid--orderTableScroller {
+  position: relative;
+  min-width: 100%;
+}
 .stwid--orderTable {
   border: 0;
   border-collapse: collapse;
@@ -530,31 +534,6 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   text-align: left;
   padding: 0 0.5em;
   width: 0;
-}
-.stwid--orderTable tr th.stwid--resizableCol {
-  position: relative;
-  padding-right: 0.75em;
-}
-.stwid--orderTable tr th.stwid--resizableCol .stwid--colSplitter {
-  position: absolute;
-  top: 0;
-  right: -4px;
-  width: 8px;
-  height: 100%;
-  cursor: col-resize;
-}
-.stwid--orderTable tr th.stwid--resizableCol .stwid--colSplitter::after {
-  content: '';
-  position: absolute;
-  top: 20%;
-  bottom: 20%;
-  left: 3px;
-  width: 2px;
-  background-color: var(--SmartThemeBorderColor);
-  opacity: 0.5;
-}
-.stwid--orderTable tr th.stwid--resizableCol .stwid--colSplitter:hover::after {
-  opacity: 0.9;
 }
 .stwid--orderTable tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
@@ -629,6 +608,37 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderTable tr td .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
+}
+.stwid--orderTableSplitters {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.stwid--orderTableSplitters .stwid--colSplitter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  transform: translateX(-50%);
+  cursor: col-resize;
+  pointer-events: auto;
+}
+.stwid--orderTableSplitters .stwid--colSplitter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: var(--SmartThemeBorderColor);
+  opacity: 0.4;
+}
+.stwid--orderTableSplitters .stwid--colSplitter:hover::after {
+  opacity: 0.9;
 }
 .stwid--helpToast {
   margin: 0;
