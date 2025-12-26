@@ -560,9 +560,6 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--commentLink {
   color: inherit;
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  cursor: pointer;
 }
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
   color: var(--SmartThemeEmColor);
