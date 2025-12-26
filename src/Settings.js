@@ -48,6 +48,8 @@ export class Settings {
     sortDirection = SORT_DIRECTION.ASCENDING;
     /**@type {boolean} */
     useBookSorts = true;
+    /**@type {{ [key: string]: number }} */
+    orderHelperColumnWidths = {};
 
     constructor() {
         Object.assign(this, extension_settings.wordInfoDrawer ?? {});
@@ -62,6 +64,9 @@ export class Settings {
         if (typeof this.useBookSorts !== 'boolean') {
             this.useBookSorts = true;
         }
+        if (!this.orderHelperColumnWidths || typeof this.orderHelperColumnWidths !== 'object') {
+            this.orderHelperColumnWidths = {};
+        }
     }
 
     toJSON() {
@@ -69,6 +74,7 @@ export class Settings {
             sortLogic: this.sortLogic,
             sortDirection: this.sortDirection,
             useBookSorts: this.useBookSorts,
+            orderHelperColumnWidths: this.orderHelperColumnWidths,
         };
     }
 

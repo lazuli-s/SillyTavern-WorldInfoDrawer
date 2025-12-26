@@ -496,6 +496,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border: 0;
   border-collapse: collapse;
   border-spacing: 0;
+  table-layout: fixed;
   text-align: left;
   white-space: normal;
   width: 100%;
@@ -529,6 +530,31 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   text-align: left;
   padding: 0 0.5em;
   width: 0;
+}
+.stwid--orderTable tr th.stwid--resizableCol {
+  position: relative;
+  padding-right: 0.75em;
+}
+.stwid--orderTable tr th.stwid--resizableCol .stwid--colSplitter {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+}
+.stwid--orderTable tr th.stwid--resizableCol .stwid--colSplitter::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 3px;
+  width: 2px;
+  background-color: var(--SmartThemeBorderColor);
+  opacity: 0.5;
+}
+.stwid--orderTable tr th.stwid--resizableCol .stwid--colSplitter:hover::after {
+  opacity: 0.9;
 }
 .stwid--orderTable tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
@@ -608,4 +634,8 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   margin: 0;
   padding-left: 0.5em;
   font-size: small;
+}
+body.stwid--.stwid--isResizingColumns {
+  cursor: col-resize;
+  user-select: none;
 }

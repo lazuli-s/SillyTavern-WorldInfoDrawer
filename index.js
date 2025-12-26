@@ -92,6 +92,19 @@ const dom = {
 
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
+const ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY = 'stwid--order-helper-column-widths';
+const ORDER_HELPER_COLUMN_SPECS = [
+    { key: 'select', label: '', resizable: false, defaultWidth: 36 },
+    { key: 'handle', label: '', resizable: false, defaultWidth: 36 },
+    { key: 'active', label: '', resizable: false, defaultWidth: 36 },
+    { key: 'entry', label: 'Entry', resizable: true, defaultWidth: 320, minWidth: 220 },
+    { key: 'strategy', label: 'Strat', resizable: true, defaultWidth: 90, minWidth: 70 },
+    { key: 'position', label: 'Position', resizable: true, defaultWidth: 110, minWidth: 80 },
+    { key: 'depth', label: 'Depth', resizable: true, defaultWidth: 90, minWidth: 70 },
+    { key: 'outlet', label: 'Outlet', resizable: true, defaultWidth: 140, minWidth: 90 },
+    { key: 'order', label: 'Order', resizable: true, defaultWidth: 90, minWidth: 70 },
+    { key: 'trigger', label: 'Trigg %', resizable: true, defaultWidth: 90, minWidth: 70 },
+];
 /**
  * Sort options available to dropdowns. Each tuple is
  * [Label, Sort Logic, Sort Direction].
@@ -152,6 +165,36 @@ const orderHelperState = (()=>{
     } catch { /* empty */ }
     return state;
 })();
+const normalizeOrderHelperColumnWidths = (widths = {})=>{
+    const normalized = {};
+    for (const spec of ORDER_HELPER_COLUMN_SPECS) {
+        if (!spec.resizable) continue;
+        const rawValue = widths?.[spec.key];
+        const value = Number(rawValue);
+        if (Number.isFinite(value)) {
+            normalized[spec.key] = Math.max(spec.minWidth, value);
+        } else {
+            normalized[spec.key] = spec.defaultWidth;
+        }
+    }
+    return normalized;
+};
+const getOrderHelperColumnWidths = ()=>{
+    const defaults = normalizeOrderHelperColumnWidths();
+    let storedLocal = {};
+    try {
+        storedLocal = JSON.parse(localStorage.getItem(ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY)) ?? {};
+    } catch { /* empty */ }
+    const storedSettings = Settings.instance.orderHelperColumnWidths ?? {};
+    return normalizeOrderHelperColumnWidths({ ...defaults, ...storedLocal, ...storedSettings });
+};
+const saveOrderHelperColumnWidths = (widths)=>{
+    const normalized = normalizeOrderHelperColumnWidths(widths);
+    Settings.instance.orderHelperColumnWidths = normalized;
+    Settings.instance.save();
+    localStorage.setItem(ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
+};
 const getOutletPositionValue = () => document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
 const isOutletPosition = (position) => {
     const outletValue = getOutletPositionValue();
@@ -938,11 +981,56 @@ const renderOrderHelper = (book = null)=>{
             wrap.classList.add('stwid--orderTableWrap');
             const tbl = document.createElement('table'); {
                 tbl.classList.add('stwid--orderTable');
+                const columnWidths = getOrderHelperColumnWidths();
+                const columnElements = {};
+                const colgroup = document.createElement('colgroup'); {
+                    for (const spec of ORDER_HELPER_COLUMN_SPECS) {
+                        const col = document.createElement('col');
+                        if (spec.resizable) {
+                            col.style.width = `${columnWidths[spec.key]}px`;
+                            columnElements[spec.key] = col;
+                        } else if (spec.defaultWidth) {
+                            col.style.width = `${spec.defaultWidth}px`;
+                        }
+                        colgroup.append(col);
+                    }
+                }
+                tbl.append(colgroup);
                 const thead = document.createElement('thead'); {
                     const tr = document.createElement('tr'); {
-                        for (const col of ['', '', '', 'Entry', 'Strat', 'Position', 'Depth', 'Outlet', 'Order', 'Trigg %']) {
+                        for (const spec of ORDER_HELPER_COLUMN_SPECS) {
                             const th = document.createElement('th'); {
-                                th.textContent = col;
+                                th.textContent = spec.label;
+                                if (spec.resizable) {
+                                    th.classList.add('stwid--resizableCol');
+                                    const splitter = document.createElement('div'); {
+                                        splitter.classList.add('stwid--colSplitter');
+                                        splitter.title = 'Drag to resize column';
+                                        splitter.addEventListener('pointerdown', (evt)=>{
+                                            evt.preventDefault();
+                                            const startX = evt.clientX;
+                                            const startWidth = columnWidths[spec.key];
+                                            document.body.classList.add('stwid--isResizingColumns');
+                                            splitter.setPointerCapture(evt.pointerId);
+                                            const onMove = (moveEvt)=>{
+                                                const delta = moveEvt.clientX - startX;
+                                                const nextWidth = Math.max(spec.minWidth, startWidth + delta);
+                                                columnWidths[spec.key] = nextWidth;
+                                                columnElements[spec.key].style.width = `${nextWidth}px`;
+                                            };
+                                            const onUp = ()=>{
+                                                document.removeEventListener('pointermove', onMove);
+                                                document.removeEventListener('pointerup', onUp);
+                                                document.body.classList.remove('stwid--isResizingColumns');
+                                                splitter.releasePointerCapture(evt.pointerId);
+                                                saveOrderHelperColumnWidths(columnWidths);
+                                            };
+                                            document.addEventListener('pointermove', onMove);
+                                            document.addEventListener('pointerup', onUp);
+                                        });
+                                        th.append(splitter);
+                                    }
+                                }
                                 tr.append(th);
                             }
                         }
