@@ -621,6 +621,14 @@ const applyOrderHelperSortToDom = ()=>{
     updateOrderHelperPreview(entries);
 };
 
+const focusWorldEntry = (book, uid)=>{
+    const entryDom = cache?.[book]?.dom?.entry?.[uid]?.root;
+    if (!entryDom) return;
+    setBookCollapsed(book, false);
+    entryDom.scrollIntoView({ behavior:'smooth', block:'center' });
+    entryDom.click();
+};
+
 const renderOrderHelper = (book = null)=>{
     orderHelperState.book = book;
     dom.editor.innerHTML = '';
@@ -1016,9 +1024,14 @@ const renderOrderHelper = (book = null)=>{
                                         }
                                         wrap.append(bookLabel);
                                     }
-                                    const comment = document.createElement('div'); {
-                                        comment.classList.add('stwid--comment');
+                                    const comment = document.createElement('a'); {
+                                        comment.classList.add('stwid--comment', 'stwid--commentLink');
+                                        comment.href = `#world_entry/${encodeURIComponent(e.data.uid)}`;
                                         comment.textContent = e.data.comment;
+                                        comment.addEventListener('click', (evt)=>{
+                                            evt.preventDefault();
+                                            focusWorldEntry(e.book, e.data.uid);
+                                        });
                                         wrap.append(comment);
                                     }
                                     const key = document.createElement('div'); {
