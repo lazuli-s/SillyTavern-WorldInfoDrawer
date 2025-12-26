@@ -1,11 +1,9 @@
-const js = require('@eslint/js');
 const globals = require('globals');
 
 module.exports = [
   {
     ignores: ['vendor/sillytavern/**'],
   },
-  js.configs.recommended,
   {
     files: ['**/*.js'],
     languageOptions: {
@@ -19,7 +17,12 @@ module.exports = [
       },
     },
     rules: {
-      'no-unused-vars': 'off',
+      'eqeqeq': 'error',
+      'no-undef': 'error',
+      'no-redeclare': 'error',
+      'no-shadow': 'warn',
+      'no-unreachable': 'error',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
 ];
