@@ -492,10 +492,15 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   flex: 1 1 auto;
   overflow: auto;
 }
+.stwid--orderTableScroller {
+  position: relative;
+  min-width: 100%;
+}
 .stwid--orderTable {
   border: 0;
   border-collapse: collapse;
   border-spacing: 0;
+  table-layout: fixed;
   text-align: left;
   white-space: normal;
   width: 100%;
@@ -604,8 +609,43 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
+.stwid--orderTableSplitters {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.stwid--orderTableSplitters .stwid--colSplitter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  transform: translateX(-50%);
+  cursor: col-resize;
+  pointer-events: auto;
+}
+.stwid--orderTableSplitters .stwid--colSplitter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: var(--SmartThemeBorderColor);
+  opacity: 0.4;
+}
+.stwid--orderTableSplitters .stwid--colSplitter:hover::after {
+  opacity: 0.9;
+}
 .stwid--helpToast {
   margin: 0;
   padding-left: 0.5em;
   font-size: small;
+}
+body.stwid--.stwid--isResizingColumns {
+  cursor: col-resize;
+  user-select: none;
 }
