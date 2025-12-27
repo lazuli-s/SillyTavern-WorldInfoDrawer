@@ -1,42 +1,12 @@
-(async () => {
-    const [
-        { event_types, eventSource, getRequestHeaders },
-        { AutoComplete },
-        { extensionNames },
-        { Popup },
-        { SlashCommandParser },
-        { renderTemplateAsync },
-        { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 },
-        {
-            createNewWorldInfo,
-            createWorldInfoEntry,
-            deleteWIOriginalDataValue,
-            deleteWorldInfoEntry,
-            getFreeWorldName,
-            getWorldEntry,
-            loadWorldInfo,
-            onWorldInfoChange,
-            saveWorldInfo,
-            selected_world_info,
-            world_info,
-            world_names,
-        },
-    ] = await Promise.all([
-        import('../../../../script.js'),
-        import('../../../autocomplete/AutoComplete.js'),
-        import('../../../extensions.js'),
-        import('../../../popup.js'),
-        import('../../../slash-commands/SlashCommandParser.js'),
-        import('../../../templates.js'),
-        import('../../../utils.js'),
-        import('../../../world-info.js'),
-    ]);
-    await import('./src/Settings.js');
-    const { Settings, SORT, SORT_DIRECTION } = globalThis.WorldInfoDrawerSettings ?? {};
-    if (!Settings || !SORT || !SORT_DIRECTION) {
-        console.error('WorldInfo Drawer settings failed to load.');
-        return;
-    }
+import { event_types, eventSource, getRequestHeaders } from '../../../../script.js';
+import { AutoComplete } from '../../../autocomplete/AutoComplete.js';
+import { extensionNames } from '../../../extensions.js';
+import { Popup } from '../../../popup.js';
+import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
+import { renderTemplateAsync } from '../../../templates.js';
+import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../utils.js';
+import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_info, world_names } from '../../../world-info.js';
+import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
 
 /**
  * Creates a deferred promise that can be resolved or rejected externally.
@@ -54,24 +24,9 @@ const createDeferred = ()=>{
     return { promise, resolve, reject };
 };
 
-const resolveExtensionName = () => {
-    if (Array.isArray(extensionNames)) {
-        const match = extensionNames.find((name) => name.toLowerCase().includes('worldinfodrawer'));
-        if (match) {
-            return match.split('/').at(-1);
-        }
-    }
-    const cssLink = Array.from(document.querySelectorAll('link[id^="third-party_"]'))
-        .find((link) => link.href?.toLowerCase().includes('worldinfodrawer'));
-    if (cssLink?.id) {
-        return cssLink.id.replace(/^third-party_/, '').replace(/-css$/, '');
-    }
-    return 'SillyTavern-WorldInfoDrawer';
-};
-
-const NAME = resolveExtensionName();
+const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
 const watchCss = async()=>{
-    if ((document.currentScript?.src ?? '').includes('reload')) return;
+    if (new URL(import.meta.url).pathname.split('/').includes('reload')) return;
     try {
         const FilesPluginApi = (await import('../SillyTavern-FilesPluginApi/api.js')).FilesPluginApi;
         // watch CSS for changes
@@ -583,7 +538,7 @@ eventSource.on(event_types.WORLDINFO_UPDATED, (name, world)=>updateWIChangeDebou
 eventSource.on(event_types.WORLDINFO_SETTINGS_UPDATED, ()=>updateSettingsChange());
 
 
-const jumpToEntry = async(name, uid)=>{
+export const jumpToEntry = async(name, uid)=>{
     if (dom.activationToggle.classList.contains('stwid--active')) {
         dom.activationToggle.click();
     }
@@ -596,8 +551,6 @@ const jumpToEntry = async(name, uid)=>{
         cache[name].dom.entry[uid].root.click();
     }
 };
-globalThis.WorldInfoDrawer ??= {};
-globalThis.WorldInfoDrawer.jumpToEntry = jumpToEntry;
 
 const getOrderHelperEntries = (book = orderHelperState.book, includeDom = false)=>{
     const source = includeDom && dom.order.entries && dom.order.tbody
@@ -2328,4 +2281,3 @@ const checkDiscord = async()=>{
     setTimeout(()=>checkDiscord(), 1000);
 };
 checkDiscord();
-})();
