@@ -1,0 +1,17 @@
+name: JS Parse Check
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  js-parse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse JavaScript files
+        run: |
+          find . -type f -name "*.js" -print0 | xargs -0 -r -n 1 node --check
