@@ -7,6 +7,7 @@ import { renderTemplateAsync } from '../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../utils.js';
 import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_info, world_names } from '../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
+import { entryState, renderEntry, setWorldEntryContext } from './src/worldEntry.js';
 import { appendSortOptions, createDeferred, getSortLabel, safeToSorted } from './src/utils.js';
 
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
@@ -113,15 +114,6 @@ let currentEditor;
 const activationBlock = document.querySelector('#wiActivationSettings');
 const activationBlockParent = activationBlock?.parentElement;
 
-const entryState = function(entry) {
-    if (entry.constant === true) {
-        return 'constant';
-    } else if (entry.vectorized === true) {
-        return 'vectorized';
-    } else {
-        return 'normal';
-    }
-};
 const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
     sortLogic ??= Settings.instance.sortLogic;
     sortDirection ??= Settings.instance.sortDirection;
@@ -1198,6 +1190,48 @@ const selectRemove = (entry)=>{
     icon.classList.add('fa-square');
     icon.classList.remove('fa-square-check');
 };
+setWorldEntryContext({
+    buildSavePayload,
+    cache,
+    dom,
+    getWorldEntry,
+    renderTemplateAsync,
+    saveWorldInfo,
+    selectAdd,
+    selectEnd,
+    selectRemove,
+    uuidv4,
+    get currentEditor() {
+        return currentEditor;
+    },
+    set currentEditor(value) {
+        currentEditor = value;
+    },
+    get selectFrom() {
+        return selectFrom;
+    },
+    set selectFrom(value) {
+        selectFrom = value;
+    },
+    get selectLast() {
+        return selectLast;
+    },
+    set selectLast(value) {
+        selectLast = value;
+    },
+    get selectList() {
+        return selectList;
+    },
+    set selectList(value) {
+        selectList = value;
+    },
+    get selectToast() {
+        return selectToast;
+    },
+    set selectToast(value) {
+        selectToast = value;
+    },
+});
 const renderBook = async(name, before = null, bookData = null)=>{
     const data = bookData ?? await loadWorldInfo(name);
     const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:getSortFromMetadata(data.metadata) };
@@ -1612,213 +1646,6 @@ const renderBook = async(name, before = null, bookData = null)=>{
         else dom.books.append(book);
     }
     return book;
-};
-const renderEntry = async(e, name, before = null)=>{
-    const world = cache[name];
-    world.dom.entry[e.uid] = {};
-    const entry = document.createElement('div'); {
-        world.dom.entry[e.uid].root = entry;
-        entry.classList.add('stwid--entry');
-        entry.dataset.uid = e.uid;
-        entry.addEventListener('selectstart', (evt)=>evt.preventDefault());
-        entry.addEventListener('dragstart', (evt)=>{
-            if (selectFrom === null || !selectList.includes(e)) {
-                evt.preventDefault();
-                return;
-            }
-            dom.books.classList.add('stwid--isDragging');
-            evt.dataTransfer.setData('text/plain', entry.textContent);
-        });
-        const sel = document.createElement('div'); {
-            sel.classList.add('stwid--selector');
-            sel.title = 'Click to select entry';
-            sel.addEventListener('click', (evt)=>{
-                evt.preventDefault();
-                // can only select from one book at a time
-                if (selectFrom !== null && selectFrom != name) return;
-                evt.stopPropagation();
-                if (selectLast && evt.shiftKey) {
-                    // range-select from last clicked entry
-                    const start = [...world.dom.entryList.children].indexOf(selectLast);
-                    const end = [...world.dom.entryList.children].indexOf(entry);
-                    for (let i = Math.min(start, end); i <= end; i++) {
-                        const el = world.dom.entryList.children[i];
-                        const data = world.entries[el.dataset.uid];
-                        if (!selectList.includes(data)) {
-                            selectAdd(el);
-                            selectList.push(data);
-                        }
-                    }
-                    selectLast = entry;
-                } else {
-                    if (selectFrom === null) {
-                        selectFrom = name;
-                        selectList = [];
-                        const help = document.createElement('ul'); {
-                            help.classList.add('stwid--helpToast');
-                            const lines = [
-                                'Hold [SHIFT] while clicking to select a range of entries',
-                                'Drag the selected entries onto another book to move them to that book',
-                                'Hold [CTRL] while dragging entries to copy them to the targeted book',
-                                'Hold [CTRL] while dragging entries onto the same book to duplicate them',
-                                'Press [DEL] to delete the selected entries',
-                            ];
-                            for (const line of lines) {
-                                const  li = document.createElement('li'); {
-                                    li.textContent = line;
-                                    help.append(li);
-                                }
-                            }
-                        }
-                        selectToast = toastr.info($(help), 'WorldInfo Drawer', {
-                            timeOut: 0,
-                            extendedTimeOut: 0,
-                            escapeHtml: false,
-                        });
-                    }
-                    // regular single select
-                    if (selectList.includes(e)) {
-                        selectRemove(entry);
-                        selectList.splice(selectList.indexOf(e), 1);
-                        if (selectLast == entry) selectLast = null;
-                        if (selectList.length == 0) {
-                            selectEnd();
-                        }
-                    } else {
-                        selectAdd(entry);
-                        selectList.push(e);
-                        selectLast = entry;
-                    }
-                }
-            });
-            const i = document.createElement('div'); {
-                i.classList.add('stwid--icon');
-                i.classList.add('fa-solid', 'fa-square');
-                sel.append(i);
-            }
-            entry.append(sel);
-        }
-        const body = document.createElement('div'); {
-            body.classList.add('stwid--body');
-            const comment = document.createElement('div'); {
-                world.dom.entry[e.uid].comment = comment;
-                comment.classList.add('stwid--comment');
-                comment.textContent = e.comment;
-                body.append(comment);
-            }
-            const key = document.createElement('div'); {
-                world.dom.entry[e.uid].key = key;
-                key.classList.add('stwid--key');
-                key.textContent = e.key.join(', ');
-                body.append(key);
-            }
-            entry.append(body);
-        }
-        const status = document.createElement('div'); {
-            status.classList.add('stwid--status');
-            status.addEventListener('click', (evt)=>{
-                if (currentEditor?.name != name || currentEditor?.uid != e.uid) evt.stopPropagation();
-            });
-            const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
-                world.dom.entry[e.uid].isEnabled = isEnabled;
-                isEnabled.classList.add('stwid--enabled');
-                if (e.disable) {
-                    isEnabled.classList.toggle('fa-toggle-off');
-                    isEnabled.classList.toggle('fa-toggle-on');
-                }
-                isEnabled.addEventListener('click', async()=>{
-                    const dis = isEnabled.classList.toggle('fa-toggle-off');
-                    isEnabled.classList.toggle('fa-toggle-on');
-                    cache[name].entries[e.uid].disable = dis;
-                    await saveWorldInfo(name, buildSavePayload(name), true);
-                });
-                status.append(isEnabled);
-            }
-            const strat = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryStateSelector"]').cloneNode(true)); {
-                world.dom.entry[e.uid].strategy = strat;
-                strat.classList.add('stwid--strategy');
-                strat.value = entryState(e);
-                strat.addEventListener('change', async()=>{
-                    const value = strat.value;
-                    switch (value) {
-                        case 'constant': {
-                            cache[name].entries[e.uid].constant = true;
-                            cache[name].entries[e.uid].vectorized = false;
-                            break;
-                        }
-                        case 'normal': {
-                            cache[name].entries[e.uid].constant = false;
-                            cache[name].entries[e.uid].vectorized = false;
-                            break;
-                        }
-                        case 'vectorized': {
-                            cache[name].entries[e.uid].constant = false;
-                            cache[name].entries[e.uid].vectorized = true;
-                            break;
-                        }
-                    }
-                    await saveWorldInfo(name, buildSavePayload(name), true);
-                });
-                status.append(strat);
-            }
-            entry.append(status);
-        }
-        const actions = document.createElement('div'); {
-            actions.classList.add('stwid--actions');
-            entry.append(actions);
-        }
-        /**@type {string} */
-        let clickToken;
-        entry.addEventListener('click', async(evt)=>{
-            const token = uuidv4();
-            clickToken = token;
-            if (selectFrom) selectEnd();
-            for (const cb of Object.values(cache)) {
-                for (const ce of Object.values(cb.dom.entry)) {
-                    ce.root.classList.remove('stwid--active');
-                }
-            }
-            if (dom.activationToggle.classList.contains('stwid--active')) {
-                dom.activationToggle.click();
-            }
-            if (dom.order.toggle.classList.contains('stwid--active')) {
-                dom.order.toggle.click();
-            }
-            entry.classList.add('stwid--active');
-            dom.editor.innerHTML = '';
-            const unfocus = document.createElement('div'); {
-                unfocus.classList.add('stwid--unfocusToggle');
-                unfocus.classList.add('menu_button');
-                unfocus.classList.add('fa-solid', 'fa-fw', 'fa-compress');
-                unfocus.title = 'Unfocus';
-                unfocus.addEventListener('click', ()=>{
-                    dom.editor.classList.toggle('stwid--focus');
-                });
-                dom.editor.append(unfocus);
-            }
-            dom.editor.append(document.createRange().createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders')).querySelector('#WIEntryHeaderTitlesPC'));
-            const editDom = (await getWorldEntry(name, { entries:cache[name].entries }, cache[name].entries[e.uid]))[0];
-            $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
-            if (clickToken != token) return;
-            const focusContainer = editDom.querySelector('label[for="content "] > small > span > span'); {
-                const btn = document.createElement('div'); {
-                    btn.classList.add('stwid--focusToggle');
-                    btn.classList.add('menu_button');
-                    btn.classList.add('fa-solid', 'fa-fw', 'fa-expand');
-                    btn.title = 'Focus';
-                    btn.addEventListener('click', ()=>{
-                        dom.editor.classList.toggle('stwid--focus');
-                    });
-                    focusContainer.append(btn);
-                }
-            }
-            dom.editor.append(editDom);
-            currentEditor = { name, uid:e.uid };
-        });
-        if (before) before.insertAdjacentElement('beforebegin', entry);
-        else world.dom.entryList.append(entry);
-        return entry;
-    }
 };
 const loadList = async()=>{
     dom.books.innerHTML = '';
