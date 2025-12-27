@@ -6,14 +6,26 @@ on:
       - dev
 
 jobs:
-  parse:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Node.js (LTS)
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-      - name: Parse JavaScript files
-        run: node scripts/parse-js.js
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run lint
+        run: npm run lint
