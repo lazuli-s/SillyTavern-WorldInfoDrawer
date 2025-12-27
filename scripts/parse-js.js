@@ -1,7 +1,7 @@
 const fs = require('fs');
 const vm = require('vm');
 
-const files = ['src/index.js', 'src/Settings.js'];
+const files = ['index.js', 'src/Settings.js'];
 const errors = [];
 
 for (const file of files) {
