@@ -1,0 +1,23 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-undef": "error",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "no-unreachable": "error",
+    "eqeqeq": "error",
+    "no-redeclare": "error",
+    "no-shadow": "error"
+  },
+  "overrides": [
+    {
+      "files": ["scripts/**/*.js"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

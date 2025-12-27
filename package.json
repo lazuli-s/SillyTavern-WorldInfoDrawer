@@ -1,0 +1,11 @@
+{
+  "name": "sillytavern-worldinfodrawer",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "lint": "eslint . --ext .js"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  }
+}
