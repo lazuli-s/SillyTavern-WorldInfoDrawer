@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const { spawnSync } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 const ignoreDirs = new Set(['.git', 'node_modules', 'vendor']);
@@ -35,10 +36,38 @@ function checkFile(filePath) {
     new vm.Script(code, { filename: relativePath });
     return true;
   } catch (error) {
-    console.error(`Syntax error in ${relativePath}`);
-    console.error(error.message);
-    return false;
+    return checkAsModule(relativePath, code, error);
   }
+}
+
+function checkAsModule(relativePath, code, scriptError) {
+  if (typeof vm.SourceTextModule === 'function') {
+    try {
+      new vm.SourceTextModule(code, { identifier: relativePath });
+      return true;
+    } catch (moduleError) {
+      console.error(`Syntax error in ${relativePath}`);
+      console.error(moduleError.message);
+      return false;
+    }
+  }
+
+  const result = spawnSync(
+    process.execPath,
+    ['--input-type=module', '--check'],
+    { encoding: 'utf8', input: code }
+  );
+  if (result.status === 0) {
+    return true;
+  }
+
+  console.error(`Syntax error in ${relativePath}`);
+  if (result.stderr) {
+    console.error(result.stderr.trim());
+  } else {
+    console.error(scriptError.message);
+  }
+  return false;
 }
 
 const jsFiles = walk(repoRoot);
