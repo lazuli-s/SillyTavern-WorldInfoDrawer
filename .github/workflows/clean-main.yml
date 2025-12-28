@@ -1,0 +1,74 @@
+name: Clean main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  clean-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove disallowed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          allowed_files=(index.js style.css style.less manifest.json README.md LICENSE .gitignore)
+          allowed_dirs=(src .github)
+
+          in_allowed_files() {
+            local item="$1"
+            for allowed in "${allowed_files[@]}"; do
+              if [[ "$item" == "$allowed" ]]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          in_allowed_dirs() {
+            local item="$1"
+            for allowed in "${allowed_dirs[@]}"; do
+              if [[ "$item" == "$allowed" ]]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          shopt -s dotglob
+          for item in *; do
+            if [[ "$item" == ".git" ]]; then
+              continue
+            fi
+
+            if [[ -d "$item" ]]; then
+              if ! in_allowed_dirs "$item"; then
+                rm -rf -- "$item"
+              fi
+              continue
+            fi
+
+            if [[ -f "$item" ]]; then
+              if ! in_allowed_files "$item"; then
+                rm -f -- "$item"
+              fi
+            fi
+          done
+
+      - name: Commit cleanup if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: strip main to extension files"
+            git push
+          fi
