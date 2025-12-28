@@ -108,6 +108,29 @@ const isOutletPosition = (position) => {
     if (outletValue === undefined) return false;
     return String(position) === String(outletValue);
 };
+const isWorldActive = (name)=>{
+    const worldData = world_info?.[name];
+    if (worldData && typeof worldData === 'object') {
+        const flags = ['active', 'enabled', 'is_active'];
+        for (const flag of flags) {
+            if (flag in worldData) {
+                return Boolean(worldData[flag]);
+            }
+        }
+    }
+    const directMatch = selected_world_info.includes(name);
+    if (directMatch) return true;
+    if (!name.includes(',')) return false;
+    const segments = name.split(',').map((segment)=>segment.trim()).filter(Boolean);
+    if (segments.length === 0) return false;
+    let lastIndex = -1;
+    for (const segment of segments) {
+        const nextIndex = selected_world_info.findIndex((item, index)=>index > lastIndex && item === segment);
+        if (nextIndex === -1) return false;
+        lastIndex = nextIndex;
+    }
+    return true;
+};
 /**@type {{name:string, uid:string}} */
 let currentEditor;
 
@@ -322,7 +345,7 @@ const sortEntriesIfNeeded = (name)=>{
 const updateSettingsChange = ()=>{
     console.log('[STWID]', '[UPDATE-SETTINGS]');
     for (const [name, world] of Object.entries(cache)) {
-        const active = selected_world_info.includes(name);
+        const active = isWorldActive(name);
         if (world.dom.active.checked != active) {
             world.dom.active.checked = active;
         }
@@ -503,7 +526,7 @@ const getOrderHelperEntries = (book = orderHelperState.book, includeDom = false)
             })))
             .flat()
         : Object.entries(cache)
-            .filter(([name])=>selected_world_info.includes(name))
+            .filter(([name])=>isWorldActive(name))
             .map(([name,data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
             .flat();
     return sortEntries(source, orderHelperState.sort, orderHelperState.direction)
@@ -1311,10 +1334,11 @@ const renderBook = async(name, before = null, bookData = null)=>{
                     world.dom.active = active;
                     active.title = 'Globally active';
                     active.type = 'checkbox';
-                    active.checked = selected_world_info.includes(name);
+                    active.checked = isWorldActive(name);
                     active.addEventListener('click', async()=>{
                         active.disabled = true;
                         onWorldInfoChange({ silent:'true', state:(active.checked ? 'on' : 'off') }, name);
+                        active.checked = isWorldActive(name);
                         active.disabled = false;
                     });
                     actions.append(active);
@@ -1958,7 +1982,7 @@ const addDrawer = ()=>{
                             inp.addEventListener('click', ()=>{
                                 for (const b of Object.keys(cache)) {
                                     if (inp.checked) {
-                                        if (selected_world_info.includes(b)) {
+                                        if (isWorldActive(b)) {
                                             cache[b].dom.root.classList.remove('stwid--filter-active');
                                         } else {
                                             cache[b].dom.root.classList.add('stwid--filter-active');
