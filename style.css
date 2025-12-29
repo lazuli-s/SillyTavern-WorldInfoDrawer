@@ -337,7 +337,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 40%);
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
   font-size: 0.9em;
   padding: 0.5em;
 }
