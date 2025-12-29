@@ -280,6 +280,12 @@ body.stwid-- #WorldInfo .stwid--editor .world_entry_form,
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   height: 100%;
 }
+body.stwid-- #WorldInfo .stwid--editor .stwid--entryWrap {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   display: flex;
   flex-direction: column;
