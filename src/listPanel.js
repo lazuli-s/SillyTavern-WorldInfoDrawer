@@ -1,3 +1,5 @@
+import { cloneMetadata } from './sortHelpers.js';
+
 let state = {};
 
 let searchInput;
@@ -17,7 +19,6 @@ let selectList = null;
 /** toastr reference showing selection help @type {JQuery<HTMLElement>} */
 let selectToast = null;
 
-const cloneMetadata = (metadata)=>structuredClone(metadata ?? {});
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
 };
