@@ -541,10 +541,10 @@ export const initOrderHelper = ({
                     const thead = document.createElement('thead'); {
                         const tr = document.createElement('tr'); {
                             const columns = [
-                                { label:'', key:null },
-                                { label:'', key:null },
-                                { label:'', key:null },
-                                { label:'Entry', key:null },
+                                { label:'', key:'select' },
+                                { label:'', key:'drag' },
+                                { label:'', key:'enabled' },
+                                { label:'Entry', key:'entry' },
                                 { label:'Strategy', key:'strategy' },
                                 { label:'Position', key:'position' },
                                 { label:'Depth', key:'depth' },
@@ -579,6 +579,7 @@ export const initOrderHelper = ({
                                 }
                                 dom.order.entries[e.book][e.data.uid] = tr;
                                 const select = document.createElement('td'); {
+                                    select.setAttribute('data-col', 'select');
                                     const btn = document.createElement('div'); {
                                         btn.classList.add('stwid--orderSelect');
                                         btn.classList.add('fa-solid', 'fa-fw');
@@ -596,6 +597,7 @@ export const initOrderHelper = ({
                                     tr.append(select);
                                 }
                                 const handle = document.createElement('td'); {
+                                    handle.setAttribute('data-col', 'drag');
                                     const i = document.createElement('div'); {
                                         i.classList.add('stwid--sortableHandle');
                                         i.textContent = '☰';
@@ -604,6 +606,7 @@ export const initOrderHelper = ({
                                     tr.append(handle);
                                 }
                                 const active = document.createElement('td'); {
+                                    active.setAttribute('data-col', 'enabled');
                                     const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
                                         isEnabled.classList.add('stwid--enabled');
                                         if (e.data.disable) {
@@ -623,6 +626,7 @@ export const initOrderHelper = ({
                                     tr.append(active);
                                 }
                                 const entry = document.createElement('td'); {
+                                    entry.setAttribute('data-col', 'entry');
                                     const wrap = document.createElement('div'); {
                                         wrap.classList.add('stwid--colwrap');
                                         wrap.classList.add('stwid--entry');

@@ -463,14 +463,14 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 15%);
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
-  padding: 0.5em;
+  padding: 0.7em;
   min-width: 10em;
   display: none;
   flex-direction: column;
-  gap: 0.35em;
+  gap: 0.6em;
   z-index: 3;
 }
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenu.stwid--active {
@@ -479,8 +479,8 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnOption {
   display: flex;
   align-items: center;
-  gap: 0.4em;
-  font-size: 0.9em;
+  gap: 0.3em;
+  font-size: 1em;
   cursor: pointer;
 }
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnOption input[type="checkbox"] {
@@ -610,18 +610,52 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   padding: 0 0.5em;
   width: 0;
 }
-.stwid--orderTable tr th:nth-child(5),
-.stwid--orderTable tr td:nth-child(5),
-.stwid--orderTable tr th:nth-child(6),
-.stwid--orderTable tr td:nth-child(6),
-.stwid--orderTable tr th:nth-child(7),
-.stwid--orderTable tr td:nth-child(7),
-.stwid--orderTable tr th:nth-child(8),
-.stwid--orderTable tr td:nth-child(8),
-.stwid--orderTable tr th:nth-child(9),
-.stwid--orderTable tr td:nth-child(9),
-.stwid--orderTable tr th:nth-child(10),
-.stwid--orderTable tr td:nth-child(10) {
+.stwid--orderHelper .stwid--orderTable tr th[data-col="select"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="select"] {
+  min-width: 1em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="drag"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="drag"] {
+  min-width: 1em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="enabled"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="enabled"] {
+  min-width: 1em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="entry"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="entry"] {
+  min-width: 10em;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="strategy"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="strategy"] {
+  min-width: 5em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="position"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="position"] {
+  min-width: 7em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="depth"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="depth"] {
+  min-width: 5em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="outlet"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="outlet"] {
+  min-width: 8em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="order"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="order"] {
+  min-width: 5em;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="trigger"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="trigger"] {
+  min-width: 5em;
   text-align: center;
 }
 .stwid--orderTable tr td {
@@ -663,11 +697,15 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
   color: var(--SmartThemeEmColor);
-  font-size: 0.6em;
+  font-size: 0.8em;
   line-height: 1;
 }
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--commentLink {
   color: inherit;
+}
+.stwid--orderTable tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
+  font-size: 1.1em;
+  font-weight: 500;
 }
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
   color: var(--SmartThemeEmColor);
@@ -703,3 +741,4 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   padding-left: 0.5em;
   font-size: small;
 }
+
