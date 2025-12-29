@@ -337,14 +337,15 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 40%);
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
   font-size: 0.9em;
   padding: 0.5em;
 }
 .stwid--blocker .stwid--menu .stwid--item {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
-  opacity: 0.5;
+  opacity: 1;
+  color: var(--SmartThemeBodyColor);
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
   transition: 200ms;
