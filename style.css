@@ -612,7 +612,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderTable tr th,
 .stwid--orderTable tr td {
   text-align: left;
-  padding: 0 0.5em;
+  padding: 0 0.7em;
   width: 0;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="select"],
