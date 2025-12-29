@@ -322,7 +322,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
     z-index: 30000;
 }
 .stwid--blocker .stwid--menu {
-    --stwid-menu-item-height: 2.35em;
+    --stwid-menu-item-height: 2.05em;
 
   position: fixed;
   position-anchor: --stwid--ctxAnchor;
@@ -337,6 +337,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   display: flex;
   flex-direction: column;
   background-color: rgb(32 33 36 / 90%);
+  font-size: 0.9em;
 }
 .stwid--blocker .stwid--menu .stwid--item {
   min-height: var(--stwid-menu-item-height);
@@ -347,10 +348,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   transition: 200ms;
   display: flex;
   flex-direction: row;
-  gap: 0.5em;
+  gap: 0.35em;
   align-items: center;
   box-sizing: border-box;
-  padding: 5px;
+  padding: 3px;
 }
 .stwid--blocker .stwid--menu .stwid--item:hover {
   opacity: 1;
@@ -358,7 +359,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--blocker .stwid--menu .stwid--item .stwid--icon {
   flex: 0 0 auto;
-  width: 1.25em;
+  width: 1.05em;
   text-align: center;
 }
 .stwid--blocker .stwid--menu .stwid--item .stwid--label {
@@ -369,7 +370,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.35em;
 }
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
     opacity: 1;
