@@ -78,6 +78,7 @@ const dom = {
 
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
+const encodeBookName = (name)=>encodeURIComponent(name);
 const executeSlashCommand = async(command)=>{
     try {
         const parser = new SlashCommandParser();
@@ -1314,7 +1315,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                     active.checked = selected_world_info.includes(name);
                     active.addEventListener('click', async()=>{
                         active.disabled = true;
-                        onWorldInfoChange({ silent:'true', state:(active.checked ? 'on' : 'off') }, name);
+                        onWorldInfoChange({ silent:'true', state:(active.checked ? 'on' : 'off') }, encodeBookName(name));
                         active.disabled = false;
                     });
                     actions.append(active);
