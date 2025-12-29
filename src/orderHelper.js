@@ -196,6 +196,44 @@ export const initOrderHelper = ({
                     });
                     actions.append(filterToggle);
                 }
+                const rightGroup = document.createElement('div'); {
+                    rightGroup.classList.add('stwid--actionsRight');
+                    const divider = document.createElement('div');
+                    divider.classList.add('stwid--actionsDivider');
+                    rightGroup.append(divider);
+                }
+                const apply = document.createElement('div'); {
+                    apply.classList.add('menu_button');
+                    apply.classList.add('fa-solid', 'fa-fw');
+                    if ((localStorage.getItem('stwid--order-direction') ?? 'down') == 'up') {
+                        apply.classList.add('fa-arrow-up-9-1');
+                    } else {
+                        apply.classList.add('fa-arrow-down-1-9');
+                    }
+                    apply.title = 'Apply current sorting as Order';
+                    apply.addEventListener('click', async()=>{
+                        const start = parseInt(dom.order.start.value);
+                        const step = parseInt(dom.order.step.value);
+                        const up = dom.order.direction.up.checked;
+                        let order = start;
+                        let rows = [...dom.order.tbody.children];
+                        const books = [];
+                        if (up) rows.reverse();
+                        for (const tr of rows) {
+                            if (tr.classList.contains('stwid--isFiltered')) continue;
+                            if (!isOrderHelperRowSelected(tr)) continue;
+                            const bookName = tr.getAttribute('data-book');
+                            const uid = tr.getAttribute('data-uid');
+                            if (!books.includes(bookName)) books.push(bookName);
+                            cache[bookName].entries[uid].order = order;
+                            /**@type {HTMLInputElement}*/(tr.querySelector('[name="order"]')).value = order.toString();
+                            order += step;
+                        }
+                        for (const bookName of books) {
+                            await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+                        }
+                    });
+                }
                 const startLbl = document.createElement('label'); {
                     startLbl.classList.add('stwid--inputWrap');
                     startLbl.title = 'Starting Order (topmost entry in list)';
@@ -213,7 +251,7 @@ export const initOrderHelper = ({
                         });
                         startLbl.append(start);
                     }
-                    actions.append(startLbl);
+                    rightGroup.append(startLbl);
                 }
                 const stepLbl = document.createElement('label'); {
                     stepLbl.classList.add('stwid--inputWrap');
@@ -231,7 +269,7 @@ export const initOrderHelper = ({
                         });
                         stepLbl.append(step);
                     }
-                    actions.append(stepLbl);
+                    rightGroup.append(stepLbl);
                 }
                 const dir = document.createElement('div'); {
                     dir.classList.add('stwid--inputWrap');
@@ -278,41 +316,10 @@ export const initOrderHelper = ({
                         }
                         dir.append(wrap);
                     }
-                    actions.append(dir);
+                    rightGroup.append(dir);
                 }
-                const apply = document.createElement('div'); {
-                    apply.classList.add('menu_button');
-                    apply.classList.add('fa-solid', 'fa-fw');
-                    if ((localStorage.getItem('stwid--order-direction') ?? 'down') == 'up') {
-                        apply.classList.add('fa-arrow-up-9-1');
-                    } else {
-                        apply.classList.add('fa-arrow-down-1-9');
-                    }
-                    apply.title = 'Apply current sorting as Order';
-                    apply.addEventListener('click', async()=>{
-                        const start = parseInt(dom.order.start.value);
-                        const step = parseInt(dom.order.step.value);
-                        const up = dom.order.direction.up.checked;
-                        let order = start;
-                        let rows = [...dom.order.tbody.children];
-                        const books = [];
-                        if (up) rows.reverse();
-                        for (const tr of rows) {
-                            if (tr.classList.contains('stwid--isFiltered')) continue;
-                            if (!isOrderHelperRowSelected(tr)) continue;
-                            const bookName = tr.getAttribute('data-book');
-                            const uid = tr.getAttribute('data-uid');
-                            if (!books.includes(bookName)) books.push(bookName);
-                            cache[bookName].entries[uid].order = order;
-                            /**@type {HTMLInputElement}*/(tr.querySelector('[name="order"]')).value = order.toString();
-                            order += step;
-                        }
-                        for (const bookName of books) {
-                            await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-                        }
-                    });
-                    actions.append(apply);
-                }
+                rightGroup.append(apply);
+                actions.append(rightGroup);
                 body.append(actions);
             }
             const filter = document.createElement('div'); {
