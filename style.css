@@ -337,7 +337,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: rgb(32 33 36 / 90%);
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 40%);
   font-size: 0.9em;
   padding: 0.5em;
 }
@@ -357,7 +357,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--blocker .stwid--menu .stwid--item:hover {
   opacity: 1;
-  background-color: rgba(255, 255, 255, 0.0625);
+  background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 .stwid--blocker .stwid--menu .stwid--item .stwid--icon {
   flex: 0 0 auto;
