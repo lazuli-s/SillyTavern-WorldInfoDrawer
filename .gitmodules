@@ -1,3 +1,4 @@
 [submodule "vendor/sillytavern"]
-	path = vendor/sillytavern
-	url = https://github.com/SillyTavern/SillyTavern.git
+    path = vendor/sillytavern
+    url = https://github.com/SillyTavern/SillyTavern.git
+    branch = release
