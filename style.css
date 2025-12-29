@@ -10,6 +10,27 @@ body.stwid-- #WorldInfo {
   flex-direction: column;
   overflow: hidden;
 }
+body.stwid-- #WorldInfo .flex-container.wide100p.flexGap10 {
+  --stwid-info-label-height: 1.5em;
+  --stwid-info-control-height: 2.35em;
+  --stwid-info-label-gap: 0.35em;
+}
+body.stwid-- #WorldInfo .flex-container.wide100p.flexGap10 > .flex-container.flexFlowColumn {
+  gap: var(--stwid-info-label-gap);
+}
+body.stwid-- #WorldInfo .flex-container.wide100p.flexGap10 > .flex-container.flexFlowColumn > .flex-container.justifySpaceBetween {
+  min-height: var(--stwid-info-label-height);
+  align-items: center;
+}
+body.stwid-- #WorldInfo .flex-container.wide100p.flexGap10 .range-block-range .text_pole {
+  height: var(--stwid-info-control-height);
+  min-height: var(--stwid-info-control-height);
+  box-sizing: border-box;
+}
+body.stwid-- #WorldInfo .flex-container.wide100p.flexGap10 .notes-link .note-link-span,
+body.stwid-- #WorldInfo .flex-container.wide100p.flexGap10 .fa-circle-info {
+  font-size: 0.85em;
+}
 body.stwid-- #WorldInfo.openDrawer {
   display: flex !important;
 }

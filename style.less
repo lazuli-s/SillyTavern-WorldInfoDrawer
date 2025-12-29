@@ -13,6 +13,32 @@ body.stwid-- #WorldInfo {
 	flex-direction: column;
 	overflow: hidden;
 
+	.flex-container.wide100p.flexGap10 {
+		--stwid-info-label-height: 1.5em;
+		--stwid-info-control-height: 2.35em;
+		--stwid-info-label-gap: 0.35em;
+
+		> .flex-container.flexFlowColumn {
+			gap: var(--stwid-info-label-gap);
+
+			> .flex-container.justifySpaceBetween {
+				min-height: var(--stwid-info-label-height);
+				align-items: center;
+			}
+		}
+
+		.range-block-range .text_pole {
+			height: var(--stwid-info-control-height);
+			min-height: var(--stwid-info-control-height);
+			box-sizing: border-box;
+		}
+
+		.notes-link .note-link-span,
+		.fa-circle-info {
+			font-size: 0.85em;
+		}
+	}
+
 
 	#wi-holder {
 		display: none;
