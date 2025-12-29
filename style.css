@@ -333,11 +333,13 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   z-index: 30000;
   overflow-x: clip;
   overflow-y: auto;
-  border-radius: 10px;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   background-color: rgb(32 33 36 / 90%);
   font-size: 0.9em;
+  padding: 0.5em;
 }
 .stwid--blocker .stwid--menu .stwid--item {
   min-height: var(--stwid-menu-item-height);
@@ -383,6 +385,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
     min-height: var(--stwid-menu-item-height);
     height: 100%;
     margin: 0;
+    font-size: 1em;
 }
 .stwid--orderHelper {
     display: flex;
