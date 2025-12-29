@@ -394,10 +394,28 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
-  gap: 1.5em;
-  justify-content: flex-start;
   align-items: center;
+  gap: 0.5em;
+  justify-content: space-between;
   background-color: var(--SmartThemeBlurTintColor);
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsGroup.stwid--actionsGroup--left {
+  justify-content: flex-start;
+  flex: 1 1 0;
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsGroup.stwid--actionsGroup--center {
+  justify-content: center;
+  flex: 1 1 0;
+}
+.stwid--orderHelper .stwid--actions .stwid--actionsGroup.stwid--actionsGroup--right {
+  justify-content: flex-end;
+  flex: 1 1 0;
+  gap: 0.75em;
 }
 .stwid--orderHelper .stwid--actions .stwid--actionsDivider {
   align-self: stretch;

@@ -129,6 +129,18 @@ export const initOrderHelper = ({
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
             const actions = document.createElement('div'); {
                 actions.classList.add('stwid--actions');
+                const actionsLeft = document.createElement('div'); {
+                    actionsLeft.classList.add('stwid--actionsGroup', 'stwid--actionsGroup--left');
+                    actions.append(actionsLeft);
+                }
+                const actionsCenter = document.createElement('div'); {
+                    actionsCenter.classList.add('stwid--actionsGroup', 'stwid--actionsGroup--center');
+                    actions.append(actionsCenter);
+                }
+                const actionsRight = document.createElement('div'); {
+                    actionsRight.classList.add('stwid--actionsGroup', 'stwid--actionsGroup--right');
+                    actions.append(actionsRight);
+                }
                 const selectAll = document.createElement('div'); {
                     dom.order.selectAll = selectAll;
                     selectAll.classList.add('menu_button');
@@ -140,7 +152,7 @@ export const initOrderHelper = ({
                         setAllOrderHelperRowSelected(shouldSelect);
                         updateOrderHelperSelectAllButton();
                     });
-                    actions.append(selectAll);
+                    actionsLeft.append(selectAll);
                 }
                 const keyToggle = document.createElement('div'); {
                     keyToggle.classList.add('menu_button');
@@ -158,14 +170,13 @@ export const initOrderHelper = ({
                         body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
                         applyKeyToggleStyle();
                     });
-                    actions.append(keyToggle);
+                    actionsLeft.append(keyToggle);
                 }
-                const addDivider = ()=>{
+                const addDivider = (target)=>{
                     const divider = document.createElement('div');
                     divider.classList.add('stwid--actionsDivider');
-                    actions.append(divider);
+                    target.append(divider);
                 };
-                addDivider();
                 const sortWrap = document.createElement('label'); {
                     sortWrap.classList.add('stwid--inputWrap');
                     sortWrap.append('Sort: ');
@@ -181,9 +192,8 @@ export const initOrderHelper = ({
                         });
                         sortWrap.append(sortSel);
                     }
-                    actions.append(sortWrap);
+                    actionsLeft.append(sortWrap);
                 }
-                addDivider();
                 const filterToggle = document.createElement('div'); {
                     filterToggle.classList.add('menu_button');
                     filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -194,8 +204,9 @@ export const initOrderHelper = ({
                             updateOrderHelperPreview(getOrderHelperEntries(orderHelperState.book, true));
                         }
                     });
-                    actions.append(filterToggle);
+                    actionsCenter.append(filterToggle);
                 }
+                addDivider(actionsRight);
                 const startLbl = document.createElement('label'); {
                     startLbl.classList.add('stwid--inputWrap');
                     startLbl.title = 'Starting Order (topmost entry in list)';
@@ -213,7 +224,7 @@ export const initOrderHelper = ({
                         });
                         startLbl.append(start);
                     }
-                    actions.append(startLbl);
+                    actionsRight.append(startLbl);
                 }
                 const stepLbl = document.createElement('label'); {
                     stepLbl.classList.add('stwid--inputWrap');
@@ -231,7 +242,7 @@ export const initOrderHelper = ({
                         });
                         stepLbl.append(step);
                     }
-                    actions.append(stepLbl);
+                    actionsRight.append(stepLbl);
                 }
                 const dir = document.createElement('div'); {
                     dir.classList.add('stwid--inputWrap');
@@ -278,7 +289,7 @@ export const initOrderHelper = ({
                         }
                         dir.append(wrap);
                     }
-                    actions.append(dir);
+                    actionsRight.append(dir);
                 }
                 const apply = document.createElement('div'); {
                     apply.classList.add('menu_button');
@@ -311,7 +322,7 @@ export const initOrderHelper = ({
                             await saveWorldInfo(bookName, buildSavePayload(bookName), true);
                         }
                     });
-                    actions.append(apply);
+                    actionsRight.append(apply);
                 }
                 body.append(actions);
             }
