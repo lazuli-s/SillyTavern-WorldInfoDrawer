@@ -1314,7 +1314,12 @@ const renderBook = async(name, before = null, bookData = null)=>{
                     active.checked = selected_world_info.includes(name);
                     active.addEventListener('click', async()=>{
                         active.disabled = true;
-                        onWorldInfoChange({ silent:'true', state:(active.checked ? 'on' : 'off') }, name);
+                        const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_info'));
+                        const option = select ? [...select.options].find((opt)=>opt.textContent === name) : null;
+                        if (option && select) {
+                            option.selected = active.checked;
+                            onWorldInfoChange('__notSlashCommand__');
+                        }
                         active.disabled = false;
                     });
                     actions.append(active);
