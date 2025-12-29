@@ -7,6 +7,7 @@ import { renderTemplateAsync } from '../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../utils.js';
 import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_info, world_names } from '../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
+import { initEditorPanel } from './src/editorPanel.js';
 import { initListPanel, refreshList } from './src/listPanel.js';
 import { entryState, renderEntry, setWorldEntryContext } from './src/worldEntry.js';
 import { appendSortOptions, createDeferred, getSortLabel, safeToSorted } from './src/utils.js';
@@ -209,6 +210,7 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
 const cache = {};
 let listPanelApi;
 let selectionState;
+let editorPanelApi;
 
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
@@ -276,8 +278,12 @@ const updateWIChange = async(name = null, data = null)=>{
             delete cache[name].dom.entry[e];
             delete cache[name].entries[e];
             if (currentEditor?.name == name && currentEditor?.uid == e) {
-                currentEditor = null;
-                dom.editor.innerHTML = '';
+                if (editorPanelApi) {
+                    editorPanelApi.clearEditor();
+                } else {
+                    currentEditor = null;
+                    dom.editor.innerHTML = '';
+                }
             }
         }
         // added entries
@@ -478,16 +484,7 @@ const focusWorldEntry = (book, uid)=>{
 
 const renderOrderHelper = (book = null)=>{
     orderHelperState.book = book;
-    dom.editor.innerHTML = '';
-    currentEditor = null;
-    if (dom.activationToggle.classList.contains('stwid--active')) {
-        dom.activationToggle.click();
-    }
-    for (const cb of Object.values(cache)) {
-        for (const ce of Object.values(cb.dom.entry)) {
-            ce.root.classList.remove('stwid--active');
-        }
-    }
+    editorPanelApi.resetEditorState();
     dom.order.entries = {};
     dom.order.filter.root = undefined;
     dom.order.filter.preview = undefined;
@@ -1129,37 +1126,16 @@ const addDrawer = ()=>{
                         controlsPrimary.append(refresh);
                     }
                     const settings = document.createElement('div'); {
-                        dom.activationToggle = settings;
-                        settings.classList.add('stwid--activation');
-                        settings.classList.add('menu_button');
-                        settings.classList.add('fa-solid', 'fa-fw', 'fa-cog');
-                        settings.title = 'Global Activation Settings';
-                        settings.addEventListener('click', ()=>{
-                            if (!activationBlock || !activationBlockParent) return;
-                            const is = settings.classList.toggle('stwid--active');
-                            currentEditor = null;
-                            if (is) {
-                                dom.editor.innerHTML = '';
-                                if (dom.order.toggle.classList.contains('stwid--active')) {
-                                    dom.order.toggle.click();
-                                }
-                                for (const cb of Object.values(cache)) {
-                                    for (const ce of Object.values(cb.dom.entry)) {
-                                        ce.root.classList.remove('stwid--active');
-                                    }
-                                }
-                                const h4 = document.createElement('h4'); {
-                                    h4.textContent = 'Global World Info/Lorebook activation settings';
-                                    dom.editor.append(h4);
-                                }
-                                dom.editor.append(activationBlock);
-                            } else {
-                                activationBlockParent.append(activationBlock);
-                                dom.editor.innerHTML = '';
-                            }
-                        });
-                        controlsPrimary.append(settings);
-                    }
+            dom.activationToggle = settings;
+            settings.classList.add('stwid--activation');
+            settings.classList.add('menu_button');
+            settings.classList.add('fa-solid', 'fa-fw', 'fa-cog');
+            settings.title = 'Global Activation Settings';
+            settings.addEventListener('click', ()=>{
+                editorPanelApi.toggleActivationSettings();
+            });
+            controlsPrimary.append(settings);
+        }
                     const order = document.createElement('div'); {
                         dom.order.toggle = order;
                         order.classList.add('menu_button');
@@ -1169,8 +1145,7 @@ const addDrawer = ()=>{
                             const isActive = order.classList.contains('stwid--active');
                             if (isActive) {
                                 order.classList.remove('stwid--active');
-                                dom.editor.innerHTML = '';
-                                currentEditor = null;
+                                editorPanelApi.clearEditor();
                                 return;
                             }
                             openOrderHelper();
@@ -1263,6 +1238,20 @@ const addDrawer = ()=>{
                     controls.append(controlsPrimary, controlsSecondary);
                     list.append(controls);
                 }
+                editorPanelApi = initEditorPanel({
+                    dom,
+                    activationBlock,
+                    activationBlockParent,
+                    renderTemplateAsync,
+                    getWorldEntry,
+                    cache,
+                    getCurrentEditor: () => currentEditor,
+                    setCurrentEditor: (value) => {
+                        currentEditor = value;
+                    },
+                    getSelectFrom: () => selectionState?.selectFrom,
+                    selectEnd: () => listPanelApi.selectEnd(),
+                });
                 listPanelApi = initListPanel({
                     Settings,
                     METADATA_NAMESPACE,
@@ -1289,8 +1278,7 @@ const addDrawer = ()=>{
                     openOrderHelper,
                     renderEntry,
                     resetEditor: ()=>{
-                        dom.editor.innerHTML = '';
-                        currentEditor = null;
+                        editorPanelApi.clearEditor();
                     },
                     safeToSorted,
                     saveWorldInfo,
@@ -1314,6 +1302,7 @@ const addDrawer = ()=>{
                     selectEnd: listPanelApi.selectEnd,
                     selectRemove: listPanelApi.selectRemove,
                     uuidv4,
+                    editorPanel: editorPanelApi,
                     get currentEditor() {
                         return currentEditor;
                     },

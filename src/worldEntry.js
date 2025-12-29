@@ -173,48 +173,12 @@ export const renderEntry = async(e, name, before = null)=>{
         entry.addEventListener('click', async(evt)=>{
             const token = context.uuidv4();
             clickToken = token;
-            if (context.selectFrom) context.selectEnd();
-            for (const cb of Object.values(context.cache)) {
-                for (const ce of Object.values(cb.dom.entry)) {
-                    ce.root.classList.remove('stwid--active');
-                }
-            }
-            if (context.dom.activationToggle.classList.contains('stwid--active')) {
-                context.dom.activationToggle.click();
-            }
-            if (context.dom.order.toggle.classList.contains('stwid--active')) {
-                context.dom.order.toggle.click();
-            }
-            entry.classList.add('stwid--active');
-            context.dom.editor.innerHTML = '';
-            const unfocus = document.createElement('div'); {
-                unfocus.classList.add('stwid--unfocusToggle');
-                unfocus.classList.add('menu_button');
-                unfocus.classList.add('fa-solid', 'fa-fw', 'fa-compress');
-                unfocus.title = 'Unfocus';
-                unfocus.addEventListener('click', ()=>{
-                    context.dom.editor.classList.toggle('stwid--focus');
-                });
-                context.dom.editor.append(unfocus);
-            }
-            context.dom.editor.append(document.createRange().createContextualFragment(await context.renderTemplateAsync('worldInfoKeywordHeaders')).querySelector('#WIEntryHeaderTitlesPC'));
-            const editDom = (await context.getWorldEntry(name, { entries:context.cache[name].entries }, context.cache[name].entries[e.uid]))[0];
-            $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
-            if (clickToken != token) return;
-            const focusContainer = editDom.querySelector('label[for="content "] > small > span > span'); {
-                const btn = document.createElement('div'); {
-                    btn.classList.add('stwid--focusToggle');
-                    btn.classList.add('menu_button');
-                    btn.classList.add('fa-solid', 'fa-fw', 'fa-expand');
-                    btn.title = 'Focus';
-                    btn.addEventListener('click', ()=>{
-                        context.dom.editor.classList.toggle('stwid--focus');
-                    });
-                    focusContainer.append(btn);
-                }
-            }
-            context.dom.editor.append(editDom);
-            context.currentEditor = { name, uid:e.uid };
+            await context.editorPanel.openEntryEditor({
+                entry: e,
+                entryDom: entry,
+                name,
+                isTokenCurrent: () => clickToken === token,
+            });
         });
         if (before) before.insertAdjacentElement('beforebegin', entry);
         else world.dom.entryList.append(entry);
