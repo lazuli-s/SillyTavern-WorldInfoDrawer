@@ -388,6 +388,13 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
     margin: 0;
     font-size: 1em;
 }
+.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort .text_pole,
+.stwid--blocker .stwid--orderHelper .text_pole {
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  padding: 0.35em 0.5em;
+}
 .stwid--orderHelper {
     display: flex;
     flex-direction: column;

@@ -218,7 +218,7 @@ export const initOrderHelper = ({
                             menuWrap.append(menuButton);
                         }
                         const menu = document.createElement('div'); {
-                            menu.classList.add('stwid--columnMenu');
+                            menu.classList.add('stwid--columnMenu', 'stwid--menu');
                             const closeMenu = ()=>{
                                 if (!menu.classList.contains('stwid--active')) return;
                                 menu.classList.remove('stwid--active');
