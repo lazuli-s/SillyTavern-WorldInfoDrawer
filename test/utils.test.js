@@ -19,6 +19,18 @@ describe("safeToSorted", () => {
     expect(sorted.map((x) => x.n)).toEqual([1, 2, 3]);
     expect(original.map((x) => x.n)).toEqual([2, 1, 3]); // original unchanged
   });
+
+  it("handles empty arrays", () => {
+    const arr = [];
+    const result = safeToSorted(arr, () => 0);
+    expect(result).toEqual([]);
+  });
+
+  it("handles arrays with one element", () => {
+    const arr = [42];
+    const result = safeToSorted(arr, () => 0);
+    expect(result).toEqual([42]);
+  });
 });
 
 describe("createDeferred", () => {
