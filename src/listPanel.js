@@ -194,7 +194,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
             evt.preventDefault();
             book.classList.add('stwid--isTarget');
         });
-        book.addEventListener('dragleave', (evt)=>{
+        book.addEventListener('dragleave', ()=>{
             if (selectFrom === null) return;
             book.classList.remove('stwid--isTarget');
         });
@@ -301,7 +301,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                 const rename = document.createElement('div'); {
                                     rename.classList.add('stwid--item');
                                     rename.classList.add('stwid--rename');
-                                    rename.addEventListener('click', async(evt)=>{
+                                    rename.addEventListener('click', async()=>{
                                         //TODO cheeky monkey
                                         const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
                                         sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
@@ -325,7 +325,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                     const bulk = document.createElement('div'); {
                                         bulk.classList.add('stwid--item');
                                         bulk.classList.add('stwid--bulkEdit');
-                                        bulk.addEventListener('click', async(evt)=>{
+                                        bulk.addEventListener('click', async()=>{
                                             //TODO cheeky monkey
                                             const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
                                             sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
@@ -350,7 +350,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                     const editor = document.createElement('div'); {
                                         editor.classList.add('stwid--item');
                                         editor.classList.add('stwid--externalEditor');
-                                        editor.addEventListener('click', async(evt)=>{
+                                        editor.addEventListener('click', async()=>{
                                             fetch('/api/plugins/wiee/editor', {
                                                 method: 'POST',
                                                 headers: state.getRequestHeaders(),
@@ -487,7 +487,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                 const exp = document.createElement('div'); {
                                     exp.classList.add('stwid--item');
                                     exp.classList.add('stwid--export');
-                                    exp.addEventListener('click', async(evt)=>{
+                                    exp.addEventListener('click', async()=>{
                                         state.download(JSON.stringify({ entries:state.cache[name].entries }), name, 'application/json');
                                     });
                                     const i = document.createElement('i'); {
@@ -505,7 +505,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                 const dup = document.createElement('div'); {
                                     dup.classList.add('stwid--item');
                                     dup.classList.add('stwid--duplicate');
-                                    dup.addEventListener('click', async(evt)=>{
+                                    dup.addEventListener('click', async()=>{
                                         //TODO cheeky monkey
                                         const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
                                         sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
@@ -528,7 +528,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                                 const del = document.createElement('div'); {
                                     del.classList.add('stwid--item');
                                     del.classList.add('stwid--delete');
-                                    del.addEventListener('click', async(evt)=>{
+                                    del.addEventListener('click', async()=>{
                                         //TODO cheeky monkey
                                         const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
                                         sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;

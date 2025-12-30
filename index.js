@@ -1,11 +1,10 @@
 import { event_types, eventSource, getRequestHeaders } from '../../../../script.js';
-import { AutoComplete } from '../../../autocomplete/AutoComplete.js';
 import { extensionNames } from '../../../extensions.js';
 import { Popup } from '../../../popup.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { renderTemplateAsync } from '../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../utils.js';
-import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_info, world_names } from '../../../world-info.js';
+import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
 import { initEditorPanel } from './src/editorPanel.js';
 import { initListPanel, refreshList } from './src/listPanel.js';
@@ -345,7 +344,6 @@ const addDrawer = ()=>{
         }
     });
     document.body.classList.add('stwid--');
-    const holder = document.querySelector('#wi-holder');
     const drawerContent = document.querySelector('#WorldInfo'); {
         const SPLITTER_STORAGE_KEY = 'stwid--list-width';
         const MIN_LIST_WIDTH = 150;
