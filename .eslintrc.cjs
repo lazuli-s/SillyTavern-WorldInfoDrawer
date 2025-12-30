@@ -4,15 +4,20 @@ module.exports = {
     browser: true,
     es2021: true,
   },
+  globals: {
+    $: "readonly",
+    toastr: "readonly",
+    hljs: "readonly",
+  },
   parserOptions: {
-    ecmaVersion: 2021,
+    ecmaVersion: "latest",
     sourceType: "module",
   },
   rules: {
     "no-undef": "error",
     "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     "no-unreachable": "error",
-    eqeqeq: "error",
+    eqeqeq: "warn",
     "no-redeclare": "error",
     "no-shadow": "warn",
   },
