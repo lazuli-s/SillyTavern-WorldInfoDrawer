@@ -1,4 +1,4 @@
-import { morphdom } from '../../../../lib.js';
+import { morphdom } from '../../lib.js';
 import { cloneMetadata } from './sortHelpers.js';
 
 let state = {};
