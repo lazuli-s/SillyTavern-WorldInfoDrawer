@@ -1,4 +1,4 @@
-import { SORT, SORT_DIRECTION } from './Settings.js';
+import { SORT, SORT_DIRECTION } from './constants.js';
 
 /**
  * Sort options available to dropdowns. Each tuple is

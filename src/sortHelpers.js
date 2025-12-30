@@ -1,4 +1,5 @@
-import { Settings, SORT, SORT_DIRECTION } from './Settings.js';
+import { Settings } from './Settings.js';
+import { SORT, SORT_DIRECTION } from './constants.js';
 import { safeToSorted } from './utils.js';
 
 const METADATA_NAMESPACE = 'stwid';
