@@ -1,3 +1,4 @@
+import { morphdom } from '../../../../lib.js';
 import { cloneMetadata } from './sortHelpers.js';
 
 let state = {};
@@ -167,7 +168,7 @@ const selectRemove = (entry)=>{
     icon.classList.remove('fa-square-check');
 };
 
-const renderBook = async(name, before = null, bookData = null)=>{
+const renderBook = async(name, before = null, bookData = null, target = state.dom.books)=>{
     const data = bookData ?? await state.loadWorldInfo(name);
     const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:state.getSortFromMetadata(data.metadata) };
     for (const [k,v] of Object.entries(data.entries)) {
@@ -583,16 +584,22 @@ const renderBook = async(name, before = null, bookData = null)=>{
             book.append(entryList);
         }
         if (before) before.insertAdjacentElement('beforebegin', book);
-        else state.dom.books.append(book);
+        else target.append(book);
     }
     return book;
 };
 
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
+    const nextBooks = state.dom.books.cloneNode(false);
     const books = await Promise.all(state.safeToSorted(state.world_names, (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).map(async(name)=>({ name, data:await state.loadWorldInfo(name) })));
     for (const book of books) {
-        await renderBook(book.name, null, book.data);
+        await renderBook(book.name, null, book.data, nextBooks);
+    }
+    if (typeof morphdom === 'function') {
+        morphdom(state.dom.books, nextBooks, { childrenOnly: true });
+    } else {
+        state.dom.books.replaceChildren(...nextBooks.children);
     }
 };
 
