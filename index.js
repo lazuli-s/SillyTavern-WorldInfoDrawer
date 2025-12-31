@@ -348,7 +348,6 @@ const addDrawer = ()=>{
         }
     });
     document.body.classList.add('stwid--');
-    const holder = document.querySelector('#wi-holder');
     const drawerContent = document.querySelector('#WorldInfo'); {
         const SPLITTER_STORAGE_KEY = 'stwid--list-width';
         const MIN_LIST_WIDTH = 150;
