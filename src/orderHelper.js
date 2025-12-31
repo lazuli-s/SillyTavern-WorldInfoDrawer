@@ -27,6 +27,7 @@ export const initOrderHelper = ({
         position: true,
         depth: true,
         outlet: true,
+        group: false,
         order: true,
         trigger: true,
         recursion: false,
@@ -303,6 +304,7 @@ export const initOrderHelper = ({
                                 { key:'position', label:'Position' },
                                 { key:'depth', label:'Depth' },
                                 { key:'outlet', label:'Outlet' },
+                                { key:'group', label:'Inclusion Group' },
                                 { key:'order', label:'Order' },
                                 { key:'trigger', label:'Trigger %' },
                                 { key:'recursion', label:'Recursion' },
@@ -621,6 +623,7 @@ export const initOrderHelper = ({
                                 { label:'Position', key:'position' },
                                 { label:'Depth', key:'depth' },
                                 { label:'Outlet', key:'outlet' },
+                                { label:'Inclusion Group', key:'group' },
                                 { label:'Order', key:'order' },
                                 { label:'Trigger %', key:'trigger' },
                                 { label:'Recursion', key:'recursion' },
@@ -855,6 +858,49 @@ export const initOrderHelper = ({
                                         outlet.append(wrap);
                                     }
                                     tr.append(outlet);
+                                }
+                                const group = document.createElement('td'); {
+                                    group.setAttribute('data-col', 'group');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--colwrap');
+                                        wrap.classList.add('stwid--outlet');
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const input = document.createElement('input'); {
+                                            input.classList.add('stwid--input');
+                                            input.classList.add('text_pole');
+                                            input.name = 'group';
+                                            input.type = 'text';
+                                            input.value = cache[e.book].entries[e.data.uid].group ?? '';
+                                            input.addEventListener('change', async()=>{
+                                                const value = input.value;
+                                                const entryData = cache[e.book].entries[e.data.uid];
+                                                entryData.group = value;
+                                                e.data.group = value;
+                                                await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                            });
+                                            wrap.append(input);
+                                        }
+                                        wrap.append(document.createElement('br'));
+                                        const row = document.createElement('label'); {
+                                            row.classList.add('stwid--recursionRow');
+                                            const input = document.createElement('input'); {
+                                                input.type = 'checkbox';
+                                                input.classList.add('checkbox');
+                                                input.checked = Boolean(e.data.groupOverride);
+                                                input.addEventListener('change', async()=>{
+                                                    const entryData = cache[e.book].entries[e.data.uid];
+                                                    entryData.groupOverride = input.checked;
+                                                    e.data.groupOverride = input.checked;
+                                                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                });
+                                                row.append(input);
+                                            }
+                                            row.append('Prioritize');
+                                            wrap.append(row);
+                                        }
+                                        group.append(wrap);
+                                    }
+                                    tr.append(group);
                                 }
                                 const order = document.createElement('td'); {
                                     order.setAttribute('data-col', 'order');
