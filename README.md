@@ -5,8 +5,8 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 ## What this extension does
 
 - Adds a full screen drawer layout for editing lorebook entries, so you can forget about the main chat and spend half your day editing lore and worldbuilding.
-- Includes an **Order Helper** panel for mass reordering: drag entries, pick which items to update, and bulk-apply new order values with a per-book or global sort preference toggle.
 - Provides one-click collapse/expand for all books and a quick refresh to pull the latest lorebook state without reloading the page.
+- Includes an **Order Helper** panel for mass reordering: drag entries, pick which items to update, and bulk-apply new order values with a per-book or global sort preference toggle.
 
 ### Interface
 <img width="960" height="471" alt="editing_entry" src="https://github.com/user-attachments/assets/a5cc31c5-c0a8-4a4d-a8c7-ae4c609c7a9a" />
@@ -25,6 +25,7 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 - Added a refresh button alongside the drawer controls for quick syncs after edits.
 - You can sort each book individually or switch to global sorting via the per-book sort toggle and “clear preferences” control.
 - The Order Helper now lets you pick which entries to update and optionally hide keywords for a cleaner view while reordering.
+- The Order Helper is now capable of visualizing all active entries in a table and allows you to choose which columns to edit for bulk updates. Drag entries to define custom ordering; the final order is defined in the Order Helper, not in the list panel.
 
 ## Installation
 
@@ -69,3 +70,7 @@ Added support to ⁠the extension 📚 ST Lorebook Ordering
 - Added an outlet name column and tightened column labels for clearer ordering context.
 - Made Order Helper comments clickable links to jump directly to entries.
 - Added a draggable splitter between the World Info list and editor, allowing to change the width
+
+### Version 2.1.0
+- The Order Helper is now more than just reordering: you can visualize all active entries in a table, and select which columns to show. Also added new columns such as Recursion settings, budget, Inclusion Groups, etc. 
+- Added custom ordering: the order is manually defined inside the Order Helper by dragging entries.

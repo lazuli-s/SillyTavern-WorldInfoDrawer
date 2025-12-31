@@ -391,7 +391,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper {
     display: flex;
     flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 .stwid--orderHelper.stwid--hideKeys .stwid--key {
   display: none;
@@ -408,10 +408,31 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-outlet [data-col="outlet"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-group [data-col="group"] {
+  display: none;
+}
 .stwid--orderHelper.stwid--hide-col-order [data-col="order"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-sticky [data-col="sticky"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-cooldown [data-col="cooldown"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-delay [data-col="delay"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-automationId [data-col="automationId"] {
+  display: none;
+}
 .stwid--orderHelper.stwid--hide-col-trigger [data-col="trigger"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-recursion [data-col="recursion"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-budget [data-col="budget"] {
   display: none;
 }
 .stwid--orderHelper .stwid--actions {
@@ -472,7 +493,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
   padding: 0.7em;
-  min-width: 10em;
+  min-width: 14em;
   display: none;
   flex-direction: column;
   gap: 0.6em;
@@ -632,7 +653,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="entry"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="entry"] {
-  min-width: 10em;
+  min-width: 12em;
+  padding-top: 1em;
+  padding-bottom: 1em;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="strategy"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="strategy"] {
@@ -657,11 +680,40 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--orderTable tr th[data-col="order"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="order"] {
   min-width: 5em;
+ text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="trigger"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="trigger"] {
   min-width: 5em;
   text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="recursion"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="recursion"] {
+  min-width: 12em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="budget"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="budget"] {
+  min-width: 7em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--recursionOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0em;
+  font-size: 0.85em;
+}
+.stwid--orderHelper .stwid--recursionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.stwid--orderHelper .stwid--recursionRow .checkbox {
+  width: 0.85em;
+  height: 0.85em;
+}
+.stwid--orderHelper .stwid--recursionOptions br {
+  display: none;
 }
 .stwid--orderTable tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
@@ -726,16 +778,21 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--orderTable tr td .stwid--outlet input[name="outletName"] {
   width: 100%;
-  min-width: 6em;
-  font-size: 0.85em;
+  min-width: 7em;
+}
+.stwid--orderHelper .stwid--orderInputTight,
+.stwid--orderHelper .stwid--orderTable input:is([name="depth"], [name="order"], [name="sticky"], [name="cooldown"], [name="delay"], [name="automationId"], [name="selective_probability"]) {
+  min-height: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size: 0.95em;
 }
 .stwid--orderTable tr td .stwid--position {
   font-size: 0.9em;
 }
 .stwid--orderTable tr td input[name="depth"], .stwid--orderTable tr td input[name="order"], .stwid--orderTable tr td input[name="selective_probability"] {
-  width: 33%;
   min-width: 4em;
-  font-size: 0.9em;
+  font-size: 0.95em;
 }
 .stwid--orderTable tr td .stwid--enabled {
   color: var(--SmartThemeQuoteColor);

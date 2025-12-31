@@ -15,6 +15,8 @@ export const SORT = {
     TRIGGER: 'trigger',
     /** By token/word count */
     LENGTH: 'length',
+    /** By custom display index */
+    CUSTOM: 'custom',
     /** Alphabetical by entry comment (title/memo) */
     ALPHABETICAL: 'alphabetical',
     /** According to prompt depth (position-depth-order) */

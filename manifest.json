@@ -1,13 +1,1 @@
-{
-    "display_name": "WorldInfo Drawer",
-    "loading_order": 100,
-    "requires": [],
-    "optional": [],
-    "js": "index.js",
-    "css": "style.css",
-    "author": "Lazuli",
-    "version": "2.0.1",
-
-    "homePage": "https://github.com/lazuli-s/SillyTavern-WorldInfoDrawer"
-}
-
+{\n  "display_name": "WorldInfo Drawer",\n  "loading_order": 100,\n  "requires": [],\n  "optional": [],\n  "js": "index.js",\n  "css": "style.css",\n  "author": "Lazuli",\n  "version": "2.1.0",\n  "homePage": "https://github.com/lazuli-s/SillyTavern-WorldInfoDrawer"\n}

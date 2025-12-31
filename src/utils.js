@@ -6,6 +6,7 @@ import { SORT, SORT_DIRECTION } from './constants.js';
  * @type {[string, SORT, SORT_DIRECTION][]}
  */
 const SORT_OPTIONS = [
+    ['Custom', SORT.CUSTOM, SORT_DIRECTION.ASCENDING],
     ['Title A-Z', SORT.TITLE, SORT_DIRECTION.ASCENDING],
     ['Title Z-A', SORT.TITLE, SORT_DIRECTION.DESCENDING],
     ['Position ↗', SORT.POSITION, SORT_DIRECTION.ASCENDING],
@@ -42,7 +43,7 @@ const safeToSorted = (array, comparator)=>typeof array.toSorted === 'function'
     ? array.toSorted(comparator)
     : array.slice().sort(comparator);
 
-const getSortLabel = (sort, direction)=>SORT_OPTIONS.find(([label, s, d])=>s === sort && d === direction)?.[0];
+const getSortLabel = (sort, direction)=>SORT_OPTIONS.find(([, s, d])=>s === sort && d === direction)?.[0];
 
 const appendSortOptions = (select, currentSort, currentDirection)=>{
     for (const [label, sort, direction] of SORT_OPTIONS) {

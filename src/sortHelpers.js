@@ -35,6 +35,23 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
             return defaultCompare(a, b);
         });
     };
+    const getDisplayIndex = (entry)=>{
+        const displayIndex = Number(entry?.extensions?.display_index);
+        return Number.isFinite(displayIndex) ? displayIndex : null;
+    };
+    const customSort = ()=>safeToSorted(entries, (a,b)=>{
+        const av = getDisplayIndex(x(a));
+        const bv = getDisplayIndex(x(b));
+        const hasA = Number.isFinite(av);
+        const hasB = Number.isFinite(bv);
+        if (hasA && hasB && av !== bv) return av - bv;
+        if (hasA && !hasB) return -1;
+        if (!hasA && hasB) return 1;
+        const auid = Number(x(a).uid);
+        const buid = Number(x(b).uid);
+        if (Number.isFinite(auid) && Number.isFinite(buid) && auid !== buid) return auid - buid;
+        return defaultCompare(a, b);
+    });
 
     let result = [...entries];
     let shouldReverse = false;
@@ -84,6 +101,10 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
                 if (typeof entry.content !== 'string') return null;
                 return entry.content.split(/\s+/).filter(Boolean).length;
             });
+            break;
+        }
+        case SORT.CUSTOM: {
+            result = customSort();
             break;
         }
         default: {

@@ -27,8 +27,15 @@ export const initOrderHelper = ({
         position: true,
         depth: true,
         outlet: true,
+        group: false,
         order: true,
+        sticky: false,
+        cooldown: false,
+        delay: false,
+        automationId: false,
         trigger: true,
+        recursion: false,
+        budget: false,
     };
     const orderHelperState = (()=>{
         const state = {
@@ -63,6 +70,56 @@ export const initOrderHelper = ({
         return state;
     })();
 
+    const getEntryDisplayIndex = (entry)=>{
+        const displayIndex = Number(entry?.extensions?.display_index);
+        return Number.isFinite(displayIndex) ? displayIndex : null;
+    };
+
+    const compareEntryUid = (a, b)=>{
+        const auid = Number(a.uid);
+        const buid = Number(b.uid);
+        if (Number.isFinite(auid) && Number.isFinite(buid) && auid !== buid) return auid - buid;
+        return String(a.uid).localeCompare(String(b.uid));
+    };
+
+    const getOrderHelperSourceEntries = (book = orderHelperState.book)=>Object.entries(cache)
+        .filter(([name])=>getSelectedWorldInfo().includes(name))
+        .map(([name,data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
+        .flat()
+        .filter((entry)=>!book || entry.book === book);
+
+    const ensureCustomDisplayIndex = (book = orderHelperState.book)=>{
+        const source = getOrderHelperSourceEntries(book);
+        const entriesByBook = new Map();
+        for (const entry of source) {
+            if (!entriesByBook.has(entry.book)) {
+                entriesByBook.set(entry.book, []);
+            }
+            entriesByBook.get(entry.book).push(entry.data);
+        }
+        const updatedBooks = new Set();
+        for (const [bookName, entries] of entriesByBook.entries()) {
+            let maxIndex = -1;
+            for (const entry of entries) {
+                const displayIndex = getEntryDisplayIndex(entry);
+                if (Number.isFinite(displayIndex)) {
+                    maxIndex = Math.max(maxIndex, displayIndex);
+                }
+            }
+            let nextIndex = maxIndex + 1;
+            const missing = entries
+                .filter((entry)=>!Number.isFinite(getEntryDisplayIndex(entry)))
+                .sort(compareEntryUid);
+            for (const entry of missing) {
+                entry.extensions ??= {};
+                entry.extensions.display_index = nextIndex;
+                nextIndex += 1;
+                updatedBooks.add(bookName);
+            }
+        }
+        return [...updatedBooks];
+    };
+
     const getOrderHelperEntries = (book = orderHelperState.book, includeDom = false)=>{
         const source = includeDom && dom.order.entries && dom.order.tbody
             ? Object.entries(dom.order.entries)
@@ -72,10 +129,7 @@ export const initOrderHelper = ({
                     data: cache[entryBook].entries[tr.getAttribute('data-uid')],
                 })))
                 .flat()
-            : Object.entries(cache)
-                .filter(([name])=>getSelectedWorldInfo().includes(name))
-                .map(([name,data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
-                .flat();
+            : getOrderHelperSourceEntries(book);
         return sortEntries(source, orderHelperState.sort, orderHelperState.direction)
             .filter((entry)=>!book || entry.book === book);
     };
@@ -132,6 +186,16 @@ export const initOrderHelper = ({
         updateOrderHelperPreview(entries);
     };
 
+    const setOrderHelperSort = (sort, direction)=>{
+        orderHelperState.sort = sort;
+        orderHelperState.direction = direction;
+        const value = JSON.stringify({ sort, direction });
+        localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, value);
+        if (dom.order.sortSelect) {
+            dom.order.sortSelect.value = value;
+        }
+    };
+
     const applyOrderHelperColumnVisibility = (root)=>{
         if (!root) return;
         for (const [key, visible] of Object.entries(orderHelperState.columns)) {
@@ -157,6 +221,12 @@ export const initOrderHelper = ({
         dom.order.filter.preview = undefined;
         dom.order.tbody = undefined;
 
+        if (orderHelperState.sort === SORT.CUSTOM) {
+            const updatedBooks = ensureCustomDisplayIndex(book);
+            for (const bookName of updatedBooks) {
+                void saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        }
         const entries = getOrderHelperEntries(book);
         const body = document.createElement('div'); {
             body.classList.add('stwid--orderHelper');
@@ -238,8 +308,15 @@ export const initOrderHelper = ({
                                 { key:'position', label:'Position' },
                                 { key:'depth', label:'Depth' },
                                 { key:'outlet', label:'Outlet' },
+                                { key:'group', label:'Inclusion Group' },
                                 { key:'order', label:'Order' },
+                                { key:'sticky', label:'Sticky' },
+                                { key:'cooldown', label:'Cooldown' },
+                                { key:'delay', label:'Delay' },
+                                { key:'automationId', label:'Automation ID' },
                                 { key:'trigger', label:'Trigger %' },
+                                { key:'recursion', label:'Recursion' },
+                                { key:'budget', label:'Budget' },
                             ];
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
@@ -287,12 +364,17 @@ export const initOrderHelper = ({
                     sortWrap.append('Sort: ');
                     const sortSel = document.createElement('select'); {
                         sortSel.classList.add('text_pole');
+                        dom.order.sortSelect = sortSel;
                         appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
-                        sortSel.addEventListener('change', ()=>{
+                        sortSel.addEventListener('change', async()=>{
                             const value = JSON.parse(sortSel.value);
-                            orderHelperState.sort = value.sort;
-                            orderHelperState.direction = value.direction;
-                            localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, JSON.stringify(value));
+                            setOrderHelperSort(value.sort, value.direction);
+                            if (value.sort === SORT.CUSTOM) {
+                                const updatedBooks = ensureCustomDisplayIndex(orderHelperState.book);
+                                for (const bookName of updatedBooks) {
+                                    await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+                                }
+                            }
                             applyOrderHelperSortToDom();
                         });
                         sortWrap.append(sortSel);
@@ -549,8 +631,15 @@ export const initOrderHelper = ({
                                 { label:'Position', key:'position' },
                                 { label:'Depth', key:'depth' },
                                 { label:'Outlet', key:'outlet' },
+                                { label:'Inclusion Group', key:'group' },
                                 { label:'Order', key:'order' },
+                                { label:'Sticky', key:'sticky' },
+                                { label:'Cooldown', key:'cooldown' },
+                                { label:'Delay', key:'delay' },
+                                { label:'Automation ID', key:'automationId' },
                                 { label:'Trigger %', key:'trigger' },
+                                { label:'Recursion', key:'recursion' },
+                                { label:'Budget', key:'budget' },
                             ];
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
@@ -569,6 +658,27 @@ export const initOrderHelper = ({
                         dom.order.tbody = tbody;
                         $(tbody).sortable({
                             delay: getSortableDelay(),
+                            update: async()=>{
+                                setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
+                                const rows = getOrderHelperRows();
+                                const booksUpdated = new Set();
+                                const nextIndexByBook = new Map();
+                                for (const row of rows) {
+                                    const bookName = row.getAttribute('data-book');
+                                    const uid = row.getAttribute('data-uid');
+                                    const nextIndex = nextIndexByBook.get(bookName) ?? 0;
+                                    const entry = cache[bookName].entries[uid];
+                                    entry.extensions ??= {};
+                                    if (entry.extensions.display_index !== nextIndex) {
+                                        entry.extensions.display_index = nextIndex;
+                                        booksUpdated.add(bookName);
+                                    }
+                                    nextIndexByBook.set(bookName, nextIndex + 1);
+                                }
+                                for (const bookName of booksUpdated) {
+                                    await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+                                }
+                            },
                         });
                         for (const e of entries) {
                             const tr = document.createElement('tr'); {
@@ -737,6 +847,7 @@ export const initOrderHelper = ({
                                         const input = document.createElement('input'); {
                                             input.classList.add('stwid--input');
                                             input.classList.add('text_pole');
+                                            input.classList.add('stwid--orderInputTight');
                                             input.name = 'outletName';
                                             input.type = 'text';
                                             input.value = cache[e.book].entries[e.data.uid].outletName ?? e.data.outletName ?? '';
@@ -761,6 +872,50 @@ export const initOrderHelper = ({
                                     }
                                     tr.append(outlet);
                                 }
+                                const group = document.createElement('td'); {
+                                    group.setAttribute('data-col', 'group');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--colwrap');
+                                        wrap.classList.add('stwid--outlet');
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const input = document.createElement('input'); {
+                                            input.classList.add('stwid--input');
+                                            input.classList.add('text_pole');
+                                            input.classList.add('stwid--orderInputTight');
+                                            input.name = 'group';
+                                            input.type = 'text';
+                                            input.value = cache[e.book].entries[e.data.uid].group ?? '';
+                                            input.addEventListener('change', async()=>{
+                                                const value = input.value;
+                                                const entryData = cache[e.book].entries[e.data.uid];
+                                                entryData.group = value;
+                                                e.data.group = value;
+                                                await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                            });
+                                            wrap.append(input);
+                                        }
+                                        wrap.append(document.createElement('br'));
+                                        const row = document.createElement('label'); {
+                                            row.classList.add('stwid--recursionRow');
+                                            const input = document.createElement('input'); {
+                                                input.type = 'checkbox';
+                                                input.classList.add('checkbox');
+                                                input.checked = Boolean(e.data.groupOverride);
+                                                input.addEventListener('change', async()=>{
+                                                    const entryData = cache[e.book].entries[e.data.uid];
+                                                    entryData.groupOverride = input.checked;
+                                                    e.data.groupOverride = input.checked;
+                                                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                });
+                                                row.append(input);
+                                            }
+                                            row.append('Prioritize');
+                                            wrap.append(row);
+                                        }
+                                        group.append(wrap);
+                                    }
+                                    tr.append(group);
+                                }
                                 const order = document.createElement('td'); {
                                     order.setAttribute('data-col', 'order');
                                     const inp = document.createElement('input'); {
@@ -780,6 +935,82 @@ export const initOrderHelper = ({
                                     }
                                     tr.append(order);
                                 }
+                                const sticky = document.createElement('td'); {
+                                    sticky.setAttribute('data-col', 'sticky');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'sticky';
+                                        inp.min = '0';
+                                        inp.max = '99999';
+                                        inp.type = 'number';
+                                        inp.value = e.data.sticky ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = parseInt(inp.value);
+                                            cache[e.book].entries[e.data.uid].sticky = Number.isFinite(value) ? value : undefined;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        sticky.append(inp);
+                                    }
+                                    tr.append(sticky);
+                                }
+                                const cooldown = document.createElement('td'); {
+                                    cooldown.setAttribute('data-col', 'cooldown');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'cooldown';
+                                        inp.min = '0';
+                                        inp.max = '99999';
+                                        inp.type = 'number';
+                                        inp.value = e.data.cooldown ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = parseInt(inp.value);
+                                            cache[e.book].entries[e.data.uid].cooldown = Number.isFinite(value) ? value : undefined;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        cooldown.append(inp);
+                                    }
+                                    tr.append(cooldown);
+                                }
+                                const delay = document.createElement('td'); {
+                                    delay.setAttribute('data-col', 'delay');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'delay';
+                                        inp.min = '0';
+                                        inp.max = '99999';
+                                        inp.type = 'number';
+                                        inp.value = e.data.delay ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = parseInt(inp.value);
+                                            cache[e.book].entries[e.data.uid].delay = Number.isFinite(value) ? value : undefined;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        delay.append(inp);
+                                    }
+                                    tr.append(delay);
+                                }
+                                const automationId = document.createElement('td'); {
+                                    automationId.setAttribute('data-col', 'automationId');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.classList.add('stwid--orderInputTight');
+                                        inp.name = 'automationId';
+                                        inp.type = 'text';
+                                        inp.value = cache[e.book].entries[e.data.uid].automationId ?? e.data.automationId ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = inp.value;
+                                            cache[e.book].entries[e.data.uid].automationId = value;
+                                            e.data.automationId = value;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        automationId.append(inp);
+                                    }
+                                    tr.append(automationId);
+                                }
                                 const probability = document.createElement('td'); {
                                     probability.setAttribute('data-col', 'trigger');
                                     const inp = document.createElement('input'); {
@@ -798,6 +1029,61 @@ export const initOrderHelper = ({
                                         probability.append(inp);
                                     }
                                     tr.append(probability);
+                                }
+                                const recursion = document.createElement('td'); {
+                                    recursion.setAttribute('data-col', 'recursion');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const addCheckbox = (key, label)=> {
+                                            const row = document.createElement('label'); {
+                                                row.classList.add('stwid--recursionRow');
+                                                const input = document.createElement('input'); {
+                                                    input.type = 'checkbox';
+                                                    input.classList.add('checkbox');
+                                                    input.checked = Boolean(e.data[key]);
+                                                    input.addEventListener('change', async()=> {
+                                                        const entryData = cache[e.book].entries[e.data.uid];
+                                                        entryData[key] = input.checked;
+                                                        e.data[key] = input.checked;
+                                                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                    });
+                                                    row.append(input);
+                                                }
+                                                row.append(label);
+                                                wrap.append(row);
+                                            }
+                                        };
+                                        addCheckbox('excludeRecursion', 'Non-recursable');
+                                        addCheckbox('preventRecursion', 'Prevent further recursion');
+                                        addCheckbox('delayUntilRecursion', 'Delay until recursion');
+                                        recursion.append(wrap);
+                                    }
+                                    tr.append(recursion);
+                                }
+                                const budget = document.createElement('td'); {
+                                    budget.setAttribute('data-col', 'budget');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const row = document.createElement('label'); {
+                                            row.classList.add('stwid--recursionRow');
+                                            const input = document.createElement('input'); {
+                                                input.type = 'checkbox';
+                                                input.classList.add('checkbox');
+                                                input.checked = Boolean(e.data.ignoreBudget);
+                                                input.addEventListener('change', async()=> {
+                                                    const entryData = cache[e.book].entries[e.data.uid];
+                                                    entryData.ignoreBudget = input.checked;
+                                                    e.data.ignoreBudget = input.checked;
+                                                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                });
+                                                row.append(input);
+                                            }
+                                            row.append('Ignore budget');
+                                            wrap.append(row);
+                                        }
+                                        budget.append(wrap);
+                                    }
+                                    tr.append(budget);
                                 }
                                 setOrderHelperRowSelected(tr, true);
                                 tbody.append(tr);
