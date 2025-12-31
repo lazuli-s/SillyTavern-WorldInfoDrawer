@@ -147,7 +147,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
   overflow: hidden;
   transition: 200ms;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
+body.stwid-- #WorldInfo .stwid--list .stwid--books.stwid--isDragging .stwid--book .stwid--entry:not(.stwid--isSelected) {
   pointer-events: none;
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected {
@@ -376,7 +376,6 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   gap: 0.35em;
 }
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
-    opacity: 1;
     cursor: default;
 }
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
