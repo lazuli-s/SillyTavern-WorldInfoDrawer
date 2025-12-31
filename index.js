@@ -664,7 +664,7 @@ const addDrawer = ()=>{
     });
     const moSel = new MutationObserver(()=>updateWIChangeDebounced());
     moSel.observe(document.querySelector('#world_editor_select'), { childList: true });
-    const moDrawer = new MutationObserver(muts=>{
+    const moDrawer = new MutationObserver(evt=>{
         if (drawerContent.getAttribute('style').includes('display: none;')) return;
         if (currentEditor) {
             cache[currentEditor.name].dom.entry[currentEditor.uid].root.click();
