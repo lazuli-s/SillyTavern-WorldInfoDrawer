@@ -29,6 +29,7 @@ export const initOrderHelper = ({
         outlet: true,
         order: true,
         trigger: true,
+        recursion: false,
     };
     const orderHelperState = (()=>{
         const state = {
@@ -303,6 +304,7 @@ export const initOrderHelper = ({
                                 { key:'outlet', label:'Outlet' },
                                 { key:'order', label:'Order' },
                                 { key:'trigger', label:'Trigger %' },
+                                { key:'recursion', label:'Recursion' },
                             ];
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
@@ -619,6 +621,7 @@ export const initOrderHelper = ({
                                 { label:'Outlet', key:'outlet' },
                                 { label:'Order', key:'order' },
                                 { label:'Trigger %', key:'trigger' },
+                                { label:'Recursion', key:'recursion' },
                             ];
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
@@ -887,6 +890,36 @@ export const initOrderHelper = ({
                                         probability.append(inp);
                                     }
                                     tr.append(probability);
+                                }
+                                const recursion = document.createElement('td'); {
+                                    recursion.setAttribute('data-col', 'recursion');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const addCheckbox = (key, label)=> {
+                                            const row = document.createElement('label'); {
+                                                row.classList.add('stwid--recursionRow');
+                                                const input = document.createElement('input'); {
+                                                    input.type = 'checkbox';
+                                                    input.classList.add('checkbox');
+                                                    input.checked = Boolean(e.data[key]);
+                                                    input.addEventListener('change', async()=> {
+                                                        const entryData = cache[e.book].entries[e.data.uid];
+                                                        entryData[key] = input.checked;
+                                                        e.data[key] = input.checked;
+                                                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                    });
+                                                    row.append(input);
+                                                }
+                                                row.append(label);
+                                                wrap.append(row);
+                                            }
+                                        };
+                                        addCheckbox('excludeRecursion', 'Non-recursable');
+                                        addCheckbox('preventRecursion', 'Prevent further recursion');
+                                        addCheckbox('delayUntilRecursion', 'Delay until recursion');
+                                        recursion.append(wrap);
+                                    }
+                                    tr.append(recursion);
                                 }
                                 setOrderHelperRowSelected(tr, true);
                                 tbody.append(tr);

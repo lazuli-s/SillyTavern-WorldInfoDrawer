@@ -414,6 +414,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-trigger [data-col="trigger"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-recursion [data-col="recursion"] {
+  display: none;
+}
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
@@ -662,6 +665,25 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--orderTable tr td[data-col="trigger"] {
   min-width: 5em;
   text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="recursion"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="recursion"] {
+  min-width: 12em;
+}
+.stwid--orderHelper .stwid--recursionOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0em;
+  font-size: 0.85em;
+}
+.stwid--orderHelper .stwid--recursionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.stwid--orderHelper .stwid--recursionRow .checkbox {
+  width: 0.85em;
+  height: 0.85em;
 }
 .stwid--orderTable tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
