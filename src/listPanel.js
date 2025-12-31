@@ -4,6 +4,7 @@ let state = {};
 
 let searchInput;
 let searchEntriesInput;
+let filterActiveInput;
 let loadListDebounced;
 
 const collapseStates = {};
@@ -246,7 +247,8 @@ const renderBook = async(name, before = null, bookData = null)=>{
                     world.dom.active = active;
                     active.title = 'Globally active';
                     active.type = 'checkbox';
-                    active.checked = state.selected_world_info.includes(name);
+                    const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
+                    active.checked = selected.includes(name);
                     active.addEventListener('click', async()=>{
                         active.disabled = true;
                         const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_info'));
@@ -673,23 +675,30 @@ const setupFilter = (list)=>{
             searchEntries.append('Entries');
             filter.append(searchEntries);
         }
+        const applyActiveFilter = ()=>{
+            if (!filterActiveInput) return;
+            const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
+            for (const b of Object.keys(state.cache)) {
+                if (filterActiveInput.checked) {
+                    if (selected.includes(b)) {
+                        state.cache[b].dom.root.classList.remove('stwid--filter-active');
+                    } else {
+                        state.cache[b].dom.root.classList.add('stwid--filter-active');
+                    }
+                } else {
+                    state.cache[b].dom.root.classList.remove('stwid--filter-active');
+                }
+            }
+        };
+        state.applyActiveFilter = applyActiveFilter;
         const filterActive = document.createElement('label'); {
             filterActive.classList.add('stwid--filterActive');
             filterActive.title = 'Only show globally active books';
             const inp = document.createElement('input'); {
                 inp.type = 'checkbox';
+                filterActiveInput = inp;
                 inp.addEventListener('click', ()=>{
-                    for (const b of Object.keys(state.cache)) {
-                        if (inp.checked) {
-                            if (state.selected_world_info.includes(b)) {
-                                state.cache[b].dom.root.classList.remove('stwid--filter-active');
-                            } else {
-                                state.cache[b].dom.root.classList.add('stwid--filter-active');
-                            }
-                        } else {
-                            state.cache[b].dom.root.classList.remove('stwid--filter-active');
-                        }
-                    }
+                    applyActiveFilter();
                 });
                 filterActive.append(inp);
             }
@@ -751,6 +760,7 @@ const initListPanel = (options)=>{
     loadListDebounced = state.debounceAsync(()=>loadList());
     setupListPanel(state.list);
     return {
+        applyActiveFilter: state.applyActiveFilter,
         clearBookSortPreferences,
         getSelectionState,
         hasExpandedBooks,

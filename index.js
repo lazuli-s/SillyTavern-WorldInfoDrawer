@@ -121,6 +121,7 @@ const updateSettingsChange = ()=>{
             world.dom.active.checked = active;
         }
     }
+    listPanelApi?.applyActiveFilter?.();
 };
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeStarted = createDeferred();
@@ -556,7 +557,7 @@ const addDrawer = ()=>{
                     },
                     safeToSorted,
                     saveWorldInfo,
-                    selected_world_info,
+                    getSelectedWorldInfo: () => selected_world_info,
                     sortEntries,
                     updateWIChange,
                     world_names,
