@@ -493,7 +493,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
   padding: 0.7em;
-  min-width: 10em;
+  min-width: 14em;
   display: none;
   flex-direction: column;
   gap: 0.6em;
@@ -653,7 +653,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="entry"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="entry"] {
-  min-width: 10em;
+  min-width: 12em;
+  padding-top: 1em;
+  padding-bottom: 1em;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="strategy"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="strategy"] {
