@@ -414,6 +414,18 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-order [data-col="order"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-sticky [data-col="sticky"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-cooldown [data-col="cooldown"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-delay [data-col="delay"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--hide-col-automationId [data-col="automationId"] {
+  display: none;
+}
 .stwid--orderHelper.stwid--hide-col-trigger [data-col="trigger"] {
   display: none;
 }

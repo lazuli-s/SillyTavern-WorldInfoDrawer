@@ -29,6 +29,10 @@ export const initOrderHelper = ({
         outlet: true,
         group: false,
         order: true,
+        sticky: false,
+        cooldown: false,
+        delay: false,
+        automationId: false,
         trigger: true,
         recursion: false,
         budget: false,
@@ -306,6 +310,10 @@ export const initOrderHelper = ({
                                 { key:'outlet', label:'Outlet' },
                                 { key:'group', label:'Inclusion Group' },
                                 { key:'order', label:'Order' },
+                                { key:'sticky', label:'Sticky' },
+                                { key:'cooldown', label:'Cooldown' },
+                                { key:'delay', label:'Delay' },
+                                { key:'automationId', label:'Automation ID' },
                                 { key:'trigger', label:'Trigger %' },
                                 { key:'recursion', label:'Recursion' },
                                 { key:'budget', label:'Budget' },
@@ -625,6 +633,10 @@ export const initOrderHelper = ({
                                 { label:'Outlet', key:'outlet' },
                                 { label:'Inclusion Group', key:'group' },
                                 { label:'Order', key:'order' },
+                                { label:'Sticky', key:'sticky' },
+                                { label:'Cooldown', key:'cooldown' },
+                                { label:'Delay', key:'delay' },
+                                { label:'Automation ID', key:'automationId' },
                                 { label:'Trigger %', key:'trigger' },
                                 { label:'Recursion', key:'recursion' },
                                 { label:'Budget', key:'budget' },
@@ -920,6 +932,81 @@ export const initOrderHelper = ({
                                         order.append(inp);
                                     }
                                     tr.append(order);
+                                }
+                                const sticky = document.createElement('td'); {
+                                    sticky.setAttribute('data-col', 'sticky');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'sticky';
+                                        inp.min = '0';
+                                        inp.max = '99999';
+                                        inp.type = 'number';
+                                        inp.value = e.data.sticky ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = parseInt(inp.value);
+                                            cache[e.book].entries[e.data.uid].sticky = Number.isFinite(value) ? value : undefined;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        sticky.append(inp);
+                                    }
+                                    tr.append(sticky);
+                                }
+                                const cooldown = document.createElement('td'); {
+                                    cooldown.setAttribute('data-col', 'cooldown');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'cooldown';
+                                        inp.min = '0';
+                                        inp.max = '99999';
+                                        inp.type = 'number';
+                                        inp.value = e.data.cooldown ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = parseInt(inp.value);
+                                            cache[e.book].entries[e.data.uid].cooldown = Number.isFinite(value) ? value : undefined;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        cooldown.append(inp);
+                                    }
+                                    tr.append(cooldown);
+                                }
+                                const delay = document.createElement('td'); {
+                                    delay.setAttribute('data-col', 'delay');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'delay';
+                                        inp.min = '0';
+                                        inp.max = '99999';
+                                        inp.type = 'number';
+                                        inp.value = e.data.delay ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = parseInt(inp.value);
+                                            cache[e.book].entries[e.data.uid].delay = Number.isFinite(value) ? value : undefined;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        delay.append(inp);
+                                    }
+                                    tr.append(delay);
+                                }
+                                const automationId = document.createElement('td'); {
+                                    automationId.setAttribute('data-col', 'automationId');
+                                    const inp = document.createElement('input'); {
+                                        inp.classList.add('stwid--input');
+                                        inp.classList.add('text_pole');
+                                        inp.name = 'automationId';
+                                        inp.type = 'text';
+                                        inp.value = cache[e.book].entries[e.data.uid].automationId ?? e.data.automationId ?? '';
+                                        inp.addEventListener('change', async()=>{
+                                            const value = inp.value;
+                                            cache[e.book].entries[e.data.uid].automationId = value;
+                                            e.data.automationId = value;
+                                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                        });
+                                        automationId.append(inp);
+                                    }
+                                    tr.append(automationId);
                                 }
                                 const probability = document.createElement('td'); {
                                     probability.setAttribute('data-col', 'trigger');
