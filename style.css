@@ -391,7 +391,7 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper {
     display: flex;
     flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 .stwid--orderHelper.stwid--hideKeys .stwid--key {
   display: none;
