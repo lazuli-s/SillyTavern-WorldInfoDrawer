@@ -411,6 +411,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-group [data-col="group"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-characterFilter [data-col="characterFilter"] {
+  display: none;
+}
 .stwid--orderHelper.stwid--hide-col-order [data-col="order"] {
   display: none;
 }
@@ -674,6 +677,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--orderTable tr td[data-col="outlet"] {
   min-width: 8em;
   text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="characterFilter"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="characterFilter"] {
+  min-width: 12em;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="order"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="order"] {

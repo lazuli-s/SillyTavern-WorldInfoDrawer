@@ -28,6 +28,7 @@ export const initOrderHelper = ({
         depth: true,
         outlet: true,
         group: false,
+        characterFilter: false,
         order: true,
         sticky: false,
         cooldown: false,
@@ -309,6 +310,7 @@ export const initOrderHelper = ({
                                 { key:'depth', label:'Depth' },
                                 { key:'outlet', label:'Outlet' },
                                 { key:'group', label:'Inclusion Group' },
+                                { key:'characterFilter', label:'Filter to Character or Tags' },
                                 { key:'order', label:'Order' },
                                 { key:'sticky', label:'Sticky' },
                                 { key:'cooldown', label:'Cooldown' },
@@ -632,6 +634,7 @@ export const initOrderHelper = ({
                                 { label:'Depth', key:'depth' },
                                 { label:'Outlet', key:'outlet' },
                                 { label:'Inclusion Group', key:'group' },
+                                { label:'Filter to Character or Tags', key:'characterFilter' },
                                 { label:'Order', key:'order' },
                                 { label:'Sticky', key:'sticky' },
                                 { label:'Cooldown', key:'cooldown' },
@@ -913,6 +916,94 @@ export const initOrderHelper = ({
                                         group.append(wrap);
                                     }
                                     tr.append(group);
+                                }
+                                const characterFilter = document.createElement('td'); {
+                                    characterFilter.setAttribute('data-col', 'characterFilter');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const characterFilterSelect = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="characterFilter"]').cloneNode(true)); {
+                                            characterFilterSelect.classList.add('stwid--characterFilter');
+                                            const characterFilterOptionTemplate = document.querySelector('#entry_edit_template [name="characterFilter"] option');
+                                            characterFilterSelect.innerHTML = '';
+                                            const entryData = cache[e.book].entries[e.data.uid];
+                                            const context = globalThis.SillyTavern?.getContext?.();
+                                            const characters = context?.characters ?? [];
+                                            const tags = context?.tags ?? [];
+                                            for (const character of characters) {
+                                                const option = document.createElement('option');
+                                                const avatarName = typeof character.avatar === 'string'
+                                                    ? character.avatar.replace(/\.[^/.]+$/, '')
+                                                    : '';
+                                                const name = avatarName || character.name;
+                                                option.innerText = name;
+                                                option.selected = entryData.characterFilter?.names?.includes(name);
+                                                option.setAttribute('data-type', 'character');
+                                                characterFilterSelect.append(option);
+                                            }
+                                            for (const tag of tags) {
+                                                const option = document.createElement('option');
+                                                option.innerText = `[Tag] ${tag.name}`;
+                                                option.value = tag.id;
+                                                option.selected = entryData.characterFilter?.tags?.includes(tag.id);
+                                                option.setAttribute('data-type', 'tag');
+                                                characterFilterSelect.append(option);
+                                            }
+                                            if (characterFilterSelect.options.length === 0 && characterFilterOptionTemplate) {
+                                                characterFilterSelect.append(characterFilterOptionTemplate.cloneNode(true));
+                                            }
+                                            if (typeof $.fn.select2 === 'function' && !globalThis.isMobile?.()) {
+                                                const placeholder = globalThis.t
+                                                    ? globalThis.t`Tie this entry to specific characters or characters with specific tags`
+                                                    : 'Tie this entry to specific characters or characters with specific tags';
+                                                $(characterFilterSelect).select2({
+                                                    width: '100%',
+                                                    placeholder,
+                                                    allowClear: true,
+                                                    closeOnSelect: false,
+                                                });
+                                            }
+                                            wrap.append(characterFilterSelect);
+                                            wrap.append(document.createElement('br'));
+                                            const excludeRow = document.createElement('label'); {
+                                                excludeRow.classList.add('stwid--recursionRow');
+                                                const excludeInput = /**@type {HTMLInputElement}*/(document.querySelector('#entry_edit_template [name="character_exclusion"]').cloneNode(true)); {
+                                                    excludeInput.classList.add('checkbox');
+                                                    excludeInput.checked = Boolean(entryData.characterFilter?.isExclude);
+                                                    const updateCharacterFilter = async()=> {
+                                                        const selected = $(characterFilterSelect).find(':selected');
+                                                        const names = selected
+                                                            .filter('[data-type="character"]')
+                                                            .map((_, option)=>option instanceof HTMLOptionElement && option.innerText)
+                                                            .toArray()
+                                                            .filter(Boolean);
+                                                        const tags = selected
+                                                            .filter('[data-type="tag"]')
+                                                            .map((_, option)=>option instanceof HTMLOptionElement && option.value)
+                                                            .toArray()
+                                                            .filter(Boolean);
+                                                        if (names.length === 0 && tags.length === 0 && !excludeInput.checked) {
+                                                            delete entryData.characterFilter;
+                                                        } else {
+                                                            entryData.characterFilter = {
+                                                                isExclude: excludeInput.checked,
+                                                                names,
+                                                                tags,
+                                                            };
+                                                        }
+                                                        e.data.characterFilter = entryData.characterFilter;
+                                                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                    };
+                                                    excludeInput.addEventListener('change', updateCharacterFilter);
+                                                    $(characterFilterSelect).on('change', updateCharacterFilter);
+                                                    excludeRow.append(excludeInput);
+                                                }
+                                                excludeRow.append('Exclude');
+                                                wrap.append(excludeRow);
+                                            }
+                                        }
+                                        characterFilter.append(wrap);
+                                    }
+                                    tr.append(characterFilter);
                                 }
                                 const order = document.createElement('td'); {
                                     order.setAttribute('data-col', 'order');
