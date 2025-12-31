@@ -30,6 +30,7 @@ export const initOrderHelper = ({
         order: true,
         trigger: true,
         recursion: false,
+        budget: false,
     };
     const orderHelperState = (()=>{
         const state = {
@@ -305,6 +306,7 @@ export const initOrderHelper = ({
                                 { key:'order', label:'Order' },
                                 { key:'trigger', label:'Trigger %' },
                                 { key:'recursion', label:'Recursion' },
+                                { key:'budget', label:'Budget' },
                             ];
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
@@ -622,6 +624,7 @@ export const initOrderHelper = ({
                                 { label:'Order', key:'order' },
                                 { label:'Trigger %', key:'trigger' },
                                 { label:'Recursion', key:'recursion' },
+                                { label:'Budget', key:'budget' },
                             ];
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
@@ -920,6 +923,31 @@ export const initOrderHelper = ({
                                         recursion.append(wrap);
                                     }
                                     tr.append(recursion);
+                                }
+                                const budget = document.createElement('td'); {
+                                    budget.setAttribute('data-col', 'budget');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--recursionOptions');
+                                        const row = document.createElement('label'); {
+                                            row.classList.add('stwid--recursionRow');
+                                            const input = document.createElement('input'); {
+                                                input.type = 'checkbox';
+                                                input.classList.add('checkbox');
+                                                input.checked = Boolean(e.data.ignoreBudget);
+                                                input.addEventListener('change', async()=> {
+                                                    const entryData = cache[e.book].entries[e.data.uid];
+                                                    entryData.ignoreBudget = input.checked;
+                                                    e.data.ignoreBudget = input.checked;
+                                                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                                });
+                                                row.append(input);
+                                            }
+                                            row.append('Ignore budget');
+                                            wrap.append(row);
+                                        }
+                                        budget.append(wrap);
+                                    }
+                                    tr.append(budget);
                                 }
                                 setOrderHelperRowSelected(tr, true);
                                 tbody.append(tr);

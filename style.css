@@ -417,6 +417,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-recursion [data-col="recursion"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-budget [data-col="budget"] {
+  display: none;
+}
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
@@ -669,6 +672,11 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--orderTable tr th[data-col="recursion"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="recursion"] {
   min-width: 12em;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="budget"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="budget"] {
+  min-width: 10em;
+  text-align: center;
 }
 .stwid--orderHelper .stwid--recursionOptions {
   display: flex;
