@@ -28,6 +28,7 @@ export const initOrderHelper = ({
         depth: true,
         outlet: true,
         group: false,
+        content: false,
         order: true,
         sticky: false,
         cooldown: false,
@@ -309,6 +310,7 @@ export const initOrderHelper = ({
                                 { key:'depth', label:'Depth' },
                                 { key:'outlet', label:'Outlet' },
                                 { key:'group', label:'Inclusion Group' },
+                                { key:'content', label:'Content' },
                                 { key:'order', label:'Order' },
                                 { key:'sticky', label:'Sticky' },
                                 { key:'cooldown', label:'Cooldown' },
@@ -632,6 +634,7 @@ export const initOrderHelper = ({
                                 { label:'Depth', key:'depth' },
                                 { label:'Outlet', key:'outlet' },
                                 { label:'Inclusion Group', key:'group' },
+                                { label:'Content', key:'content' },
                                 { label:'Order', key:'order' },
                                 { label:'Sticky', key:'sticky' },
                                 { label:'Cooldown', key:'cooldown' },
@@ -915,6 +918,43 @@ export const initOrderHelper = ({
                                         group.append(wrap);
                                     }
                                     tr.append(group);
+                                }
+                                const content = document.createElement('td'); {
+                                    content.setAttribute('data-col', 'content');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--colwrap');
+                                        wrap.classList.add('stwid--contentWrap');
+                                        const input = document.createElement('textarea'); {
+                                            input.classList.add('stwid--input');
+                                            input.classList.add('text_pole');
+                                            input.classList.add('stwid--orderInputTight');
+                                            input.name = 'content';
+                                            input.rows = 2;
+                                            input.value = cache[e.book].entries[e.data.uid].content ?? '';
+                                            input.addEventListener('change', async()=> {
+                                                const value = input.value;
+                                                cache[e.book].entries[e.data.uid].content = value;
+                                                e.data.content = value;
+                                                await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                            });
+                                            wrap.append(input);
+                                        }
+                                        const focusToggle = document.createElement('div'); {
+                                            focusToggle.classList.add('stwid--focusToggle');
+                                            focusToggle.classList.add('menu_button');
+                                            focusToggle.classList.add('fa-solid', 'fa-fw', 'fa-expand');
+                                            focusToggle.title = 'Focus content';
+                                            focusToggle.addEventListener('click', ()=> {
+                                                const isFocused = body.classList.toggle('stwid--focusContent');
+                                                focusToggle.classList.toggle('fa-expand', !isFocused);
+                                                focusToggle.classList.toggle('fa-compress', isFocused);
+                                                focusToggle.title = isFocused ? 'Unfocus content' : 'Focus content';
+                                            });
+                                            wrap.append(focusToggle);
+                                        }
+                                        content.append(wrap);
+                                    }
+                                    tr.append(content);
                                 }
                                 const order = document.createElement('td'); {
                                     order.setAttribute('data-col', 'order');

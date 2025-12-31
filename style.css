@@ -412,6 +412,12 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-group [data-col="group"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-content [data-col="content"] {
+  display: none;
+}
+.stwid--orderHelper.stwid--focusContent .stwid--orderTable tr :is(th, td):not([data-col="entry"]):not([data-col="content"]) {
+  display: none;
+}
 .stwid--orderHelper.stwid--hide-col-order [data-col="order"] {
   display: none;
 }
@@ -684,6 +690,30 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper .stwid--orderTable tr th[data-col="budget"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="budget"] {
   min-width: 7em;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col="content"],
+.stwid--orderHelper .stwid--orderTable tr td[data-col="content"] {
+  min-width: 16em;
+}
+.stwid--orderHelper .stwid--orderTable tr td[data-col="content"] {
+  height: 100%;
+}
+.stwid--orderHelper .stwid--contentWrap {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35em;
+  height: 100%;
+}
+.stwid--orderHelper .stwid--contentWrap textarea[name="content"] {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 2.5em;
+  resize: vertical;
+}
+.stwid--orderHelper .stwid--contentWrap .stwid--focusToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .stwid--orderHelper .stwid--recursionOptions {
   display: flex;
