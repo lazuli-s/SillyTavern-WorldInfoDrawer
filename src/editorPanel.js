@@ -5,7 +5,6 @@ export const initEditorPanel = ({
     renderTemplateAsync,
     getWorldEntry,
     cache,
-    getCurrentEditor,
     setCurrentEditor,
     getSelectFrom,
     selectEnd,

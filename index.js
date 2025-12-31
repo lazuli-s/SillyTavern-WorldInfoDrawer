@@ -520,7 +520,6 @@ const addDrawer = ()=>{
                     renderTemplateAsync,
                     getWorldEntry,
                     cache,
-                    getCurrentEditor: () => currentEditor,
                     setCurrentEditor: (value) => {
                         currentEditor = value;
                     },
