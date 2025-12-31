@@ -847,6 +847,7 @@ export const initOrderHelper = ({
                                         const input = document.createElement('input'); {
                                             input.classList.add('stwid--input');
                                             input.classList.add('text_pole');
+                                            input.classList.add('stwid--orderInputTight');
                                             input.name = 'outletName';
                                             input.type = 'text';
                                             input.value = cache[e.book].entries[e.data.uid].outletName ?? e.data.outletName ?? '';
@@ -880,6 +881,7 @@ export const initOrderHelper = ({
                                         const input = document.createElement('input'); {
                                             input.classList.add('stwid--input');
                                             input.classList.add('text_pole');
+                                            input.classList.add('stwid--orderInputTight');
                                             input.name = 'group';
                                             input.type = 'text';
                                             input.value = cache[e.book].entries[e.data.uid].group ?? '';
@@ -995,6 +997,7 @@ export const initOrderHelper = ({
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
+                                        inp.classList.add('stwid--orderInputTight');
                                         inp.name = 'automationId';
                                         inp.type = 'text';
                                         inp.value = cache[e.book].entries[e.data.uid].automationId ?? e.data.automationId ?? '';

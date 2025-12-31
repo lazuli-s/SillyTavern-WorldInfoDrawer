@@ -771,8 +771,13 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 }
 .stwid--orderTable tr td .stwid--outlet input[name="outletName"] {
   width: 100%;
-  min-width: 6em;
+  min-width: 7em;
   font-size: 0.85em;
+}
+.stwid--orderHelper .stwid--orderInputTight {
+  min-height: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 .stwid--orderTable tr td .stwid--position {
   font-size: 0.9em;
