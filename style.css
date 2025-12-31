@@ -635,18 +635,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   padding: 0 0.7em;
   width: 0;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="select"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="select"] {
-  min-width: 1em;
-  text-align: center;
-}
-.stwid--orderHelper .stwid--orderTable tr th[data-col="drag"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="drag"] {
-  min-width: 1em;
-  text-align: center;
-}
-.stwid--orderHelper .stwid--orderTable tr th[data-col="enabled"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="enabled"] {
+.stwid--orderHelper .stwid--orderTable tr :is(th, td)[data-col="select"],
+.stwid--orderHelper .stwid--orderTable tr :is(th, td)[data-col="drag"],
+.stwid--orderHelper .stwid--orderTable tr :is(th, td)[data-col="enabled"] {
   min-width: 1em;
   text-align: center;
 }
@@ -656,45 +647,40 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   padding-top: 1em;
   padding-bottom: 1em;
 }
+.stwid--orderHelper .stwid--orderTable tr :is(th, td):is([data-col="strategy"], [data-col="position"], [data-col="depth"], [data-col="outlet"], [data-col="order"], [data-col="trigger"], [data-col="recursion"], [data-col="budget"]) {
+  text-align: center;
+}
 .stwid--orderHelper .stwid--orderTable tr th[data-col="strategy"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="strategy"] {
   min-width: 5em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="position"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="position"] {
   min-width: 7em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="depth"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="depth"] {
   min-width: 5em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="outlet"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="outlet"] {
   min-width: 8em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="order"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="order"] {
   min-width: 5em;
- text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="trigger"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="trigger"] {
   min-width: 5em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="recursion"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="recursion"] {
   min-width: 12em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--orderTable tr th[data-col="budget"],
 .stwid--orderHelper .stwid--orderTable tr td[data-col="budget"] {
   min-width: 7em;
-  text-align: center;
 }
 .stwid--orderHelper .stwid--recursionOptions {
   display: flex;
