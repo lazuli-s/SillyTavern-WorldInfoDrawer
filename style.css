@@ -408,6 +408,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderHelper.stwid--hide-col-outlet [data-col="outlet"] {
   display: none;
 }
+.stwid--orderHelper.stwid--hide-col-group [data-col="group"] {
+  display: none;
+}
 .stwid--orderHelper.stwid--hide-col-order [data-col="order"] {
   display: none;
 }
