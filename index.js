@@ -1,5 +1,4 @@
 import { event_types, eventSource, getRequestHeaders } from '../../../../script.js';
-import { AutoComplete } from '../../../autocomplete/AutoComplete.js';
 import { extensionNames } from '../../../extensions.js';
 import { Popup } from '../../../popup.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
