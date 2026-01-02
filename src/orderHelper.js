@@ -735,11 +735,18 @@ export const initOrderHelper = ({
                                                 const menuWrap = document.createElement('div'); {
                                                     menuWrap.classList.add('stwid--columnMenuWrap');
                                                     const menuButton = document.createElement('div'); {
-                                                        menuButton.classList.add('menu_button', 'fa-solid', 'fa-fw', 'fa-filter', 'stwid--orderFilterButton');
+                                                        menuButton.classList.add(
+                                                            'menu_button',
+                                                            'fa-solid',
+                                                            'fa-fw',
+                                                            'fa-filter',
+                                                            'stwid--orderFilterButton',
+                                                            'stwid--columnMenuButton',
+                                                        );
                                                         menuWrap.append(menuButton);
                                                     }
                                                     const menu = document.createElement('div'); {
-                                                        menu.classList.add('stwid--columnMenu', 'stwid--orderFilterMenu');
+                                                        menu.classList.add('stwid--columnMenu');
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
                                                             menu.classList.remove('stwid--active');
