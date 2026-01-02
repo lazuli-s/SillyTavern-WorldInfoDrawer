@@ -1,30 +1,37 @@
 body #WorldInfo > .stwid--body {
   display: none;
 }
+
 body.stwid--.stwid--nonDiscord #WorldInfo {
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
   max-height: unset;
 }
+
 body.stwid-- #WorldInfo {
   flex-direction: column;
   overflow: hidden;
 }
+
 body.stwid-- #WorldInfo.openDrawer {
   display: flex !important;
 }
+
 body.stwid-- #WorldInfo #wi-holder {
   display: none;
 }
+
 body.stwid-- #WorldInfo > .stwid--body {
   flex: 1 1 auto;
   display: flex;
   gap: 0;
   overflow: hidden;
 }
+
 body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading {
   pointer-events: none;
 }
+
 body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
   content: 'Loading...';
   position: absolute;
@@ -35,6 +42,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
   justify-content: center;
   font-size: 5em;
 }
+
 body.stwid-- #WorldInfo .stwid--list {
   flex: 0 0 auto;
   display: flex;
@@ -42,22 +50,27 @@ body.stwid-- #WorldInfo .stwid--list {
   overflow: hidden;
   width: 300px;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--controls {
   display: flex;
   flex-direction: column;
   gap: 0.25em;
   align-items: stretch;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow {
   --stwid-control-height: 2.35em;
+
   display: flex;
   gap: 0.25em;
   align-items: center;
   flex-wrap: wrap;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
   flex-wrap: nowrap;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .text_pole {
   height: var(--stwid-control-height);
   min-height: var(--stwid-control-height);
@@ -66,6 +79,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .tex
   align-items: center;
   box-sizing: border-box;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid--bookSortToggle,
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid--clearBookSorts {
   display: inline-flex;
@@ -75,35 +89,43 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid
   min-height: var(--stwid-control-height);
   height: var(--stwid-control-height);
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--filter {
   display: flex;
   gap: 0.75em;
   align-items: center;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--searchEntries,
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterActive {
   display: flex;
   gap: 0.5em;
   align-items: center;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books {
   flex: 1 1 auto;
   overflow: auto;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget .stwid--head {
   background-color: rgb(from orange r g b / 0.125);
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-active,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-query {
   display: none;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -112,6 +134,7 @@ body.stwid--
   .stwid--head {
   background-color: var(--white20a);
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
   display: flex;
   gap: 0.5em;
@@ -120,6 +143,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
   top: 0;
   z-index: 1;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--title {
   flex: 1 1 auto;
   cursor: pointer;
@@ -128,11 +152,13 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .st
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions {
   display: flex;
   gap: 0.25em;
   align-items: center;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -145,6 +171,7 @@ body.stwid--
   opacity: 0.5;
   transition: 200ms;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -155,6 +182,7 @@ body.stwid--
   .stwid--action:hover {
   opacity: 1;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -163,6 +191,7 @@ body.stwid--
   .stwid--entryList.stwid--isCollapsed {
   display: none;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
   display: flex;
   gap: 0.5em;
@@ -171,6 +200,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
   overflow: hidden;
   transition: 200ms;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -179,10 +209,12 @@ body.stwid--
   .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
   pointer-events: none;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected {
   background-color: rgb(from orange r g b / 0.125);
   cursor: grab;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -197,6 +229,7 @@ body.stwid--
   .stwid--entry.stwid--isSelected.stwid--active {
   background-color: rgb(from orange r g b / 0.25);
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -206,13 +239,16 @@ body.stwid--
   *:not(:is(.stwid--selector)) {
   pointer-events: none;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--filter-query {
   display: none;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--active {
   background-color: var(--white20a);
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover .stwid--status,
 body.stwid--
   #WorldInfo
@@ -223,6 +259,7 @@ body.stwid--
   .stwid--status {
   opacity: 1;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -231,6 +268,7 @@ body.stwid--
   .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
   opacity: 0.5;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--selector {
   display: flex;
   align-items: center;
@@ -238,6 +276,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   transition: 200ms;
   cursor: pointer;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -247,11 +286,13 @@ body.stwid--
   .stwid--selector:hover {
   opacity: 1;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body {
   flex: 1 1 auto;
   cursor: pointer;
   overflow: hidden;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -265,6 +306,7 @@ body.stwid--
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -281,6 +323,7 @@ body.stwid--
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--status {
   align-self: center;
   display: flex;
@@ -289,6 +332,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   opacity: 0.5;
   transition: 200ms;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--list
@@ -300,6 +344,7 @@ body.stwid--
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
+
 body.stwid-- #WorldInfo .stwid--splitter {
   flex: 0 0 auto;
   width: 6px;
@@ -309,10 +354,12 @@ body.stwid-- #WorldInfo .stwid--splitter {
   opacity: 0.6;
   transition: opacity 0.15s ease-in-out;
 }
+
 body.stwid-- #WorldInfo .stwid--splitter:hover,
 body.stwid-- #WorldInfo .stwid--splitter:active {
   opacity: 1;
 }
+
 body.stwid-- #WorldInfo .stwid--editor {
   flex: 1 1 auto;
   min-width: 300px;
@@ -320,6 +367,7 @@ body.stwid-- #WorldInfo .stwid--editor {
   flex-direction: column;
   overflow: hidden;
 }
+
 body.stwid-- #WorldInfo .stwid--editor:empty::after {
   content: '\f558';
   font-family: 'Font Awesome 6 Free';
@@ -330,29 +378,33 @@ body.stwid-- #WorldInfo .stwid--editor:empty::after {
   align-items: center;
   justify-content: center;
 }
+
 body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings {
   flex-wrap: nowrap;
 }
+
 body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings #wiCheckboxes {
   flex: 0 0 auto;
   width: unset;
 }
+
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
 body.stwid--
   #WorldInfo
   .stwid--editor.stwid--focus
   .world_entry
-  *:not(:has([name='content'])):not([name='content']):not(:has([class*='stwim--'])):not(
-    [class*='stwim--']
-  ) {
+  *:not(:has([name='content']), [name='content'], :has([class*='stwim--']), [class*='stwim--']) {
   display: none;
 }
+
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus .stwid--unfocusToggle {
   display: flex;
 }
+
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
   justify-content: end;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--editor.stwid--focus
@@ -362,41 +414,50 @@ body.stwid--
   top: -3em;
   right: 0;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .stwid--unfocusToggle {
   display: none;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .stwid--focusToggle {
   margin-left: 1em;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .world_entry,
 body.stwid-- #WorldInfo .stwid--editor .world_entry_form,
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   height: 100%;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   display: flex;
   flex-direction: column;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .drag-handle,
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-toggle {
   display: none;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
   flex: 1 1 auto;
   display: flex !important;
   flex-direction: column;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
+
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > :nth-child(1) {
   flex: 1 1 auto;
   flex-direction: column;
   align-items: stretch;
 }
+
 body.stwid--
   #WorldInfo
   .stwid--editor
@@ -405,20 +466,25 @@ body.stwid--
   .inline-drawer:has(> .userSettingsInnerExpandable) {
   display: none;
 }
+
 body.stwid-- #WorldInfo .stwid--editor [name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
 }
+
 body.stwid-- #WorldInfo .stwid--editor [name='content'] {
   flex: 1 1 auto;
 }
+
 body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
+
 .stwid--blocker {
   position: fixed;
   inset: 0;
   z-index: 30000;
 }
+
 .stwid--blocker .stwid--menu {
   --stwid-menu-item-height: 2.05em;
 
@@ -429,8 +495,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   margin-top: -1lh;
   filter: drop-shadow(1px 1px 2px var(--black50a));
   z-index: 30000;
-  overflow-x: clip;
-  overflow-y: auto;
+  overflow: clip auto;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
   display: flex;
@@ -439,6 +504,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   font-size: 0.9em;
   padding: 0.5em;
 }
+
 .stwid--blocker .stwid--menu .stwid--item {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
@@ -454,29 +520,35 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   box-sizing: border-box;
   padding: 3px;
 }
+
 .stwid--blocker .stwid--menu .stwid--item:hover {
   opacity: 1;
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
+
 .stwid--blocker .stwid--menu .stwid--item .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
 }
+
 .stwid--blocker .stwid--menu .stwid--item .stwid--label {
   flex: 1 1 auto;
   min-width: fit-content;
 }
+
 .stwid--blocker .stwid--menu .stwid--item #lorebook_ordering_button {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.35em;
 }
+
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
   opacity: 1;
   cursor: default;
 }
+
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
   width: fit-content;
   color: inherit;
@@ -486,6 +558,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   margin: 0;
   font-size: 1em;
 }
+
 .stwid--orderHelper {
   display: flex;
   flex-direction: column;
@@ -493,48 +566,63 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   min-height: 0;
   overflow: hidden;
 }
+
 .stwid--orderHelper.stwid--hideKeys .stwid--key {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-strategy [data-col='strategy'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-position [data-col='position'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-depth [data-col='depth'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-outlet [data-col='outlet'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-group [data-col='group'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-order [data-col='order'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-sticky [data-col='sticky'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-cooldown [data-col='cooldown'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-delay [data-col='delay'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-automationId [data-col='automationId'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-trigger [data-col='trigger'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-recursion [data-col='recursion'] {
   display: none;
 }
+
 .stwid--orderHelper.stwid--hide-col-budget [data-col='budget'] {
   display: none;
 }
+
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
@@ -544,12 +632,14 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   background-color: var(--SmartThemeBlurTintColor);
   padding: 0 0.5em;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--actionsDivider {
   align-self: stretch;
   width: 1px;
   background-color: var(--SmartThemeBorderColor);
   opacity: 0.5;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--inputWrap {
   display: flex;
   align-items: center;
@@ -557,10 +647,12 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--inputWrap .stwid--input {
   width: 33%;
   min-width: 4em;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility {
   display: flex;
   align-items: center;
@@ -569,22 +661,27 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   font-size: smaller;
   position: relative;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnVisibilityLabel {
   display: flex;
   align-items: center;
   gap: 0.35em;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnVisibilityText {
   line-height: 1.1;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenuWrap {
   position: relative;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenuButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenu {
   position: absolute;
   top: calc(100% + 0.35em);
@@ -599,9 +696,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   gap: 0.6em;
   z-index: 3;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenu.stwid--active {
   display: flex;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnOption {
   display: flex;
   align-items: center;
@@ -609,6 +708,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   font-size: 1em;
   cursor: pointer;
 }
+
 .stwid--orderHelper
   .stwid--actions
   .stwid--columnVisibility
@@ -617,42 +717,51 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   width: 0.85em;
   height: 0.85em;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--actionsRight {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 0.75em;
 }
+
 .stwid--orderHelper .stwid--actions .stwid--actionsRight .stwid--actionsDivider {
   margin-right: 0.5em;
 }
+
 .stwid--orderHelper .stwid--filter {
   background-color: var(--SmartThemeBlurTintColor);
   display: none;
   gap: 1em;
   height: 20vh;
 }
+
 .stwid--orderHelper .stwid--filter.stwid--active {
   display: flex;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.5em;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--hint {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--hint code {
   font-size: smaller;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--syntax,
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input {
   grid-column: 1;
@@ -662,7 +771,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   font-family: var(--monoFontFamily, monospace);
   padding: 0.75em;
   margin: 0;
-  border: none;
   line-height: 1.2;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 5px;
@@ -671,9 +779,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   tab-size: 4;
   max-height: unset;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input {
   caret-color: var(--ac-style-color-text);
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar,
 .stwid--orderHelper
   .stwid--filter
@@ -682,15 +792,18 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   .stwid--input::-webkit-scrollbar-thumb {
   visibility: hidden;
 }
+
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::selection {
   color: transparent;
   background-color: rgba(108 171 251 / 0.25);
 }
+
 @supports (rgb(from var(--ac-style-color-matchedText) r g b / 0.25)) {
   .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::selection {
     background-color: rgb(from var(--ac-style-color-matchedText) r g b / 0.25);
   }
 }
+
 .stwid--orderHelper .stwid--filter .stwid--preview {
   font-family: var(--monoFontFamily, monospace);
   font-size: 0.6em;
@@ -699,14 +812,17 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   overflow: auto;
   height: 100%;
 }
+
 .stwid--orderHelper .stwid--input {
   width: auto;
 }
+
 .stwid--orderTableWrap {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
 }
+
 .stwid--orderTable {
   border: 0;
   border-collapse: collapse;
@@ -715,6 +831,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   white-space: normal;
   width: 100%;
 }
+
 .stwid--orderTable thead {
   background-color: var(--SmartThemeBlurTintColor);
   position: sticky;
@@ -722,121 +839,147 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   z-index: 1;
   font-size: smaller;
 }
+
 .stwid--orderTable tr {
   border-bottom: 5px solid var(--SmartThemeBorderColor);
   transition: 200ms;
   background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
 }
+
 .stwid--orderTable tr:hover {
   background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
 }
+
 .stwid--orderTable tr.stwid--isFiltered {
   display: none;
 }
+
 .stwid--orderTable tr:not(.stwid--applySelected) {
   opacity: 0.6;
 }
+
 .stwid--orderTable tr:has(.stwid--enabled.fa-toggle-off) {
   opacity: 0.5;
 }
+
 .stwid--orderTable tr th,
 .stwid--orderTable tr td {
   text-align: left;
   padding: 0 0.7em;
   width: 0;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='select'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='select'] {
   min-width: 1em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='drag'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='drag'] {
   min-width: 1em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='enabled'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='enabled'] {
   min-width: 1em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='entry'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='entry'] {
   min-width: 12em;
   padding-top: 1em;
   padding-bottom: 1em;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='strategy'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='strategy'] {
   min-width: 5em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='position'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='position'] {
   min-width: 7em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='depth'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='depth'] {
   min-width: 5em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='outlet'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='outlet'] {
   min-width: 8em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='order'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='order'] {
   min-width: 5em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='trigger'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='trigger'] {
   min-width: 5em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='recursion'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='recursion'] {
   min-width: 12em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='budget'] {
   min-width: 7em;
   text-align: center;
 }
+
 .stwid--orderHelper .stwid--recursionOptions {
   display: flex;
   flex-direction: column;
-  gap: 0em;
+  gap: 0;
   font-size: 0.85em;
 }
+
 .stwid--orderHelper .stwid--recursionRow {
   display: flex;
   align-items: center;
   gap: 0.4em;
 }
+
 .stwid--orderHelper .stwid--recursionRow .checkbox {
   width: 0.85em;
   height: 0.85em;
 }
+
 .stwid--orderHelper .stwid--recursionOptions br {
   display: none;
 }
+
 .stwid--orderTable tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
   font-size: small;
 }
+
 .stwid--orderTable tr td .stwid--sortableHandle {
   cursor: pointer;
   opacity: 0.5;
   padding: 4px;
   transition: 200ms;
 }
+
 .stwid--orderTable tr td .stwid--sortableHandle:hover {
   opacity: 1;
 }
+
 .stwid--orderTable tr td .stwid--orderSelect {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
@@ -846,49 +989,61 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   gap: 0.25em;
   transition: 200ms;
 }
+
 .stwid--orderTable tr td .stwid--orderSelect:hover {
   opacity: 0.8;
 }
+
 .stwid--orderTable tr td .stwid--orderSelect .stwid--icon {
   pointer-events: none;
 }
+
 .stwid--orderTable tr td [name='depth'] {
   display: none;
 }
+
 .stwid--orderTable tr td:has([name='position'] > [value='4']:checked) + td > [name='depth'] {
   display: inline-block;
 }
+
 .stwid--orderTable tr td:has(.stwid--entry) {
   width: 100%;
 }
+
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
   color: var(--SmartThemeEmColor);
   font-size: 0.8em;
   line-height: 1;
 }
+
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--commentLink {
   color: inherit;
 }
+
 .stwid--orderTable tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
   font-size: 1.1em;
   font-weight: 500;
 }
+
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: 0.75em;
   font-style: italic;
   line-height: 1;
 }
+
 .stwid--orderTable tr td .stwid--outlet {
   color: var(--SmartThemeBodyColor);
   font-size: 0.85em;
   min-width: 6em;
   word-break: break-word;
 }
+
 .stwid--orderTable tr td .stwid--outlet input[name='outletName'] {
   width: 100%;
   min-width: 7em;
 }
+
 .stwid--orderHelper .stwid--orderInputTight,
 .stwid--orderHelper
   .stwid--orderTable
@@ -906,19 +1061,23 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   padding-right: 5px;
   font-size: 0.95em;
 }
+
 .stwid--orderTable tr td .stwid--position {
   font-size: 0.9em;
 }
+
 .stwid--orderTable tr td input[name='depth'],
 .stwid--orderTable tr td input[name='order'],
 .stwid--orderTable tr td input[name='selective_probability'] {
   min-width: 4em;
   font-size: 0.95em;
 }
+
 .stwid--orderTable tr td .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
+
 .stwid--helpToast {
   margin: 0;
   padding-left: 0.5em;
