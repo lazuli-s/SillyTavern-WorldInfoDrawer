@@ -110,7 +110,7 @@ export const initEditorPanel = ({
         const header = editDom.querySelector('.inline-drawer-header');
         if (!header) return;
         const fieldTargets = [
-            { label: 'Entry Title', selectors: ['[name="comment"]', '.WIEntryTitleAndStatus', '.WIEntryTitle', '[name="title"]', '[name="entryTitle"]'] },
+            { label: 'Entry Title', selectors: ['[name="comment"]'] },
             { label: 'Strategy', selectors: ['[name="entryStateSelector"]'] },
             { label: 'Position', selectors: ['[name="position"]'] },
             { label: 'Depth', selectors: ['[name="depth"]'] },
