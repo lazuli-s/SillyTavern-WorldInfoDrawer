@@ -1,0 +1,6 @@
+vendor/
+node_modules/
+dist/
+docs/
+scripts/
+test/
