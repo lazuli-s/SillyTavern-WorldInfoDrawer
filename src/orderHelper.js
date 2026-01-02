@@ -18,6 +18,7 @@ export const initOrderHelper = ({
     isOutletPosition,
     hljs,
     $,
+    extensionNames,
 }) => {
     const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
     const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
@@ -393,6 +394,47 @@ export const initOrderHelper = ({
                         }
                     });
                     actions.append(filterToggle);
+                }
+                if (extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
+                    const bulkEdit = document.createElement('div'); {
+                        bulkEdit.classList.add('menu_button');
+                        bulkEdit.classList.add('stwid--item', 'stwid--bulkEdit');
+                        bulkEdit.classList.add('fa-solid', 'fa-fw', 'fa-list-check');
+                        bulkEdit.title = 'Bulk edit visible selected entries';
+                        bulkEdit.addEventListener('click', async()=>{
+                            const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
+                            const selected = rows
+                                .filter((row)=>!row.classList.contains('stwid--isFiltered'))
+                                .filter(isOrderHelperRowSelected)
+                                .map((row)=>({
+                                    book: row.getAttribute('data-book'),
+                                    uid: row.getAttribute('data-uid'),
+                                }))
+                                .filter((entry)=>entry.book && entry.uid);
+                            if (selected.length === 0) {
+                                toastr.info('No visible selected entries are available for bulk edit.');
+                                return;
+                            }
+                            if (typeof window.stwibeOpenBulkEdit === 'function') {
+                                window.stwibeOpenBulkEdit(selected);
+                                return;
+                            }
+                            const firstBook = selected[0]?.book;
+                            if (firstBook) {
+                                const bookSelect = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+                                const option = bookSelect
+                                    ? [...bookSelect.children].find((it)=>it.textContent == firstBook)
+                                    : null;
+                                if (bookSelect && option) {
+                                    bookSelect.value = option.value;
+                                    bookSelect.dispatchEvent(new Event('change', { bubbles:true }));
+                                    await new Promise((resolve)=>setTimeout(resolve, 500));
+                                }
+                            }
+                            document.querySelector('.stwibe--trigger')?.click();
+                        });
+                        actions.append(bulkEdit);
+                    }
                 }
                 const rightGroup = document.createElement('div'); {
                     rightGroup.classList.add('stwid--actionsRight');
