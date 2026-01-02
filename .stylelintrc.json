@@ -1,6 +1,16 @@
 {
   "extends": "stylelint-config-standard",
   "rules": {
-    "selector-class-pattern": null
+    "selector-class-pattern": null,
+
+    "selector-id-pattern": null,
+    "custom-property-pattern": null,
+
+    "no-descending-specificity": null,
+
+    "alpha-value-notation": null,
+    "color-function-notation": null,
+    "color-function-alias-notation": null,
+    "value-keyword-case": null
   }
 }
