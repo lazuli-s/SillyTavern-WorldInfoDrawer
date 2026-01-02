@@ -401,7 +401,7 @@ export const initOrderHelper = ({
                         bulkEdit.classList.add('stwid--item', 'stwid--bulkEdit');
                         bulkEdit.classList.add('fa-solid', 'fa-fw', 'fa-list-check');
                         bulkEdit.title = 'Bulk edit visible selected entries';
-                        bulkEdit.addEventListener('click', ()=>{
+                        bulkEdit.addEventListener('click', async()=>{
                             const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
                             const selected = rows
                                 .filter((row)=>!row.classList.contains('stwid--isFiltered'))
@@ -418,6 +418,18 @@ export const initOrderHelper = ({
                             if (typeof window.stwibeOpenBulkEdit === 'function') {
                                 window.stwibeOpenBulkEdit(selected);
                                 return;
+                            }
+                            const firstBook = selected[0]?.book;
+                            if (firstBook) {
+                                const bookSelect = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+                                const option = bookSelect
+                                    ? [...bookSelect.children].find((it)=>it.textContent == firstBook)
+                                    : null;
+                                if (bookSelect && option) {
+                                    bookSelect.value = option.value;
+                                    bookSelect.dispatchEvent(new Event('change', { bubbles:true }));
+                                    await new Promise((resolve)=>setTimeout(resolve, 500));
+                                }
                             }
                             document.querySelector('.stwibe--trigger')?.click();
                         });
