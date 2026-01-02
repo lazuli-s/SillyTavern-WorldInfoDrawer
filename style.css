@@ -691,7 +691,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
   padding: 0.7em;
-  min-width: 14em;
   display: none;
   flex-direction: column;
   gap: 0.6em;
@@ -719,7 +718,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.2em;
+  gap: 0.8em;
 }
 
 .stwid--orderHelper .stwid--orderTable .stwid--columnFilter {
@@ -735,7 +734,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   min-height: 0;
   min-width: 0;
   line-height: 1;
-  opacity: 0.2;
   font-size: 0.85em;
 }
 
