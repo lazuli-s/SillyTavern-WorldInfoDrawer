@@ -106,6 +106,34 @@ export const initEditorPanel = ({
         }
     };
 
+    const addEditorFieldLabels = (editDom) => {
+        const header = editDom.querySelector('.inline-drawer-header');
+        if (!header) return;
+        const fieldTargets = [
+            { label: 'Entry Title', selectors: ['[name="title"]', '[name="entryTitle"]'] },
+            { label: 'Strategy', selectors: ['[name="entryStateSelector"]'] },
+            { label: 'Position', selectors: ['[name="position"]'] },
+            { label: 'Depth', selectors: ['[name="depth"]'] },
+            { label: 'Order', selectors: ['[name="order"]'] },
+            { label: 'Trigger %', selectors: ['[name="probability"]', '[name="trigger"]', '[name="triggerChance"]'] },
+        ];
+
+        for (const target of fieldTargets) {
+            const field = target.selectors
+                .map((selector) => header.querySelector(selector))
+                .find(Boolean);
+            if (!field) continue;
+            const wrapper = field.closest('.world_entry_form_control') ?? field.parentElement;
+            if (!wrapper || wrapper.querySelector(':scope > .stwid--fieldLabel')) continue;
+            wrapper.classList.add('stwid--headerField');
+            const label = document.createElement('div'); {
+                label.classList.add('stwid--fieldLabel', 'small');
+                label.textContent = target.label;
+                wrapper.prepend(label);
+            }
+        }
+    };
+
     const openEntryEditor = async ({ entry, entryDom, name, isTokenCurrent }) => {
         if (getSelectFrom()) selectEnd();
         clearEntryHighlights();
@@ -127,6 +155,7 @@ export const initEditorPanel = ({
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
+        addEditorFieldLabels(editDom);
         dom.editor.append(editDom);
         setCurrentEditor({ name, uid: entry.uid });
     };
