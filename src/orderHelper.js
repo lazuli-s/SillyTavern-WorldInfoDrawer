@@ -22,6 +22,17 @@ export const initOrderHelper = ({
     const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
     const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
     const ORDER_HELPER_COLUMNS_STORAGE_KEY = 'stwid--order-helper-columns';
+    const getStrategyOptions = ()=>{
+        const select = document.querySelector('#entry_edit_template [name="entryStateSelector"]');
+        if (!select) return [];
+        return [...select.querySelectorAll('option')]
+            .map((option)=>({
+                value: option.value,
+                label: option.textContent?.trim() ?? option.value,
+            }))
+            .filter((option)=>option.value);
+    };
+    const getStrategyValues = ()=>getStrategyOptions().map((option)=>option.value);
     const ORDER_HELPER_DEFAULT_COLUMNS = {
         strategy: true,
         position: true,
@@ -44,6 +55,10 @@ export const initOrderHelper = ({
             book:null,
             hideKeys:false,
             columns: { ...ORDER_HELPER_DEFAULT_COLUMNS },
+            filters: {
+                strategy: getStrategyValues(),
+            },
+            strategyValues: getStrategyValues(),
         };
         try {
             const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_SORT_STORAGE_KEY));
@@ -69,6 +84,11 @@ export const initOrderHelper = ({
         } catch { /* empty */ }
         return state;
     })();
+
+    const normalizeStrategyFilters = (filters)=>{
+        const allowed = new Set(getStrategyValues());
+        return filters.filter((value)=>allowed.has(value));
+    };
 
     const getEntryDisplayIndex = (entry)=>{
         const displayIndex = Number(entry?.extensions?.display_index);
@@ -203,6 +223,66 @@ export const initOrderHelper = ({
         }
     };
 
+    const updateOrderHelperRowFilterClass = (row)=>{
+        if (!row) return;
+        const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
+        const scriptFiltered = row.dataset.stwidFilterScript === 'true';
+        row.classList.toggle('stwid--isFiltered', strategyFiltered || scriptFiltered);
+    };
+
+    const setOrderHelperRowFilterState = (row, key, filtered)=>{
+        if (!row) return;
+        row.dataset[key] = filtered ? 'true' : 'false';
+        updateOrderHelperRowFilterClass(row);
+    };
+
+    const applyOrderHelperStrategyFilterToRow = (row, entryData)=>{
+        const strategyValues = orderHelperState.strategyValues.length
+            ? orderHelperState.strategyValues
+            : getStrategyValues();
+        if (!strategyValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterStrategy', false);
+            return;
+        }
+        if (!orderHelperState.filters.strategy.length) {
+            orderHelperState.filters.strategy = [...strategyValues];
+        }
+        const allowed = new Set(orderHelperState.filters.strategy);
+        const strategy = entryState(entryData);
+        setOrderHelperRowFilterState(row, 'stwidFilterStrategy', !allowed.has(strategy));
+    };
+
+    const applyOrderHelperStrategyFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperStrategyFilterToRow(row, entry.data);
+        }
+    };
+
+    const clearOrderHelperScriptFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            setOrderHelperRowFilterState(row, 'stwidFilterScript', false);
+        }
+    };
+
+    const syncOrderHelperStrategyFilters = ()=>{
+        const nextValues = getStrategyValues();
+        const hadAllSelected = orderHelperState.filters.strategy.length === orderHelperState.strategyValues.length;
+        orderHelperState.strategyValues = nextValues;
+        if (!nextValues.length) {
+            orderHelperState.filters.strategy = [];
+            return;
+        }
+        if (hadAllSelected || !orderHelperState.filters.strategy.length) {
+            orderHelperState.filters.strategy = [...nextValues];
+        } else {
+            orderHelperState.filters.strategy = normalizeStrategyFilters(orderHelperState.filters.strategy);
+        }
+    };
+
     const focusWorldEntry = (book, uid)=>{
         const entryDom = cache?.[book]?.dom?.entry?.[uid]?.root;
         if (!entryDom) return;
@@ -214,6 +294,7 @@ export const initOrderHelper = ({
 
     const renderOrderHelper = (book = null)=>{
         orderHelperState.book = book;
+        syncOrderHelperStrategyFilters();
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
         dom.order.entries = {};
@@ -390,6 +471,8 @@ export const initOrderHelper = ({
                         const is = dom.order.filter.root.classList.toggle('stwid--active');
                         if (is) {
                             updateOrderHelperPreview(getOrderHelperEntries(orderHelperState.book, true));
+                        } else {
+                            clearOrderHelperScriptFilters();
                         }
                     });
                     actions.append(filterToggle);
@@ -571,8 +654,8 @@ export const initOrderHelper = ({
                                     await closure.compile(script);
                                     const entries = getOrderHelperEntries(orderHelperState.book, true);
                                     for (const e of entries) {
-                                        dom.order.entries[e.book][e.data.uid].classList.remove('stwid--isFiltered');
-                                        dom.order.entries[e.book][e.data.uid].classList.add('stwid--isFiltered');
+                                        const row = dom.order.entries[e.book][e.data.uid];
+                                        setOrderHelperRowFilterState(row, 'stwidFilterScript', true);
                                     }
                                     for (const e of entries) {
                                         closure.scope.setVariable('entry', JSON.stringify(Object.assign({ book:e.book }, e.data)));
@@ -581,11 +664,8 @@ export const initOrderHelper = ({
                                             filterStack.splice(filterStack.indexOf(closure), 1);
                                             return;
                                         }
-                                        if (isTrueBoolean(result)) {
-                                            dom.order.entries[e.book][e.data.uid].classList.remove('stwid--isFiltered');
-                                        } else {
-                                            dom.order.entries[e.book][e.data.uid].classList.add('stwid--isFiltered');
-                                        }
+                                        const row = dom.order.entries[e.book][e.data.uid];
+                                        setOrderHelperRowFilterState(row, 'stwidFilterScript', !isTrueBoolean(result));
                                     }
                                     filterStack.splice(filterStack.indexOf(closure), 1);
                                 } catch { /* empty */ }
@@ -643,7 +723,100 @@ export const initOrderHelper = ({
                             ];
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
-                                    th.textContent = col.label;
+                                    if (col.key === 'strategy') {
+                                        const header = document.createElement('div'); {
+                                            header.classList.add('stwid--columnHeader');
+                                            const title = document.createElement('div'); {
+                                                title.textContent = col.label;
+                                                header.append(title);
+                                            }
+                                            const filterWrap = document.createElement('div'); {
+                                                filterWrap.classList.add('stwid--columnFilter');
+                                                const menuWrap = document.createElement('div'); {
+                                                    menuWrap.classList.add('stwid--columnMenuWrap');
+                                                    const menuButton = document.createElement('div'); {
+                                                        menuButton.classList.add('menu_button', 'fa-solid', 'fa-fw', 'fa-filter', 'stwid--orderFilterButton');
+                                                        menuWrap.append(menuButton);
+                                                    }
+                                                    const menu = document.createElement('div'); {
+                                                        menu.classList.add('stwid--columnMenu', 'stwid--orderFilterMenu');
+                                                        const closeMenu = ()=>{
+                                                            if (!menu.classList.contains('stwid--active')) return;
+                                                            menu.classList.remove('stwid--active');
+                                                            document.removeEventListener('click', handleOutsideClick);
+                                                        };
+                                                        const openMenu = ()=>{
+                                                            if (menu.classList.contains('stwid--active')) return;
+                                                            menu.classList.add('stwid--active');
+                                                            document.addEventListener('click', handleOutsideClick);
+                                                        };
+                                                        const handleOutsideClick = (event)=>{
+                                                            if (menuWrap.contains(event.target)) return;
+                                                            closeMenu();
+                                                        };
+                                                        const updateFilterIndicator = ()=>{
+                                                            const allValues = orderHelperState.strategyValues.length
+                                                                ? orderHelperState.strategyValues
+                                                                : getStrategyValues();
+                                                            const filters = normalizeStrategyFilters(orderHelperState.filters.strategy);
+                                                            orderHelperState.filters.strategy = filters.length ? filters : [...allValues];
+                                                            const isActive = orderHelperState.filters.strategy.length !== allValues.length;
+                                                            menuButton.classList.toggle('stwid--active', isActive);
+                                                        };
+                                                        const updateStrategyFilters = ()=>{
+                                                            orderHelperState.filters.strategy = normalizeStrategyFilters(orderHelperState.filters.strategy);
+                                                            updateFilterIndicator();
+                                                            applyOrderHelperStrategyFilters();
+                                                        };
+                                                        const strategyOptions = getStrategyOptions();
+                                                        if (!strategyOptions.length) {
+                                                            menu.classList.add('stwid--empty');
+                                                            menu.textContent = 'No strategies available.';
+                                                        }
+                                                        for (const optionData of strategyOptions) {
+                                                            const option = document.createElement('label'); {
+                                                                option.classList.add('stwid--columnOption');
+                                                                const input = document.createElement('input'); {
+                                                                    input.type = 'checkbox';
+                                                                    input.checked = orderHelperState.filters.strategy.includes(optionData.value);
+                                                                    input.addEventListener('change', ()=>{
+                                                                        if (input.checked) {
+                                                                            if (!orderHelperState.filters.strategy.includes(optionData.value)) {
+                                                                                orderHelperState.filters.strategy.push(optionData.value);
+                                                                            }
+                                                                        } else {
+                                                                            orderHelperState.filters.strategy = orderHelperState.filters.strategy
+                                                                                .filter((item)=>item !== optionData.value);
+                                                                        }
+                                                                        updateStrategyFilters();
+                                                                    });
+                                                                    option.append(input);
+                                                                }
+                                                                option.append(optionData.label);
+                                                                menu.append(option);
+                                                            }
+                                                        }
+                                                        updateFilterIndicator();
+                                                        menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                        menuButton.addEventListener('click', (event)=>{
+                                                            event.stopPropagation();
+                                                            if (menu.classList.contains('stwid--active')) {
+                                                                closeMenu();
+                                                            } else {
+                                                                openMenu();
+                                                            }
+                                                        });
+                                                        menuWrap.append(menu);
+                                                    }
+                                                    filterWrap.append(menuWrap);
+                                                }
+                                                header.append(filterWrap);
+                                            }
+                                            th.append(header);
+                                        }
+                                    } else {
+                                        th.textContent = col.label;
+                                    }
                                     if (col.key) {
                                         th.setAttribute('data-col', col.key);
                                     }
@@ -684,6 +857,8 @@ export const initOrderHelper = ({
                             const tr = document.createElement('tr'); {
                                 tr.setAttribute('data-book', e.book);
                                 tr.setAttribute('data-uid', e.data.uid);
+                                tr.dataset.stwidFilterStrategy = 'false';
+                                tr.dataset.stwidFilterScript = 'false';
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
                                 }
@@ -796,6 +971,7 @@ export const initOrderHelper = ({
                                                     break;
                                                 }
                                             }
+                                            applyOrderHelperStrategyFilterToRow(tr, cache[e.book].entries[e.data.uid]);
                                             await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                         });
                                         strategy.append(strat);
@@ -1089,6 +1265,7 @@ export const initOrderHelper = ({
                                 tbody.append(tr);
                             }
                         }
+                        applyOrderHelperStrategyFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
                     }

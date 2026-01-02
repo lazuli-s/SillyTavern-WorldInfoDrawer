@@ -718,6 +718,70 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   height: 0.85em;
 }
 
+.stwid--orderHelper .stwid--orderTable .stwid--columnHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnFilter {
+  display: flex;
+  align-items: center;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton {
+  opacity: 0.4;
+  font-size: 0.85em;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton.stwid--active {
+  opacity: 1;
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnMenuButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnMenu {
+  position: absolute;
+  top: calc(100% + 0.35em);
+  left: 0;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  padding: 0.7em;
+  min-width: 12em;
+  display: none;
+  flex-direction: column;
+  gap: 0.6em;
+  z-index: 3;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnMenu.stwid--active {
+  display: flex;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnOption {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnOption input[type='checkbox'] {
+  width: 0.85em;
+  height: 0.85em;
+}
+
 .stwid--orderHelper .stwid--actions .stwid--actionsRight {
   margin-left: auto;
   display: flex;
