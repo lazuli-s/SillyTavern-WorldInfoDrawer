@@ -319,6 +319,7 @@ const addDrawer = ()=>{
         isOutletPosition,
         hljs,
         $,
+        extensionNames,
     });
     document.addEventListener('keydown', async(evt)=>{
         // only run when drawer is open
