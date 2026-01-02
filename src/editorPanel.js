@@ -1,3 +1,5 @@
+import { morphdom } from '../../../../../lib.js';
+
 export const initEditorPanel = ({
     dom,
     activationBlock,
@@ -78,8 +80,9 @@ export const initEditorPanel = ({
         clearEntryHighlights();
     };
 
-    const appendUnfocusButton = () => {
+    const appendUnfocusButton = (target = dom.editor) => {
         const unfocus = document.createElement('div'); {
+            unfocus.setAttribute('data-stwid-key', 'unfocus-toggle');
             unfocus.classList.add('stwid--unfocusToggle');
             unfocus.classList.add('menu_button');
             unfocus.classList.add('fa-solid', 'fa-fw', 'fa-compress');
@@ -87,7 +90,7 @@ export const initEditorPanel = ({
             unfocus.addEventListener('click', () => {
                 dom.editor.classList.toggle('stwid--focus');
             });
-            dom.editor.append(unfocus);
+            target.append(unfocus);
         }
     };
 
@@ -116,18 +119,46 @@ export const initEditorPanel = ({
             dom.order.toggle.click();
         }
         entryDom.classList.add('stwid--active');
-        clearEditor({ resetCurrent: false });
-        appendUnfocusButton();
-        dom.editor.append(
-            document.createRange()
-                .createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders'))
-                .querySelector('#WIEntryHeaderTitlesPC')
-        );
+        const header = document.createRange()
+            .createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders'))
+            .querySelector('#WIEntryHeaderTitlesPC');
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
-        dom.editor.append(editDom);
+        const newContainer = document.createElement('div');
+        newContainer.className = dom.editor.className;
+        appendUnfocusButton(newContainer);
+        if (header) {
+            header.setAttribute('data-stwid-key', 'editor-header');
+            newContainer.append(header);
+        }
+        newContainer.append(editDom);
+        const applyLegacyUpdate = () => {
+            clearEditor({ resetCurrent: false });
+            dom.editor.append(...Array.from(newContainer.childNodes));
+        };
+        try {
+            morphdom(dom.editor, newContainer, {
+                getNodeKey: (node) => node?.getAttribute?.('data-stwid-key') ?? node?.id,
+                onBeforeElUpdated: (fromEl) => {
+                    if (fromEl === document.activeElement) {
+                        const tagName = fromEl.tagName;
+                        if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                onBeforeNodeDiscarded: (node) => {
+                    if (node === activationBlock) return false;
+                    return true;
+                },
+            });
+        } catch (error) {
+            console.error('[STWID] Failed to morph editor DOM, falling back to full replacement.', error);
+            applyLegacyUpdate();
+        }
         setCurrentEditor({ name, uid: entry.uid });
     };
 
