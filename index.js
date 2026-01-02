@@ -1,4 +1,4 @@
-import { event_types, eventSource, getRequestHeaders } from '../../../../script.js';
+import { characters, chat_metadata, event_types, eventSource, getCharaFilename, getRequestHeaders, power_user, this_chid, world_info } from '../../../../script.js';
 import { extensionNames } from '../../../extensions.js';
 import { Popup } from '../../../popup.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
@@ -110,14 +110,38 @@ let editorPanelApi;
 
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
+const METADATA_KEY = 'world_info';
 const buildSavePayload = (name)=>({
     entries: structuredClone(cache[name].entries),
     metadata: cloneMetadata(cache[name].metadata),
 });
+const getEffectiveActiveWorlds = ()=>{
+    const active = new Set(selected_world_info);
+    const chatLorebook = chat_metadata?.[METADATA_KEY];
+    const personaLorebook = power_user?.persona_description_lorebook;
+    const primaryLorebook = characters?.[this_chid]?.data?.extensions?.world;
+    const charFilename = typeof getCharaFilename === 'function' ? getCharaFilename(this_chid) : null;
+    const extraLorebooks = charFilename ? world_info?.charLore?.[charFilename] : null;
+
+    for (const name of [chatLorebook, personaLorebook, primaryLorebook]) {
+        if (name) active.add(name);
+    }
+    if (Array.isArray(extraLorebooks)) {
+        for (const name of extraLorebooks) {
+            if (name) active.add(name);
+        }
+    }
+
+    const available = new Set(world_names);
+    return [...active]
+        .map((name)=>String(name ?? '').trim())
+        .filter((name)=>name && available.has(name));
+};
 const updateSettingsChange = ()=>{
     console.log('[STWID]', '[UPDATE-SETTINGS]');
+    const activeWorlds = getEffectiveActiveWorlds();
     for (const [name, world] of Object.entries(cache)) {
-        const active = selected_world_info.includes(name);
+        const active = activeWorlds.includes(name);
         if (world.dom.active.checked != active) {
             world.dom.active.checked = active;
         }
@@ -308,7 +332,7 @@ const addDrawer = ()=>{
         appendSortOptions,
         saveWorldInfo,
         buildSavePayload,
-        getSelectedWorldInfo: () => selected_world_info,
+        getEffectiveActiveWorlds,
         getListPanelApi: () => listPanelApi,
         getEditorPanelApi: () => editorPanelApi,
         debounce,
@@ -556,7 +580,7 @@ const addDrawer = ()=>{
                     },
                     safeToSorted,
                     saveWorldInfo,
-                    getSelectedWorldInfo: () => selected_world_info,
+                    getEffectiveActiveWorlds,
                     sortEntries,
                     updateWIChange,
                     world_names,

@@ -7,7 +7,7 @@ export const initOrderHelper = ({
     appendSortOptions,
     saveWorldInfo,
     buildSavePayload,
-    getSelectedWorldInfo,
+    getEffectiveActiveWorlds,
     getListPanelApi,
     getEditorPanelApi,
     debounce,
@@ -83,7 +83,7 @@ export const initOrderHelper = ({
     };
 
     const getOrderHelperSourceEntries = (book = orderHelperState.book)=>Object.entries(cache)
-        .filter(([name])=>getSelectedWorldInfo().includes(name))
+        .filter(([name])=>getEffectiveActiveWorlds().includes(name))
         .map(([name,data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
         .flat()
         .filter((entry)=>!book || entry.book === book);
