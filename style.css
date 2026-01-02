@@ -370,7 +370,7 @@ body.stwid-- #WorldInfo .stwid--editor {
 
 body.stwid-- #WorldInfo .stwid--editor:empty::after {
   content: '\f558';
-  font-family: 'Font Awesome 6 Free';
+  font-family: 'Font Awesome 6 Free', sans-serif;
   font-size: 20em;
   opacity: 0.125;
   display: flex;
@@ -1036,7 +1036,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   color: var(--SmartThemeBodyColor);
   font-size: 0.85em;
   min-width: 6em;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .stwid--orderTable tr td .stwid--outlet input[name='outletName'] {
