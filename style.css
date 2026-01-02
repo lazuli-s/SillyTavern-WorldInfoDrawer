@@ -672,17 +672,18 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   line-height: 1.1;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenuWrap {
+.stwid--orderHelper .stwid--columnMenuWrap {
   position: relative;
+  display: inline-flex;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenuButton {
+.stwid--orderHelper .stwid--columnMenuButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenu {
+.stwid--orderHelper .stwid--columnMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -690,18 +691,17 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
   padding: 0.7em;
-  min-width: 14em;
   display: none;
   flex-direction: column;
   gap: 0.6em;
   z-index: 3;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnMenu.stwid--active {
+.stwid--orderHelper .stwid--columnMenu.stwid--active {
   display: flex;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnOption {
+.stwid--orderHelper .stwid--columnOption {
   display: flex;
   align-items: center;
   gap: 0.3em;
@@ -709,14 +709,39 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   cursor: pointer;
 }
 
-.stwid--orderHelper
-  .stwid--actions
-  .stwid--columnVisibility
-  .stwid--columnOption
-  input[type='checkbox'] {
+.stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
   width: 0.85em;
   height: 0.85em;
 }
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8em;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--columnFilter {
+  display: flex;
+  align-items: center;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  min-height: 0;
+  min-width: 0;
+  line-height: 1;
+  font-size: 0.85em;
+}
+
+.stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton.stwid--active {
+  opacity: 1;
+  color: var(--SmartThemeQuoteColor);
+}
+
 
 .stwid--orderHelper .stwid--actions .stwid--actionsRight {
   margin-left: auto;
