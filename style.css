@@ -717,14 +717,14 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--orderTable .stwid--columnHeader {
   display: flex;
-  flex-direction: column;
-  gap: 0.05em;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.2em;
 }
 
 .stwid--orderHelper .stwid--orderTable .stwid--columnFilter {
   display: flex;
   align-items: center;
-  margin-top: -0.15em;
 }
 
 .stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton {
@@ -735,7 +735,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   min-height: 0;
   min-width: 0;
   line-height: 1;
-  opacity: 0.4;
+  opacity: 0.2;
   font-size: 0.85em;
 }
 
