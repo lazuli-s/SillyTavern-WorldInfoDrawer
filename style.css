@@ -452,6 +452,18 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
   align-items: stretch;
 }
 
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-header .stwid--headerField {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-header .stwid--fieldLabel {
+  text-align: center;
+  margin-bottom: 0.2em;
+  opacity: 0.85;
+}
+
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > :nth-child(1) {
   flex: 1 1 auto;
   flex-direction: column;
