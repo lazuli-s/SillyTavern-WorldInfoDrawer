@@ -6,7 +6,8 @@
     "test:watch": "vitest",
     "lint:css": "stylelint \"**/*.css\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check ." 
+    "format:check": "prettier --check .",
+    "format:css": "prettier --write style.css"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

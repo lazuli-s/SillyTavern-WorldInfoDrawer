@@ -104,7 +104,12 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-ac
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-query {
   display: none;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active) .stwid--head {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active)
+  .stwid--head {
   background-color: var(--white20a);
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
@@ -128,15 +133,34 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .st
   gap: 0.25em;
   align-items: center;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--head
+  .stwid--actions
+  .stwid--action {
   cursor: pointer;
   opacity: 0.5;
   transition: 200ms;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--head
+  .stwid--actions
+  .stwid--action:hover {
   opacity: 1;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entryList.stwid--isCollapsed {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entryList.stwid--isCollapsed {
   display: none;
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
@@ -147,18 +171,39 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
   overflow: hidden;
   transition: 200ms;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
   pointer-events: none;
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected {
   background-color: rgb(from orange r g b / 0.125);
   cursor: grab;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected:hover,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected.stwid--active {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry.stwid--isSelected:hover,
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry.stwid--isSelected.stwid--active {
   background-color: rgb(from orange r g b / 0.25);
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected *:not(:is(.stwid--selector)) {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry.stwid--isSelected
+  *:not(:is(.stwid--selector)) {
   pointer-events: none;
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--filter-query {
@@ -169,10 +214,21 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.st
   background-color: var(--white20a);
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover .stwid--status,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--active .stwid--status {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry.stwid--active
+  .stwid--status {
   opacity: 1;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
   opacity: 0.5;
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--selector {
@@ -182,7 +238,13 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   transition: 200ms;
   cursor: pointer;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--selector:hover {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry
+  .stwid--selector:hover {
   opacity: 1;
 }
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body {
@@ -190,13 +252,27 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   cursor: pointer;
   overflow: hidden;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--comment {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry
+  .stwid--body
+  .stwid--comment {
   height: 1lh;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--key {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry
+  .stwid--body
+  .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
   font-style: italic;
@@ -213,7 +289,14 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   opacity: 0.5;
   transition: 200ms;
 }
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--status .stwid--enabled {
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--book
+  .stwid--entry
+  .stwid--status
+  .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
@@ -238,8 +321,8 @@ body.stwid-- #WorldInfo .stwid--editor {
   overflow: hidden;
 }
 body.stwid-- #WorldInfo .stwid--editor:empty::after {
-  content: "\f558";
-  font-family: "Font Awesome 6 Free";
+  content: '\f558';
+  font-family: 'Font Awesome 6 Free';
   font-size: 20em;
   opacity: 0.125;
   display: flex;
@@ -255,7 +338,13 @@ body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings #wiCheckboxes {
   width: unset;
 }
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
-body.stwid-- #WorldInfo .stwid--editor.stwid--focus .world_entry *:not(:has([name="content"])):not([name="content"]):not(:has([class*="stwim--"])):not([class*="stwim--"]) {
+body.stwid--
+  #WorldInfo
+  .stwid--editor.stwid--focus
+  .world_entry
+  *:not(:has([name='content'])):not([name='content']):not(:has([class*='stwim--'])):not(
+    [class*='stwim--']
+  ) {
   display: none;
 }
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus .stwid--unfocusToggle {
@@ -264,7 +353,11 @@ body.stwid-- #WorldInfo .stwid--editor.stwid--focus .stwid--unfocusToggle {
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
   justify-content: end;
 }
-body.stwid-- #WorldInfo .stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) .stwim--pickerTriggerWrap {
+body.stwid--
+  #WorldInfo
+  .stwid--editor.stwid--focus
+  :has(> .stwim--pickerTriggerWrap)
+  .stwim--pickerTriggerWrap {
   position: absolute;
   top: -3em;
   right: 0;
@@ -304,25 +397,30 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
   flex-direction: column;
   align-items: stretch;
 }
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer:has(> .userSettingsInnerExpandable) {
+body.stwid--
+  #WorldInfo
+  .stwid--editor
+  .inline-drawer-content
+  > .world_entry_edit
+  .inline-drawer:has(> .userSettingsInnerExpandable) {
   display: none;
 }
-body.stwid-- #WorldInfo .stwid--editor [name="contentAndCharFilterBlock"] {
+body.stwid-- #WorldInfo .stwid--editor [name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
 }
-body.stwid-- #WorldInfo .stwid--editor [name="content"] {
+body.stwid-- #WorldInfo .stwid--editor [name='content'] {
   flex: 1 1 auto;
 }
-body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
+body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
 .stwid--blocker {
-    position: fixed;
-    inset: 0;
-    z-index: 30000;
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
 }
 .stwid--blocker .stwid--menu {
-    --stwid-menu-item-height: 2.05em;
+  --stwid-menu-item-height: 2.05em;
 
   position: fixed;
   position-anchor: --stwid--ctxAnchor;
@@ -366,8 +464,8 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   text-align: center;
 }
 .stwid--blocker .stwid--menu .stwid--item .stwid--label {
-    flex: 1 1 auto;
-    min-width: fit-content;
+  flex: 1 1 auto;
+  min-width: fit-content;
 }
 .stwid--blocker .stwid--menu .stwid--item #lorebook_ordering_button {
   display: flex;
@@ -376,65 +474,65 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   gap: 0.35em;
 }
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
-    opacity: 1;
-    cursor: default;
+  opacity: 1;
+  cursor: default;
 }
 .stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
-    width: fit-content;
-    color: inherit;
-    background-color: rgba(255, 255, 255, 0.05);
-    min-height: var(--stwid-menu-item-height);
-    height: 100%;
-    margin: 0;
-    font-size: 1em;
+  width: fit-content;
+  color: inherit;
+  background-color: rgba(255, 255, 255, 0.05);
+  min-height: var(--stwid-menu-item-height);
+  height: 100%;
+  margin: 0;
+  font-size: 1em;
 }
 .stwid--orderHelper {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 .stwid--orderHelper.stwid--hideKeys .stwid--key {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-strategy [data-col="strategy"] {
+.stwid--orderHelper.stwid--hide-col-strategy [data-col='strategy'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-position [data-col="position"] {
+.stwid--orderHelper.stwid--hide-col-position [data-col='position'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-depth [data-col="depth"] {
+.stwid--orderHelper.stwid--hide-col-depth [data-col='depth'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-outlet [data-col="outlet"] {
+.stwid--orderHelper.stwid--hide-col-outlet [data-col='outlet'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-group [data-col="group"] {
+.stwid--orderHelper.stwid--hide-col-group [data-col='group'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-order [data-col="order"] {
+.stwid--orderHelper.stwid--hide-col-order [data-col='order'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-sticky [data-col="sticky"] {
+.stwid--orderHelper.stwid--hide-col-sticky [data-col='sticky'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-cooldown [data-col="cooldown"] {
+.stwid--orderHelper.stwid--hide-col-cooldown [data-col='cooldown'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-delay [data-col="delay"] {
+.stwid--orderHelper.stwid--hide-col-delay [data-col='delay'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-automationId [data-col="automationId"] {
+.stwid--orderHelper.stwid--hide-col-automationId [data-col='automationId'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-trigger [data-col="trigger"] {
+.stwid--orderHelper.stwid--hide-col-trigger [data-col='trigger'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-recursion [data-col="recursion"] {
+.stwid--orderHelper.stwid--hide-col-recursion [data-col='recursion'] {
   display: none;
 }
-.stwid--orderHelper.stwid--hide-col-budget [data-col="budget"] {
+.stwid--orderHelper.stwid--hide-col-budget [data-col='budget'] {
   display: none;
 }
 .stwid--orderHelper .stwid--actions {
@@ -511,7 +609,11 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   font-size: 1em;
   cursor: pointer;
 }
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnOption input[type="checkbox"] {
+.stwid--orderHelper
+  .stwid--actions
+  .stwid--columnVisibility
+  .stwid--columnOption
+  input[type='checkbox'] {
   width: 0.85em;
   height: 0.85em;
 }
@@ -573,7 +675,11 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   caret-color: var(--ac-style-color-text);
 }
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar,
-.stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar-thumb {
+.stwid--orderHelper
+  .stwid--filter
+  .stwid--main
+  .stwid--script
+  .stwid--input::-webkit-scrollbar-thumb {
   visibility: hidden;
 }
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--script .stwid--input::selection {
@@ -639,64 +745,64 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   padding: 0 0.7em;
   width: 0;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="select"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="select"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='select'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='select'] {
   min-width: 1em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="drag"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="drag"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='drag'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='drag'] {
   min-width: 1em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="enabled"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="enabled"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='enabled'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='enabled'] {
   min-width: 1em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="entry"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="entry"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='entry'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='entry'] {
   min-width: 12em;
   padding-top: 1em;
   padding-bottom: 1em;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="strategy"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="strategy"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='strategy'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='strategy'] {
   min-width: 5em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="position"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="position"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='position'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='position'] {
   min-width: 7em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="depth"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="depth"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='depth'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='depth'] {
   min-width: 5em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="outlet"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="outlet"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='outlet'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='outlet'] {
   min-width: 8em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="order"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="order"] {
-  min-width: 5em;
- text-align: center;
-}
-.stwid--orderHelper .stwid--orderTable tr th[data-col="trigger"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="trigger"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='order'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='order'] {
   min-width: 5em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="recursion"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="recursion"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='trigger'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='trigger'] {
+  min-width: 5em;
+  text-align: center;
+}
+.stwid--orderHelper .stwid--orderTable tr th[data-col='recursion'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='recursion'] {
   min-width: 12em;
   text-align: center;
 }
-.stwid--orderHelper .stwid--orderTable tr th[data-col="budget"],
-.stwid--orderHelper .stwid--orderTable tr td[data-col="budget"] {
+.stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='budget'] {
   min-width: 7em;
   text-align: center;
 }
@@ -746,10 +852,10 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderTable tr td .stwid--orderSelect .stwid--icon {
   pointer-events: none;
 }
-.stwid--orderTable tr td [name="depth"] {
+.stwid--orderTable tr td [name='depth'] {
   display: none;
 }
-.stwid--orderTable tr td:has([name="position"] > [value="4"]:checked) + td > [name="depth"] {
+.stwid--orderTable tr td:has([name='position'] > [value='4']:checked) + td > [name='depth'] {
   display: inline-block;
 }
 .stwid--orderTable tr td:has(.stwid--entry) {
@@ -779,12 +885,22 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   min-width: 6em;
   word-break: break-word;
 }
-.stwid--orderTable tr td .stwid--outlet input[name="outletName"] {
+.stwid--orderTable tr td .stwid--outlet input[name='outletName'] {
   width: 100%;
   min-width: 7em;
 }
 .stwid--orderHelper .stwid--orderInputTight,
-.stwid--orderHelper .stwid--orderTable input:is([name="depth"], [name="order"], [name="sticky"], [name="cooldown"], [name="delay"], [name="automationId"], [name="selective_probability"]) {
+.stwid--orderHelper
+  .stwid--orderTable
+  input:is(
+    [name='depth'],
+    [name='order'],
+    [name='sticky'],
+    [name='cooldown'],
+    [name='delay'],
+    [name='automationId'],
+    [name='selective_probability']
+  ) {
   min-height: 5px;
   padding-left: 5px;
   padding-right: 5px;
@@ -793,7 +909,9 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
 .stwid--orderTable tr td .stwid--position {
   font-size: 0.9em;
 }
-.stwid--orderTable tr td input[name="depth"], .stwid--orderTable tr td input[name="order"], .stwid--orderTable tr td input[name="selective_probability"] {
+.stwid--orderTable tr td input[name='depth'],
+.stwid--orderTable tr td input[name='order'],
+.stwid--orderTable tr td input[name='selective_probability'] {
   min-width: 4em;
   font-size: 0.95em;
 }
@@ -806,4 +924,3 @@ body.stwid-- #WorldInfo .stwid--editor [name="WIEntryBottomControls"] {
   padding-left: 0.5em;
   font-size: small;
 }
-
