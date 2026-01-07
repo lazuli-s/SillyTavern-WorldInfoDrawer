@@ -388,13 +388,6 @@ body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings #wiCheckboxes {
   width: unset;
 }
 
-body.stwid-- #WorldInfo .stwid--editor .world_entry_form small.stwid--titleMemoLabel {
-  display: block;
-  margin: 0 0 0.35em;
-  text-align: center;
-  color: var(--SmartThemeQuoteColor);
-}
-
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
 body.stwid--
   #WorldInfo

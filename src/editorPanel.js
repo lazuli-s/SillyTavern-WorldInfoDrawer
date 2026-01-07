@@ -123,13 +123,17 @@ export const initEditorPanel = ({
         if (titleMemoInput) {
             const titleMemoLabel = document.createElement('small'); {
                 titleMemoLabel.classList.add('textAlignCenter');
-                titleMemoLabel.classList.add('stwid--titleMemoLabel');
                 const span = document.createElement('span'); {
                     span.textContent = 'Title/Memo';
                     titleMemoLabel.append(span);
                 }
             }
-            titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
+            const titleMemoContainer = titleMemoInput.closest('label') ?? titleMemoInput.parentElement;
+            if (titleMemoContainer) {
+                titleMemoContainer.insertBefore(titleMemoLabel, titleMemoInput);
+            } else {
+                titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
+            }
         }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
