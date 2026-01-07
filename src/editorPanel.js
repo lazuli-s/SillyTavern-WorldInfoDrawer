@@ -123,6 +123,7 @@ export const initEditorPanel = ({
         if (titleMemoInput) {
             const titleMemoLabel = document.createElement('small'); {
                 titleMemoLabel.classList.add('textAlignCenter');
+                titleMemoLabel.classList.add('stwid--titleMemoLabel');
                 const span = document.createElement('span'); {
                     span.textContent = 'Title/Memo';
                     titleMemoLabel.append(span);
