@@ -119,21 +119,32 @@ export const initEditorPanel = ({
         clearEditor({ resetCurrent: false });
         appendUnfocusButton();
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
-        const titleMemoInput = editDom.querySelector('[name="comment"]');
-        if (titleMemoInput) {
-            const titleMemoLabel = document.createElement('small'); {
-                titleMemoLabel.classList.add('textAlignCenter');
-                const span = document.createElement('span'); {
-                    span.textContent = 'Title/Memo';
-                    titleMemoLabel.append(span);
-                }
-            }
-            const titleMemoContainer = titleMemoInput.closest('label') ?? titleMemoInput.parentElement;
-            if (titleMemoContainer) {
-                titleMemoContainer.insertBefore(titleMemoLabel, titleMemoInput);
+        const insertCenteredLabel = (input, text) => {
+            if (!input) return;
+            const container = input.closest('label') ?? input.parentElement;
+            const label = document.createElement('small');
+            label.classList.add('textAlignCenter');
+            const span = document.createElement('span');
+            span.textContent = text;
+            label.append(span);
+            if (input.previousElementSibling?.matches('small.textAlignCenter')) return;
+            if (container) {
+                container.insertBefore(label, input);
             } else {
-                titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
+                input.insertAdjacentElement('beforebegin', label);
             }
+        };
+        const titleMemoInput = editDom.querySelector('[name="comment"]');
+        insertCenteredLabel(titleMemoInput, 'Title/Memo');
+        const labelTargets = [
+            { selector: '[name="entryStateSelector"]', label: 'Strategy' },
+            { selector: '[name="position"]', label: 'Position' },
+            { selector: '[name="depth"]', label: 'Depth' },
+            { selector: '[name="order"]', label: 'Order' },
+            { selector: '[name="selective_probability"]', label: 'Trigger %' },
+        ];
+        for (const target of labelTargets) {
+            insertCenteredLabel(editDom.querySelector(target.selector), target.label);
         }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
