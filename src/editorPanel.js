@@ -135,6 +135,22 @@ export const initEditorPanel = ({
                 titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
             }
         }
+        const strategySelect = editDom.querySelector('[name="entryStateSelector"]');
+        const strategyControl = strategySelect?.closest('.world_entry_form_control') ?? strategySelect?.parentElement;
+        if (strategySelect && strategyControl?.parentElement) {
+            const strategyLabelContainer = document.createElement('div'); {
+                strategyLabelContainer.classList.add('world_entry_form_control');
+                const strategyLabel = document.createElement('small'); {
+                    strategyLabel.classList.add('textAlignCenter');
+                    const span = document.createElement('span'); {
+                        span.textContent = 'Strategy';
+                        strategyLabel.append(span);
+                    }
+                }
+                strategyLabelContainer.append(strategyLabel);
+            }
+            strategyControl.parentElement.insertBefore(strategyLabelContainer, strategyControl);
+        }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
