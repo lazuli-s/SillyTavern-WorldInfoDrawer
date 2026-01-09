@@ -168,6 +168,32 @@ const selectRemove = (entry)=>{
     icon.classList.remove('fa-square-check');
 };
 
+const getBookBindings = (name)=>{
+    const bindings = {
+        persona: false,
+        character: false,
+        chat: false,
+    };
+    const personaBook = globalThis?.power_user?.persona_description_lorebook;
+    bindings.persona = Boolean(personaBook && personaBook === name);
+    const context = globalThis?.context;
+    const character = context?.characters?.[context?.characterId];
+    const characterBook = character?.data?.extensions?.world;
+    bindings.character = Boolean(characterBook && characterBook === name);
+    const getCharaFilename = globalThis?.getCharaFilename;
+    if (character && typeof getCharaFilename === 'function') {
+        const filename = getCharaFilename(character);
+        const charLore = globalThis?.world_info?.charLore?.[filename];
+        if (Array.isArray(charLore) ? charLore.includes(name) : charLore === name) {
+            bindings.character = true;
+        }
+    }
+    const METADATA_KEY = 'world_info';
+    const chatLore = globalThis?.chat_metadata?.[METADATA_KEY];
+    bindings.chat = Boolean(Array.isArray(chatLore) ? chatLore.includes(name) : chatLore === name);
+    return bindings;
+};
+
 const renderBook = async(name, before = null, bookData = null)=>{
     const data = bookData ?? await state.loadWorldInfo(name);
     const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:state.getSortFromMetadata(data.metadata) };
@@ -243,6 +269,22 @@ const renderBook = async(name, before = null, bookData = null)=>{
             }
             const actions = document.createElement('div'); {
                 actions.classList.add('stwid--actions');
+                const bindings = getBookBindings(name);
+                const addBindingIcon = (iconClasses, title)=>{
+                    const icon = document.createElement('i');
+                    icon.classList.add('stwid--action', ...iconClasses);
+                    icon.title = title;
+                    actions.append(icon);
+                };
+                if (bindings.persona) {
+                    addBindingIcon(['fa-solid', 'fa-fw', 'fa-face-smile'], 'Lorebook bound to the current persona');
+                }
+                if (bindings.character) {
+                    addBindingIcon(['fa-solid', 'fa-fw', 'fa-user'], 'Lorebook bound to the current character');
+                }
+                if (bindings.chat) {
+                    addBindingIcon(['fa-solid', 'fa-fw', 'fa-comments'], 'Lorebook bound to the current chat');
+                }
                 const active = document.createElement('input'); {
                     world.dom.active = active;
                     active.title = 'Globally active';
