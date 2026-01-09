@@ -245,9 +245,9 @@ const renderBook = async(name, before = null, bookData = null)=>{
                 actions.classList.add('stwid--actions');
                 const active = document.createElement('input'); {
                     world.dom.active = active;
-                    active.title = 'Globally active';
+                    active.title = 'Checked means active from any source; clicking still toggles global activation.';
                     active.type = 'checkbox';
-                    const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
+                    const selected = state.getEffectiveActiveWorlds ? state.getEffectiveActiveWorlds() : (state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info);
                     active.checked = selected.includes(name);
                     active.addEventListener('click', async()=>{
                         active.disabled = true;
@@ -677,7 +677,7 @@ const setupFilter = (list)=>{
         }
         const applyActiveFilter = ()=>{
             if (!filterActiveInput) return;
-            const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
+            const selected = state.getEffectiveActiveWorlds ? state.getEffectiveActiveWorlds() : (state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info);
             for (const b of Object.keys(state.cache)) {
                 if (filterActiveInput.checked) {
                     if (selected.includes(b)) {
