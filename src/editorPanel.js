@@ -120,7 +120,7 @@ export const initEditorPanel = ({
         appendUnfocusButton();
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
         const wrapFieldWithLabel = (field, labelText) => {
-            if (!field) return;
+            if (!field) return null;
             const wrapper = document.createElement('div'); {
                 wrapper.classList.add('flex-container', 'flex1');
             }
@@ -139,10 +139,20 @@ export const initEditorPanel = ({
                 field.insertAdjacentElement('beforebegin', wrapper);
                 wrapper.append(label, field);
             }
+            return wrapper;
         };
 
-        wrapFieldWithLabel(editDom.querySelector('[name="comment"]'), 'Title/Memo');
-        wrapFieldWithLabel(editDom.querySelector('select[name="entryStateSelector"]'), 'Strategy');
+        const titleWrapper = wrapFieldWithLabel(editDom.querySelector('[name="comment"]'), 'Title/Memo');
+        const strategyWrapper = wrapFieldWithLabel(editDom.querySelector('select[name="entryStateSelector"]'), 'Strategy');
+        const sharedContainer = titleWrapper?.closest('.WIEntryTitleAndStatus');
+        if (sharedContainer && strategyWrapper && sharedContainer.contains(strategyWrapper)) {
+            const parent = sharedContainer.parentElement;
+            if (parent) {
+                parent.insertBefore(titleWrapper, sharedContainer);
+                parent.insertBefore(strategyWrapper, sharedContainer);
+                sharedContainer.remove();
+            }
+        }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
