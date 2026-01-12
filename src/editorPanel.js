@@ -144,13 +144,12 @@ export const initEditorPanel = ({
 
         const titleWrapper = wrapFieldWithLabel(editDom.querySelector('[name="comment"]'), 'Title/Memo');
         const strategyWrapper = wrapFieldWithLabel(editDom.querySelector('select[name="entryStateSelector"]'), 'Strategy');
-        const sharedContainer = titleWrapper?.closest('.WIEntryTitleAndStatus');
+        const sharedContainer = titleWrapper?.closest('.flex-container.alignitemscenter.wide100p');
         if (sharedContainer && strategyWrapper && sharedContainer.contains(strategyWrapper)) {
             const parent = sharedContainer.parentElement;
             if (parent) {
                 parent.insertBefore(titleWrapper, sharedContainer);
                 parent.insertBefore(strategyWrapper, sharedContainer);
-                sharedContainer.remove();
             }
         }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
