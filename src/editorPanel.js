@@ -135,6 +135,24 @@ export const initEditorPanel = ({
                 titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
             }
         }
+        const entryStateSelect = editDom.querySelector('select[name="entryStateSelector"]');
+        if (entryStateSelect) {
+            const strategyLabel = document.createElement('small'); {
+                strategyLabel.classList.add('textAlignCenter');
+                const span = document.createElement('span'); {
+                    span.textContent = 'Strategy';
+                    strategyLabel.append(span);
+                }
+            }
+            const strategyParent = entryStateSelect.parentElement;
+            if (strategyParent) {
+                const strategyContainer = document.createElement('div'); {
+                    strategyContainer.classList.add('flex-container', 'flex1');
+                }
+                strategyParent.insertBefore(strategyContainer, entryStateSelect);
+                strategyContainer.append(strategyLabel, entryStateSelect);
+            }
+        }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
