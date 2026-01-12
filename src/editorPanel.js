@@ -119,22 +119,30 @@ export const initEditorPanel = ({
         clearEditor({ resetCurrent: false });
         appendUnfocusButton();
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
-        const titleMemoInput = editDom.querySelector('[name="comment"]');
-        if (titleMemoInput) {
-            const titleMemoLabel = document.createElement('small'); {
-                titleMemoLabel.classList.add('textAlignCenter');
+        const wrapFieldWithLabel = (field, labelText) => {
+            if (!field) return;
+            const wrapper = document.createElement('div'); {
+                wrapper.classList.add('flex-container', 'flex1');
+            }
+            const label = document.createElement('small'); {
+                label.classList.add('textAlignCenter');
                 const span = document.createElement('span'); {
-                    span.textContent = 'Title/Memo';
-                    titleMemoLabel.append(span);
+                    span.textContent = labelText;
+                    label.append(span);
                 }
             }
-            const titleMemoContainer = titleMemoInput.closest('label') ?? titleMemoInput.parentElement;
-            if (titleMemoContainer) {
-                titleMemoContainer.insertBefore(titleMemoLabel, titleMemoInput);
+            const parent = field.parentElement;
+            if (parent) {
+                parent.insertBefore(wrapper, field);
+                wrapper.append(label, field);
             } else {
-                titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
+                field.insertAdjacentElement('beforebegin', wrapper);
+                wrapper.append(label, field);
             }
-        }
+        };
+
+        wrapFieldWithLabel(editDom.querySelector('[name="comment"]'), 'Title/Memo');
+        wrapFieldWithLabel(editDom.querySelector('select[name="entryStateSelector"]'), 'Strategy');
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
