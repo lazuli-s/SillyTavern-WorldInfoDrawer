@@ -932,6 +932,9 @@ export const initOrderHelper = ({
                                                             applyOrderHelperPositionFilters();
                                                         };
                                                         const positionOptions = getPositionOptions();
+                                                        if (!orderHelperState.filters.position.length && positionOptions.length) {
+                                                            orderHelperState.filters.position = positionOptions.map((option)=>option.value);
+                                                        }
                                                         if (!positionOptions.length) {
                                                             menu.classList.add('stwid--empty');
                                                             menu.textContent = 'No positions available.';
