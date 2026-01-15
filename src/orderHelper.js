@@ -33,6 +33,17 @@ export const initOrderHelper = ({
             .filter((option)=>option.value);
     };
     const getStrategyValues = ()=>getStrategyOptions().map((option)=>option.value);
+    const getPositionOptions = ()=>{
+        const select = document.querySelector('#entry_edit_template [name="position"]');
+        if (!select) return [];
+        return [...select.querySelectorAll('option')]
+            .map((option)=>({
+                value: option.value,
+                label: option.textContent?.trim() ?? option.value,
+            }))
+            .filter((option)=>option.value !== '');
+    };
+    const getPositionValues = ()=>getPositionOptions().map((option)=>option.value);
     const ORDER_HELPER_DEFAULT_COLUMNS = {
         strategy: true,
         position: true,
@@ -57,8 +68,10 @@ export const initOrderHelper = ({
             columns: { ...ORDER_HELPER_DEFAULT_COLUMNS },
             filters: {
                 strategy: getStrategyValues(),
+                position: getPositionValues(),
             },
             strategyValues: getStrategyValues(),
+            positionValues: getPositionValues(),
         };
         try {
             const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_SORT_STORAGE_KEY));
@@ -87,6 +100,10 @@ export const initOrderHelper = ({
 
     const normalizeStrategyFilters = (filters)=>{
         const allowed = new Set(getStrategyValues());
+        return filters.filter((value)=>allowed.has(value));
+    };
+    const normalizePositionFilters = (filters)=>{
+        const allowed = new Set(getPositionValues());
         return filters.filter((value)=>allowed.has(value));
     };
 
@@ -226,8 +243,9 @@ export const initOrderHelper = ({
     const updateOrderHelperRowFilterClass = (row)=>{
         if (!row) return;
         const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
+        const positionFiltered = row.dataset.stwidFilterPosition === 'true';
         const scriptFiltered = row.dataset.stwidFilterScript === 'true';
-        row.classList.toggle('stwid--isFiltered', strategyFiltered || scriptFiltered);
+        row.classList.toggle('stwid--isFiltered', strategyFiltered || positionFiltered || scriptFiltered);
     };
 
     const setOrderHelperRowFilterState = (row, key, filtered)=>{
@@ -252,11 +270,35 @@ export const initOrderHelper = ({
         setOrderHelperRowFilterState(row, 'stwidFilterStrategy', !allowed.has(strategy));
     };
 
+    const applyOrderHelperPositionFilterToRow = (row, entryData)=>{
+        const positionValues = orderHelperState.positionValues.length
+            ? orderHelperState.positionValues
+            : getPositionValues();
+        if (!positionValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterPosition', false);
+            return;
+        }
+        if (!orderHelperState.filters.position.length) {
+            orderHelperState.filters.position = [...positionValues];
+        }
+        const allowed = new Set(orderHelperState.filters.position);
+        const position = entryData.position ?? '';
+        setOrderHelperRowFilterState(row, 'stwidFilterPosition', !allowed.has(String(position)));
+    };
+
     const applyOrderHelperStrategyFilters = ()=>{
         const entries = getOrderHelperEntries(orderHelperState.book, true);
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
             applyOrderHelperStrategyFilterToRow(row, entry.data);
+        }
+    };
+
+    const applyOrderHelperPositionFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperPositionFilterToRow(row, entry.data);
         }
     };
 
@@ -283,6 +325,21 @@ export const initOrderHelper = ({
         }
     };
 
+    const syncOrderHelperPositionFilters = ()=>{
+        const nextValues = getPositionValues();
+        const hadAllSelected = orderHelperState.filters.position.length === orderHelperState.positionValues.length;
+        orderHelperState.positionValues = nextValues;
+        if (!nextValues.length) {
+            orderHelperState.filters.position = [];
+            return;
+        }
+        if (hadAllSelected || !orderHelperState.filters.position.length) {
+            orderHelperState.filters.position = [...nextValues];
+        } else {
+            orderHelperState.filters.position = normalizePositionFilters(orderHelperState.filters.position);
+        }
+    };
+
     const focusWorldEntry = (book, uid)=>{
         const entryDom = cache?.[book]?.dom?.entry?.[uid]?.root;
         if (!entryDom) return;
@@ -295,6 +352,7 @@ export const initOrderHelper = ({
     const renderOrderHelper = (book = null)=>{
         orderHelperState.book = book;
         syncOrderHelperStrategyFilters();
+        syncOrderHelperPositionFilters();
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
         dom.order.entries = {};
@@ -822,7 +880,107 @@ export const initOrderHelper = ({
                                             th.append(header);
                                         }
                                     } else {
-                                        th.textContent = col.label;
+                                        if (col.key === 'position') {
+                                            const header = document.createElement('div'); {
+                                                header.classList.add('stwid--columnHeader');
+                                                const title = document.createElement('div'); {
+                                                    title.textContent = col.label;
+                                                    header.append(title);
+                                                }
+                                                const filterWrap = document.createElement('div'); {
+                                                    filterWrap.classList.add('stwid--columnFilter');
+                                                    const menuWrap = document.createElement('div'); {
+                                                        menuWrap.classList.add('stwid--columnMenuWrap');
+                                                        const menuButton = document.createElement('div'); {
+                                                            menuButton.classList.add(
+                                                                'menu_button',
+                                                                'fa-solid',
+                                                                'fa-fw',
+                                                                'fa-filter',
+                                                                'stwid--orderFilterButton',
+                                                                'stwid--columnMenuButton',
+                                                            );
+                                                            menuWrap.append(menuButton);
+                                                        }
+                                                        const menu = document.createElement('div'); {
+                                                            menu.classList.add('stwid--columnMenu');
+                                                            const closeMenu = ()=>{
+                                                                if (!menu.classList.contains('stwid--active')) return;
+                                                                menu.classList.remove('stwid--active');
+                                                                document.removeEventListener('click', handleOutsideClick);
+                                                            };
+                                                            const openMenu = ()=>{
+                                                                if (menu.classList.contains('stwid--active')) return;
+                                                                menu.classList.add('stwid--active');
+                                                                document.addEventListener('click', handleOutsideClick);
+                                                            };
+                                                            const handleOutsideClick = (event)=>{
+                                                                if (menuWrap.contains(event.target)) return;
+                                                                closeMenu();
+                                                            };
+                                                            const updateFilterIndicator = ()=>{
+                                                                const allValues = orderHelperState.positionValues.length
+                                                                    ? orderHelperState.positionValues
+                                                                    : getPositionValues();
+                                                                const filters = normalizePositionFilters(orderHelperState.filters.position);
+                                                                orderHelperState.filters.position = filters.length ? filters : [...allValues];
+                                                                const isActive = orderHelperState.filters.position.length !== allValues.length;
+                                                                menuButton.classList.toggle('stwid--active', isActive);
+                                                            };
+                                                            const updatePositionFilters = ()=>{
+                                                                orderHelperState.filters.position = normalizePositionFilters(orderHelperState.filters.position);
+                                                                updateFilterIndicator();
+                                                                applyOrderHelperPositionFilters();
+                                                            };
+                                                            const positionOptions = getPositionOptions();
+                                                            if (!positionOptions.length) {
+                                                                menu.classList.add('stwid--empty');
+                                                                menu.textContent = 'No positions available.';
+                                                            }
+                                                            for (const optionData of positionOptions) {
+                                                                const option = document.createElement('label'); {
+                                                                    option.classList.add('stwid--columnOption');
+                                                                    const input = document.createElement('input'); {
+                                                                        input.type = 'checkbox';
+                                                                        input.checked = orderHelperState.filters.position.includes(optionData.value);
+                                                                        input.addEventListener('change', ()=>{
+                                                                            if (input.checked) {
+                                                                                if (!orderHelperState.filters.position.includes(optionData.value)) {
+                                                                                    orderHelperState.filters.position.push(optionData.value);
+                                                                                }
+                                                                            } else {
+                                                                                orderHelperState.filters.position = orderHelperState.filters.position
+                                                                                    .filter((item)=>item !== optionData.value);
+                                                                            }
+                                                                            updatePositionFilters();
+                                                                        });
+                                                                        option.append(input);
+                                                                    }
+                                                                    option.append(optionData.label);
+                                                                    menu.append(option);
+                                                                }
+                                                            }
+                                                            updateFilterIndicator();
+                                                            menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                            menuButton.addEventListener('click', (event)=>{
+                                                                event.stopPropagation();
+                                                                if (menu.classList.contains('stwid--active')) {
+                                                                    closeMenu();
+                                                                } else {
+                                                                    openMenu();
+                                                                }
+                                                            });
+                                                            menuWrap.append(menu);
+                                                        }
+                                                        filterWrap.append(menuWrap);
+                                                    }
+                                                    header.append(filterWrap);
+                                                }
+                                                th.append(header);
+                                            }
+                                        } else {
+                                            th.textContent = col.label;
+                                        }
                                     }
                                     if (col.key) {
                                         th.setAttribute('data-col', col.key);
@@ -865,6 +1023,7 @@ export const initOrderHelper = ({
                                 tr.setAttribute('data-book', e.book);
                                 tr.setAttribute('data-uid', e.data.uid);
                                 tr.dataset.stwidFilterStrategy = 'false';
+                                tr.dataset.stwidFilterPosition = 'false';
                                 tr.dataset.stwidFilterScript = 'false';
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
@@ -997,6 +1156,7 @@ export const initOrderHelper = ({
                                         cache[e.book].dom.entry[e.data.uid].position.value = value;
                                         cache[e.book].entries[e.data.uid].position = value;
                                         e.data.position = value;
+                                        applyOrderHelperPositionFilterToRow(tr, cache[e.book].entries[e.data.uid]);
                                         updateOutlet?.();
                                         await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                     });
@@ -1273,6 +1433,7 @@ export const initOrderHelper = ({
                             }
                         }
                         applyOrderHelperStrategyFilters();
+                        applyOrderHelperPositionFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
                     }
