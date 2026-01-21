@@ -485,9 +485,19 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   z-index: 30000;
 }
 
-.stwid--blocker .stwid--menu {
+.stwid--blocker .stwid--menu,
+.stwid--orderHelper .stwid--columnMenu {
   --stwid-menu-item-height: 2.05em;
 
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
+  font-size: 0.9em;
+  padding: 0.5em;
+  color: var(--SmartThemeBodyColor);
+}
+
+.stwid--blocker .stwid--menu {
   position: fixed;
   position-anchor: --stwid--ctxAnchor;
   position-area: bottom right;
@@ -496,20 +506,15 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   filter: drop-shadow(1px 1px 2px var(--black50a));
   z-index: 30000;
   overflow: clip auto;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
-  font-size: 0.9em;
-  padding: 0.5em;
 }
 
-.stwid--blocker .stwid--menu .stwid--item {
+.stwid--blocker .stwid--menu .stwid--item,
+.stwid--orderHelper .stwid--columnMenu .stwid--columnOption {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
   opacity: 1;
-  color: var(--SmartThemeBodyColor);
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
   transition: 200ms;
@@ -519,9 +524,14 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   align-items: center;
   box-sizing: border-box;
   padding: 3px;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
 }
 
-.stwid--blocker .stwid--menu .stwid--item:hover {
+.stwid--blocker .stwid--menu .stwid--item:hover,
+.stwid--orderHelper .stwid--columnMenu .stwid--columnOption:hover {
   opacity: 1;
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
@@ -687,14 +697,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
-  padding: 0.7em;
   display: none;
   flex-direction: column;
-  gap: 0.6em;
+  gap: 0.35em;
   z-index: 3;
+  max-width: 100%;
 }
 
 .stwid--orderHelper .stwid--columnMenu.stwid--active {
@@ -704,9 +711,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--columnOption {
   display: flex;
   align-items: center;
-  gap: 0.3em;
   font-size: 1em;
-  cursor: pointer;
 }
 
 .stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
