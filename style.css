@@ -525,9 +525,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   box-sizing: border-box;
   padding: 3px;
   white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  min-width: 0;
+  width: 100%;
 }
 
 .stwid--blocker .stwid--menu .stwid--item:hover,
