@@ -728,11 +728,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   gap: 0.3em;
   font-size: 1em;
   cursor: pointer;
-  transition: background-color 150ms ease;
+  transition: color 150ms ease;
 }
 
 .stwid--orderHelper .stwid--columnOption:hover {
-  background: color-mix(in srgb, var(--SmartThemeBodyColor) 10%, transparent);
+  color: var(--customThemeColor) !important;
 }
 
 .stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
