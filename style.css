@@ -852,10 +852,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   height: 100%;
 }
 
-.stwid--orderHelper .stwid--input {
-  width: auto;
-}
-
 /* Order Table */
 .stwid--orderTableWrap {
   flex: 1 1 auto;
@@ -962,7 +958,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--orderTable .stwid--orderTable--NumberColumns {
   min-width: 5em;
-  text-align: center;
 }
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='recursion'],
