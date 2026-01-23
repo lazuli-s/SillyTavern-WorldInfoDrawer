@@ -372,10 +372,10 @@ export const initOrderHelper = ({
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
             applyOrderHelperColumnVisibility(body);
             const actions = document.createElement('div'); {
-                actions.classList.add('stwid--actions');
+                actions.classList.add('stwid--actions', 'stwid--panel');
                 const selectAll = document.createElement('div'); {
                     dom.order.selectAll = selectAll;
-                    selectAll.classList.add('menu_button');
+                    selectAll.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                     selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
                     selectAll.title = 'Select/unselect all entries for applying Order values';
                     selectAll.addEventListener('click', ()=>{
@@ -387,7 +387,7 @@ export const initOrderHelper = ({
                     actions.append(selectAll);
                 }
                 const keyToggle = document.createElement('div'); {
-                    keyToggle.classList.add('menu_button');
+                    keyToggle.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                     keyToggle.classList.add('fa-solid', 'fa-fw');
                     keyToggle.title = 'Toggle keyword visibility';
                     const applyKeyToggleStyle = ()=>{
@@ -418,7 +418,7 @@ export const initOrderHelper = ({
                     const menuWrap = document.createElement('div'); {
                         menuWrap.classList.add('stwid--columnMenuWrap');
                         const menuButton = document.createElement('div'); {
-                            menuButton.classList.add('menu_button', 'stwid--columnMenuButton');
+                            menuButton.classList.add('menu_button', 'stwid--columnMenuButton', 'stwid--btn');
                             menuButton.textContent = 'Select';
                             const caret = document.createElement('i'); {
                                 caret.classList.add('fa-solid', 'fa-fw', 'fa-caret-down');
@@ -522,7 +522,7 @@ export const initOrderHelper = ({
                 }
                 addDivider();
                 const filterToggle = document.createElement('div'); {
-                    filterToggle.classList.add('menu_button');
+                    filterToggle.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                     filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
                     filterToggle.title = 'Filter entries\n---\nOrder will only be applied to unfiltered entries';
                     filterToggle.addEventListener('click', ()=>{
@@ -542,7 +542,7 @@ export const initOrderHelper = ({
                     rightGroup.append(divider);
                 }
                 const apply = document.createElement('div'); {
-                    apply.classList.add('menu_button');
+                    apply.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                     apply.classList.add('fa-solid', 'fa-fw');
                     if ((localStorage.getItem('stwid--order-direction') ?? 'down') == 'up') {
                         apply.classList.add('fa-arrow-up-9-1');
@@ -663,7 +663,7 @@ export const initOrderHelper = ({
             }
             const filter = document.createElement('div'); {
                 dom.order.filter.root = filter;
-                filter.classList.add('stwid--filter');
+                filter.classList.add('stwid--filter', 'stwid--panel');
                 const main = document.createElement('div'); {
                     main.classList.add('stwid--main');
                     const hint = document.createElement('div'); {
@@ -795,6 +795,8 @@ export const initOrderHelper = ({
                                                     const menuButton = document.createElement('div'); {
                                                         menuButton.classList.add(
                                                             'menu_button',
+                                                            'stwid--btn',
+                                                            'stwid--btnIcon',
                                                             'fa-solid',
                                                             'fa-fw',
                                                             'fa-filter',
@@ -893,6 +895,8 @@ export const initOrderHelper = ({
                                                     const menuButton = document.createElement('div'); {
                                                         menuButton.classList.add(
                                                             'menu_button',
+                                                            'stwid--btn',
+                                                            'stwid--btnIcon',
                                                             'fa-solid',
                                                             'fa-fw',
                                                             'fa-filter',

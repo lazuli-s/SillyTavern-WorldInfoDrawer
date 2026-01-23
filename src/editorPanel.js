@@ -81,7 +81,7 @@ export const initEditorPanel = ({
     const appendUnfocusButton = () => {
         const unfocus = document.createElement('div'); {
             unfocus.classList.add('stwid--unfocusToggle');
-            unfocus.classList.add('menu_button');
+            unfocus.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
             unfocus.classList.add('fa-solid', 'fa-fw', 'fa-compress');
             unfocus.title = 'Unfocus';
             unfocus.addEventListener('click', () => {
@@ -96,7 +96,7 @@ export const initEditorPanel = ({
         if (!focusContainer) return;
         const btn = document.createElement('div'); {
             btn.classList.add('stwid--focusToggle');
-            btn.classList.add('menu_button');
+            btn.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
             btn.classList.add('fa-solid', 'fa-fw', 'fa-expand');
             btn.title = 'Focus';
             btn.addEventListener('click', () => {

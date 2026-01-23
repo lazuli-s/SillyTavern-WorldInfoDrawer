@@ -264,6 +264,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                 const add = document.createElement('div'); {
                     add.classList.add('stwid--action');
                     add.classList.add('stwid--add');
+                    add.classList.add('stwid--btn', 'stwid--btnIcon');
                     add.classList.add('fa-solid', 'fa-fw', 'fa-plus');
                     add.title = 'New Entry';
                     add.addEventListener('click', async()=>{
@@ -279,6 +280,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
                 const menuTrigger = document.createElement('div'); {
                     menuTrigger.classList.add('stwid--action');
                     menuTrigger.classList.add('stwid--menuTrigger');
+                    menuTrigger.classList.add('stwid--btn', 'stwid--btnIcon');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
                     menuTrigger.addEventListener('click', ()=>{
                         menuTrigger.style.anchorName = '--stwid--ctxAnchor';

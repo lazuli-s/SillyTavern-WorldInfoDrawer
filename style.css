@@ -1,4 +1,40 @@
-/* Drawer */
+/*
+CHANGELOG (2025-02-18)
+- Added design tokens to unify spacing, sizing, and motion across the drawer.
+- Normalized control, panel, and table visuals with reusable component classes.
+- Reduced selector depth where safe to improve maintainability.
+*/
+
+/* ===================================================================== */
+/* Tokens */
+body.stwid-- {
+  --stwid-space-1: 0.25em;
+  --stwid-space-2: 0.5em;
+  --stwid-space-3: 0.75em;
+  --stwid-space-4: 1em;
+  --stwid-space-5: 1.25em;
+  --stwid-radius-1: 4px;
+  --stwid-radius-2: 6px;
+  --stwid-border-width: 1px;
+  --stwid-control-height: 2.35em;
+  --stwid-transition-fast: 150ms;
+  --stwid-transition: 200ms;
+  --stwid-z-menu: 30000;
+  --stwid-list-width: 300px;
+  --stwid-splitter-width: 6px;
+  --stwid-splitter-gap: 10px;
+  --stwid-panel-bg: var(--SmartThemeBlurTintColor);
+  --stwid-panel-border: var(--SmartThemeBorderColor);
+  --stwid-panel-text: var(--SmartThemeBodyColor);
+  --stwid-text-muted: var(--SmartThemeEmColor);
+  --stwid-active-color: var(--SmartThemeQuoteColor);
+  --stwid-row-hover: var(--white20a);
+  --stwid-table-row-bg: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
+  --stwid-table-row-hover: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
+}
+
+/* ===================================================================== */
+/* Base */
 body #WorldInfo > .stwid--body {
   display: none;
 }
@@ -44,29 +80,62 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
   font-size: 5em;
 }
 
+body.stwid-- .stwid--controlRow {
+  display: flex;
+  gap: var(--stwid-space-1);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+body.stwid-- .stwid--btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stwid-space-1);
+  min-height: var(--stwid-control-height);
+  height: var(--stwid-control-height);
+  padding: 0 var(--stwid-space-2);
+  border-radius: var(--stwid-radius-1);
+  transition: var(--stwid-transition);
+}
+
+body.stwid-- .stwid--btnIcon {
+  min-width: var(--stwid-control-height);
+  padding: 0 var(--stwid-space-1);
+}
+
+body.stwid-- .stwid--btn.stwid--active {
+  color: var(--stwid-active-color);
+}
+
+body.stwid-- .stwid--panel {
+  background-color: var(--stwid-panel-bg);
+  border: var(--stwid-border-width) solid var(--stwid-panel-border);
+  border-radius: var(--stwid-radius-2);
+  box-sizing: border-box;
+}
+
+/* ===================================================================== */
+/* Components */
 /* List Panel */
 body.stwid-- #WorldInfo .stwid--list {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  width: 300px;
+  width: var(--stwid-list-width);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--controls {
   display: flex;
   flex-direction: column;
-  gap: 0.25em;
+  gap: var(--stwid-space-1);
   align-items: stretch;
+  padding: var(--stwid-space-2);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow {
-  --stwid-control-height: 2.35em;
-
-  display: flex;
-  gap: 0.25em;
-  align-items: center;
-  flex-wrap: wrap;
+  min-height: var(--stwid-control-height);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
@@ -76,7 +145,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .text_pole {
   height: var(--stwid-control-height);
   min-height: var(--stwid-control-height);
-  padding: 0.35em;
+  padding: 0 var(--stwid-space-2);
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
@@ -87,25 +156,25 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.35em;
+  padding: 0 var(--stwid-space-2);
   min-height: var(--stwid-control-height);
   height: var(--stwid-control-height);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--active {
-  color: var(--SmartThemeQuoteColor);
+  color: var(--stwid-active-color);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter {
   display: flex;
-  gap: 0.75em;
+  gap: var(--stwid-space-3);
   align-items: center;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--searchEntries,
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterActive {
   display: flex;
-  gap: 0.5em;
+  gap: var(--stwid-space-2);
   align-items: center;
 }
 
@@ -115,7 +184,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books {
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book {
-  border-bottom: 2px solid var(--SmartThemeBorderColor);
+  border-bottom: 2px solid var(--stwid-panel-border);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget,
@@ -134,13 +203,13 @@ body.stwid--
   .stwid--books
   .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active)
   .stwid--head {
-  background-color: var(--white20a);
+  background-color: var(--stwid-row-hover);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
   display: flex;
-  gap: 0.5em;
-  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  gap: var(--stwid-space-2);
+  background-color: rgb(var(--primaryBgCol, var(--stwid-panel-bg)));
   position: sticky;
   top: 0;
   z-index: 1;
@@ -157,7 +226,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .st
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions {
   display: flex;
-  gap: 0.25em;
+  gap: var(--stwid-space-1);
   align-items: center;
 }
 
@@ -171,7 +240,7 @@ body.stwid--
   .stwid--action {
   cursor: pointer;
   opacity: 0.5;
-  transition: 200ms;
+  transition: var(--stwid-transition);
 }
 
 body.stwid--
@@ -196,11 +265,11 @@ body.stwid--
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
   display: flex;
-  gap: 0.5em;
-  border-bottom: 2px solid var(--SmartThemeBorderColor);
+  gap: var(--stwid-space-2);
+  border-bottom: 2px solid var(--stwid-panel-border);
   margin-left: 0.25em;
   overflow: hidden;
-  transition: 200ms;
+  transition: var(--stwid-transition);
 }
 
 body.stwid--
@@ -248,7 +317,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.st
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--active {
-  background-color: var(--white20a);
+  background-color: var(--stwid-row-hover);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover .stwid--status,
@@ -275,7 +344,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   display: flex;
   align-items: center;
   opacity: 0.25;
-  transition: 200ms;
+  transition: var(--stwid-transition);
   cursor: pointer;
 }
 
@@ -329,10 +398,10 @@ body.stwid--
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--status {
   align-self: center;
   display: flex;
-  gap: 0.5em;
+  gap: var(--stwid-space-2);
   align-items: baseline;
   opacity: 0.5;
-  transition: 200ms;
+  transition: var(--stwid-transition);
 }
 
 body.stwid--
@@ -343,19 +412,19 @@ body.stwid--
   .stwid--entry
   .stwid--status
   .stwid--enabled {
-  color: var(--SmartThemeQuoteColor);
+  color: var(--stwid-active-color);
   cursor: pointer;
 }
 
 /* Splitter */
 body.stwid-- #WorldInfo .stwid--splitter {
   flex: 0 0 auto;
-  width: 6px;
-  margin: 0 10px;
+  width: var(--stwid-splitter-width);
+  margin: 0 var(--stwid-splitter-gap);
   cursor: col-resize;
-  background: var(--SmartThemeBorderColor);
+  background: var(--stwid-panel-border);
   opacity: 0.6;
-  transition: opacity 0.15s ease-in-out;
+  transition: opacity var(--stwid-transition-fast) ease-in-out;
 }
 
 body.stwid-- #WorldInfo .stwid--splitter:hover,
@@ -424,7 +493,7 @@ body.stwid-- #WorldInfo .stwid--editor .stwid--unfocusToggle {
 }
 
 body.stwid-- #WorldInfo .stwid--editor .stwid--focusToggle {
-  margin-left: 1em;
+  margin-left: var(--stwid-space-4);
 }
 
 body.stwid-- #WorldInfo .stwid--editor .world_entry,
@@ -487,7 +556,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--blocker {
   position: fixed;
   inset: 0;
-  z-index: 30000;
+  z-index: var(--stwid-z-menu);
 }
 
 .stwid--blocker .stwid--menu {
@@ -499,62 +568,62 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   position-try-fallbacks: flip-block, flip-inline;
   margin-top: -1lh;
   filter: drop-shadow(1px 1px 2px var(--black50a));
-  z-index: 30000;
+  z-index: var(--stwid-z-menu);
   overflow: clip auto;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
+  border: var(--stwid-border-width) solid var(--stwid-panel-border);
+  border-radius: var(--stwid-radius-2);
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
+  background-color: color-mix(in srgb, var(--stwid-panel-bg) 95%, black 10%);
   font-size: 0.9em;
-  padding: 0.5em;
+  padding: var(--stwid-space-2);
 }
 
-.stwid--blocker .stwid--menu .stwid--item {
+.stwid--menu .stwid--item {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
   opacity: 1;
-  color: var(--SmartThemeBodyColor);
+  color: var(--stwid-panel-text);
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
-  transition: 200ms;
+  transition: var(--stwid-transition);
   display: flex;
   flex-direction: row;
-  gap: 0.35em;
+  gap: var(--stwid-space-1);
   align-items: center;
   box-sizing: border-box;
   padding: 3px;
 }
 
-.stwid--blocker .stwid--menu .stwid--item:hover {
+.stwid--menu .stwid--item:hover {
   opacity: 1;
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 
-.stwid--blocker .stwid--menu .stwid--item .stwid--icon {
+.stwid--menu .stwid--item .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
 }
 
-.stwid--blocker .stwid--menu .stwid--item .stwid--label {
+.stwid--menu .stwid--item .stwid--label {
   flex: 1 1 auto;
   min-width: fit-content;
 }
 
-.stwid--blocker .stwid--menu .stwid--item #lorebook_ordering_button {
+.stwid--menu .stwid--item #lorebook_ordering_button {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.35em;
+  gap: var(--stwid-space-1);
 }
 
-.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
+.stwid--menu .stwid--item.stwid--bookSort {
   opacity: 1;
   cursor: default;
 }
 
-.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
+.stwid--menu .stwid--item.stwid--bookSort select {
   width: fit-content;
   color: inherit;
   background-color: rgba(255, 255, 255, 0.05);
@@ -632,25 +701,25 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
-  gap: 1.25em;
+  gap: var(--stwid-space-5);
   justify-content: flex-start;
   align-items: center;
-  background-color: var(--SmartThemeBlurTintColor);
-  padding: 0 0.5em;
+  background-color: var(--stwid-panel-bg);
+  padding: 0 var(--stwid-space-2);
 }
 
 .stwid--orderHelper .stwid--actions .stwid--actionsDivider {
   align-self: stretch;
-  width: 1px;
-  background-color: var(--SmartThemeBorderColor);
+  width: var(--stwid-border-width);
+  background-color: var(--stwid-panel-border);
   opacity: 0.5;
 }
 
 .stwid--orderHelper .stwid--actions .stwid--inputWrap {
   display: flex;
   align-items: center;
-  gap: 0.5em;
-  color: var(--SmartThemeEmColor);
+  gap: var(--stwid-space-2);
+  color: var(--stwid-text-muted);
   font-size: smaller;
 }
 
@@ -662,8 +731,8 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility {
   display: flex;
   align-items: center;
-  gap: 0.5em;
-  color: var(--SmartThemeEmColor);
+  gap: var(--stwid-space-2);
+  color: var(--stwid-text-muted);
   font-size: smaller;
   position: relative;
 }
@@ -671,7 +740,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnVisibilityLabel {
   display: flex;
   align-items: center;
-  gap: 0.35em;
+  gap: var(--stwid-space-1);
 }
 
 .stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnVisibilityText {
@@ -682,11 +751,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 0.75em;
+  gap: var(--stwid-space-3);
 }
 
 .stwid--orderHelper .stwid--actions .stwid--actionsRight .stwid--actionsDivider {
-  margin-right: 0.5em;
+  margin-right: var(--stwid-space-2);
 }
 
 .stwid--orderHelper .stwid--columnMenuWrap {
@@ -697,20 +766,20 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--columnMenuButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.25em;
+  gap: var(--stwid-space-1);
 }
 
 .stwid--orderHelper .stwid--columnMenu {
   position: absolute;
-  top: calc(100% + 0.35em);
+  top: calc(100% + var(--stwid-space-1));
   left: 0;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
-  padding: 0.7em;
+  background-color: color-mix(in srgb, var(--stwid-panel-bg) 90%, black 15%);
+  border: var(--stwid-border-width) solid var(--stwid-panel-border);
+  border-radius: var(--stwid-radius-2);
+  padding: var(--stwid-space-3);
   display: none;
   flex-direction: column;
-  gap: 0.6em;
+  gap: var(--stwid-space-3);
   z-index: 3;
 }
 
@@ -721,7 +790,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--columnOption {
   display: flex;
   align-items: center;
-  gap: 0.3em;
+  gap: var(--stwid-space-1);
   font-size: 1em;
   cursor: pointer;
 }
@@ -735,7 +804,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.8em;
+  gap: var(--stwid-space-3);
 }
 
 .stwid--orderHelper .stwid--orderTable .stwid--columnFilter {
@@ -750,20 +819,22 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   padding: 0;
   min-height: 0;
   min-width: 0;
+  height: auto;
   line-height: 1;
   font-size: 0.85em;
 }
 
 .stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton.stwid--active {
   opacity: 1;
-  color: var(--SmartThemeQuoteColor);
+  color: var(--stwid-active-color);
 }
 
 .stwid--orderHelper .stwid--filter {
-  background-color: var(--SmartThemeBlurTintColor);
+  background-color: var(--stwid-panel-bg);
   display: none;
-  gap: 1em;
+  gap: var(--stwid-space-4);
   height: 20vh;
+  padding: var(--stwid-space-3);
 }
 
 .stwid--orderHelper .stwid--filter.stwid--active {
@@ -774,11 +845,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: var(--stwid-space-2);
 }
 
 .stwid--orderHelper .stwid--filter .stwid--main .stwid--hint {
-  color: var(--SmartThemeEmColor);
+  color: var(--stwid-text-muted);
   font-size: smaller;
 }
 
@@ -799,11 +870,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   height: 100%;
   width: 100%;
   font-family: var(--monoFontFamily, monospace);
-  padding: 0.75em;
+  padding: var(--stwid-space-3);
   margin: 0;
   line-height: 1.2;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 5px;
+  border: var(--stwid-border-width) solid var(--stwid-panel-border);
+  border-radius: var(--stwid-radius-1);
   white-space: pre;
   resize: none;
   tab-size: 4;
@@ -864,7 +935,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderTable thead {
-  background-color: var(--SmartThemeBlurTintColor);
+  background-color: var(--stwid-panel-bg);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -872,13 +943,13 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderTable tr {
-  border-bottom: 5px solid var(--SmartThemeBorderColor);
-  transition: 200ms;
-  background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
+  border-bottom: 5px solid var(--stwid-panel-border);
+  transition: var(--stwid-transition);
+  background-color: var(--stwid-table-row-bg);
 }
 
 .stwid--orderTable tr:hover {
-  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
+  background-color: var(--stwid-table-row-hover);
 }
 
 .stwid--orderTable tr.stwid--isFiltered {
@@ -896,7 +967,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderTable tr th,
 .stwid--orderTable tr td {
   text-align: left;
-  padding: 0 0.7em;
+  padding: 0 var(--stwid-space-3);
   width: 0;
 }
 
@@ -1012,7 +1083,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   cursor: pointer;
   opacity: 0.5;
   padding: 4px;
-  transition: 200ms;
+  transition: var(--stwid-transition);
 }
 
 .stwid--orderTable tr td .stwid--sortableHandle:hover {
@@ -1020,13 +1091,13 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderTable tr td .stwid--orderSelect {
-  color: var(--SmartThemeQuoteColor);
+  color: var(--stwid-active-color);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25em;
-  transition: 200ms;
+  gap: var(--stwid-space-1);
+  transition: var(--stwid-transition);
 }
 
 .stwid--orderTable tr td .stwid--orderSelect:hover {
@@ -1050,7 +1121,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
-  color: var(--SmartThemeEmColor);
+  color: var(--stwid-text-muted);
   font-size: 0.8em;
   line-height: 1;
 }
@@ -1065,7 +1136,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
-  color: var(--SmartThemeEmColor);
+  color: var(--stwid-text-muted);
   font-size: 0.75em;
   font-style: italic;
   line-height: 1;
@@ -1113,13 +1184,18 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderTable tr td .stwid--enabled {
-  color: var(--SmartThemeQuoteColor);
+  color: var(--stwid-active-color);
   cursor: pointer;
 }
 
+/* ===================================================================== */
+/* Utilities */
 /* Misc */
 .stwid--helpToast {
   margin: 0;
   padding-left: 0.5em;
   font-size: small;
 }
+
+/* ===================================================================== */
+/* Overrides */

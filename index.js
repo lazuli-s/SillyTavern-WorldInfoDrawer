@@ -356,14 +356,15 @@ const addDrawer = ()=>{
             body.classList.add('stwid--body');
             body.classList.add('stwid--isLoading');
             const list = document.createElement('div'); {
-                list.classList.add('stwid--list');
+                list.classList.add('stwid--list', 'stwid--panel');
                     const controls = document.createElement('div'); {
                         controls.classList.add('stwid--controls');
                         const controlsPrimary = document.createElement('div');
-                        controlsPrimary.classList.add('stwid--controlsRow');
+                        controlsPrimary.classList.add('stwid--controlsRow', 'stwid--controlRow');
                         const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
+                            add.classList.add('stwid--btn', 'stwid--btnIcon');
                             add.title = 'Create New Book';
                             add.querySelector('span')?.remove();
                             add.addEventListener('click', async()=>{
@@ -383,7 +384,7 @@ const addDrawer = ()=>{
                         controlsPrimary.append(add);
                     }
                     const imp = document.createElement('div'); {
-                        imp.classList.add('menu_button');
+                        imp.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                         imp.classList.add('fa-solid', 'fa-fw', 'fa-file-import');
                         imp.title = 'Import Book';
                         imp.addEventListener('click', ()=>{
@@ -392,7 +393,7 @@ const addDrawer = ()=>{
                         controlsPrimary.append(imp);
                     }
                     const refresh = document.createElement('div'); {
-                        refresh.classList.add('menu_button');
+                        refresh.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                         refresh.classList.add('fa-solid', 'fa-fw', 'fa-arrows-rotate');
                         refresh.title = 'Refresh';
                         refresh.addEventListener('click', async()=>{
@@ -403,7 +404,7 @@ const addDrawer = ()=>{
                     const settings = document.createElement('div'); {
             dom.activationToggle = settings;
             settings.classList.add('stwid--activation');
-            settings.classList.add('menu_button');
+            settings.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
             settings.classList.add('fa-solid', 'fa-fw', 'fa-cog');
             settings.title = 'Global Activation Settings';
             settings.addEventListener('click', ()=>{
@@ -413,7 +414,7 @@ const addDrawer = ()=>{
         }
                     const order = document.createElement('div'); {
                         dom.order.toggle = order;
-                        order.classList.add('menu_button');
+                        order.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                         order.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
                         order.title = 'Order Helper\n---\nUse drag and drop to help assign an "Order" value to entries of all active books.';
                         order.addEventListener('click', ()=>{
@@ -430,7 +431,7 @@ const addDrawer = ()=>{
                     const collapseAllToggle = document.createElement('button'); {
                         dom.collapseAllToggle = collapseAllToggle;
                         collapseAllToggle.type = 'button';
-                        collapseAllToggle.classList.add('menu_button');
+                        collapseAllToggle.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                         collapseAllToggle.classList.add('stwid--collapseAllToggle');
                         const icon = document.createElement('i'); {
                             icon.classList.add('fa-solid', 'fa-fw');
@@ -446,7 +447,7 @@ const addDrawer = ()=>{
                         controlsPrimary.append(collapseAllToggle);
                     }
                     const controlsSecondary = document.createElement('div');
-                    controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');
+                    controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls', 'stwid--controlRow');
                     const sortSel = document.createElement('select'); {
                         sortSel.classList.add('text_pole');
                         sortSel.addEventListener('change', ()=>{
@@ -463,7 +464,7 @@ const addDrawer = ()=>{
                     }
                     const bookSortToggle = document.createElement('button'); {
                         bookSortToggle.type = 'button';
-                        bookSortToggle.classList.add('menu_button');
+                        bookSortToggle.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                         bookSortToggle.classList.add('stwid--bookSortToggle');
                         const icon = document.createElement('i'); {
                             icon.classList.add('fa-solid', 'fa-fw');
@@ -492,7 +493,7 @@ const addDrawer = ()=>{
                     }
                     const clearBookSorts = document.createElement('button'); {
                         clearBookSorts.type = 'button';
-                        clearBookSorts.classList.add('menu_button');
+                        clearBookSorts.classList.add('menu_button', 'stwid--btn', 'stwid--btnIcon');
                         clearBookSorts.classList.add('stwid--clearBookSorts');
                         const icon = document.createElement('i'); {
                             icon.classList.add('fa-solid', 'fa-fw', 'fa-broom');
@@ -648,7 +649,7 @@ const addDrawer = ()=>{
             }
             const editor = document.createElement('div'); {
                 dom.editor = editor;
-                editor.classList.add('stwid--editor');
+                editor.classList.add('stwid--editor', 'stwid--panel');
                 body.append(editor);
             }
             drawerContent.append(body);
