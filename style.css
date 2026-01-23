@@ -933,7 +933,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='entry'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='entry'] {
-  min-width: 12em;
+  min-width: 16em;
   padding-top: 1em;
   padding-bottom: 1em;
 }
@@ -962,7 +962,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='recursion'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='recursion'] {
-  min-width: 12em;
+  min-width: 14em;
 }
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
