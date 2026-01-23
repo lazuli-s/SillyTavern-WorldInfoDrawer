@@ -700,15 +700,8 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--columnMenu {
   position: absolute;
   top: calc(100% + 0.35em);
-  left: 0;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
-  padding: 0.7em;
   display: none;
-  flex-direction: column;
-  gap: 0.6em;
-  z-index: 3;
+
 }
 
 .stwid--columnMenu.stwid--active {
@@ -719,7 +712,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
   border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
   text-shadow: 0px 0px calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
+  padding: 0.7em;
+  gap: 0.6em;
+  flex-direction: column;
 }
 
 .stwid--orderHelper .stwid--columnOption {
