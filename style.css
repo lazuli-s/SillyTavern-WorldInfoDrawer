@@ -562,6 +562,22 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 /* Order Helper */
+.stwid--orderHelper select {
+  width: max-content;
+  min-width: max-content;
+  color: inherit;
+  background-color: rgba(255, 255, 255, 0.05);
+  min-height: var(--stwid-menu-item-height);
+  height: 100%;
+  margin: 0;
+  font-size: 1em;
+  white-space: nowrap;
+}
+
+.stwid--orderHelper select option {
+  white-space: nowrap;
+}
+
 .stwid--orderHelper {
   display: flex;
   flex-direction: column;
