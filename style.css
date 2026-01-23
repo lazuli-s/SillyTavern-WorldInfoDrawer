@@ -852,10 +852,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   height: 100%;
 }
 
-.stwid--orderHelper .stwid--input {
-  width: auto;
-}
-
 /* Order Table */
 .stwid--orderTableWrap {
   flex: 1 1 auto;
@@ -937,7 +933,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='entry'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='entry'] {
-  min-width: 12em;
+  min-width: 16em;
   padding-top: 1em;
   padding-bottom: 1em;
 }
@@ -954,34 +950,19 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   text-align: center;
 }
 
-.stwid--orderHelper .stwid--orderTable tr th[data-col='depth'],
-.stwid--orderHelper .stwid--orderTable tr td[data-col='depth'] {
-  min-width: 5em;
-  text-align: center;
-}
-
 .stwid--orderHelper .stwid--orderTable tr th[data-col='outlet'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='outlet'] {
   min-width: 8em;
   text-align: center;
 }
 
-.stwid--orderHelper .stwid--orderTable tr th[data-col='order'],
-.stwid--orderHelper .stwid--orderTable tr td[data-col='order'] {
+.stwid--orderHelper .stwid--orderTable .stwid--orderTable--NumberColumns {
   min-width: 5em;
-  text-align: center;
-}
-
-.stwid--orderHelper .stwid--orderTable tr th[data-col='trigger'],
-.stwid--orderHelper .stwid--orderTable tr td[data-col='trigger'] {
-  min-width: 5em;
-  text-align: center;
 }
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='recursion'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='recursion'] {
-  min-width: 12em;
-  text-align: center;
+  min-width: 14em;
 }
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
@@ -1084,7 +1065,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   color: var(--SmartThemeBodyColor);
   font-size: 0.85em;
   min-width: 6em;
-  word-break: break-word;
 }
 
 .stwid--orderTable tr td .stwid--outlet input[name='outletName'] {
