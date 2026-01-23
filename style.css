@@ -894,6 +894,14 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   width: 0;
 }
 
+.stwid--orderTable thead th {
+  text-align: center;
+}
+
+.stwid--orderTable thead th[data-col='entry'] {
+  text-align: left;
+}
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='select'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='select'] {
   min-width: 1em;
