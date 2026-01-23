@@ -1,3 +1,4 @@
+/* Drawer */
 body #WorldInfo > .stwid--body {
   display: none;
 }
@@ -43,6 +44,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
   font-size: 5em;
 }
 
+/* List Panel */
 body.stwid-- #WorldInfo .stwid--list {
   flex: 0 0 auto;
   display: flex;
@@ -345,6 +347,7 @@ body.stwid--
   cursor: pointer;
 }
 
+/* Splitter */
 body.stwid-- #WorldInfo .stwid--splitter {
   flex: 0 0 auto;
   width: 6px;
@@ -360,6 +363,7 @@ body.stwid-- #WorldInfo .stwid--splitter:active {
   opacity: 1;
 }
 
+/* Editor Panel */
 body.stwid-- #WorldInfo .stwid--editor {
   flex: 1 1 auto;
   min-width: 300px;
@@ -479,6 +483,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
 
+/* Context Menu */
 .stwid--blocker {
   position: fixed;
   inset: 0;
@@ -559,6 +564,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   font-size: 1em;
 }
 
+/* Order Helper */
 .stwid--orderHelper {
   display: flex;
   flex-direction: column;
@@ -672,6 +678,17 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   line-height: 1.1;
 }
 
+.stwid--orderHelper .stwid--actions .stwid--actionsRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+}
+
+.stwid--orderHelper .stwid--actions .stwid--actionsRight .stwid--actionsDivider {
+  margin-right: 0.5em;
+}
+
 .stwid--orderHelper .stwid--columnMenuWrap {
   position: relative;
   display: inline-flex;
@@ -740,18 +757,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--orderTable .stwid--orderFilterButton.stwid--active {
   opacity: 1;
   color: var(--SmartThemeQuoteColor);
-}
-
-
-.stwid--orderHelper .stwid--actions .stwid--actionsRight {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.75em;
-}
-
-.stwid--orderHelper .stwid--actions .stwid--actionsRight .stwid--actionsDivider {
-  margin-right: 0.5em;
 }
 
 .stwid--orderHelper .stwid--filter {
@@ -842,6 +847,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   width: auto;
 }
 
+/* Order Table */
 .stwid--orderTableWrap {
   flex: 1 1 auto;
   min-height: 0;
@@ -1103,6 +1109,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   cursor: pointer;
 }
 
+/* Misc */
 .stwid--helpToast {
   margin: 0;
   padding-left: 0.5em;
