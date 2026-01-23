@@ -510,14 +510,17 @@ const createOrderHelperRenderer = ({
                                                     }
                                                     const menu = document.createElement('div'); {
                                                         menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.toggle('stwid--active', orderHelperState.columnMenuOpen.strategy);
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.remove('stwid--active');
+                                                            orderHelperState.columnMenuOpen.strategy = false;
+                                                            menu.classList.toggle('stwid--active', orderHelperState.columnMenuOpen.strategy);
                                                             document.removeEventListener('click', handleOutsideClick);
                                                         };
                                                         const openMenu = ()=>{
                                                             if (menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.add('stwid--active');
+                                                            orderHelperState.columnMenuOpen.strategy = true;
+                                                            menu.classList.toggle('stwid--active', orderHelperState.columnMenuOpen.strategy);
                                                             document.addEventListener('click', handleOutsideClick);
                                                         };
                                                         const handleOutsideClick = (event)=>{
@@ -568,6 +571,9 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         updateFilterIndicator();
                                                         menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                        if (orderHelperState.columnMenuOpen.strategy) {
+                                                            document.addEventListener('click', handleOutsideClick);
+                                                        }
                                                         menuButton.addEventListener('click', (event)=>{
                                                             event.stopPropagation();
                                                             if (menu.classList.contains('stwid--active')) {
@@ -608,14 +614,17 @@ const createOrderHelperRenderer = ({
                                                     }
                                                     const menu = document.createElement('div'); {
                                                         menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.toggle('stwid--active', orderHelperState.columnMenuOpen.position);
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.remove('stwid--active');
+                                                            orderHelperState.columnMenuOpen.position = false;
+                                                            menu.classList.toggle('stwid--active', orderHelperState.columnMenuOpen.position);
                                                             document.removeEventListener('click', handleOutsideClick);
                                                         };
                                                         const openMenu = ()=>{
                                                             if (menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.add('stwid--active');
+                                                            orderHelperState.columnMenuOpen.position = true;
+                                                            menu.classList.toggle('stwid--active', orderHelperState.columnMenuOpen.position);
                                                             document.addEventListener('click', handleOutsideClick);
                                                         };
                                                         const handleOutsideClick = (event)=>{
@@ -666,6 +675,9 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         updateFilterIndicator();
                                                         menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                        if (orderHelperState.columnMenuOpen.position) {
+                                                            document.addEventListener('click', handleOutsideClick);
+                                                        }
                                                         menuButton.addEventListener('click', (event)=>{
                                                             event.stopPropagation();
                                                             if (menu.classList.contains('stwid--active')) {
