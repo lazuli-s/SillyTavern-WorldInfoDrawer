@@ -475,6 +475,15 @@ const createOrderHelperRenderer = ({
                                 { label:'Recursion', key:'recursion' },
                                 { label:'Budget', key:'budget' },
                             ];
+                            const numberColumnKeys = new Set([
+                                'depth',
+                                'order',
+                                'sticky',
+                                'cooldown',
+                                'delay',
+                                'automationId',
+                                'trigger',
+                            ]);
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
                                     if (col.key === 'strategy') {
@@ -678,6 +687,9 @@ const createOrderHelperRenderer = ({
                                     }
                                     if (col.key) {
                                         th.setAttribute('data-col', col.key);
+                                        if (numberColumnKeys.has(col.key)) {
+                                            th.classList.add('stwid--orderTable--NumberColumns');
+                                        }
                                     }
                                     tr.append(th);
                                 }
@@ -859,6 +871,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const depth = document.createElement('td'); {
                                     depth.setAttribute('data-col', 'depth');
+                                    depth.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
@@ -955,6 +968,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const order = document.createElement('td'); {
                                     order.setAttribute('data-col', 'order');
+                                    order.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
@@ -974,6 +988,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const sticky = document.createElement('td'); {
                                     sticky.setAttribute('data-col', 'sticky');
+                                    sticky.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
@@ -993,6 +1008,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const cooldown = document.createElement('td'); {
                                     cooldown.setAttribute('data-col', 'cooldown');
+                                    cooldown.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
@@ -1012,6 +1028,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const delay = document.createElement('td'); {
                                     delay.setAttribute('data-col', 'delay');
+                                    delay.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
@@ -1031,6 +1048,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const automationId = document.createElement('td'); {
                                     automationId.setAttribute('data-col', 'automationId');
+                                    automationId.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
@@ -1050,6 +1068,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const probability = document.createElement('td'); {
                                     probability.setAttribute('data-col', 'trigger');
+                                    probability.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');

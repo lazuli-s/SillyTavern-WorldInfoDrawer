@@ -954,26 +954,13 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   text-align: center;
 }
 
-.stwid--orderHelper .stwid--orderTable tr th[data-col='depth'],
-.stwid--orderHelper .stwid--orderTable tr td[data-col='depth'] {
-  min-width: 5em;
-  text-align: center;
-}
-
 .stwid--orderHelper .stwid--orderTable tr th[data-col='outlet'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='outlet'] {
   min-width: 8em;
   text-align: center;
 }
 
-.stwid--orderHelper .stwid--orderTable tr th[data-col='order'],
-.stwid--orderHelper .stwid--orderTable tr td[data-col='order'] {
-  min-width: 5em;
-  text-align: center;
-}
-
-.stwid--orderHelper .stwid--orderTable tr th[data-col='trigger'],
-.stwid--orderHelper .stwid--orderTable tr td[data-col='trigger'] {
+.stwid--orderHelper .stwid--orderTable .stwid--orderTable--NumberColumns {
   min-width: 5em;
   text-align: center;
 }
