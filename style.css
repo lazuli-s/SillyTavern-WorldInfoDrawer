@@ -713,6 +713,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--columnMenu.stwid--active {
   display: flex;
+  width: max-content;
 }
 
 .stwid--orderHelper .stwid--columnOption {
@@ -721,6 +722,10 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   gap: 0.3em;
   font-size: 1em;
   cursor: pointer;
+}
+
+.stwid--orderHelper .stwid--columnOption:hover {
+  color: var(--SmartThemeQuoteColor);
 }
 
 .stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
