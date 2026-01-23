@@ -75,7 +75,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
 
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .text_pole {
   height: var(--stwid-control-height);
-  min-height: var(--stwid-control-height);
   padding: 0.35em;
   display: inline-flex;
   align-items: center;
@@ -88,7 +87,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid
   align-items: center;
   justify-content: center;
   padding: 0.35em;
-  min-height: var(--stwid-control-height);
   height: var(--stwid-control-height);
 }
 
@@ -527,7 +525,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--blocker .stwid--menu .stwid--item:hover {
-  opacity: 1;
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 
