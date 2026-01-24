@@ -171,7 +171,6 @@ const createOrderHelperRenderer = ({
                                 closeMenu();
                             };
                             const columns = [
-                                { key:'move', label:'Move' },
                                 { key:'strategy', label:'Strategy' },
                                 { key:'position', label:'Position' },
                                 { key:'depth', label:'Depth' },
@@ -491,7 +490,6 @@ const createOrderHelperRenderer = ({
                     const thead = document.createElement('thead'); {
                         const tr = document.createElement('tr'); {
                             const columns = [
-                                { label:'', key:'move' },
                                 { label:'', key:'select' },
                                 { label:'', key:'drag' },
                                 { label:'', key:'enabled' },
@@ -880,8 +878,26 @@ const createOrderHelperRenderer = ({
                                     dom.order.entries[e.book] = {};
                                 }
                                 dom.order.entries[e.book][e.data.uid] = tr;
-                                const move = document.createElement('td'); {
-                                    move.setAttribute('data-col', 'move');
+                                const select = document.createElement('td'); {
+                                    select.setAttribute('data-col', 'select');
+                                    const btn = document.createElement('div'); {
+                                        btn.classList.add('stwid--orderSelect');
+                                        btn.classList.add('fa-solid', 'fa-fw');
+                                        btn.title = 'Toggle selection for applying Order values';
+                                        const icon = document.createElement('i'); {
+                                            icon.classList.add('fa-solid', 'fa-fw', 'stwid--icon');
+                                            btn.append(icon);
+                                        }
+                                        btn.addEventListener('click', ()=>{
+                                            setOrderHelperRowSelected(tr, !isOrderHelperRowSelected(tr));
+                                            updateOrderHelperSelectAllButton();
+                                        });
+                                        select.append(btn);
+                                    }
+                                    tr.append(select);
+                                }
+                                const handle = document.createElement('td'); {
+                                    handle.setAttribute('data-col', 'drag');
                                     const controls = document.createElement('div'); {
                                         controls.classList.add('stwid--orderMove');
                                         const createMoveButton = (direction, iconClass, title, jumpTitle)=>{
@@ -952,35 +968,12 @@ const createOrderHelperRenderer = ({
                                             'Move down',
                                             'the bottom of the filtered list',
                                         );
-                                        controls.append(upButton, downButton);
-                                        move.append(controls);
-                                    }
-                                    tr.append(move);
-                                }
-                                const select = document.createElement('td'); {
-                                    select.setAttribute('data-col', 'select');
-                                    const btn = document.createElement('div'); {
-                                        btn.classList.add('stwid--orderSelect');
-                                        btn.classList.add('fa-solid', 'fa-fw');
-                                        btn.title = 'Toggle selection for applying Order values';
-                                        const icon = document.createElement('i'); {
-                                            icon.classList.add('fa-solid', 'fa-fw', 'stwid--icon');
-                                            btn.append(icon);
+                                        const dragHandle = document.createElement('div'); {
+                                            dragHandle.classList.add('stwid--sortableHandle');
+                                            dragHandle.textContent = '☰';
+                                            controls.append(upButton, dragHandle, downButton);
                                         }
-                                        btn.addEventListener('click', ()=>{
-                                            setOrderHelperRowSelected(tr, !isOrderHelperRowSelected(tr));
-                                            updateOrderHelperSelectAllButton();
-                                        });
-                                        select.append(btn);
-                                    }
-                                    tr.append(select);
-                                }
-                                const handle = document.createElement('td'); {
-                                    handle.setAttribute('data-col', 'drag');
-                                    const i = document.createElement('div'); {
-                                        i.classList.add('stwid--sortableHandle');
-                                        i.textContent = '☰';
-                                        handle.append(i);
+                                        handle.append(controls);
                                     }
                                     tr.append(handle);
                                 }
