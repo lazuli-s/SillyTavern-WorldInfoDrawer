@@ -8,6 +8,8 @@ let filterActiveInput;
 let loadListDebounced;
 
 const collapseStates = {};
+const folderCollapseStates = {};
+const folderGroups = new Map();
 
 /** Last clicked/selected DOM (WI entry) @type {HTMLElement} */
 let selectLast = null;
@@ -22,6 +24,147 @@ let selectToast = null;
 
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
+};
+
+const setFolderCollapseState = (name, isCollapsed)=>{
+    folderCollapseStates[name] = Boolean(isCollapsed);
+};
+
+const normalizeFolderName = (value)=>{
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : null;
+};
+
+const getFolderFromMetadata = (metadata)=>{
+    const folder = metadata?.[state.METADATA_NAMESPACE]?.[state.METADATA_FOLDER_KEY];
+    return normalizeFolderName(folder);
+};
+
+const updateFolderCount = (name)=>{
+    const group = folderGroups.get(name);
+    if (!group) return;
+    const count = Object.values(state.cache).filter((book)=>book.folder === name).length;
+    group.count.textContent = `(${count})`;
+};
+
+const updateFolderVisibility = ()=>{
+    for (const group of folderGroups.values()) {
+        const hasVisibleBook = [...group.books.children].some((book)=>!book.classList.contains('stwid--filter-active') && !book.classList.contains('stwid--filter-query'));
+        group.root.classList.toggle('stwid--isEmpty', !hasVisibleBook);
+    }
+};
+
+const applyFolderCollapseState = (name)=>{
+    const isCollapsed = folderCollapseStates[name];
+    const group = folderGroups.get(name);
+    if (isCollapsed === undefined || !group) return;
+    group.root.classList.toggle('stwid--isCollapsed', isCollapsed);
+};
+
+const setFolderCollapsed = (name, isCollapsed)=>{
+    setFolderCollapseState(name, isCollapsed);
+    applyFolderCollapseState(name);
+};
+
+const ensureFolderGroup = (name, before = null)=>{
+    if (!name) return null;
+    if (folderGroups.has(name)) return folderGroups.get(name);
+    const root = document.createElement('div'); {
+        root.classList.add('stwid--folder');
+        root.dataset.folder = name;
+        const header = document.createElement('div'); {
+            header.classList.add('stwid--folderHeader');
+            const icon = document.createElement('i'); {
+                icon.classList.add('fa-solid', 'fa-fw', 'fa-folder');
+                header.append(icon);
+            }
+            const label = document.createElement('div'); {
+                label.classList.add('stwid--folderName');
+                label.textContent = name;
+                header.append(label);
+            }
+            const count = document.createElement('div'); {
+                count.classList.add('stwid--folderCount');
+                count.textContent = '(0)';
+                header.append(count);
+            }
+            header.addEventListener('click', ()=>{
+                const isCollapsed = !root.classList.contains('stwid--isCollapsed');
+                setFolderCollapsed(name, isCollapsed);
+            });
+            root.append(header);
+        }
+        const books = document.createElement('div'); {
+            books.classList.add('stwid--folderBooks');
+            root.append(books);
+        }
+        let insertBefore = before;
+        if (insertBefore) {
+            const folderRoot = insertBefore.closest('.stwid--folder');
+            if (folderRoot && folderRoot.parentElement === state.dom.books) {
+                insertBefore = folderRoot;
+            }
+        }
+        if (insertBefore && insertBefore.parentElement === state.dom.books) {
+            insertBefore.insertAdjacentElement('beforebegin', root);
+        } else {
+            state.dom.books.append(root);
+        }
+        folderGroups.set(name, { root, books, count: root.querySelector('.stwid--folderCount') });
+    }
+    applyFolderCollapseState(name);
+    updateFolderCount(name);
+    return folderGroups.get(name);
+};
+
+const getOrderedBookGroups = ()=>{
+    const sorted = state.safeToSorted(state.world_names, (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    const seenFolders = new Set();
+    const order = [];
+    for (const name of sorted) {
+        const folder = state.cache[name]?.folder ?? null;
+        if (folder) {
+            if (!seenFolders.has(folder)) {
+                seenFolders.add(folder);
+                order.push({ type:'folder', key: folder });
+            }
+        } else {
+            order.push({ type:'book', key: name });
+        }
+    }
+    return order;
+};
+
+const getGroupInsertBefore = (folderName)=>{
+    const order = getOrderedBookGroups();
+    const idx = order.findIndex((entry)=>entry.type === 'folder' && entry.key === folderName);
+    if (idx === -1) return null;
+    for (let i = idx + 1; i < order.length; i++) {
+        const entry = order[i];
+        if (entry.type === 'folder') {
+            const group = folderGroups.get(entry.key);
+            if (group?.root?.parentElement) return group.root;
+        } else {
+            const book = state.cache?.[entry.key];
+            if (book?.dom?.root?.parentElement) return book.dom.root;
+        }
+    }
+    return null;
+};
+
+const getBookInsertBefore = (bookName, folderName)=>{
+    const booksInFolder = Object.keys(state.cache)
+        .filter((name)=>state.cache[name].folder === folderName && name !== bookName)
+        .sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    const allBooks = [...booksInFolder, bookName]
+        .sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    const index = allBooks.indexOf(bookName);
+    for (let i = index + 1; i < allBooks.length; i++) {
+        const next = state.cache[allBooks[i]];
+        if (next?.dom?.root?.parentElement) return next.dom.root;
+    }
+    return null;
 };
 
 const hasExpandedBooks = ()=>Object.values(state.cache).some((book)=>{
@@ -90,8 +233,38 @@ const sortEntriesIfNeeded = (name)=>{
 };
 
 const setCacheMetadata = (name, metadata = {})=>{
+    const prevFolder = state.cache[name]?.folder ?? null;
     state.cache[name].metadata = cloneMetadata(metadata);
     state.cache[name].sort = state.getSortFromMetadata(state.cache[name].metadata);
+    const nextFolder = getFolderFromMetadata(state.cache[name].metadata);
+    state.cache[name].folder = nextFolder;
+    if (prevFolder !== nextFolder && state.cache[name]?.dom?.root) {
+        if (prevFolder) updateFolderCount(prevFolder);
+        if (nextFolder) updateFolderCount(nextFolder);
+        if (prevFolder && Object.values(state.cache).every((book)=>book.folder !== prevFolder)) {
+            folderGroups.get(prevFolder)?.root?.remove();
+            folderGroups.delete(prevFolder);
+        }
+        const bookRoot = state.cache[name].dom.root;
+        bookRoot.dataset.folder = nextFolder ?? '';
+        if (nextFolder) {
+            const before = getBookInsertBefore(name, nextFolder);
+            const group = ensureFolderGroup(nextFolder, getGroupInsertBefore(nextFolder));
+            if (before && before.parentElement === group.books) {
+                before.insertAdjacentElement('beforebegin', bookRoot);
+            } else {
+                group.books.append(bookRoot);
+            }
+        } else {
+            const before = getBookInsertBefore(name, null);
+            if (before) {
+                before.insertAdjacentElement('beforebegin', bookRoot);
+            } else {
+                state.dom.books.append(bookRoot);
+            }
+        }
+        updateFolderVisibility();
+    }
 };
 
 const setBookSortPreference = async(name, sort = null, direction = null)=>{
@@ -171,6 +344,7 @@ const selectRemove = (entry)=>{
 const renderBook = async(name, before = null, bookData = null)=>{
     const data = bookData ?? await state.loadWorldInfo(name);
     const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:state.getSortFromMetadata(data.metadata) };
+    world.folder = getFolderFromMetadata(world.metadata);
     for (const [k,v] of Object.entries(data.entries)) {
         world.entries[k] = structuredClone(v);
     }
@@ -190,6 +364,7 @@ const renderBook = async(name, before = null, bookData = null)=>{
     const book = document.createElement('div'); {
         world.dom.root = book;
         book.classList.add('stwid--book');
+        book.dataset.folder = world.folder ?? '';
         book.addEventListener('dragover', (evt)=>{
             if (selectFrom === null) return;
             evt.preventDefault();
@@ -584,14 +759,32 @@ const renderBook = async(name, before = null, bookData = null)=>{
             setBookCollapsed(name, initialCollapsed);
             book.append(entryList);
         }
-        if (before) before.insertAdjacentElement('beforebegin', book);
-        else state.dom.books.append(book);
+        if (world.folder) {
+            const groupBefore = before ? getGroupInsertBefore(world.folder) : null;
+            const group = ensureFolderGroup(world.folder, groupBefore || before);
+            const beforeInGroup = before?.parentElement === group.books ? before : getBookInsertBefore(name, world.folder);
+            if (beforeInGroup) {
+                beforeInGroup.insertAdjacentElement('beforebegin', book);
+            } else {
+                group.books.append(book);
+            }
+            updateFolderCount(world.folder);
+        } else {
+            const beforeInRoot = before?.parentElement === state.dom.books ? before : getBookInsertBefore(name, null);
+            if (beforeInRoot) {
+                beforeInRoot.insertAdjacentElement('beforebegin', book);
+            } else {
+                state.dom.books.append(book);
+            }
+        }
+        updateFolderVisibility();
     }
     return book;
 };
 
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
+    folderGroups.clear();
     const books = await Promise.all(state.safeToSorted(state.world_names, (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).map(async(name)=>({ name, data:await state.loadWorldInfo(name) })));
     for (const book of books) {
         await renderBook(book.name, null, book.data);
@@ -605,6 +798,10 @@ const refreshList = async()=>{
         const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--isCollapsed');
         if (isCollapsed !== undefined) setCollapseState(bookName, isCollapsed);
         delete state.cache[bookName];
+    }
+    for (const [folderName, group] of folderGroups.entries()) {
+        const isCollapsed = group.root.classList.contains('stwid--isCollapsed');
+        setFolderCollapseState(folderName, isCollapsed);
     }
     try {
         await loadListDebounced();
@@ -658,6 +855,7 @@ const setupFilter = (list)=>{
                         }
                     }
                 }
+                updateFolderVisibility();
             });
             filter.append(search);
         }
@@ -689,6 +887,7 @@ const setupFilter = (list)=>{
                     state.cache[b].dom.root.classList.remove('stwid--filter-active');
                 }
             }
+            updateFolderVisibility();
         };
         state.applyActiveFilter = applyActiveFilter;
         const filterActive = document.createElement('label'); {
@@ -765,6 +964,21 @@ const initListPanel = (options)=>{
         getSelectionState,
         hasExpandedBooks,
         refreshList,
+        removeBook: (name)=>{
+            const book = state.cache[name];
+            if (!book) return;
+            book.dom.root.remove();
+            const folderName = book.folder;
+            delete state.cache[name];
+            if (folderName) {
+                updateFolderCount(folderName);
+                if (Object.values(state.cache).every((b)=>b.folder !== folderName)) {
+                    folderGroups.get(folderName)?.root?.remove();
+                    folderGroups.delete(folderName);
+                }
+            }
+            updateFolderVisibility();
+        },
         renderBook,
         selectAdd,
         selectEnd,
@@ -772,6 +986,7 @@ const initListPanel = (options)=>{
         setBookCollapsed,
         setCacheMetadata,
         setCollapseState,
+        setFolderCollapsed,
         setBookSortPreference,
         sortEntriesIfNeeded,
         updateCollapseAllToggle,
