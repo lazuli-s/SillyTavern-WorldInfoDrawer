@@ -50,7 +50,11 @@ const createOrderHelperRenderer = ({
         if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
         const lines = [];
         if (Array.isArray(filter.names) && filter.names.length > 0) {
-            lines.push(...filter.names.map((name)=>`Name: ${name}`));
+            lines.push(...filter.names.map((name)=>({
+                icon: filter.isExclude ? 'fa-user-slash' : 'fa-user-plus',
+                mode: filter.isExclude ? 'exclude' : 'include',
+                label: name,
+            })));
         }
         if (Array.isArray(filter.tags) && filter.tags.length > 0) {
             const tags = globalThis.SillyTavern?.getContext?.().tags ?? [];
@@ -58,14 +62,17 @@ const createOrderHelperRenderer = ({
                 ? tags.filter((tag)=>filter.tags.includes(tag.id)).map((tag)=>tag.name)
                 : filter.tags.map((tag)=>String(tag));
             if (tagNames.length > 0) {
-                lines.push(...tagNames.map((tag)=>`Tag: ${tag}`));
+                lines.push(...tagNames.map((tag)=>({
+                    icon: 'fa-tag',
+                    mode: filter.isExclude ? 'exclude' : 'include',
+                    label: tag,
+                })));
             }
         }
         if (!lines.length) {
-            return filter.isExclude ? ['Exclude'] : [];
+            return [];
         }
-        const prefix = filter.isExclude ? 'Exclude' : 'Include';
-        return lines.map((line)=>`${prefix} ${line}`);
+        return lines;
     };
 
     const renderOrderHelper = (book = null)=>{
@@ -1175,9 +1182,18 @@ const createOrderHelperRenderer = ({
                                             wrap.textContent = '';
                                         } else {
                                             for (const line of lines) {
-                                                const row = document.createElement('div');
-                                                row.textContent = line;
-                                                wrap.append(row);
+                                                const row = document.createElement('div'); {
+                                                    row.classList.add('stwid--characterFilterRow', `stwid--characterFilterRow--${line.mode}`);
+                                                    const icon = document.createElement('i'); {
+                                                        icon.classList.add('fa-solid', 'fa-fw', line.icon);
+                                                        row.append(icon);
+                                                    }
+                                                    const text = document.createElement('span'); {
+                                                        text.textContent = line.label;
+                                                        row.append(text);
+                                                    }
+                                                    wrap.append(row);
+                                                }
                                             }
                                         }
                                         characterFilter.append(wrap);

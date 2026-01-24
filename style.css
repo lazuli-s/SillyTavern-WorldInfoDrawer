@@ -994,6 +994,20 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   font-size: 0.85em;
 }
 
+.stwid--orderHelper .stwid--characterFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.stwid--orderHelper .stwid--characterFilterRow--include {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--orderHelper .stwid--characterFilterRow--exclude {
+  color: var(--SmartThemeErrorColor, #e57373);
+}
+
 .stwid--orderHelper .stwid--recursionRow {
   display: flex;
   align-items: center;
