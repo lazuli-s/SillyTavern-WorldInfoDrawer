@@ -16,6 +16,7 @@ const ORDER_HELPER_DEFAULT_COLUMNS = {
     trigger: true,
     recursion: false,
     budget: false,
+    characterFilter: false,
 };
 
 const getStrategyOptions = ()=>{

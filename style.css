@@ -626,6 +626,10 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
 
+.stwid--orderHelper.stwid--hide-col-characterFilter [data-col='characterFilter'] {
+  display: none;
+}
+
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
@@ -965,6 +969,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   min-width: 14em;
 }
 
+.stwid--orderHelper .stwid--orderTable tr th[data-col='characterFilter'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='characterFilter'] {
+  min-width: 14em;
+}
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='budget'] {
   min-width: 7em;
@@ -976,6 +985,27 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   flex-direction: column;
   gap: 0;
   font-size: 0.85em;
+}
+
+.stwid--orderHelper .stwid--characterFilterOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 0.85em;
+}
+
+.stwid--orderHelper .stwid--characterFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.stwid--orderHelper .stwid--characterFilterRow--include {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--orderHelper .stwid--characterFilterRow--exclude {
+  color: var(--SmartThemeErrorColor, #e57373);
 }
 
 .stwid--orderHelper .stwid--recursionRow {

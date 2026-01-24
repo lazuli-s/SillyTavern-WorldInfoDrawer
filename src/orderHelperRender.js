@@ -45,6 +45,36 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
+    const formatCharacterFilter = (entry)=>{
+        const filter = entry?.characterFilter;
+        if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
+        const lines = [];
+        if (Array.isArray(filter.names) && filter.names.length > 0) {
+            lines.push(...filter.names.map((name)=>({
+                icon: filter.isExclude ? 'fa-user-slash' : 'fa-user-plus',
+                mode: filter.isExclude ? 'exclude' : 'include',
+                label: name,
+            })));
+        }
+        if (Array.isArray(filter.tags) && filter.tags.length > 0) {
+            const tags = globalThis.SillyTavern?.getContext?.().tags ?? [];
+            const tagNames = tags.length
+                ? tags.filter((tag)=>filter.tags.includes(tag.id)).map((tag)=>tag.name)
+                : filter.tags.map((tag)=>String(tag));
+            if (tagNames.length > 0) {
+                lines.push(...tagNames.map((tag)=>({
+                    icon: 'fa-tag',
+                    mode: filter.isExclude ? 'exclude' : 'include',
+                    label: tag,
+                })));
+            }
+        }
+        if (!lines.length) {
+            return [];
+        }
+        return lines;
+    };
+
     const renderOrderHelper = (book = null)=>{
         orderHelperState.book = book;
         syncOrderHelperStrategyFilters();
@@ -152,6 +182,7 @@ const createOrderHelperRenderer = ({
                                 { key:'trigger', label:'Trigger %' },
                                 { key:'recursion', label:'Recursion' },
                                 { key:'budget', label:'Budget' },
+                                { key:'characterFilter', label:'Character Filter' },
                             ];
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
@@ -474,6 +505,7 @@ const createOrderHelperRenderer = ({
                                 { label:'Trigger %', key:'trigger' },
                                 { label:'Recursion', key:'recursion' },
                                 { label:'Budget', key:'budget' },
+                                { label:'Character Filter', key:'characterFilter' },
                             ];
                             const numberColumnKeys = new Set([
                                 'depth',
@@ -1140,6 +1172,33 @@ const createOrderHelperRenderer = ({
                                         budget.append(wrap);
                                     }
                                     tr.append(budget);
+                                }
+                                const characterFilter = document.createElement('td'); {
+                                    characterFilter.setAttribute('data-col', 'characterFilter');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--colwrap', 'stwid--characterFilterOptions');
+                                        const lines = formatCharacterFilter(e.data);
+                                        if (!lines.length) {
+                                            wrap.textContent = '';
+                                        } else {
+                                            for (const line of lines) {
+                                                const row = document.createElement('div'); {
+                                                    row.classList.add('stwid--characterFilterRow', `stwid--characterFilterRow--${line.mode}`);
+                                                    const icon = document.createElement('i'); {
+                                                        icon.classList.add('fa-solid', 'fa-fw', line.icon);
+                                                        row.append(icon);
+                                                    }
+                                                    const text = document.createElement('span'); {
+                                                        text.textContent = line.label;
+                                                        row.append(text);
+                                                    }
+                                                    wrap.append(row);
+                                                }
+                                            }
+                                        }
+                                        characterFilter.append(wrap);
+                                    }
+                                    tr.append(characterFilter);
                                 }
                                 setOrderHelperRowSelected(tr, true);
                                 tbody.append(tr);
