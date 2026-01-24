@@ -118,23 +118,12 @@ export const initEditorPanel = ({
         entryDom.classList.add('stwid--active');
         clearEditor({ resetCurrent: false });
         appendUnfocusButton();
+        dom.editor.append(
+            document.createRange()
+                .createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders'))
+                .querySelector('#WIEntryHeaderTitlesPC')
+        );
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
-        const titleMemoInput = editDom.querySelector('[name="comment"]');
-        if (titleMemoInput) {
-            const titleMemoLabel = document.createElement('small'); {
-                titleMemoLabel.classList.add('textAlignCenter');
-                const span = document.createElement('span'); {
-                    span.textContent = 'Title/Memo';
-                    titleMemoLabel.append(span);
-                }
-            }
-            const titleMemoContainer = titleMemoInput.closest('label') ?? titleMemoInput.parentElement;
-            if (titleMemoContainer) {
-                titleMemoContainer.insertBefore(titleMemoLabel, titleMemoInput);
-            } else {
-                titleMemoInput.insertAdjacentElement('beforebegin', titleMemoLabel);
-            }
-        }
         $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
