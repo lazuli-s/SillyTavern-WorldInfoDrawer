@@ -45,6 +45,29 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
+    const formatCharacterFilter = (entry)=>{
+        const filter = entry?.characterFilter;
+        if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return '';
+        const parts = [];
+        if (Array.isArray(filter.names) && filter.names.length > 0) {
+            parts.push(`Names: ${filter.names.join(', ')}`);
+        }
+        if (Array.isArray(filter.tags) && filter.tags.length > 0) {
+            const tags = globalThis.SillyTavern?.getContext?.().tags ?? [];
+            const tagNames = tags.length
+                ? tags.filter((tag)=>filter.tags.includes(tag.id)).map((tag)=>tag.name)
+                : filter.tags.map((tag)=>String(tag));
+            if (tagNames.length > 0) {
+                parts.push(`Tags: ${tagNames.join(', ')}`);
+            }
+        }
+        if (!parts.length) {
+            return filter.isExclude ? 'Exclude' : '';
+        }
+        const prefix = filter.isExclude ? 'Exclude' : 'Include';
+        return `${prefix}: ${parts.join(' | ')}`;
+    };
+
     const renderOrderHelper = (book = null)=>{
         orderHelperState.book = book;
         syncOrderHelperStrategyFilters();
@@ -1147,8 +1170,7 @@ const createOrderHelperRenderer = ({
                                     characterFilter.setAttribute('data-col', 'characterFilter');
                                     const wrap = document.createElement('div'); {
                                         wrap.classList.add('stwid--colwrap');
-                                        const value = e.data.characterFilter;
-                                        wrap.textContent = value === undefined || value === null ? '' : String(value);
+                                        wrap.textContent = formatCharacterFilter(e.data);
                                         characterFilter.append(wrap);
                                     }
                                     tr.append(characterFilter);
