@@ -702,25 +702,23 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
-  padding: 0.7em;
   display: none;
-  flex-direction: column;
-  gap: 0.6em;
   z-index: 3;
 }
 
 .stwid--orderHelper .stwid--columnMenu.stwid--active,
 .stwid--orderHelper .stwid--filterDropdown.stwid--active {
   display: flex;
+  flex-direction: column;
   width: max-content;
+  gap: 0.6em;
   opacity: 1 !important;
   background-color: var(--SmartThemeBlurTintColor) !important;
   backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
   border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  padding: 0.7em;
   text-shadow: 0px 0px calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
