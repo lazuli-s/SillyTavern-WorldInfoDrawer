@@ -57,6 +57,10 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
         book: null,
         hideKeys: false,
         columns: { ...ORDER_HELPER_DEFAULT_COLUMNS },
+        columnMenuOpen: {
+            strategy: false,
+            position: false,
+        },
         filters: {
             strategy: getStrategyValues(),
             position: getPositionValues(),
