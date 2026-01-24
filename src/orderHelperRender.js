@@ -835,28 +835,35 @@ const createOrderHelperRenderer = ({
                     }
                     const tbody = document.createElement('tbody'); {
                         dom.order.tbody = tbody;
+                        const getVisibleOrderHelperRows = ()=>{
+                            const rows = getOrderHelperRows();
+                            return rows.filter((row)=>!row.classList.contains('stwid--isFiltered'));
+                        };
+                        const updateCustomOrderFromDom = async()=>{
+                            setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
+                            const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
+                            const booksUpdated = new Set();
+                            const nextIndexByBook = new Map();
+                            for (const row of rows) {
+                                const bookName = row.getAttribute('data-book');
+                                const uid = row.getAttribute('data-uid');
+                                const nextIndex = nextIndexByBook.get(bookName) ?? 0;
+                                const entry = cache[bookName].entries[uid];
+                                entry.extensions ??= {};
+                                if (entry.extensions.display_index !== nextIndex) {
+                                    entry.extensions.display_index = nextIndex;
+                                    booksUpdated.add(bookName);
+                                }
+                                nextIndexByBook.set(bookName, nextIndex + 1);
+                            }
+                            for (const bookName of booksUpdated) {
+                                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+                            }
+                        };
                         $(tbody).sortable({
                             delay: getSortableDelay(),
                             update: async()=>{
-                                setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
-                                const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
-                                const booksUpdated = new Set();
-                                const nextIndexByBook = new Map();
-                                for (const row of rows) {
-                                    const bookName = row.getAttribute('data-book');
-                                    const uid = row.getAttribute('data-uid');
-                                    const nextIndex = nextIndexByBook.get(bookName) ?? 0;
-                                    const entry = cache[bookName].entries[uid];
-                                    entry.extensions ??= {};
-                                    if (entry.extensions.display_index !== nextIndex) {
-                                        entry.extensions.display_index = nextIndex;
-                                        booksUpdated.add(bookName);
-                                    }
-                                    nextIndexByBook.set(bookName, nextIndex + 1);
-                                }
-                                for (const bookName of booksUpdated) {
-                                    await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-                                }
+                                await updateCustomOrderFromDom();
                             },
                         });
                         for (const e of entries) {
@@ -891,10 +898,82 @@ const createOrderHelperRenderer = ({
                                 }
                                 const handle = document.createElement('td'); {
                                     handle.setAttribute('data-col', 'drag');
-                                    const i = document.createElement('div'); {
-                                        i.classList.add('stwid--sortableHandle');
-                                        i.textContent = '☰';
-                                        handle.append(i);
+                                    const controls = document.createElement('div'); {
+                                        controls.classList.add('stwid--orderMove');
+                                        const createMoveButton = (direction, iconClass, title, jumpTitle)=>{
+                                            const button = document.createElement('button');
+                                            button.type = 'button';
+                                            button.classList.add('stwid--orderMoveButton');
+                                            button.title = `${title}\nDouble-click to jump to ${jumpTitle}`;
+                                            button.setAttribute('aria-label', `${title}. Double-click to jump to ${jumpTitle}.`);
+                                            const icon = document.createElement('i'); {
+                                                icon.classList.add('fa-solid', 'fa-fw', iconClass);
+                                                button.append(icon);
+                                            }
+                                            let clickTimer;
+                                            button.addEventListener('click', (event)=>{
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                if (clickTimer) {
+                                                    window.clearTimeout(clickTimer);
+                                                }
+                                                clickTimer = window.setTimeout(()=>{
+                                                    const visibleRows = getVisibleOrderHelperRows();
+                                                    if (!visibleRows.length || tr.classList.contains('stwid--isFiltered')) return;
+                                                    const index = visibleRows.indexOf(tr);
+                                                    if (index === -1) return;
+                                                    const targetRow = direction === 'up'
+                                                        ? visibleRows[index - 1]
+                                                        : visibleRows[index + 1];
+                                                    if (!targetRow) return;
+                                                    if (direction === 'up') {
+                                                        dom.order.tbody.insertBefore(tr, targetRow);
+                                                    } else {
+                                                        targetRow.insertAdjacentElement('afterend', tr);
+                                                    }
+                                                    void updateCustomOrderFromDom();
+                                                }, 250);
+                                            });
+                                            button.addEventListener('dblclick', (event)=>{
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                if (clickTimer) {
+                                                    window.clearTimeout(clickTimer);
+                                                    clickTimer = null;
+                                                }
+                                                const visibleRows = getVisibleOrderHelperRows();
+                                                if (!visibleRows.length || tr.classList.contains('stwid--isFiltered')) return;
+                                                const targetRow = direction === 'up'
+                                                    ? visibleRows[0]
+                                                    : visibleRows[visibleRows.length - 1];
+                                                if (!targetRow || targetRow === tr) return;
+                                                if (direction === 'up') {
+                                                    dom.order.tbody.insertBefore(tr, targetRow);
+                                                } else {
+                                                    targetRow.insertAdjacentElement('afterend', tr);
+                                                }
+                                                void updateCustomOrderFromDom();
+                                            });
+                                            return button;
+                                        };
+                                        const upButton = createMoveButton(
+                                            'up',
+                                            'fa-caret-up',
+                                            'Move up',
+                                            'the top of the filtered list',
+                                        );
+                                        const downButton = createMoveButton(
+                                            'down',
+                                            'fa-caret-down',
+                                            'Move down',
+                                            'the bottom of the filtered list',
+                                        );
+                                        const dragHandle = document.createElement('div'); {
+                                            dragHandle.classList.add('stwid--sortableHandle');
+                                            dragHandle.textContent = '☰';
+                                            controls.append(upButton, dragHandle, downButton);
+                                        }
+                                        handle.append(controls);
                                     }
                                     tr.append(handle);
                                 }
