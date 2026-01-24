@@ -890,7 +890,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
 
-.stwid--orderTable tr:not(.stwid--applySelected) {
+.stwid--orderTable tbody tr:not(.stwid--applySelected) {
   opacity: 0.6;
 }
 
