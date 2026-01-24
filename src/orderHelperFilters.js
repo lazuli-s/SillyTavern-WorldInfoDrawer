@@ -21,8 +21,12 @@ const createOrderHelperFilters = ({
         const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
         const positionFiltered = row.dataset.stwidFilterPosition === 'true';
         const recursionFiltered = row.dataset.stwidFilterRecursion === 'true';
+        const budgetFiltered = row.dataset.stwidFilterBudget === 'true';
         const scriptFiltered = row.dataset.stwidFilterScript === 'true';
-        row.classList.toggle('stwid--isFiltered', strategyFiltered || positionFiltered || recursionFiltered || scriptFiltered);
+        row.classList.toggle(
+            'stwid--isFiltered',
+            strategyFiltered || positionFiltered || recursionFiltered || budgetFiltered || scriptFiltered,
+        );
     };
 
     const setOrderHelperRowFilterState = (row, key, filtered)=>{
@@ -87,6 +91,27 @@ const createOrderHelperFilters = ({
         setOrderHelperRowFilterState(row, 'stwidFilterRecursion', !matches);
     };
 
+    const applyOrderHelperBudgetFilterToRow = (row, entryData)=>{
+        const budgetValues = orderHelperState.budgetValues ?? ['on', 'off'];
+        if (!budgetValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterBudget', false);
+            return;
+        }
+        if (!orderHelperState.filters.budget.length) {
+            orderHelperState.filters.budget = [...budgetValues];
+        }
+        const allowed = new Set(orderHelperState.filters.budget);
+        const allowOn = allowed.has('on');
+        const allowOff = allowed.has('off');
+        if (allowOn && allowOff) {
+            setOrderHelperRowFilterState(row, 'stwidFilterBudget', false);
+            return;
+        }
+        const ignoreBudget = entryData?.ignoreBudget === true;
+        const matches = (allowOn && ignoreBudget) || (allowOff && !ignoreBudget);
+        setOrderHelperRowFilterState(row, 'stwidFilterBudget', !matches);
+    };
+
     const applyOrderHelperStrategyFilters = ()=>{
         const entries = getOrderHelperEntries(orderHelperState.book, true);
         for (const entry of entries) {
@@ -108,6 +133,14 @@ const createOrderHelperFilters = ({
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
             applyOrderHelperRecursionFilterToRow(row, entry.data);
+        }
+    };
+
+    const applyOrderHelperBudgetFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperBudgetFilterToRow(row, entry.data);
         }
     };
 
@@ -150,6 +183,8 @@ const createOrderHelperFilters = ({
     };
 
     return {
+        applyOrderHelperBudgetFilterToRow,
+        applyOrderHelperBudgetFilters,
         applyOrderHelperRecursionFilterToRow,
         applyOrderHelperRecursionFilters,
         applyOrderHelperPositionFilterToRow,

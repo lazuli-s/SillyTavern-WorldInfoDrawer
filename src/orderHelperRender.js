@@ -24,6 +24,8 @@ const createOrderHelperRenderer = ({
     applyOrderHelperStrategyFilterToRow,
     applyOrderHelperPositionFilterToRow,
     applyOrderHelperPositionFilters,
+    applyOrderHelperBudgetFilterToRow,
+    applyOrderHelperBudgetFilters,
     applyOrderHelperRecursionFilterToRow,
     applyOrderHelperRecursionFilters,
     setOrderHelperRowFilterState,
@@ -817,6 +819,105 @@ const createOrderHelperRenderer = ({
                                             }
                                             th.append(header);
                                         }
+                                    } else if (col.key === 'budget') {
+                                        const header = document.createElement('div'); {
+                                            header.classList.add('stwid--columnHeader');
+                                            const title = document.createElement('div'); {
+                                                title.textContent = col.label;
+                                                header.append(title);
+                                            }
+                                            const filterWrap = document.createElement('div'); {
+                                                filterWrap.classList.add('stwid--columnFilter');
+                                                const menuWrap = document.createElement('div'); {
+                                                    menuWrap.classList.add('stwid--columnMenuWrap');
+                                                    const menuButton = document.createElement('div'); {
+                                                        menuButton.classList.add(
+                                                            'menu_button',
+                                                            'fa-solid',
+                                                            'fa-fw',
+                                                            'fa-filter',
+                                                            'stwid--orderFilterButton',
+                                                            'stwid--columnMenuButton',
+                                                        );
+                                                        menuWrap.append(menuButton);
+                                                    }
+                                                    const menu = document.createElement('div'); {
+                                                        menu.classList.add('stwid--columnMenu');
+                                                        const closeMenu = ()=>{
+                                                            if (!menu.classList.contains('stwid--active')) return;
+                                                            menu.classList.remove('stwid--active');
+                                                            document.removeEventListener('click', handleOutsideClick);
+                                                        };
+                                                        const openMenu = ()=>{
+                                                            if (menu.classList.contains('stwid--active')) return;
+                                                            menu.classList.add('stwid--active');
+                                                            document.addEventListener('click', handleOutsideClick);
+                                                        };
+                                                        const handleOutsideClick = (event)=>{
+                                                            if (menuWrap.contains(event.target)) return;
+                                                            closeMenu();
+                                                        };
+                                                        const getBudgetOptions = ()=>[
+                                                            { value:'on', label:'Ignore budget ON' },
+                                                            { value:'off', label:'Ignore budget OFF' },
+                                                        ];
+                                                        const updateFilterIndicator = ()=>{
+                                                            const allValues = orderHelperState.budgetValues ?? ['on', 'off'];
+                                                            if (!orderHelperState.filters.budget.length) {
+                                                                orderHelperState.filters.budget = [...allValues];
+                                                            }
+                                                            const isActive = orderHelperState.filters.budget.length !== allValues.length;
+                                                            menuButton.classList.toggle('stwid--active', isActive);
+                                                        };
+                                                        const updateBudgetFilters = ()=>{
+                                                            const allValues = orderHelperState.budgetValues ?? ['on', 'off'];
+                                                            if (!orderHelperState.filters.budget.length) {
+                                                                orderHelperState.filters.budget = [...allValues];
+                                                            }
+                                                            updateFilterIndicator();
+                                                            applyOrderHelperBudgetFilters();
+                                                        };
+                                                        for (const optionData of getBudgetOptions()) {
+                                                            const option = document.createElement('label'); {
+                                                                option.classList.add('stwid--columnOption');
+                                                                const input = document.createElement('input'); {
+                                                                    input.type = 'checkbox';
+                                                                    input.checked = orderHelperState.filters.budget.includes(optionData.value);
+                                                                    input.addEventListener('change', ()=>{
+                                                                        if (input.checked) {
+                                                                            if (!orderHelperState.filters.budget.includes(optionData.value)) {
+                                                                                orderHelperState.filters.budget.push(optionData.value);
+                                                                            }
+                                                                        } else {
+                                                                            orderHelperState.filters.budget = orderHelperState.filters.budget
+                                                                                .filter((item)=>item !== optionData.value);
+                                                                        }
+                                                                        updateBudgetFilters();
+                                                                    });
+                                                                    option.append(input);
+                                                                }
+                                                                option.append(optionData.label);
+                                                                menu.append(option);
+                                                            }
+                                                        }
+                                                        updateFilterIndicator();
+                                                        menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                        menuButton.addEventListener('click', (event)=>{
+                                                            event.stopPropagation();
+                                                            if (menu.classList.contains('stwid--active')) {
+                                                                closeMenu();
+                                                            } else {
+                                                                openMenu();
+                                                            }
+                                                        });
+                                                        menuWrap.append(menu);
+                                                    }
+                                                    filterWrap.append(menuWrap);
+                                                }
+                                                header.append(filterWrap);
+                                            }
+                                            th.append(header);
+                                        }
                                     } else {
                                         th.textContent = col.label;
                                     }
@@ -866,6 +967,7 @@ const createOrderHelperRenderer = ({
                                 tr.dataset.stwidFilterStrategy = 'false';
                                 tr.dataset.stwidFilterPosition = 'false';
                                 tr.dataset.stwidFilterRecursion = 'false';
+                                tr.dataset.stwidFilterBudget = 'false';
                                 tr.dataset.stwidFilterScript = 'false';
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
@@ -1267,6 +1369,7 @@ const createOrderHelperRenderer = ({
                                                     const entryData = cache[e.book].entries[e.data.uid];
                                                     entryData.ignoreBudget = input.checked;
                                                     e.data.ignoreBudget = input.checked;
+                                                    applyOrderHelperBudgetFilterToRow(tr, entryData);
                                                     await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                                 });
                                                 row.append(input);
@@ -1311,6 +1414,7 @@ const createOrderHelperRenderer = ({
                         }
                         applyOrderHelperStrategyFilters();
                         applyOrderHelperRecursionFilters();
+                        applyOrderHelperBudgetFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
                     }

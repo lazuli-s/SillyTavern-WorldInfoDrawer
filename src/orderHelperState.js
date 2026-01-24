@@ -51,6 +51,7 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
         'preventRecursion',
         'delayUntilRecursion',
     ];
+    const budgetValues = ['on', 'off'];
     const state = {
         sort: SORT.TITLE,
         direction: SORT_DIRECTION.ASCENDING,
@@ -61,10 +62,12 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
             strategy: getStrategyValues(),
             position: getPositionValues(),
             recursion: [...recursionValues],
+            budget: [...budgetValues],
         },
         strategyValues: getStrategyValues(),
         positionValues: getPositionValues(),
         recursionValues,
+        budgetValues,
     };
     try {
         const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_SORT_STORAGE_KEY));
