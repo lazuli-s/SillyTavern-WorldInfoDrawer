@@ -46,6 +46,11 @@ const getPositionOptions = ()=>{
 const getPositionValues = ()=>getPositionOptions().map((option)=>option.value);
 
 const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
+    const recursionValues = [
+        'excludeRecursion',
+        'preventRecursion',
+        'delayUntilRecursion',
+    ];
     const state = {
         sort: SORT.TITLE,
         direction: SORT_DIRECTION.ASCENDING,
@@ -55,9 +60,11 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
         filters: {
             strategy: getStrategyValues(),
             position: getPositionValues(),
+            recursion: [...recursionValues],
         },
         strategyValues: getStrategyValues(),
         positionValues: getPositionValues(),
+        recursionValues,
     };
     try {
         const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_SORT_STORAGE_KEY));
