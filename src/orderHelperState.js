@@ -3,6 +3,7 @@ const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
 const ORDER_HELPER_COLUMNS_STORAGE_KEY = 'stwid--order-helper-columns';
 
 const ORDER_HELPER_DEFAULT_COLUMNS = {
+    move: true,
     strategy: true,
     position: true,
     depth: true,

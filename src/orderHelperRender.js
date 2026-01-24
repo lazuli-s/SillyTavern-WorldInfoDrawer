@@ -171,6 +171,7 @@ const createOrderHelperRenderer = ({
                                 closeMenu();
                             };
                             const columns = [
+                                { key:'move', label:'Move' },
                                 { key:'strategy', label:'Strategy' },
                                 { key:'position', label:'Position' },
                                 { key:'depth', label:'Depth' },
@@ -490,6 +491,7 @@ const createOrderHelperRenderer = ({
                     const thead = document.createElement('thead'); {
                         const tr = document.createElement('tr'); {
                             const columns = [
+                                { label:'', key:'move' },
                                 { label:'', key:'select' },
                                 { label:'', key:'drag' },
                                 { label:'', key:'enabled' },
@@ -835,28 +837,35 @@ const createOrderHelperRenderer = ({
                     }
                     const tbody = document.createElement('tbody'); {
                         dom.order.tbody = tbody;
+                        const getVisibleOrderHelperRows = ()=>{
+                            const rows = getOrderHelperRows();
+                            return rows.filter((row)=>!row.classList.contains('stwid--isFiltered'));
+                        };
+                        const updateCustomOrderFromDom = async()=>{
+                            setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
+                            const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
+                            const booksUpdated = new Set();
+                            const nextIndexByBook = new Map();
+                            for (const row of rows) {
+                                const bookName = row.getAttribute('data-book');
+                                const uid = row.getAttribute('data-uid');
+                                const nextIndex = nextIndexByBook.get(bookName) ?? 0;
+                                const entry = cache[bookName].entries[uid];
+                                entry.extensions ??= {};
+                                if (entry.extensions.display_index !== nextIndex) {
+                                    entry.extensions.display_index = nextIndex;
+                                    booksUpdated.add(bookName);
+                                }
+                                nextIndexByBook.set(bookName, nextIndex + 1);
+                            }
+                            for (const bookName of booksUpdated) {
+                                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+                            }
+                        };
                         $(tbody).sortable({
                             delay: getSortableDelay(),
                             update: async()=>{
-                                setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
-                                const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
-                                const booksUpdated = new Set();
-                                const nextIndexByBook = new Map();
-                                for (const row of rows) {
-                                    const bookName = row.getAttribute('data-book');
-                                    const uid = row.getAttribute('data-uid');
-                                    const nextIndex = nextIndexByBook.get(bookName) ?? 0;
-                                    const entry = cache[bookName].entries[uid];
-                                    entry.extensions ??= {};
-                                    if (entry.extensions.display_index !== nextIndex) {
-                                        entry.extensions.display_index = nextIndex;
-                                        booksUpdated.add(bookName);
-                                    }
-                                    nextIndexByBook.set(bookName, nextIndex + 1);
-                                }
-                                for (const bookName of booksUpdated) {
-                                    await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-                                }
+                                await updateCustomOrderFromDom();
                             },
                         });
                         for (const e of entries) {
@@ -871,6 +880,83 @@ const createOrderHelperRenderer = ({
                                     dom.order.entries[e.book] = {};
                                 }
                                 dom.order.entries[e.book][e.data.uid] = tr;
+                                const move = document.createElement('td'); {
+                                    move.setAttribute('data-col', 'move');
+                                    const controls = document.createElement('div'); {
+                                        controls.classList.add('stwid--orderMove');
+                                        const createMoveButton = (direction, iconClass, title, jumpTitle)=>{
+                                            const button = document.createElement('button');
+                                            button.type = 'button';
+                                            button.classList.add('stwid--orderMoveButton');
+                                            button.title = `${title}\nDouble-click to ${jumpTitle}`;
+                                            button.setAttribute('aria-label', `${title}. Double-click to ${jumpTitle}.`);
+                                            const icon = document.createElement('i'); {
+                                                icon.classList.add('fa-solid', 'fa-fw', iconClass);
+                                                button.append(icon);
+                                            }
+                                            let clickTimer;
+                                            button.addEventListener('click', (event)=>{
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                if (clickTimer) {
+                                                    window.clearTimeout(clickTimer);
+                                                }
+                                                clickTimer = window.setTimeout(()=>{
+                                                    const visibleRows = getVisibleOrderHelperRows();
+                                                    if (!visibleRows.length || tr.classList.contains('stwid--isFiltered')) return;
+                                                    const index = visibleRows.indexOf(tr);
+                                                    if (index === -1) return;
+                                                    const targetRow = direction === 'up'
+                                                        ? visibleRows[index - 1]
+                                                        : visibleRows[index + 1];
+                                                    if (!targetRow) return;
+                                                    if (direction === 'up') {
+                                                        dom.order.tbody.insertBefore(tr, targetRow);
+                                                    } else {
+                                                        targetRow.insertAdjacentElement('afterend', tr);
+                                                    }
+                                                    void updateCustomOrderFromDom();
+                                                }, 250);
+                                            });
+                                            button.addEventListener('dblclick', (event)=>{
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                if (clickTimer) {
+                                                    window.clearTimeout(clickTimer);
+                                                    clickTimer = null;
+                                                }
+                                                const visibleRows = getVisibleOrderHelperRows();
+                                                if (!visibleRows.length || tr.classList.contains('stwid--isFiltered')) return;
+                                                const targetRow = direction === 'up'
+                                                    ? visibleRows[0]
+                                                    : visibleRows[visibleRows.length - 1];
+                                                if (!targetRow || targetRow === tr) return;
+                                                if (direction === 'up') {
+                                                    dom.order.tbody.insertBefore(tr, targetRow);
+                                                } else {
+                                                    targetRow.insertAdjacentElement('afterend', tr);
+                                                }
+                                                void updateCustomOrderFromDom();
+                                            });
+                                            return button;
+                                        };
+                                        const upButton = createMoveButton(
+                                            'up',
+                                            'fa-angle-up',
+                                            'Move up',
+                                            'send to the top of the filtered list',
+                                        );
+                                        const downButton = createMoveButton(
+                                            'down',
+                                            'fa-angle-down',
+                                            'Move down',
+                                            'send to the bottom of the filtered list',
+                                        );
+                                        controls.append(upButton, downButton);
+                                        move.append(controls);
+                                    }
+                                    tr.append(move);
+                                }
                                 const select = document.createElement('td'); {
                                     select.setAttribute('data-col', 'select');
                                     const btn = document.createElement('div'); {
