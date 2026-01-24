@@ -20,8 +20,10 @@ const createOrderHelperFilters = ({
         if (!row) return;
         const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
         const positionFiltered = row.dataset.stwidFilterPosition === 'true';
+        const recursionFiltered = row.dataset.stwidFilterRecursion === 'true';
+        const budgetFiltered = row.dataset.stwidFilterBudget === 'true';
         const scriptFiltered = row.dataset.stwidFilterScript === 'true';
-        row.classList.toggle('stwid--isFiltered', strategyFiltered || positionFiltered || scriptFiltered);
+        row.classList.toggle('stwid--isFiltered', strategyFiltered || positionFiltered || recursionFiltered || budgetFiltered || scriptFiltered);
     };
 
     const setOrderHelperRowFilterState = (row, key, filtered)=>{
@@ -62,6 +64,49 @@ const createOrderHelperFilters = ({
         setOrderHelperRowFilterState(row, 'stwidFilterPosition', !allowed.has(String(position)));
     };
 
+    const applyOrderHelperRecursionFilterToRow = (row, entryData)=>{
+        const recursionValues = orderHelperState.recursionValues ?? [];
+        if (!recursionValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterRecursion', false);
+            return;
+        }
+        if (!orderHelperState.filters.recursion.length) {
+            orderHelperState.filters.recursion = [...recursionValues];
+        }
+        const allowed = new Set(orderHelperState.filters.recursion);
+        if (orderHelperState.filters.recursion.length === recursionValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterRecursion', false);
+            return;
+        }
+        const hasDelayUntilRecursion = entryData?.delayUntilRecursion !== false && entryData?.delayUntilRecursion != null;
+        const entryFlags = [
+            entryData?.excludeRecursion ? 'excludeRecursion' : null,
+            entryData?.preventRecursion ? 'preventRecursion' : null,
+            hasDelayUntilRecursion ? 'delayUntilRecursion' : null,
+        ].filter(Boolean);
+        const matches = entryFlags.some((flag)=>allowed.has(flag));
+        setOrderHelperRowFilterState(row, 'stwidFilterRecursion', !matches);
+    };
+
+    const applyOrderHelperBudgetFilterToRow = (row, entryData)=>{
+        const budgetValues = orderHelperState.budgetValues ?? [];
+        if (!budgetValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterBudget', false);
+            return;
+        }
+        if (!orderHelperState.filters.budget.length) {
+            orderHelperState.filters.budget = [...budgetValues];
+        }
+        const allowed = new Set(orderHelperState.filters.budget);
+        if (orderHelperState.filters.budget.length === budgetValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterBudget', false);
+            return;
+        }
+        const isIgnored = entryData?.ignoreBudget === true;
+        const matches = (isIgnored && allowed.has('on')) || (!isIgnored && allowed.has('off'));
+        setOrderHelperRowFilterState(row, 'stwidFilterBudget', !matches);
+    };
+
     const applyOrderHelperStrategyFilters = ()=>{
         const entries = getOrderHelperEntries(orderHelperState.book, true);
         for (const entry of entries) {
@@ -75,6 +120,22 @@ const createOrderHelperFilters = ({
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
             applyOrderHelperPositionFilterToRow(row, entry.data);
+        }
+    };
+
+    const applyOrderHelperRecursionFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperRecursionFilterToRow(row, entry.data);
+        }
+    };
+
+    const applyOrderHelperBudgetFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperBudgetFilterToRow(row, entry.data);
         }
     };
 
@@ -117,6 +178,10 @@ const createOrderHelperFilters = ({
     };
 
     return {
+        applyOrderHelperBudgetFilterToRow,
+        applyOrderHelperBudgetFilters,
+        applyOrderHelperRecursionFilterToRow,
+        applyOrderHelperRecursionFilters,
         applyOrderHelperPositionFilterToRow,
         applyOrderHelperPositionFilters,
         applyOrderHelperStrategyFilterToRow,
