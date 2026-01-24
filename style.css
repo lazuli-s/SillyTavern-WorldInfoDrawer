@@ -969,6 +969,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   min-width: 14em;
 }
 
+.stwid--orderHelper .stwid--orderTable tr th[data-col='characterFilter'],
+.stwid--orderHelper .stwid--orderTable tr td[data-col='characterFilter'] {
+  min-width: 14em;
+}
+
 .stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='budget'] {
   min-width: 7em;
@@ -976,6 +981,13 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 }
 
 .stwid--orderHelper .stwid--recursionOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 0.85em;
+}
+
+.stwid--orderHelper .stwid--characterFilterOptions {
   display: flex;
   flex-direction: column;
   gap: 0;

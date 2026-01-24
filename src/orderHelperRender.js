@@ -47,10 +47,10 @@ const createOrderHelperRenderer = ({
 }) => {
     const formatCharacterFilter = (entry)=>{
         const filter = entry?.characterFilter;
-        if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return '';
-        const parts = [];
+        if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
+        const lines = [];
         if (Array.isArray(filter.names) && filter.names.length > 0) {
-            parts.push(`Names: ${filter.names.join(', ')}`);
+            lines.push(...filter.names.map((name)=>`Name: ${name}`));
         }
         if (Array.isArray(filter.tags) && filter.tags.length > 0) {
             const tags = globalThis.SillyTavern?.getContext?.().tags ?? [];
@@ -58,14 +58,14 @@ const createOrderHelperRenderer = ({
                 ? tags.filter((tag)=>filter.tags.includes(tag.id)).map((tag)=>tag.name)
                 : filter.tags.map((tag)=>String(tag));
             if (tagNames.length > 0) {
-                parts.push(`Tags: ${tagNames.join(', ')}`);
+                lines.push(...tagNames.map((tag)=>`Tag: ${tag}`));
             }
         }
-        if (!parts.length) {
-            return filter.isExclude ? 'Exclude' : '';
+        if (!lines.length) {
+            return filter.isExclude ? ['Exclude'] : [];
         }
         const prefix = filter.isExclude ? 'Exclude' : 'Include';
-        return `${prefix}: ${parts.join(' | ')}`;
+        return lines.map((line)=>`${prefix} ${line}`);
     };
 
     const renderOrderHelper = (book = null)=>{
@@ -1169,8 +1169,17 @@ const createOrderHelperRenderer = ({
                                 const characterFilter = document.createElement('td'); {
                                     characterFilter.setAttribute('data-col', 'characterFilter');
                                     const wrap = document.createElement('div'); {
-                                        wrap.classList.add('stwid--colwrap');
-                                        wrap.textContent = formatCharacterFilter(e.data);
+                                        wrap.classList.add('stwid--colwrap', 'stwid--characterFilterOptions');
+                                        const lines = formatCharacterFilter(e.data);
+                                        if (!lines.length) {
+                                            wrap.textContent = '';
+                                        } else {
+                                            for (const line of lines) {
+                                                const row = document.createElement('div');
+                                                row.textContent = line;
+                                                wrap.append(row);
+                                            }
+                                        }
                                         characterFilter.append(wrap);
                                     }
                                     tr.append(characterFilter);
