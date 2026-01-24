@@ -697,7 +697,8 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   gap: 0.25em;
 }
 
-.stwid--orderHelper .stwid--columnMenu {
+.stwid--orderHelper .stwid--columnMenu,
+.stwid--orderHelper .stwid--filterDropdown {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -711,7 +712,8 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   z-index: 3;
 }
 
-.stwid--orderHelper .stwid--columnMenu.stwid--active {
+.stwid--orderHelper .stwid--columnMenu.stwid--active,
+.stwid--orderHelper .stwid--filterDropdown.stwid--active {
   display: flex;
   width: max-content;
   opacity: 1 !important;

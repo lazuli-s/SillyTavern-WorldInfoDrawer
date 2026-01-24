@@ -509,7 +509,7 @@ const createOrderHelperRenderer = ({
                                                         menuWrap.append(menuButton);
                                                     }
                                                     const menu = document.createElement('div'); {
-                                                        menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.add('stwid--filterDropdown');
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
                                                             menu.classList.remove('stwid--active');
@@ -607,7 +607,7 @@ const createOrderHelperRenderer = ({
                                                         menuWrap.append(menuButton);
                                                     }
                                                     const menu = document.createElement('div'); {
-                                                        menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.add('stwid--filterDropdown');
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
                                                             menu.classList.remove('stwid--active');
