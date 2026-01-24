@@ -63,7 +63,7 @@ const createOrderHelperRenderer = ({
                 : filter.tags.map((tag)=>String(tag));
             if (tagNames.length > 0) {
                 lines.push(...tagNames.map((tag)=>({
-                    icon: filter.isExclude ? 'fa-tag-slash' : 'fa-tag',
+                    icon: 'fa-tag',
                     mode: filter.isExclude ? 'exclude' : 'include',
                     label: tag,
                 })));
