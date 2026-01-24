@@ -152,6 +152,7 @@ const createOrderHelperRenderer = ({
                                 { key:'trigger', label:'Trigger %' },
                                 { key:'recursion', label:'Recursion' },
                                 { key:'budget', label:'Budget' },
+                                { key:'characterFilter', label:'Character Filter' },
                             ];
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
@@ -474,6 +475,7 @@ const createOrderHelperRenderer = ({
                                 { label:'Trigger %', key:'trigger' },
                                 { label:'Recursion', key:'recursion' },
                                 { label:'Budget', key:'budget' },
+                                { label:'Character Filter', key:'characterFilter' },
                             ];
                             const numberColumnKeys = new Set([
                                 'depth',
@@ -1140,6 +1142,16 @@ const createOrderHelperRenderer = ({
                                         budget.append(wrap);
                                     }
                                     tr.append(budget);
+                                }
+                                const characterFilter = document.createElement('td'); {
+                                    characterFilter.setAttribute('data-col', 'characterFilter');
+                                    const wrap = document.createElement('div'); {
+                                        wrap.classList.add('stwid--colwrap');
+                                        const value = e.data.characterFilter;
+                                        wrap.textContent = value === undefined || value === null ? '' : String(value);
+                                        characterFilter.append(wrap);
+                                    }
+                                    tr.append(characterFilter);
                                 }
                                 setOrderHelperRowSelected(tr, true);
                                 tbody.append(tr);

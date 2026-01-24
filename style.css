@@ -626,6 +626,10 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
 
+.stwid--orderHelper.stwid--hide-col-characterFilter [data-col='characterFilter'] {
+  display: none;
+}
+
 .stwid--orderHelper .stwid--actions {
   flex: 0 0 auto;
   display: flex;
