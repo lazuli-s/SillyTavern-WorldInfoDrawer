@@ -888,8 +888,8 @@ const createOrderHelperRenderer = ({
                                             const button = document.createElement('button');
                                             button.type = 'button';
                                             button.classList.add('stwid--orderMoveButton');
-                                            button.title = `${title}\nDouble-click to ${jumpTitle}`;
-                                            button.setAttribute('aria-label', `${title}. Double-click to ${jumpTitle}.`);
+                                            button.title = `${title}\nDouble-click to jump to ${jumpTitle}`;
+                                            button.setAttribute('aria-label', `${title}. Double-click to jump to ${jumpTitle}.`);
                                             const icon = document.createElement('i'); {
                                                 icon.classList.add('fa-solid', 'fa-fw', iconClass);
                                                 button.append(icon);
@@ -942,15 +942,15 @@ const createOrderHelperRenderer = ({
                                         };
                                         const upButton = createMoveButton(
                                             'up',
-                                            'fa-angle-up',
+                                            'fa-caret-up',
                                             'Move up',
-                                            'send to the top of the filtered list',
+                                            'the top of the filtered list',
                                         );
                                         const downButton = createMoveButton(
                                             'down',
-                                            'fa-angle-down',
+                                            'fa-caret-down',
                                             'Move down',
-                                            'send to the bottom of the filtered list',
+                                            'the bottom of the filtered list',
                                         );
                                         controls.append(upButton, downButton);
                                         move.append(controls);

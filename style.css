@@ -1071,6 +1071,10 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderTable tr td .stwid--orderMoveButton:hover {
   opacity: 1;
+  color: var(--SmartThemeQuoteColor);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--SmartThemeQuoteColor) 65%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent);
+  border-radius: 4px;
 }
 
 .stwid--orderTable tr td .stwid--orderSelect {
