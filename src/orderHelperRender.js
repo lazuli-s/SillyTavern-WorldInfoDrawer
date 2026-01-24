@@ -24,6 +24,8 @@ const createOrderHelperRenderer = ({
     applyOrderHelperStrategyFilterToRow,
     applyOrderHelperPositionFilterToRow,
     applyOrderHelperPositionFilters,
+    applyOrderHelperRecursionFilterToRow,
+    applyOrderHelperRecursionFilters,
     setOrderHelperRowFilterState,
     syncOrderHelperStrategyFilters,
     syncOrderHelperPositionFilters,
@@ -714,6 +716,107 @@ const createOrderHelperRenderer = ({
                                             }
                                             th.append(header);
                                         }
+                                    } else if (col.key === 'recursion') {
+                                        const header = document.createElement('div'); {
+                                            header.classList.add('stwid--columnHeader');
+                                            const title = document.createElement('div'); {
+                                                title.textContent = col.label;
+                                                header.append(title);
+                                            }
+                                            const filterWrap = document.createElement('div'); {
+                                                filterWrap.classList.add('stwid--columnFilter');
+                                                const menuWrap = document.createElement('div'); {
+                                                    menuWrap.classList.add('stwid--columnMenuWrap');
+                                                    const menuButton = document.createElement('div'); {
+                                                        menuButton.classList.add(
+                                                            'menu_button',
+                                                            'fa-solid',
+                                                            'fa-fw',
+                                                            'fa-filter',
+                                                            'stwid--orderFilterButton',
+                                                            'stwid--columnMenuButton',
+                                                        );
+                                                        menuWrap.append(menuButton);
+                                                    }
+                                                    const menu = document.createElement('div'); {
+                                                        menu.classList.add('stwid--columnMenu');
+                                                        const closeMenu = ()=>{
+                                                            if (!menu.classList.contains('stwid--active')) return;
+                                                            menu.classList.remove('stwid--active');
+                                                            document.removeEventListener('click', handleOutsideClick);
+                                                        };
+                                                        const openMenu = ()=>{
+                                                            if (menu.classList.contains('stwid--active')) return;
+                                                            menu.classList.add('stwid--active');
+                                                            document.addEventListener('click', handleOutsideClick);
+                                                        };
+                                                        const handleOutsideClick = (event)=>{
+                                                            if (menuWrap.contains(event.target)) return;
+                                                            closeMenu();
+                                                        };
+                                                        const getRecursionOptions = ()=>[
+                                                            { value:'excludeRecursion', label:'Non-recursable' },
+                                                            { value:'preventRecursion', label:'Prevent further recursion' },
+                                                            { value:'delayUntilRecursion', label:'Delay until recursion' },
+                                                        ];
+                                                        const updateFilterIndicator = ()=>{
+                                                            const allValues = orderHelperState.recursionValues ?? [];
+                                                            if (!allValues.length) return;
+                                                            if (!orderHelperState.filters.recursion.length) {
+                                                                orderHelperState.filters.recursion = [...allValues];
+                                                            }
+                                                            const isActive = orderHelperState.filters.recursion.length !== allValues.length;
+                                                            menuButton.classList.toggle('stwid--active', isActive);
+                                                        };
+                                                        const updateRecursionFilters = ()=>{
+                                                            const allValues = orderHelperState.recursionValues ?? [];
+                                                            if (!orderHelperState.filters.recursion.length) {
+                                                                orderHelperState.filters.recursion = [...allValues];
+                                                            }
+                                                            updateFilterIndicator();
+                                                            applyOrderHelperRecursionFilters();
+                                                        };
+                                                        for (const optionData of getRecursionOptions()) {
+                                                            const option = document.createElement('label'); {
+                                                                option.classList.add('stwid--columnOption');
+                                                                const input = document.createElement('input'); {
+                                                                    input.type = 'checkbox';
+                                                                    input.checked = orderHelperState.filters.recursion.includes(optionData.value);
+                                                                    input.addEventListener('change', ()=>{
+                                                                        if (input.checked) {
+                                                                            if (!orderHelperState.filters.recursion.includes(optionData.value)) {
+                                                                                orderHelperState.filters.recursion.push(optionData.value);
+                                                                            }
+                                                                        } else {
+                                                                            orderHelperState.filters.recursion = orderHelperState.filters.recursion
+                                                                                .filter((item)=>item !== optionData.value);
+                                                                        }
+                                                                        updateRecursionFilters();
+                                                                    });
+                                                                    option.append(input);
+                                                                }
+                                                                option.append(optionData.label);
+                                                                menu.append(option);
+                                                            }
+                                                        }
+                                                        updateFilterIndicator();
+                                                        menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                        menuButton.addEventListener('click', (event)=>{
+                                                            event.stopPropagation();
+                                                            if (menu.classList.contains('stwid--active')) {
+                                                                closeMenu();
+                                                            } else {
+                                                                openMenu();
+                                                            }
+                                                        });
+                                                        menuWrap.append(menu);
+                                                    }
+                                                    filterWrap.append(menuWrap);
+                                                }
+                                                header.append(filterWrap);
+                                            }
+                                            th.append(header);
+                                        }
                                     } else {
                                         th.textContent = col.label;
                                     }
@@ -762,6 +865,7 @@ const createOrderHelperRenderer = ({
                                 tr.setAttribute('data-uid', e.data.uid);
                                 tr.dataset.stwidFilterStrategy = 'false';
                                 tr.dataset.stwidFilterPosition = 'false';
+                                tr.dataset.stwidFilterRecursion = 'false';
                                 tr.dataset.stwidFilterScript = 'false';
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
@@ -1133,6 +1237,7 @@ const createOrderHelperRenderer = ({
                                                         const entryData = cache[e.book].entries[e.data.uid];
                                                         entryData[key] = input.checked;
                                                         e.data[key] = input.checked;
+                                                        applyOrderHelperRecursionFilterToRow(tr, entryData);
                                                         await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                                     });
                                                     row.append(input);
@@ -1205,6 +1310,7 @@ const createOrderHelperRenderer = ({
                             }
                         }
                         applyOrderHelperStrategyFilters();
+                        applyOrderHelperRecursionFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
                     }

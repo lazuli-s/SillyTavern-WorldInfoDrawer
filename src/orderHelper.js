@@ -168,6 +168,8 @@ export const initOrderHelper = ({
     };
 
     const {
+        applyOrderHelperRecursionFilterToRow,
+        applyOrderHelperRecursionFilters,
         applyOrderHelperPositionFilterToRow,
         applyOrderHelperPositionFilters,
         applyOrderHelperStrategyFilterToRow,
@@ -222,6 +224,8 @@ export const initOrderHelper = ({
         applyOrderHelperStrategyFilterToRow,
         applyOrderHelperPositionFilterToRow,
         applyOrderHelperPositionFilters,
+        applyOrderHelperRecursionFilterToRow,
+        applyOrderHelperRecursionFilters,
         setOrderHelperRowFilterState,
         syncOrderHelperStrategyFilters,
         syncOrderHelperPositionFilters,
