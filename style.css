@@ -1031,7 +1031,8 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderTable tr td .stwid--sortableHandle {
   cursor: pointer;
   opacity: 0.5;
-  padding: 4px;
+  padding: 2px;
+  font-size: 0.85em;
   transition: 200ms;
 }
 
