@@ -1044,7 +1044,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35em;
+  gap: 0.40em;
 }
 
 .stwid--orderTable tr td .stwid--orderMoveButton {
