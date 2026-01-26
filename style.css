@@ -926,6 +926,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 .stwid--orderHelper .stwid--orderTable tr th[data-col='drag'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='drag'] {
   min-width: 1.5em;
+  min-width: 1.5em;
   text-align: center;
 }
 
