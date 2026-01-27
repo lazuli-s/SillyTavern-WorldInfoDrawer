@@ -3,6 +3,7 @@ const createOrderHelperRenderer = ({
     cache,
     orderHelperState,
     ORDER_HELPER_COLUMNS_STORAGE_KEY,
+    ORDER_HELPER_DEFAULT_COLUMNS,
     ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
     SORT,
     SORT_DIRECTION,
@@ -204,12 +205,51 @@ const createOrderHelperRenderer = ({
                                 { key:'budget', label:'Budget' },
                                 { key:'characterFilter', label:'Character Filter' },
                             ];
+                            const columnInputs = new Map();
+                            const mainColumnDefaults = Object.fromEntries(
+                                Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)
+                                    .map(([key, value])=>[key, Boolean(value)]),
+                            );
+                            const setColumnVisibility = (overrides)=>{
+                                for (const column of columns) {
+                                    const nextValue = Boolean(overrides[column.key]);
+                                    orderHelperState.columns[column.key] = nextValue;
+                                    const input = columnInputs.get(column.key);
+                                    if (input) input.checked = nextValue;
+                                }
+                                localStorage.setItem(
+                                    ORDER_HELPER_COLUMNS_STORAGE_KEY,
+                                    JSON.stringify(orderHelperState.columns),
+                                );
+                                applyOrderHelperColumnVisibility(body);
+                                closeMenu();
+                            };
+                            const addColumnAction = ({ label, onClick })=>{
+                                const action = document.createElement('div'); {
+                                    action.classList.add('stwid--columnOption');
+                                    action.style.fontWeight = 'bold';
+                                    action.textContent = label;
+                                    action.addEventListener('click', onClick);
+                                    menu.append(action);
+                                }
+                            };
+                            addColumnAction({
+                                label: 'SELECT ALL',
+                                onClick: ()=>setColumnVisibility(
+                                    Object.fromEntries(columns.map((column)=>[column.key, true])),
+                                ),
+                            });
+                            addColumnAction({
+                                label: 'MAIN COLUMNS',
+                                onClick: ()=>setColumnVisibility(mainColumnDefaults),
+                            });
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
                                     option.classList.add('stwid--columnOption');
                                     const input = document.createElement('input'); {
                                         input.type = 'checkbox';
                                         input.checked = Boolean(orderHelperState.columns[column.key]);
+                                        columnInputs.set(column.key, input);
                                         input.addEventListener('change', ()=>{
                                             orderHelperState.columns[column.key] = input.checked;
                                             localStorage.setItem(
