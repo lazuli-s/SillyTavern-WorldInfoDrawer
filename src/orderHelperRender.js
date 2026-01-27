@@ -224,23 +224,32 @@ const createOrderHelperRenderer = ({
                                 applyOrderHelperColumnVisibility(body);
                                 closeMenu();
                             };
-                            const addColumnAction = ({ label, onClick })=>{
+                            const addColumnAction = ({ label, icon, onClick })=>{
                                 const action = document.createElement('div'); {
                                     action.classList.add('stwid--columnOption');
                                     action.style.fontWeight = 'bold';
-                                    action.textContent = label;
+                                    const iconEl = document.createElement('i'); {
+                                        iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--columnOptionIcon');
+                                        action.append(iconEl);
+                                    }
+                                    const labelText = document.createElement('span'); {
+                                        labelText.textContent = label;
+                                        action.append(labelText);
+                                    }
                                     action.addEventListener('click', onClick);
                                     menu.append(action);
                                 }
                             };
                             addColumnAction({
                                 label: 'SELECT ALL',
+                                icon: 'fa-check-double',
                                 onClick: ()=>setColumnVisibility(
                                     Object.fromEntries(columns.map((column)=>[column.key, true])),
                                 ),
                             });
                             addColumnAction({
                                 label: 'MAIN COLUMNS',
+                                icon: 'fa-table-columns',
                                 onClick: ()=>setColumnVisibility(mainColumnDefaults),
                             });
                             for (const column of columns) {
