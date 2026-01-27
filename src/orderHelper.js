@@ -33,6 +33,10 @@ export const initOrderHelper = ({
     $,
 }) => {
     const orderHelperState = createOrderHelperState({ SORT, SORT_DIRECTION });
+    const OUTLET_NONE_VALUE = '';
+    const AUTOMATION_ID_NONE_VALUE = '';
+    const GROUP_NONE_VALUE = '';
+    const GROUP_PRIORITIZE_VALUE = 'prioritize';
 
     const getEntryDisplayIndex = (entry)=>{
         const displayIndex = Number(entry?.extensions?.display_index);
@@ -97,6 +101,95 @@ export const initOrderHelper = ({
         return sortEntries(source, orderHelperState.sort, orderHelperState.direction)
             .filter((entry)=>!book || entry.book === book);
     };
+
+    const getOutletValueForEntry = (entry)=>{
+        if (!isOutletPosition(entry?.position)) {
+            return OUTLET_NONE_VALUE;
+        }
+        const outletName = entry?.outletName;
+        if (outletName == null) return OUTLET_NONE_VALUE;
+        const normalized = String(outletName).trim();
+        return normalized || OUTLET_NONE_VALUE;
+    };
+
+    const getOutletOptions = (book = orderHelperState.book)=>{
+        const entries = getOrderHelperEntries(book);
+        const values = new Set();
+        for (const entry of entries) {
+            values.add(getOutletValueForEntry(entry.data));
+        }
+        const labels = [...values].filter((value)=>value !== OUTLET_NONE_VALUE);
+        labels.sort((a, b)=>a.localeCompare(b));
+        return [
+            { value: OUTLET_NONE_VALUE, label: '(none)' },
+            ...labels.map((label)=>({ value: label, label })),
+        ];
+    };
+
+    const getOutletValues = (book = orderHelperState.book)=>getOutletOptions(book).map((option)=>option.value);
+
+    const getAutomationIdValueForEntry = (entry)=>{
+        const automationId = entry?.automationId;
+        if (automationId == null) return AUTOMATION_ID_NONE_VALUE;
+        const normalized = String(automationId).trim();
+        return normalized || AUTOMATION_ID_NONE_VALUE;
+    };
+
+    const getAutomationIdOptions = (book = orderHelperState.book)=>{
+        const entries = getOrderHelperEntries(book);
+        const values = new Set();
+        for (const entry of entries) {
+            values.add(getAutomationIdValueForEntry(entry.data));
+        }
+        const labels = [...values].filter((value)=>value !== AUTOMATION_ID_NONE_VALUE);
+        labels.sort((a, b)=>a.localeCompare(b));
+        return [
+            { value: AUTOMATION_ID_NONE_VALUE, label: '(none)' },
+            ...labels.map((label)=>({ value: label, label })),
+        ];
+    };
+
+    const getAutomationIdValues = (book = orderHelperState.book)=>getAutomationIdOptions(book).map((option)=>option.value);
+
+    const splitGroupValues = (value)=>String(value ?? '').split(/,\s*/).filter(Boolean);
+
+    const getGroupValueForEntry = (entry)=>{
+        const values = [];
+        if (entry?.groupOverride) {
+            values.push(GROUP_PRIORITIZE_VALUE);
+        }
+        const groupValue = entry?.group;
+        if (groupValue == null) {
+            values.push(GROUP_NONE_VALUE);
+            return values;
+        }
+        const groups = splitGroupValues(groupValue);
+        if (groups.length) {
+            values.push(...groups);
+        } else {
+            values.push(GROUP_NONE_VALUE);
+        }
+        return values;
+    };
+
+    const getGroupOptions = (book = orderHelperState.book)=>{
+        const entries = getOrderHelperEntries(book);
+        const values = new Set();
+        for (const entry of entries) {
+            for (const value of getGroupValueForEntry(entry.data)) {
+                values.add(value);
+            }
+        }
+        const labels = [...values].filter((value)=>value !== GROUP_NONE_VALUE && value !== GROUP_PRIORITIZE_VALUE);
+        labels.sort((a, b)=>a.localeCompare(b));
+        return [
+            { value: GROUP_PRIORITIZE_VALUE, label: 'Prioritize' },
+            { value: GROUP_NONE_VALUE, label: '(none)' },
+            ...labels.map((label)=>({ value: label, label })),
+        ];
+    };
+
+    const getGroupValues = (book = orderHelperState.book)=>getGroupOptions(book).map((option)=>option.value);
 
     const updateOrderHelperPreview = (entries)=>{
         if (!dom.order.filter.preview) return;
@@ -174,10 +267,22 @@ export const initOrderHelper = ({
         applyOrderHelperPositionFilters,
         applyOrderHelperStrategyFilterToRow,
         applyOrderHelperStrategyFilters,
+        applyOrderHelperOutletFilterToRow,
+        applyOrderHelperOutletFilters,
+        applyOrderHelperAutomationIdFilterToRow,
+        applyOrderHelperAutomationIdFilters,
+        applyOrderHelperGroupFilterToRow,
+        applyOrderHelperGroupFilters,
         clearOrderHelperScriptFilters,
         normalizePositionFilters,
         normalizeStrategyFilters,
+        normalizeOutletFilters,
+        normalizeAutomationIdFilters,
+        normalizeGroupFilters,
         setOrderHelperRowFilterState,
+        syncOrderHelperOutletFilters,
+        syncOrderHelperAutomationIdFilters,
+        syncOrderHelperGroupFilters,
         syncOrderHelperPositionFilters,
         syncOrderHelperStrategyFilters,
     } = createOrderHelperFilters({
@@ -187,6 +292,12 @@ export const initOrderHelper = ({
         getOrderHelperEntries,
         getStrategyValues,
         getPositionValues,
+        getOutletValues,
+        getOutletValue: getOutletValueForEntry,
+        getAutomationIdValues,
+        getAutomationIdValue: getAutomationIdValueForEntry,
+        getGroupValues,
+        getGroupValue: getGroupValueForEntry,
     });
 
     const focusWorldEntry = (book, uid)=>{
@@ -226,9 +337,18 @@ export const initOrderHelper = ({
         applyOrderHelperPositionFilters,
         applyOrderHelperRecursionFilterToRow,
         applyOrderHelperRecursionFilters,
+        applyOrderHelperOutletFilterToRow,
+        applyOrderHelperOutletFilters,
+        applyOrderHelperAutomationIdFilterToRow,
+        applyOrderHelperAutomationIdFilters,
+        applyOrderHelperGroupFilterToRow,
+        applyOrderHelperGroupFilters,
         setOrderHelperRowFilterState,
         syncOrderHelperStrategyFilters,
         syncOrderHelperPositionFilters,
+        syncOrderHelperOutletFilters,
+        syncOrderHelperAutomationIdFilters,
+        syncOrderHelperGroupFilters,
         focusWorldEntry,
         entryState,
         isOutletPosition,
@@ -236,8 +356,17 @@ export const initOrderHelper = ({
         getStrategyValues,
         getPositionOptions,
         getPositionValues,
+        getOutletOptions,
+        getOutletValues,
+        getAutomationIdOptions,
+        getAutomationIdValues,
+        getGroupOptions,
+        getGroupValues,
         normalizeStrategyFilters,
         normalizePositionFilters,
+        normalizeOutletFilters,
+        normalizeAutomationIdFilters,
+        normalizeGroupFilters,
         getOrderHelperRows,
         SlashCommandParser,
         debounce,
