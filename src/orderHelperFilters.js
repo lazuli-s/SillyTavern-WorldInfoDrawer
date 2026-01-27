@@ -9,6 +9,8 @@ const createOrderHelperFilters = ({
     getOutletValue,
     getAutomationIdValues,
     getAutomationIdValue,
+    getGroupValues,
+    getGroupValue,
 }) => {
     const normalizeStrategyFilters = (filters)=>{
         const allowed = new Set(getStrategyValues());
@@ -30,6 +32,11 @@ const createOrderHelperFilters = ({
         return filters.filter((value)=>allowed.has(value));
     };
 
+    const normalizeGroupFilters = (filters)=>{
+        const allowed = new Set(getGroupValues());
+        return filters.filter((value)=>allowed.has(value));
+    };
+
     const updateOrderHelperRowFilterClass = (row)=>{
         if (!row) return;
         const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
@@ -37,6 +44,7 @@ const createOrderHelperFilters = ({
         const recursionFiltered = row.dataset.stwidFilterRecursion === 'true';
         const outletFiltered = row.dataset.stwidFilterOutlet === 'true';
         const automationIdFiltered = row.dataset.stwidFilterAutomationId === 'true';
+        const groupFiltered = row.dataset.stwidFilterGroup === 'true';
         const scriptFiltered = row.dataset.stwidFilterScript === 'true';
         row.classList.toggle(
             'stwid--isFiltered',
@@ -45,6 +53,7 @@ const createOrderHelperFilters = ({
                 || recursionFiltered
                 || outletFiltered
                 || automationIdFiltered
+                || groupFiltered
                 || scriptFiltered,
         );
     };
@@ -143,6 +152,23 @@ const createOrderHelperFilters = ({
         setOrderHelperRowFilterState(row, 'stwidFilterAutomationId', !allowed.has(automationId));
     };
 
+    const applyOrderHelperGroupFilterToRow = (row, entryData)=>{
+        const groupValues = orderHelperState.groupValues.length
+            ? orderHelperState.groupValues
+            : getGroupValues();
+        if (!groupValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterGroup', false);
+            return;
+        }
+        if (!orderHelperState.filters.group.length) {
+            orderHelperState.filters.group = [...groupValues];
+        }
+        const allowed = new Set(orderHelperState.filters.group);
+        const groupValuesForEntry = getGroupValue(entryData);
+        const matches = groupValuesForEntry.some((value)=>allowed.has(value));
+        setOrderHelperRowFilterState(row, 'stwidFilterGroup', !matches);
+    };
+
     const applyOrderHelperStrategyFilters = ()=>{
         const entries = getOrderHelperEntries(orderHelperState.book, true);
         for (const entry of entries) {
@@ -180,6 +206,14 @@ const createOrderHelperFilters = ({
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
             applyOrderHelperAutomationIdFilterToRow(row, entry.data);
+        }
+    };
+
+    const applyOrderHelperGroupFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperGroupFilterToRow(row, entry.data);
         }
     };
 
@@ -251,6 +285,21 @@ const createOrderHelperFilters = ({
         }
     };
 
+    const syncOrderHelperGroupFilters = ()=>{
+        const nextValues = getGroupValues();
+        const hadAllSelected = orderHelperState.filters.group.length === orderHelperState.groupValues.length;
+        orderHelperState.groupValues = nextValues;
+        if (!nextValues.length) {
+            orderHelperState.filters.group = [];
+            return;
+        }
+        if (hadAllSelected || !orderHelperState.filters.group.length) {
+            orderHelperState.filters.group = [...nextValues];
+        } else {
+            orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
+        }
+    };
+
     return {
         applyOrderHelperRecursionFilterToRow,
         applyOrderHelperRecursionFilters,
@@ -260,16 +309,20 @@ const createOrderHelperFilters = ({
         applyOrderHelperOutletFilters,
         applyOrderHelperAutomationIdFilterToRow,
         applyOrderHelperAutomationIdFilters,
+        applyOrderHelperGroupFilterToRow,
+        applyOrderHelperGroupFilters,
         applyOrderHelperStrategyFilterToRow,
         applyOrderHelperStrategyFilters,
         clearOrderHelperScriptFilters,
         normalizeOutletFilters,
         normalizeAutomationIdFilters,
+        normalizeGroupFilters,
         normalizePositionFilters,
         normalizeStrategyFilters,
         setOrderHelperRowFilterState,
         syncOrderHelperOutletFilters,
         syncOrderHelperAutomationIdFilters,
+        syncOrderHelperGroupFilters,
         syncOrderHelperPositionFilters,
         syncOrderHelperStrategyFilters,
     };

@@ -28,11 +28,13 @@ const createOrderHelperRenderer = ({
     applyOrderHelperRecursionFilters,
     applyOrderHelperOutletFilters,
     applyOrderHelperAutomationIdFilters,
+    applyOrderHelperGroupFilters,
     setOrderHelperRowFilterState,
     syncOrderHelperStrategyFilters,
     syncOrderHelperPositionFilters,
     syncOrderHelperOutletFilters,
     syncOrderHelperAutomationIdFilters,
+    syncOrderHelperGroupFilters,
     focusWorldEntry,
     entryState,
     isOutletPosition,
@@ -44,10 +46,13 @@ const createOrderHelperRenderer = ({
     getOutletValues,
     getAutomationIdOptions,
     getAutomationIdValues,
+    getGroupOptions,
+    getGroupValues,
     normalizeStrategyFilters,
     normalizePositionFilters,
     normalizeOutletFilters,
     normalizeAutomationIdFilters,
+    normalizeGroupFilters,
     getOrderHelperRows,
     SlashCommandParser,
     debounce,
@@ -93,6 +98,7 @@ const createOrderHelperRenderer = ({
         syncOrderHelperPositionFilters();
         syncOrderHelperOutletFilters();
         syncOrderHelperAutomationIdFilters();
+        syncOrderHelperGroupFilters();
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
         dom.order.entries = {};
@@ -1018,6 +1024,100 @@ const createOrderHelperRenderer = ({
                                                 }
                                                 th.append(header);
                                             }
+                                        } else if (col.key === 'group') {
+                                            const header = document.createElement('div'); {
+                                                header.classList.add('stwid--columnHeader');
+                                                const title = document.createElement('div'); {
+                                                    title.textContent = col.label;
+                                                    header.append(title);
+                                                }
+                                                const filterWrap = document.createElement('div'); {
+                                                    filterWrap.classList.add('stwid--columnFilter');
+                                                    const menuWrap = document.createElement('div'); {
+                                                        menuWrap.classList.add('stwid--columnMenuWrap');
+                                                        const menuButton = document.createElement('div'); {
+                                                            menuButton.classList.add(
+                                                                'menu_button',
+                                                                'fa-solid',
+                                                                'fa-fw',
+                                                                'fa-filter',
+                                                                'stwid--orderFilterButton',
+                                                                'stwid--columnMenuButton',
+                                                            );
+                                                            menuWrap.append(menuButton);
+                                                        }
+                                                        const menu = document.createElement('div'); {
+                                                            menu.classList.add('stwid--columnMenu');
+                                                            const closeMenu = ()=>{
+                                                                if (!menu.classList.contains('stwid--active')) return;
+                                                                menu.classList.remove('stwid--active');
+                                                                document.removeEventListener('click', handleOutsideClick);
+                                                            };
+                                                            const openMenu = ()=>{
+                                                                if (menu.classList.contains('stwid--active')) return;
+                                                                menu.classList.add('stwid--active');
+                                                                document.addEventListener('click', handleOutsideClick);
+                                                            };
+                                                            const handleOutsideClick = (event)=>{
+                                                                if (menuWrap.contains(event.target)) return;
+                                                                closeMenu();
+                                                            };
+                                                            const updateFilterIndicator = ()=>{
+                                                                const allValues = orderHelperState.groupValues.length
+                                                                    ? orderHelperState.groupValues
+                                                                    : getGroupValues();
+                                                                const filters = normalizeGroupFilters(orderHelperState.filters.group);
+                                                                orderHelperState.filters.group = filters.length ? filters : [...allValues];
+                                                                const isActive = orderHelperState.filters.group.length !== allValues.length;
+                                                                menuButton.classList.toggle('stwid--active', isActive);
+                                                            };
+                                                            const updateGroupFilters = ()=>{
+                                                                orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
+                                                                updateFilterIndicator();
+                                                                applyOrderHelperGroupFilters();
+                                                            };
+                                                            const groupOptions = getGroupOptions();
+                                                            for (const optionData of groupOptions) {
+                                                                const option = document.createElement('label'); {
+                                                                    option.classList.add('stwid--columnOption');
+                                                                    const input = document.createElement('input'); {
+                                                                        input.type = 'checkbox';
+                                                                        input.checked = orderHelperState.filters.group.includes(optionData.value);
+                                                                        input.addEventListener('change', ()=>{
+                                                                            if (input.checked) {
+                                                                                if (!orderHelperState.filters.group.includes(optionData.value)) {
+                                                                                    orderHelperState.filters.group.push(optionData.value);
+                                                                                }
+                                                                            } else {
+                                                                                orderHelperState.filters.group = orderHelperState.filters.group
+                                                                                    .filter((item)=>item !== optionData.value);
+                                                                            }
+                                                                            updateGroupFilters();
+                                                                        });
+                                                                        option.append(input);
+                                                                    }
+                                                                    option.append(optionData.label);
+                                                                    menu.append(option);
+                                                                }
+                                                            }
+                                                            updateFilterIndicator();
+                                                            menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                            menuButton.addEventListener('click', (event)=>{
+                                                                event.stopPropagation();
+                                                                if (menu.classList.contains('stwid--active')) {
+                                                                    closeMenu();
+                                                                } else {
+                                                                    openMenu();
+                                                                }
+                                                            });
+                                                            menuWrap.append(menu);
+                                                        }
+                                                        filterWrap.append(menuWrap);
+                                                    }
+                                                    header.append(filterWrap);
+                                                }
+                                                th.append(header);
+                                            }
                                         } else {
                                             th.textContent = col.label;
                                         }
@@ -1077,6 +1177,7 @@ const createOrderHelperRenderer = ({
                                 tr.dataset.stwidFilterRecursion = 'false';
                                 tr.dataset.stwidFilterOutlet = 'false';
                                 tr.dataset.stwidFilterAutomationId = 'false';
+                                tr.dataset.stwidFilterGroup = 'false';
                                 tr.dataset.stwidFilterScript = 'false';
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
@@ -1596,6 +1697,7 @@ const createOrderHelperRenderer = ({
                         applyOrderHelperRecursionFilters();
                         applyOrderHelperOutletFilters();
                         applyOrderHelperAutomationIdFilters();
+                        applyOrderHelperGroupFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
                     }
