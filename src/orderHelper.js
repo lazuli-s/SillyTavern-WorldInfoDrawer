@@ -36,7 +36,6 @@ export const initOrderHelper = ({
     const OUTLET_NONE_VALUE = '';
     const AUTOMATION_ID_NONE_VALUE = '';
     const GROUP_NONE_VALUE = '';
-    const GROUP_PRIORITIZE_VALUE = 'prioritize';
 
     const getEntryDisplayIndex = (entry)=>{
         const displayIndex = Number(entry?.extensions?.display_index);
@@ -154,22 +153,10 @@ export const initOrderHelper = ({
     const splitGroupValues = (value)=>String(value ?? '').split(/,\s*/).filter(Boolean);
 
     const getGroupValueForEntry = (entry)=>{
-        const values = [];
-        if (entry?.groupOverride) {
-            values.push(GROUP_PRIORITIZE_VALUE);
-        }
         const groupValue = entry?.group;
-        if (groupValue == null) {
-            values.push(GROUP_NONE_VALUE);
-            return values;
-        }
+        if (groupValue == null) return [GROUP_NONE_VALUE];
         const groups = splitGroupValues(groupValue);
-        if (groups.length) {
-            values.push(...groups);
-        } else {
-            values.push(GROUP_NONE_VALUE);
-        }
-        return values;
+        return groups.length ? groups : [GROUP_NONE_VALUE];
     };
 
     const getGroupOptions = (book = orderHelperState.book)=>{
@@ -180,10 +167,9 @@ export const initOrderHelper = ({
                 values.add(value);
             }
         }
-        const labels = [...values].filter((value)=>value !== GROUP_NONE_VALUE && value !== GROUP_PRIORITIZE_VALUE);
+        const labels = [...values].filter((value)=>value !== GROUP_NONE_VALUE);
         labels.sort((a, b)=>a.localeCompare(b));
         return [
-            { value: GROUP_PRIORITIZE_VALUE, label: 'Prioritize' },
             { value: GROUP_NONE_VALUE, label: '(none)' },
             ...labels.map((label)=>({ value: label, label })),
         ];
