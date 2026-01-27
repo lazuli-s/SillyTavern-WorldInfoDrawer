@@ -33,6 +33,7 @@ export const initOrderHelper = ({
     $,
 }) => {
     const orderHelperState = createOrderHelperState({ SORT, SORT_DIRECTION });
+    const OUTLET_NONE_VALUE = '';
 
     const getEntryDisplayIndex = (entry)=>{
         const displayIndex = Number(entry?.extensions?.display_index);
@@ -97,6 +98,32 @@ export const initOrderHelper = ({
         return sortEntries(source, orderHelperState.sort, orderHelperState.direction)
             .filter((entry)=>!book || entry.book === book);
     };
+
+    const getOutletValueForEntry = (entry)=>{
+        if (!isOutletPosition(entry?.position)) {
+            return OUTLET_NONE_VALUE;
+        }
+        const outletName = entry?.outletName;
+        if (outletName == null) return OUTLET_NONE_VALUE;
+        const normalized = String(outletName).trim();
+        return normalized || OUTLET_NONE_VALUE;
+    };
+
+    const getOutletOptions = (book = orderHelperState.book)=>{
+        const entries = getOrderHelperEntries(book);
+        const values = new Set();
+        for (const entry of entries) {
+            values.add(getOutletValueForEntry(entry.data));
+        }
+        const labels = [...values].filter((value)=>value !== OUTLET_NONE_VALUE);
+        labels.sort((a, b)=>a.localeCompare(b));
+        return [
+            { value: OUTLET_NONE_VALUE, label: '(none)' },
+            ...labels.map((label)=>({ value: label, label })),
+        ];
+    };
+
+    const getOutletValues = (book = orderHelperState.book)=>getOutletOptions(book).map((option)=>option.value);
 
     const updateOrderHelperPreview = (entries)=>{
         if (!dom.order.filter.preview) return;
@@ -174,10 +201,14 @@ export const initOrderHelper = ({
         applyOrderHelperPositionFilters,
         applyOrderHelperStrategyFilterToRow,
         applyOrderHelperStrategyFilters,
+        applyOrderHelperOutletFilterToRow,
+        applyOrderHelperOutletFilters,
         clearOrderHelperScriptFilters,
         normalizePositionFilters,
         normalizeStrategyFilters,
+        normalizeOutletFilters,
         setOrderHelperRowFilterState,
+        syncOrderHelperOutletFilters,
         syncOrderHelperPositionFilters,
         syncOrderHelperStrategyFilters,
     } = createOrderHelperFilters({
@@ -187,6 +218,8 @@ export const initOrderHelper = ({
         getOrderHelperEntries,
         getStrategyValues,
         getPositionValues,
+        getOutletValues,
+        getOutletValue: getOutletValueForEntry,
     });
 
     const focusWorldEntry = (book, uid)=>{
@@ -226,9 +259,12 @@ export const initOrderHelper = ({
         applyOrderHelperPositionFilters,
         applyOrderHelperRecursionFilterToRow,
         applyOrderHelperRecursionFilters,
+        applyOrderHelperOutletFilterToRow,
+        applyOrderHelperOutletFilters,
         setOrderHelperRowFilterState,
         syncOrderHelperStrategyFilters,
         syncOrderHelperPositionFilters,
+        syncOrderHelperOutletFilters,
         focusWorldEntry,
         entryState,
         isOutletPosition,
@@ -236,8 +272,11 @@ export const initOrderHelper = ({
         getStrategyValues,
         getPositionOptions,
         getPositionValues,
+        getOutletOptions,
+        getOutletValues,
         normalizeStrategyFilters,
         normalizePositionFilters,
+        normalizeOutletFilters,
         getOrderHelperRows,
         SlashCommandParser,
         debounce,
