@@ -27,10 +27,12 @@ const createOrderHelperRenderer = ({
     applyOrderHelperRecursionFilterToRow,
     applyOrderHelperRecursionFilters,
     applyOrderHelperOutletFilters,
+    applyOrderHelperAutomationIdFilters,
     setOrderHelperRowFilterState,
     syncOrderHelperStrategyFilters,
     syncOrderHelperPositionFilters,
     syncOrderHelperOutletFilters,
+    syncOrderHelperAutomationIdFilters,
     focusWorldEntry,
     entryState,
     isOutletPosition,
@@ -40,9 +42,12 @@ const createOrderHelperRenderer = ({
     getPositionValues,
     getOutletOptions,
     getOutletValues,
+    getAutomationIdOptions,
+    getAutomationIdValues,
     normalizeStrategyFilters,
     normalizePositionFilters,
     normalizeOutletFilters,
+    normalizeAutomationIdFilters,
     getOrderHelperRows,
     SlashCommandParser,
     debounce,
@@ -87,6 +92,7 @@ const createOrderHelperRenderer = ({
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
         syncOrderHelperOutletFilters();
+        syncOrderHelperAutomationIdFilters();
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
         dom.order.entries = {};
@@ -918,6 +924,100 @@ const createOrderHelperRenderer = ({
                                                 }
                                                 th.append(header);
                                             }
+                                        } else if (col.key === 'automationId') {
+                                            const header = document.createElement('div'); {
+                                                header.classList.add('stwid--columnHeader');
+                                                const title = document.createElement('div'); {
+                                                    title.textContent = col.label;
+                                                    header.append(title);
+                                                }
+                                                const filterWrap = document.createElement('div'); {
+                                                    filterWrap.classList.add('stwid--columnFilter');
+                                                    const menuWrap = document.createElement('div'); {
+                                                        menuWrap.classList.add('stwid--columnMenuWrap');
+                                                        const menuButton = document.createElement('div'); {
+                                                            menuButton.classList.add(
+                                                                'menu_button',
+                                                                'fa-solid',
+                                                                'fa-fw',
+                                                                'fa-filter',
+                                                                'stwid--orderFilterButton',
+                                                                'stwid--columnMenuButton',
+                                                            );
+                                                            menuWrap.append(menuButton);
+                                                        }
+                                                        const menu = document.createElement('div'); {
+                                                            menu.classList.add('stwid--columnMenu');
+                                                            const closeMenu = ()=>{
+                                                                if (!menu.classList.contains('stwid--active')) return;
+                                                                menu.classList.remove('stwid--active');
+                                                                document.removeEventListener('click', handleOutsideClick);
+                                                            };
+                                                            const openMenu = ()=>{
+                                                                if (menu.classList.contains('stwid--active')) return;
+                                                                menu.classList.add('stwid--active');
+                                                                document.addEventListener('click', handleOutsideClick);
+                                                            };
+                                                            const handleOutsideClick = (event)=>{
+                                                                if (menuWrap.contains(event.target)) return;
+                                                                closeMenu();
+                                                            };
+                                                            const updateFilterIndicator = ()=>{
+                                                                const allValues = orderHelperState.automationIdValues.length
+                                                                    ? orderHelperState.automationIdValues
+                                                                    : getAutomationIdValues();
+                                                                const filters = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
+                                                                orderHelperState.filters.automationId = filters.length ? filters : [...allValues];
+                                                                const isActive = orderHelperState.filters.automationId.length !== allValues.length;
+                                                                menuButton.classList.toggle('stwid--active', isActive);
+                                                            };
+                                                            const updateAutomationIdFilters = ()=>{
+                                                                orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
+                                                                updateFilterIndicator();
+                                                                applyOrderHelperAutomationIdFilters();
+                                                            };
+                                                            const automationIdOptions = getAutomationIdOptions();
+                                                            for (const optionData of automationIdOptions) {
+                                                                const option = document.createElement('label'); {
+                                                                    option.classList.add('stwid--columnOption');
+                                                                    const input = document.createElement('input'); {
+                                                                        input.type = 'checkbox';
+                                                                        input.checked = orderHelperState.filters.automationId.includes(optionData.value);
+                                                                        input.addEventListener('change', ()=>{
+                                                                            if (input.checked) {
+                                                                                if (!orderHelperState.filters.automationId.includes(optionData.value)) {
+                                                                                    orderHelperState.filters.automationId.push(optionData.value);
+                                                                                }
+                                                                            } else {
+                                                                                orderHelperState.filters.automationId = orderHelperState.filters.automationId
+                                                                                    .filter((item)=>item !== optionData.value);
+                                                                            }
+                                                                            updateAutomationIdFilters();
+                                                                        });
+                                                                        option.append(input);
+                                                                    }
+                                                                    option.append(optionData.label);
+                                                                    menu.append(option);
+                                                                }
+                                                            }
+                                                            updateFilterIndicator();
+                                                            menu.addEventListener('click', (event)=>event.stopPropagation());
+                                                            menuButton.addEventListener('click', (event)=>{
+                                                                event.stopPropagation();
+                                                                if (menu.classList.contains('stwid--active')) {
+                                                                    closeMenu();
+                                                                } else {
+                                                                    openMenu();
+                                                                }
+                                                            });
+                                                            menuWrap.append(menu);
+                                                        }
+                                                        filterWrap.append(menuWrap);
+                                                    }
+                                                    header.append(filterWrap);
+                                                }
+                                                th.append(header);
+                                            }
                                         } else {
                                             th.textContent = col.label;
                                         }
@@ -976,6 +1076,7 @@ const createOrderHelperRenderer = ({
                                 tr.dataset.stwidFilterPosition = 'false';
                                 tr.dataset.stwidFilterRecursion = 'false';
                                 tr.dataset.stwidFilterOutlet = 'false';
+                                tr.dataset.stwidFilterAutomationId = 'false';
                                 tr.dataset.stwidFilterScript = 'false';
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
@@ -1494,6 +1595,7 @@ const createOrderHelperRenderer = ({
                         applyOrderHelperStrategyFilters();
                         applyOrderHelperRecursionFilters();
                         applyOrderHelperOutletFilters();
+                        applyOrderHelperAutomationIdFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
                     }

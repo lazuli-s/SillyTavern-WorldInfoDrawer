@@ -7,6 +7,8 @@ const createOrderHelperFilters = ({
     getPositionValues,
     getOutletValues,
     getOutletValue,
+    getAutomationIdValues,
+    getAutomationIdValue,
 }) => {
     const normalizeStrategyFilters = (filters)=>{
         const allowed = new Set(getStrategyValues());
@@ -23,16 +25,27 @@ const createOrderHelperFilters = ({
         return filters.filter((value)=>allowed.has(value));
     };
 
+    const normalizeAutomationIdFilters = (filters)=>{
+        const allowed = new Set(getAutomationIdValues());
+        return filters.filter((value)=>allowed.has(value));
+    };
+
     const updateOrderHelperRowFilterClass = (row)=>{
         if (!row) return;
         const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
         const positionFiltered = row.dataset.stwidFilterPosition === 'true';
         const recursionFiltered = row.dataset.stwidFilterRecursion === 'true';
         const outletFiltered = row.dataset.stwidFilterOutlet === 'true';
+        const automationIdFiltered = row.dataset.stwidFilterAutomationId === 'true';
         const scriptFiltered = row.dataset.stwidFilterScript === 'true';
         row.classList.toggle(
             'stwid--isFiltered',
-            strategyFiltered || positionFiltered || recursionFiltered || outletFiltered || scriptFiltered,
+            strategyFiltered
+                || positionFiltered
+                || recursionFiltered
+                || outletFiltered
+                || automationIdFiltered
+                || scriptFiltered,
         );
     };
 
@@ -114,6 +127,22 @@ const createOrderHelperFilters = ({
         setOrderHelperRowFilterState(row, 'stwidFilterOutlet', !allowed.has(outletValue));
     };
 
+    const applyOrderHelperAutomationIdFilterToRow = (row, entryData)=>{
+        const automationIdValues = orderHelperState.automationIdValues.length
+            ? orderHelperState.automationIdValues
+            : getAutomationIdValues();
+        if (!automationIdValues.length) {
+            setOrderHelperRowFilterState(row, 'stwidFilterAutomationId', false);
+            return;
+        }
+        if (!orderHelperState.filters.automationId.length) {
+            orderHelperState.filters.automationId = [...automationIdValues];
+        }
+        const allowed = new Set(orderHelperState.filters.automationId);
+        const automationId = getAutomationIdValue(entryData);
+        setOrderHelperRowFilterState(row, 'stwidFilterAutomationId', !allowed.has(automationId));
+    };
+
     const applyOrderHelperStrategyFilters = ()=>{
         const entries = getOrderHelperEntries(orderHelperState.book, true);
         for (const entry of entries) {
@@ -143,6 +172,14 @@ const createOrderHelperFilters = ({
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
             applyOrderHelperOutletFilterToRow(row, entry.data);
+        }
+    };
+
+    const applyOrderHelperAutomationIdFilters = ()=>{
+        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        for (const entry of entries) {
+            const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+            applyOrderHelperAutomationIdFilterToRow(row, entry.data);
         }
     };
 
@@ -199,6 +236,21 @@ const createOrderHelperFilters = ({
         }
     };
 
+    const syncOrderHelperAutomationIdFilters = ()=>{
+        const nextValues = getAutomationIdValues();
+        const hadAllSelected = orderHelperState.filters.automationId.length === orderHelperState.automationIdValues.length;
+        orderHelperState.automationIdValues = nextValues;
+        if (!nextValues.length) {
+            orderHelperState.filters.automationId = [];
+            return;
+        }
+        if (hadAllSelected || !orderHelperState.filters.automationId.length) {
+            orderHelperState.filters.automationId = [...nextValues];
+        } else {
+            orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
+        }
+    };
+
     return {
         applyOrderHelperRecursionFilterToRow,
         applyOrderHelperRecursionFilters,
@@ -206,14 +258,18 @@ const createOrderHelperFilters = ({
         applyOrderHelperPositionFilters,
         applyOrderHelperOutletFilterToRow,
         applyOrderHelperOutletFilters,
+        applyOrderHelperAutomationIdFilterToRow,
+        applyOrderHelperAutomationIdFilters,
         applyOrderHelperStrategyFilterToRow,
         applyOrderHelperStrategyFilters,
         clearOrderHelperScriptFilters,
         normalizeOutletFilters,
+        normalizeAutomationIdFilters,
         normalizePositionFilters,
         normalizeStrategyFilters,
         setOrderHelperRowFilterState,
         syncOrderHelperOutletFilters,
+        syncOrderHelperAutomationIdFilters,
         syncOrderHelperPositionFilters,
         syncOrderHelperStrategyFilters,
     };

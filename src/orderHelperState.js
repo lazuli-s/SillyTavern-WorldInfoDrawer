@@ -62,11 +62,13 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
             position: getPositionValues(),
             recursion: [...recursionValues],
             outlet: [],
+            automationId: [],
         },
         strategyValues: getStrategyValues(),
         positionValues: getPositionValues(),
         recursionValues,
         outletValues: [],
+        automationIdValues: [],
     };
     try {
         const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_SORT_STORAGE_KEY));
