@@ -110,6 +110,7 @@ let editorPanelApi;
 
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
+const METADATA_FOLDER_KEY = 'folder';
 const buildSavePayload = (name)=>({
     entries: structuredClone(cache[name].entries),
     metadata: cloneMetadata(cache[name].metadata),
@@ -136,8 +137,12 @@ const updateWIChange = async(name = null, data = null)=>{
     for (const [n, w] of Object.entries(cache)) {
         if (world_names.includes(n)) continue;
         else {
-            w.dom.root.remove();
-            delete cache[n];
+            if (listPanelApi?.removeBook) {
+                listPanelApi.removeBook(n);
+            } else {
+                w.dom.root.remove();
+                delete cache[n];
+            }
         }
     }
     // added books
@@ -530,6 +535,7 @@ const addDrawer = ()=>{
                     Settings,
                     METADATA_NAMESPACE,
                     METADATA_SORT_KEY,
+                    METADATA_FOLDER_KEY,
                     appendSortOptions,
                     buildSavePayload,
                     cache,
