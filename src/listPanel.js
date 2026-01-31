@@ -17,6 +17,7 @@ let searchInput;
 let searchEntriesInput;
 let filterActiveInput;
 let loadListDebounced;
+let folderImportInput;
 
 const collapseStates = {};
 const folderCollapseStates = {};
@@ -155,6 +156,73 @@ const setBookFolder = async(name, folderName)=>{
 const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
     input?.click();
+};
+
+const importFolderFile = async(file)=>{
+    if (!file) return false;
+    let payload;
+    try {
+        payload = JSON.parse(await file.text());
+    } catch (error) {
+        console.warn('[STWID] Failed to parse folder import file', error);
+        toastr.error('Folder import failed: invalid JSON.');
+        return false;
+    }
+    const books = payload?.books;
+    if (!books || typeof books !== 'object' || Array.isArray(books)) {
+        toastr.error('Folder import failed: missing "books" object.');
+        return false;
+    }
+    const currentNames = new Set(state.getWorldNames ? state.getWorldNames() : state.world_names);
+    const createdNames = [];
+    for (const [rawName, bookData] of Object.entries(books)) {
+        if (!bookData || typeof bookData !== 'object') continue;
+        const entries = bookData.entries;
+        if (!entries || typeof entries !== 'object') continue;
+        const metadata = typeof bookData.metadata === 'object' && bookData.metadata ? bookData.metadata : {};
+        let name = rawName;
+        if (currentNames.has(name)) {
+            let index = 1;
+            while (currentNames.has(name)) {
+                const suffix = index === 1 ? ' (imported)' : ` (imported ${index})`;
+                name = `${rawName}${suffix}`;
+                index += 1;
+            }
+        }
+        const created = await state.createNewWorldInfo(name, { interactive: false });
+        if (!created) continue;
+        const nextPayload = {
+            entries: structuredClone(entries),
+            metadata: structuredClone(metadata),
+        };
+        sanitizeFolderMetadata(nextPayload.metadata);
+        await state.saveWorldInfo(name, nextPayload, true);
+        currentNames.add(name);
+        createdNames.push(name);
+    }
+    if (!createdNames.length) {
+        toastr.warning('Folder import finished with no new books.');
+        return false;
+    }
+    await refreshList();
+    toastr.success(`Imported ${createdNames.length} book${createdNames.length === 1 ? '' : 's'}.`);
+    return true;
+};
+
+const openFolderImportDialog = ()=>{
+    if (!folderImportInput) {
+        folderImportInput = document.createElement('input');
+        folderImportInput.type = 'file';
+        folderImportInput.accept = '.json,application/json';
+        folderImportInput.hidden = true;
+        folderImportInput.addEventListener('change', async()=>{
+            const [file] = folderImportInput.files ?? [];
+            folderImportInput.value = '';
+            await importFolderFile(file);
+        });
+        document.body.append(folderImportInput);
+    }
+    folderImportInput.click();
 };
 
 const duplicateBook = async(name)=>{
@@ -1033,6 +1101,7 @@ const initListPanel = (options)=>{
         clearBookSortPreferences,
         getSelectionState,
         hasExpandedBooks,
+        openFolderImportDialog,
         refreshList,
         renderBook,
         selectAdd,
