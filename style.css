@@ -131,12 +131,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   line-height: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader:hover,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader:focus-within {
-  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 8%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 35%, transparent);
-}
-
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder.stwid--isTarget .stwid--folderHeader {
   background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 15%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 55%, transparent);
@@ -187,10 +181,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   min-height: 1.1em;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle:hover {
-  opacity: 1;
-}
-
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction {
   display: inline-flex;
   align-items: center;
@@ -201,20 +191,12 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   padding: 0.15em 0.25em;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction:hover {
-  opacity: 1;
-}
-
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu {
   cursor: pointer;
   opacity: 0.75;
   transition: 200ms;
   border-radius: 6px;
   padding: 0.15em 0.25em;
-}
-
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu:hover {
-  opacity: 1;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle:focus-visible,
