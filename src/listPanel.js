@@ -1,5 +1,11 @@
 import { cloneMetadata } from './sortHelpers.js';
-import { sanitizeFolderMetadata, setFolderInMetadata } from './lorebookFolders.js';
+import {
+    createFolderDom,
+    getFolderFromMetadata,
+    sanitizeFolderMetadata,
+    setFolderCollapsed,
+    setFolderInMetadata,
+} from './lorebookFolders.js';
 
 let state = {};
 
@@ -9,6 +15,8 @@ let filterActiveInput;
 let loadListDebounced;
 
 const collapseStates = {};
+const folderCollapseStates = {};
+const folderDoms = {};
 
 /** Last clicked/selected DOM (WI entry) @type {HTMLElement} */
 let selectLast = null;
@@ -179,7 +187,7 @@ const selectRemove = (entry)=>{
     icon.classList.remove('fa-square-check');
 };
 
-const renderBook = async(name, before = null, bookData = null)=>{
+const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     const data = bookData ?? await state.loadWorldInfo(name);
     const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:state.getSortFromMetadata(data.metadata) };
     for (const [k,v] of Object.entries(data.entries)) {
@@ -198,6 +206,44 @@ const renderBook = async(name, before = null, bookData = null)=>{
         entry: {},
     };
     state.cache[name] = world;
+    setCacheMetadata(name, data.metadata);
+    let targetParent = parent ?? state.dom.books;
+    if (!parent) {
+        const folderName = getFolderFromMetadata(state.cache[name].metadata);
+        if (folderName) {
+            if (!folderDoms[folderName]) {
+                folderDoms[folderName] = createFolderDom({
+                    folderName,
+                    onToggle: ()=>{
+                        const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
+                        folderCollapseStates[folderName] = isCollapsed;
+                        setFolderCollapsed(folderDoms[folderName], isCollapsed);
+                    },
+                });
+                let insertBefore = null;
+                const normalizedFolder = folderName.toLowerCase();
+                for (const child of state.dom.books.children) {
+                    if (child.classList.contains('stwid--folder')) {
+                        const childName = child.dataset.folder?.toLowerCase() ?? '';
+                        if (childName.localeCompare(normalizedFolder) > 0) {
+                            insertBefore = child;
+                            break;
+                        }
+                        continue;
+                    }
+                    if (child.classList.contains('stwid--book')) {
+                        insertBefore = child;
+                        break;
+                    }
+                }
+                if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', folderDoms[folderName].root);
+                else state.dom.books.append(folderDoms[folderName].root);
+                const initialCollapsed = folderCollapseStates[folderName] ?? false;
+                setFolderCollapsed(folderDoms[folderName], initialCollapsed);
+            }
+            targetParent = folderDoms[folderName].books;
+        }
+    }
     const book = document.createElement('div'); {
         world.dom.root = book;
         book.classList.add('stwid--book');
@@ -595,18 +641,64 @@ const renderBook = async(name, before = null, bookData = null)=>{
             setBookCollapsed(name, initialCollapsed);
             book.append(entryList);
         }
-        if (before) before.insertAdjacentElement('beforebegin', book);
-        else state.dom.books.append(book);
+        let insertBefore = before && before.parentElement === targetParent ? before : null;
+        if (!insertBefore) {
+            const normalizedName = name.toLowerCase();
+            for (const child of targetParent.children) {
+                if (!child.classList.contains('stwid--book')) continue;
+                const childName = child.querySelector('.stwid--title')?.textContent?.toLowerCase() ?? '';
+                if (childName.localeCompare(normalizedName) > 0) {
+                    insertBefore = child;
+                    break;
+                }
+            }
+        }
+        if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', book);
+        else targetParent.append(book);
     }
     return book;
 };
 
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
+    for (const folderDom of Object.values(folderDoms)) {
+        folderDom.observer?.disconnect();
+    }
+    for (const key of Object.keys(folderDoms)) {
+        delete folderDoms[key];
+    }
     const worldNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
     const books = await Promise.all(state.safeToSorted(worldNames ?? [], (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).map(async(name)=>({ name, data:await state.loadWorldInfo(name) })));
+    const folderGroups = new Map();
+    const rootBooks = [];
     for (const book of books) {
-        await renderBook(book.name, null, book.data);
+        const folderName = getFolderFromMetadata(book.data?.metadata);
+        if (folderName) {
+            if (!folderGroups.has(folderName)) folderGroups.set(folderName, []);
+            folderGroups.get(folderName).push(book);
+        } else {
+            rootBooks.push(book);
+        }
+    }
+    const sortedFolders = [...folderGroups.keys()].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    for (const folderName of sortedFolders) {
+        folderDoms[folderName] = createFolderDom({
+            folderName,
+            onToggle: ()=>{
+                const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
+                folderCollapseStates[folderName] = isCollapsed;
+                setFolderCollapsed(folderDoms[folderName], isCollapsed);
+            },
+        });
+        state.dom.books.append(folderDoms[folderName].root);
+        const initialCollapsed = folderCollapseStates[folderName] ?? false;
+        setFolderCollapsed(folderDoms[folderName], initialCollapsed);
+        for (const book of folderGroups.get(folderName)) {
+            await renderBook(book.name, null, book.data, folderDoms[folderName].books);
+        }
+    }
+    for (const book of rootBooks) {
+        await renderBook(book.name, null, book.data, state.dom.books);
     }
 };
 
