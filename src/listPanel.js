@@ -534,6 +534,42 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     }
                                     menu.append(rename);
                                 }
+                                const moveFolder = document.createElement('div'); {
+                                    moveFolder.classList.add('stwid--item');
+                                    moveFolder.classList.add('stwid--moveFolder');
+                                    moveFolder.addEventListener('click', async()=>{
+                                        const Popup = state.Popup;
+                                        if (!Popup) return;
+                                        const currentFolder = getFolderFromMetadata(state.cache[name]?.metadata);
+                                        const folderList = getFolderRegistry();
+                                        const folderMessage = folderList.length
+                                            ? `Existing folders: ${folderList.join(', ')}`
+                                            : 'No folders yet.';
+                                        const nextFolder = await Popup.show.input(
+                                            'Move book to folder',
+                                            `Enter a folder name (leave blank to remove).\n${folderMessage}`,
+                                            currentFolder ?? ''
+                                        );
+                                        if (nextFolder === null || nextFolder === undefined) return;
+                                        const updated = await setBookFolder(name, nextFolder);
+                                        if (!updated) {
+                                            toastr.error('Folder names cannot include "/".');
+                                            return;
+                                        }
+                                        await refreshList();
+                                    });
+                                    const i = document.createElement('i'); {
+                                        i.classList.add('stwid--icon');
+                                        i.classList.add('fa-solid', 'fa-fw', 'fa-folder-tree');
+                                        moveFolder.append(i);
+                                    }
+                                    const txt = document.createElement('span'); {
+                                        txt.classList.add('stwid--label');
+                                        txt.textContent = 'Move to Folder';
+                                        moveFolder.append(txt);
+                                    }
+                                    menu.append(moveFolder);
+                                }
                                 if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
                                     const bulk = document.createElement('div'); {
                                         bulk.classList.add('stwid--item');
