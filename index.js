@@ -136,6 +136,13 @@ const updateWIChange = async(name = null, data = null)=>{
     console.log('[STWID]', '[UPDATE-WI]', name, data);
     updateWIChangeFinished = createDeferred();
     updateWIChangeStarted.resolve();
+
+    // If called with a book name but without the corresponding data payload,
+    // fall back to a full refresh (robust against mutation observer / unexpected callers).
+    if (name && cache[name] && !data) {
+        name = null;
+    }
+
     // removed books
     for (const [n, w] of Object.entries(cache)) {
         if (world_names.includes(n)) continue;
@@ -200,14 +207,20 @@ const updateWIChange = async(name = null, data = null)=>{
                 hasUpdate = true;
                 switch (k) {
                     case 'content': {
-                        if (currentEditor?.name == name && currentEditor?.uid == e && dom.editor.querySelector('[name="content"]').value != n.content) {
-                            cache[name].dom.entry[e].root.click();
+                        if (currentEditor?.name == name && currentEditor?.uid == e) {
+                            const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="content"]'));
+                            if (!inp || inp.value != n.content) {
+                                cache[name].dom.entry[e].root.click();
+                            }
                         }
                         break;
                     }
                     case 'comment': {
-                        if (currentEditor?.name == name && currentEditor?.uid == e && dom.editor.querySelector('[name="comment"]').value != n.comment) {
-                            cache[name].dom.entry[e].root.click();
+                        if (currentEditor?.name == name && currentEditor?.uid == e) {
+                            const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="comment"]'));
+                            if (!inp || inp.value != n.comment) {
+                                cache[name].dom.entry[e].root.click();
+                            }
                         }
                         cache[name].dom.entry[e].comment.textContent = n.comment;
                         break;
