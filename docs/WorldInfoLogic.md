@@ -32,7 +32,81 @@ When you generate text, SillyTavern **scans the chat** for those keywords, decid
 
 ---
 
-## 3) Where entries come from (the 4 sources)
+## 3) Main variables (the “knobs” and stored data)
+
+These are the **core variables** that the vanilla system keeps in memory:
+
+### Core settings (“knobs”)
+- `world_info_depth`: how far back in chat the scan looks.
+- `world_info_budget`: % of max context reserved for World Info text.
+- `world_info_budget_cap`: hard maximum token budget.
+- `world_info_include_names`: include entry names when building prompt text.
+- `world_info_recursive`: allow recursion scanning.
+- `world_info_min_activations`: keep scanning until at least this many entries activate.
+- `world_info_min_activations_depth_max`: maximum depth for “min activations.”
+- `world_info_overflow_alert`: warn when the budget is exceeded.
+- `world_info_case_sensitive`: case-sensitive matching toggle.
+- `world_info_match_whole_words`: match whole words only.
+- `world_info_use_group_scoring`: enable scoring for inclusion groups.
+- `world_info_max_recursion_steps`: stop after this many recursion loops.
+- `world_info_character_strategy`: how to order character vs global lorebooks.
+
+### Stored data
+- `world_names`: all known lorebook names.
+- `selected_world_info`: the globally selected lorebooks.
+- `world_info`: the settings object saved to disk.
+- `worldInfoCache`: an in-memory cache of loaded lorebooks.
+
+### Enums & constants (named choices)
+- `world_info_insertion_strategy`: the available ordering strategies.
+- `world_info_logic`: logic modes for secondary keyword matching.
+- `scan_state`: scan loop states (initial, recursion, min-activations).
+- `world_info_position`: where entry content is inserted in the prompt.
+- `wi_anchor_position`: anchor positions for some prompt sections.
+- `DEFAULT_DEPTH`, `DEFAULT_WEIGHT`, `MAX_SCAN_DEPTH`: default limits.
+
+---
+
+## 4) Helper classes & utilities (what they do, simply)
+
+Helpers are small tools used by the main logic:
+
+- **`WorldInfoBuffer`**: stores the text to scan (chat + recursion + injected prompts).
+- **`WorldInfoTimedEffects`**: tracks sticky/cooldown/delay effects across chat.
+- **`FilterHelper`**: used for editor filtering (not part of scanning, but tied to World Info UI).
+- **`StructuredCloneMap`**: cache helper used for `worldInfoCache`.
+
+---
+
+## 5) Main functions (what each does, in simple words)
+
+### Loading & saving
+- `loadWorldInfo(name)`: fetch a lorebook (uses cache).
+- `saveWorldInfo(name, data, immediately)`: save lorebook data.
+- `createNewWorldInfo(name)`: create a new empty lorebook.
+- `createWorldInfoEntry(name, data)`: create a new entry inside a lorebook.
+- `deleteWorldInfo(name)`: delete a lorebook file.
+- `deleteWorldInfoEntry(data, uid)`: delete a single entry.
+
+### UI helpers
+- `updateWorldInfoList()`: refresh list of lorebooks in the UI.
+- `showWorldEditor(name)`: load a lorebook into the editor.
+
+### Settings
+- `setWorldInfoSettings(settings, data)`: apply saved settings + load lists.
+- `updateWorldInfoSettings(settings, activeWorldInfo)`: update settings while running.
+
+### Entry collection & scan
+- `getSortedEntries()`: merge entries from all sources + sort them.
+- `getWorldInfoPrompt(chat, maxContext, isDryRun, globalScanData)`: returns final World Info text for the prompt.
+- `checkWorldInfo(chat, maxContext, isDryRun, globalScanData)`: the core scanning/activation logic.
+
+### Automation & commands
+- `registerWorldInfoSlashCommands()`: registers slash commands related to lorebooks.
+
+---
+
+## 6) Where entries come from (the 4 sources)
 
 Vanilla ST merges entries from **four places**:
 
@@ -45,7 +119,7 @@ SillyTavern is careful **not to double‑count** the same lorebook if it’s alr
 
 ---
 
-## 4) How entries are ordered (insertion strategy)
+## 7) How entries are ordered (insertion strategy)
 
 When SillyTavern merges entries, it applies a **strategy** for “global vs character” ordering:
 
@@ -63,7 +137,7 @@ This ordering matters because later logic processes entries in this sequence.
 
 ---
 
-## 5) What’s inside a lorebook entry (fields you should know)
+## 8) What’s inside a lorebook entry (fields you should know)
 
 Each entry has many fields. Think of them as **settings for that one entry**.
 
@@ -102,7 +176,7 @@ Here are the most important ones:
 
 ---
 
-## 6) What is a “helper” (in very simple terms)?
+## 9) What is a “helper” (in very simple terms)?
 
 A **helper** is a small piece of code (a function or class) that does one focused job so the main logic stays clean.
 
@@ -113,13 +187,15 @@ Example analogy:
 In Vanilla ST World Info, helpers include:
 
 - **`WorldInfoBuffer`** — collects the text to scan, recursion text, and injected text.
+- **`WorldInfoTimedEffects`** — manages sticky/cooldown/delay timing.
 - **`FilterHelper`** — manages filtering logic used by the editor UI.
+- **`StructuredCloneMap`** — cache helper behind `worldInfoCache`.
 
 You don’t need to code to benefit from them; just know they keep the system organized.
 
 ---
 
-## 7) The scanning process (step‑by‑step, beginner view)
+## 10) The scanning process (step‑by‑step, beginner view)
 
 This is the core of lorebook logic. Think of it like a checklist for each entry.
 
@@ -165,7 +241,7 @@ If “minimum activations” is set, the scan keeps going deeper until enough en
 
 ---
 
-## 8) Decorators (special tags in entry content)
+## 11) Decorators (special tags in entry content)
 
 Entries can start with special lines like:
 
@@ -176,7 +252,7 @@ These are called **decorators** and are parsed before matching happens.
 
 ---
 
-## 9) Why “budget” exists
+## 12) Why “budget” exists
 
 A **budget** is a limit on how much lorebook text can be inserted. It’s a safety guard so your prompt doesn’t get too big.
 
@@ -187,7 +263,7 @@ If the budget is exceeded, ST may stop adding more entries.
 
 ---
 
-## 10) Where this logic lives in Vanilla ST
+## 13) Where this logic lives in Vanilla ST
 
 Everything described here is primarily implemented in:
 
@@ -203,7 +279,7 @@ This file defines:
 
 ---
 
-## 11) Key terms glossary (plain English)
+## 14) Key terms glossary (plain English)
 
 - **Entry**: One lore note (keywords + content).
 - **Activation**: The entry is chosen to be inserted into the prompt.
@@ -214,7 +290,7 @@ This file defines:
 
 ---
 
-## 12) If you want to learn incrementally
+## 15) If you want to learn incrementally
 
 Start with these three ideas:
 
