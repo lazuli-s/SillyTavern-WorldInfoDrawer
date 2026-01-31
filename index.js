@@ -124,6 +124,7 @@ const updateSettingsChange = ()=>{
         }
     }
     listPanelApi?.applyActiveFilter?.();
+    listPanelApi?.updateFolderActiveToggles?.();
 };
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeStarted = createDeferred();
@@ -259,6 +260,12 @@ const updateWIChange = async(name = null, data = null)=>{
     updateWIChangeFinished.resolve();
 };
 const updateWIChangeDebounced = debounce(updateWIChange);
+const waitForWorldInfoUpdate = async()=>{
+    const startPromise = updateWIChangeStarted.promise;
+    await startPromise;
+    await updateWIChangeFinished?.promise;
+    return true;
+};
 
 const fillEmptyTitlesWithKeywords = async(name)=>{
     const data = await loadWorldInfo(name);
@@ -572,6 +579,7 @@ const addDrawer = ()=>{
                     loadWorldInfo,
                     onWorldInfoChange,
                     openOrderHelper,
+                    Popup,
                     renderEntry,
                     resetEditor: ()=>{
                         editorPanelApi.clearEditor();
@@ -582,6 +590,7 @@ const addDrawer = ()=>{
                     getWorldNames: () => world_names,
                     sortEntries,
                     updateWIChange,
+                    waitForWorldInfoUpdate,
                     world_names,
                     createNewWorldInfo,
                     createWorldInfoEntry,

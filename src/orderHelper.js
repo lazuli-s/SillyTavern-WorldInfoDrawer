@@ -37,6 +37,7 @@ export const initOrderHelper = ({
     const OUTLET_NONE_VALUE = '';
     const AUTOMATION_ID_NONE_VALUE = '';
     const GROUP_NONE_VALUE = '';
+    let scopedBookNames = null;
 
     const getEntryDisplayIndex = (entry)=>{
         const displayIndex = Number(entry?.extensions?.display_index);
@@ -51,7 +52,7 @@ export const initOrderHelper = ({
     };
 
     const getOrderHelperSourceEntries = (book = orderHelperState.book)=>Object.entries(cache)
-        .filter(([name])=>getSelectedWorldInfo().includes(name))
+        .filter(([name])=>(scopedBookNames ?? getSelectedWorldInfo()).includes(name))
         .map(([name,data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
         .flat()
         .filter((entry)=>!book || entry.book === book);
@@ -365,8 +366,9 @@ export const initOrderHelper = ({
         getEditorPanelApi,
     });
 
-    const openOrderHelper = (book = null)=>{
+    const openOrderHelper = (book = null, scope = null)=>{
         if (!dom.order.toggle) return;
+        scopedBookNames = Array.isArray(scope) ? scope : null;
         dom.order.toggle.classList.add('stwid--active');
         renderOrderHelper(book);
     };
