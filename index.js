@@ -34,7 +34,9 @@ const watchCss = async()=>{
             style.innerHTML = await (await FilesPluginApi.get(path)).text();
             document.querySelector(`#third-party_${NAME}-css`)?.remove();
         });
-    } catch { /* empty */ }
+    } catch (error) {
+        console.debug('[STWID] CSS watch disabled', error);
+    }
 };
 watchCss();
 
