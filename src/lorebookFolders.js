@@ -1,4 +1,5 @@
 const FOLDER_METADATA_KEY = 'folder';
+const FOLDER_REGISTRY_STORAGE_KEY = 'stwid--folder-registry';
 
 const normalizeFolderName = (value)=>String(value ?? '').trim();
 
@@ -8,6 +9,64 @@ const validateFolderName = (value)=>{
         normalized,
         isValid: !normalized.includes('/'),
     };
+};
+
+const loadFolderRegistry = ()=>{
+    if (typeof localStorage === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem(FOLDER_REGISTRY_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.warn('[STWID] Failed to load folder registry', error);
+        return [];
+    }
+};
+
+const saveFolderRegistry = (folders)=>{
+    if (typeof localStorage === 'undefined') return;
+    try {
+        localStorage.setItem(FOLDER_REGISTRY_STORAGE_KEY, JSON.stringify(folders));
+    } catch (error) {
+        console.warn('[STWID] Failed to save folder registry', error);
+    }
+};
+
+const normalizeRegistry = (folders)=>{
+    const normalized = [];
+    const seen = new Set();
+    for (const entry of folders) {
+        const { normalized: folderName, isValid } = validateFolderName(entry);
+        if (!isValid || !folderName) continue;
+        if (seen.has(folderName)) continue;
+        seen.add(folderName);
+        normalized.push(folderName);
+    }
+    return normalized;
+};
+
+const getFolderRegistry = ()=>{
+    const normalized = normalizeRegistry(loadFolderRegistry());
+    saveFolderRegistry(normalized);
+    return normalized;
+};
+
+const registerFolderName = (folderName)=>{
+    const { normalized, isValid } = validateFolderName(folderName);
+    if (!normalized) {
+        return { ok: false, folder: null, reason: 'empty' };
+    }
+    if (!isValid) {
+        return { ok: false, folder: null, reason: 'invalid' };
+    }
+    const registry = getFolderRegistry();
+    if (!registry.includes(normalized)) {
+        registry.push(normalized);
+        registry.sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+        saveFolderRegistry(registry);
+    }
+    return { ok: true, folder: normalized };
 };
 
 const getFolderFromMetadata = (metadata)=>{
@@ -138,6 +197,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange })=>{
 export {
     createFolderDom,
     getFolderFromMetadata,
+    getFolderRegistry,
+    registerFolderName,
     setFolderCollapsed,
     setFolderInMetadata,
     sanitizeFolderMetadata,

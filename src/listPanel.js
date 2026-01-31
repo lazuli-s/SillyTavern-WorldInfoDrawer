@@ -2,6 +2,8 @@ import { cloneMetadata } from './sortHelpers.js';
 import {
     createFolderDom,
     getFolderFromMetadata,
+    getFolderRegistry,
+    registerFolderName,
     sanitizeFolderMetadata,
     setFolderCollapsed,
     setFolderInMetadata,
@@ -139,6 +141,9 @@ const setBookFolder = async(name, folderName)=>{
     const metadata = state.cache[name].metadata ?? {};
     const result = setFolderInMetadata(metadata, folderName);
     if (!result.ok) return false;
+    if (result.folder) {
+        registerFolderName(result.folder);
+    }
     state.cache[name].metadata = metadata;
     await state.saveWorldInfo(name, state.buildSavePayload(name), true);
     return true;
@@ -726,13 +731,19 @@ const loadList = async()=>{
     for (const book of books) {
         const folderName = getFolderFromMetadata(book.data?.metadata);
         if (folderName) {
+            registerFolderName(folderName);
             if (!folderGroups.has(folderName)) folderGroups.set(folderName, []);
             folderGroups.get(folderName).push(book);
         } else {
             rootBooks.push(book);
         }
     }
-    const sortedFolders = [...folderGroups.keys()].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    const folderRegistry = getFolderRegistry();
+    const allFolderNames = new Set(folderRegistry);
+    for (const folderName of folderGroups.keys()) {
+        allFolderNames.add(folderName);
+    }
+    const sortedFolders = [...allFolderNames].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
     for (const folderName of sortedFolders) {
         folderDoms[folderName] = createFolderDom({
             folderName,
@@ -767,7 +778,8 @@ const loadList = async()=>{
         state.dom.books.append(folderDoms[folderName].root);
         const initialCollapsed = folderCollapseStates[folderName] ?? false;
         setFolderCollapsed(folderDoms[folderName], initialCollapsed);
-        for (const book of folderGroups.get(folderName)) {
+        const folderBooks = folderGroups.get(folderName) ?? [];
+        for (const book of folderBooks) {
             await renderBook(book.name, null, book.data, folderDoms[folderName].books);
         }
     }
