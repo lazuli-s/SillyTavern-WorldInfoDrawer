@@ -110,6 +110,56 @@ const getFolderBookNames = (cache, folderName)=>{
     return Object.keys(cache).filter((name)=>getFolderFromMetadata(cache[name]?.metadata) === folderName);
 };
 
+const getFolderActiveState = (cache, selected, folderName)=>{
+    const bookNames = getFolderBookNames(cache, folderName);
+    if (!bookNames.length) {
+        return { checked: false, indeterminate: false };
+    }
+    const selectedSet = new Set(selected ?? []);
+    const activeCount = bookNames.filter((name)=>selectedSet.has(name)).length;
+    return {
+        checked: activeCount === bookNames.length,
+        indeterminate: activeCount > 0 && activeCount < bookNames.length,
+    };
+};
+
+const setFolderBooksActive = async(bookNames, isActive, onWorldInfoChange)=>{
+    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_info'));
+    if (!select) return;
+    const targets = new Set(bookNames ?? []);
+    for (const option of select.options) {
+        if (!targets.has(option.textContent ?? '')) continue;
+        option.selected = isActive;
+    }
+    onWorldInfoChange?.('__notSlashCommand__');
+};
+
+const createBookInFolder = async({
+    folderName,
+    Popup,
+    createNewWorldInfo,
+    getFreeWorldName,
+    loadWorldInfo,
+    saveWorldInfo,
+    refreshList,
+})=>{
+    if (!Popup || !createNewWorldInfo || !loadWorldInfo || !saveWorldInfo) return null;
+    const tempName = getFreeWorldName?.() ?? 'New World Info';
+    const finalName = await Popup.show.input('Create a new World Info', 'Enter a name for the new file:', tempName);
+    if (!finalName) return null;
+    const created = await createNewWorldInfo(finalName, { interactive: true });
+    if (!created) return null;
+    const data = await loadWorldInfo(finalName);
+    const metadata = data.metadata ?? {};
+    const updated = setFolderInMetadata(metadata, folderName);
+    if (!updated.ok) return null;
+    data.metadata = metadata;
+    await saveWorldInfo(finalName, data, true);
+    registerFolderName(folderName);
+    await refreshList?.();
+    return finalName;
+};
+
 const removeFolderName = (folderName)=>{
     const normalized = normalizeFolderName(folderName);
     if (!normalized) return false;
@@ -181,6 +231,50 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             const count = document.createElement('span'); {
                 count.classList.add('stwid--folderCount');
                 header.append(count);
+            }
+            const activeToggle = document.createElement('input'); {
+                activeToggle.classList.add('stwid--folderActiveToggle');
+                activeToggle.type = 'checkbox';
+                activeToggle.title = 'Toggle folder active';
+                activeToggle.setAttribute('aria-label', 'Toggle folder active');
+                activeToggle.addEventListener('click', (evt)=>{
+                    evt.stopPropagation();
+                });
+                activeToggle.addEventListener('change', async()=>{
+                    if (!menuActions?.setBooksActive) return;
+                    const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                    if (!bookNames.length) {
+                        activeToggle.checked = false;
+                        activeToggle.indeterminate = false;
+                        return;
+                    }
+                    activeToggle.disabled = true;
+                    try {
+                        await menuActions.setBooksActive(bookNames, activeToggle.checked);
+                    } finally {
+                        activeToggle.disabled = false;
+                    }
+                });
+                header.append(activeToggle);
+            }
+            const addButton = document.createElement('div'); {
+                addButton.classList.add('stwid--folderAction');
+                addButton.classList.add('stwid--folderAdd');
+                addButton.classList.add('fa-solid', 'fa-fw', 'fa-plus');
+                addButton.title = 'New Book in Folder';
+                addButton.setAttribute('aria-label', 'New Book in Folder');
+                addButton.addEventListener('click', async(evt)=>{
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    if (!menuActions?.createBookInFolder) return;
+                    addButton.setAttribute('aria-busy', 'true');
+                    try {
+                        await menuActions.createBookInFolder(folderName);
+                    } finally {
+                        addButton.removeAttribute('aria-busy');
+                    }
+                });
+                header.append(addButton);
             }
             if (menuActions) {
                 const menuTrigger = document.createElement('div'); {
@@ -374,18 +468,28 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     const books = root.querySelector('.stwid--folderBooks');
     const count = root.querySelector('.stwid--folderCount');
     const toggle = root.querySelector('.stwid--folderToggle');
+    const activeToggle = root.querySelector('.stwid--folderActiveToggle');
     const observer = new MutationObserver(()=>{
         updateFolderCount(count, books.childElementCount);
     });
     observer.observe(books, { childList: true });
     updateFolderCount(count, books.childElementCount);
+    const updateActiveToggle = ()=>{
+        if (!activeToggle || !menuActions?.cache || !menuActions?.getSelectedWorldInfo) return;
+        const state = getFolderActiveState(menuActions.cache, menuActions.getSelectedWorldInfo(), folderName);
+        activeToggle.checked = state.checked;
+        activeToggle.indeterminate = state.indeterminate;
+    };
+    updateActiveToggle();
     return {
         root,
         header: root.querySelector('.stwid--folderHeader'),
         books,
         count,
         toggle,
+        activeToggle,
         observer,
+        updateActiveToggle,
     };
 };
 
@@ -394,6 +498,8 @@ export {
     getFolderFromMetadata,
     getFolderRegistry,
     registerFolderName,
+    createBookInFolder,
+    setFolderBooksActive,
     setFolderCollapsed,
     setFolderInMetadata,
     sanitizeFolderMetadata,
