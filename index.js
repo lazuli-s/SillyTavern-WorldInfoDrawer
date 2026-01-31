@@ -557,6 +557,7 @@ const addDrawer = ()=>{
                     safeToSorted,
                     saveWorldInfo,
                     getSelectedWorldInfo: () => selected_world_info,
+                    getWorldNames: () => world_names,
                     sortEntries,
                     updateWIChange,
                     world_names,
