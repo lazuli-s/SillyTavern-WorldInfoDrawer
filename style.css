@@ -115,7 +115,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books {
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
   border-radius: 8px;
-  overflow: hidden;
   margin: 0.35em 0;
 }
 
