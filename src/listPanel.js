@@ -149,6 +149,11 @@ const setBookFolder = async(name, folderName)=>{
     return true;
 };
 
+const openImportDialog = ()=>{
+    const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
+    input?.click();
+};
+
 const duplicateBook = async(name)=>{
     const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
     if (!select) return null;
@@ -166,6 +171,17 @@ const duplicateBook = async(name)=>{
         if (newName) return newName;
     }
     return null;
+};
+
+const deleteBook = async(name)=>{
+    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+    if (!select) return;
+    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
+    if (!option) return;
+    select.value = option.value;
+    select.dispatchEvent(new Event('change', { bubbles:true }));
+    await state.delay(500);
+    document.querySelector('#world_popup_delete')?.click();
 };
 
 const selectEnd = ()=>{
@@ -773,6 +789,18 @@ const loadList = async()=>{
                 await refreshList();
                 const updated = await setBookFolder(duplicatedName, folderName);
                 if (updated) await refreshList();
+            },
+            menuActions: {
+                Popup: state.Popup,
+                buildSavePayload: state.buildSavePayload,
+                cache: state.cache,
+                deleteBook,
+                download: state.download,
+                getWorldNames: () => state.getWorldNames ? state.getWorldNames() : state.world_names,
+                openImportDialog,
+                refreshList,
+                setBookFolder,
+                waitForWorldInfoUpdate: state.waitForWorldInfoUpdate,
             },
         });
         state.dom.books.append(folderDoms[folderName].root);
