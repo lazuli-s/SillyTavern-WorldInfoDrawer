@@ -4,7 +4,7 @@ import { Popup } from '../../../popup.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { renderTemplateAsync } from '../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../utils.js';
-import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../world-info.js';
+import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
 import { initEditorPanel } from './src/editorPanel.js';
 import { initListPanel, refreshList } from './src/listPanel.js';
@@ -575,6 +575,7 @@ const addDrawer = ()=>{
                     debounce,
                     debounceAsync,
                     deleteWIOriginalDataValue,
+                    deleteWorldInfo,
                     deleteWorldInfoEntry,
                     delay,
                     dom,

@@ -244,7 +244,11 @@ const duplicateBook = async(name)=>{
     return null;
 };
 
-const deleteBook = async(name)=>{
+const deleteBook = async(name, { skipConfirm = false } = {})=>{
+    if (skipConfirm && state.deleteWorldInfo) {
+        await state.deleteWorldInfo(name);
+        return;
+    }
     const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
     if (!select) return;
     const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
