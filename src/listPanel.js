@@ -842,32 +842,36 @@ const setupFilter = (list)=>{
             search.placeholder = 'Search books';
             searchInput = search;
             const entryMatchesQuery = (entry, query)=>{
-                const title = entry.comment ?? '';
-                const memo = entry.title ?? '';
+                const comment = entry.comment ?? '';
                 const keys = Array.isArray(entry.key) ? entry.key.join(', ') : '';
                 const normalizedQuery = query.toLowerCase();
-                return [title, memo, keys].some(value=>String(value ?? '').toLowerCase().includes(normalizedQuery));
+                return [comment, keys].some(value=>String(value ?? '').toLowerCase().includes(normalizedQuery));
             };
 
             search.addEventListener('input', ()=>{
                 const query = search.value.toLowerCase();
+                const searchEntries = searchEntriesInput.checked;
                 for (const b of Object.keys(state.cache)) {
                     if (query.length) {
                         const bookMatch = b.toLowerCase().includes(query);
-                        const entryMatch = searchEntriesInput.checked && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(e, query));
+                        const entryMatch = searchEntries && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(e, query));
                         if (bookMatch || entryMatch) {
                             state.cache[b].dom.root.classList.remove('stwid--filter-query');
-                            if (searchEntriesInput.checked) {
-                                for (const e of Object.values(state.cache[b].entries)) {
-                                    if (bookMatch || entryMatchesQuery(e, query)) {
-                                        state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
-                                    } else {
-                                        state.cache[b].dom.entry[e.uid].root.classList.add('stwid--filter-query');
-                                    }
+                        } else {
+                            state.cache[b].dom.root.classList.add('stwid--filter-query');
+                        }
+                        if (searchEntries) {
+                            for (const e of Object.values(state.cache[b].entries)) {
+                                if (bookMatch || entryMatchesQuery(e, query)) {
+                                    state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
+                                } else {
+                                    state.cache[b].dom.entry[e.uid].root.classList.add('stwid--filter-query');
                                 }
                             }
                         } else {
-                            state.cache[b].dom.root.classList.add('stwid--filter-query');
+                            for (const e of Object.values(state.cache[b].entries)) {
+                                state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
+                            }
                         }
                     } else {
                         state.cache[b].dom.root.classList.remove('stwid--filter-query');
