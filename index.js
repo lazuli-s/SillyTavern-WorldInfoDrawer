@@ -8,6 +8,7 @@ import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, de
 import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
 import { initEditorPanel } from './src/editorPanel.js';
 import { initListPanel, refreshList } from './src/listPanel.js';
+import { registerFolderName } from './src/lorebookFolders.js';
 import { initOrderHelper } from './src/orderHelper.js';
 import { cloneMetadata, getSortFromMetadata, sortEntries } from './src/sortHelpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './src/worldEntry.js';
@@ -123,6 +124,7 @@ const updateSettingsChange = ()=>{
         }
     }
     listPanelApi?.applyActiveFilter?.();
+    listPanelApi?.updateFolderActiveToggles?.();
 };
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeStarted = createDeferred();
@@ -258,6 +260,12 @@ const updateWIChange = async(name = null, data = null)=>{
     updateWIChangeFinished.resolve();
 };
 const updateWIChangeDebounced = debounce(updateWIChange);
+const waitForWorldInfoUpdate = async()=>{
+    const startPromise = updateWIChangeStarted.promise;
+    await startPromise;
+    await updateWIChangeFinished?.promise;
+    return true;
+};
 
 const fillEmptyTitlesWithKeywords = async(name)=>{
     const data = await loadWorldInfo(name);
@@ -381,6 +389,27 @@ const addDrawer = ()=>{
                             }
                         });
                         controlsPrimary.append(add);
+                    }
+                    const addFolder = document.createElement('div'); {
+                        addFolder.classList.add('menu_button');
+                        addFolder.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
+                        addFolder.title = 'New Folder';
+                        addFolder.setAttribute('aria-label', 'New Folder');
+                        addFolder.addEventListener('click', async()=>{
+                            const folderName = await Popup.show.input('Create a new folder', 'Enter a name for the new folder:', 'New Folder');
+                            if (!folderName) return;
+                            const result = registerFolderName(folderName);
+                            if (!result.ok) {
+                                if (result.reason === 'invalid') {
+                                    toastr.error('Folder names cannot include "/".');
+                                    return;
+                                }
+                                toastr.warning('Folder name cannot be empty.');
+                                return;
+                            }
+                            await refreshList();
+                        });
+                        controlsPrimary.append(addFolder);
                     }
                     const imp = document.createElement('div'); {
                         imp.classList.add('menu_button');
@@ -550,6 +579,7 @@ const addDrawer = ()=>{
                     loadWorldInfo,
                     onWorldInfoChange,
                     openOrderHelper,
+                    Popup,
                     renderEntry,
                     resetEditor: ()=>{
                         editorPanelApi.clearEditor();
@@ -560,6 +590,7 @@ const addDrawer = ()=>{
                     getWorldNames: () => world_names,
                     sortEntries,
                     updateWIChange,
+                    waitForWorldInfoUpdate,
                     world_names,
                     createNewWorldInfo,
                     createWorldInfoEntry,

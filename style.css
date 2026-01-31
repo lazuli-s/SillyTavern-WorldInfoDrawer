@@ -112,6 +112,88 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books {
   overflow: auto;
 }
 
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder {
+  border-bottom: 2px solid var(--SmartThemeBorderColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.35em 0.5em;
+  cursor: pointer;
+  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderLabel {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderCount {
+  opacity: 0.75;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle {
+  margin-left: auto;
+  opacity: 0.75;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle {
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle:hover {
+  opacity: 1;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: 200ms;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction:hover {
+  opacity: 1;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu {
+  cursor: pointer;
+  opacity: 0.75;
+  transition: 200ms;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu:hover {
+  opacity: 1;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderMenu {
+  margin-left: 0;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderToggle {
+  margin-left: 0;
+}
+
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--folder
+  .stwid--folderHeader.stwid--hasMenu
+  .stwid--folderActiveToggle {
+  margin-left: auto;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderBooks.stwid--isCollapsed {
+  display: none;
+}
+
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
 }
