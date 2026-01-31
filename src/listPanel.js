@@ -1,7 +1,11 @@
 import { cloneMetadata } from './sortHelpers.js';
 import {
     createFolderDom,
+    createBookInFolder,
     getFolderFromMetadata,
+    getFolderRegistry,
+    registerFolderName,
+    setFolderBooksActive,
     sanitizeFolderMetadata,
     setFolderCollapsed,
     setFolderInMetadata,
@@ -30,6 +34,7 @@ let selectList = null;
 let selectToast = null;
 /** Name of the book being dragged @type {string|null} */
 let dragBookName = null;
+let folderMenuActions;
 
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
@@ -139,9 +144,17 @@ const setBookFolder = async(name, folderName)=>{
     const metadata = state.cache[name].metadata ?? {};
     const result = setFolderInMetadata(metadata, folderName);
     if (!result.ok) return false;
+    if (result.folder) {
+        registerFolderName(result.folder);
+    }
     state.cache[name].metadata = metadata;
     await state.saveWorldInfo(name, state.buildSavePayload(name), true);
     return true;
+};
+
+const openImportDialog = ()=>{
+    const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
+    input?.click();
 };
 
 const duplicateBook = async(name)=>{
@@ -161,6 +174,17 @@ const duplicateBook = async(name)=>{
         if (newName) return newName;
     }
     return null;
+};
+
+const deleteBook = async(name)=>{
+    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+    if (!select) return;
+    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
+    if (!option) return;
+    select.value = option.value;
+    select.dispatchEvent(new Event('change', { bubbles:true }));
+    await state.delay(500);
+    document.querySelector('#world_popup_delete')?.click();
 };
 
 const selectEnd = ()=>{
@@ -262,6 +286,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                         const updated = await setBookFolder(duplicatedName, folderName);
                         if (updated) await refreshList();
                     },
+                    menuActions: folderMenuActions,
                 });
                 let insertBefore = null;
                 const normalizedFolder = folderName.toLowerCase();
@@ -726,13 +751,19 @@ const loadList = async()=>{
     for (const book of books) {
         const folderName = getFolderFromMetadata(book.data?.metadata);
         if (folderName) {
+            registerFolderName(folderName);
             if (!folderGroups.has(folderName)) folderGroups.set(folderName, []);
             folderGroups.get(folderName).push(book);
         } else {
             rootBooks.push(book);
         }
     }
-    const sortedFolders = [...folderGroups.keys()].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    const folderRegistry = getFolderRegistry();
+    const allFolderNames = new Set(folderRegistry);
+    for (const folderName of folderGroups.keys()) {
+        allFolderNames.add(folderName);
+    }
+    const sortedFolders = [...allFolderNames].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
     for (const folderName of sortedFolders) {
         folderDoms[folderName] = createFolderDom({
             folderName,
@@ -763,17 +794,20 @@ const loadList = async()=>{
                 const updated = await setBookFolder(duplicatedName, folderName);
                 if (updated) await refreshList();
             },
+            menuActions: folderMenuActions,
         });
         state.dom.books.append(folderDoms[folderName].root);
         const initialCollapsed = folderCollapseStates[folderName] ?? false;
         setFolderCollapsed(folderDoms[folderName], initialCollapsed);
-        for (const book of folderGroups.get(folderName)) {
+        const folderBooks = folderGroups.get(folderName) ?? [];
+        for (const book of folderBooks) {
             await renderBook(book.name, null, book.data, folderDoms[folderName].books);
         }
     }
     for (const book of rootBooks) {
         await renderBook(book.name, null, book.data, state.dom.books);
     }
+    updateFolderActiveToggles();
 };
 
 const refreshList = async()=>{
@@ -789,6 +823,12 @@ const refreshList = async()=>{
         searchInput?.dispatchEvent(new Event('input'));
     } finally {
         state.dom.drawer.body.classList.remove('stwid--isLoading');
+    }
+};
+
+const updateFolderActiveToggles = ()=>{
+    for (const folderDom of Object.values(folderDoms)) {
+        folderDom.updateActiveToggle?.();
     }
 };
 
@@ -959,6 +999,30 @@ const getSelectionState = ()=>({
 const initListPanel = (options)=>{
     state = options;
     loadListDebounced = state.debounceAsync(()=>loadList());
+    folderMenuActions = {
+        Popup: state.Popup,
+        buildSavePayload: state.buildSavePayload,
+        cache: state.cache,
+        createBookInFolder: (folderName)=>createBookInFolder({
+            folderName,
+            Popup: state.Popup,
+            createNewWorldInfo: state.createNewWorldInfo,
+            getFreeWorldName: state.getFreeWorldName,
+            loadWorldInfo: state.loadWorldInfo,
+            saveWorldInfo: state.saveWorldInfo,
+            refreshList,
+        }),
+        deleteBook,
+        download: state.download,
+        getWorldNames: () => state.getWorldNames ? state.getWorldNames() : state.world_names,
+        getSelectedWorldInfo: () => state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info,
+        openOrderHelper: state.openOrderHelper,
+        openImportDialog,
+        refreshList,
+        setBookFolder,
+        setBooksActive: (bookNames, isActive)=>setFolderBooksActive(bookNames, isActive, state.onWorldInfoChange),
+        waitForWorldInfoUpdate: state.waitForWorldInfoUpdate,
+    };
     setupListPanel(state.list);
     return {
         applyActiveFilter: state.applyActiveFilter,
@@ -976,6 +1040,7 @@ const initListPanel = (options)=>{
         setCollapseState,
         setBookSortPreference,
         sortEntriesIfNeeded,
+        updateFolderActiveToggles,
         updateCollapseAllToggle,
     };
 };
