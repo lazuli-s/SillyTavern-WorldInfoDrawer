@@ -14,7 +14,7 @@ const getFolderFromMetadata = (metadata)=>{
     if (!metadata || typeof metadata !== 'object') return null;
     if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
     const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
-    if (!isValid) return null;
+    if (!isValid || !normalized) return null;
     return normalized;
 };
 
@@ -26,6 +26,10 @@ const setFolderInMetadata = (metadata, folderName)=>{
     if (!isValid) {
         return { ok: false, folder: null };
     }
+    if (!normalized) {
+        delete metadata[FOLDER_METADATA_KEY];
+        return { ok: true, folder: null };
+    }
     metadata[FOLDER_METADATA_KEY] = normalized;
     return { ok: true, folder: normalized };
 };
@@ -34,7 +38,7 @@ const sanitizeFolderMetadata = (metadata)=>{
     if (!metadata || typeof metadata !== 'object') return null;
     if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
     const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
-    if (!isValid) {
+    if (!isValid || !normalized) {
         delete metadata[FOLDER_METADATA_KEY];
         return null;
     }
@@ -59,7 +63,7 @@ const setFolderCollapsed = (folderDom, isCollapsed)=>{
     }
 };
 
-const createFolderDom = ({ folderName, onToggle })=>{
+const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange })=>{
     const root = document.createElement('div'); {
         root.classList.add('stwid--folder');
         root.dataset.folder = folderName;
@@ -68,6 +72,24 @@ const createFolderDom = ({ folderName, onToggle })=>{
             header.addEventListener('click', (evt)=>{
                 evt.preventDefault();
                 onToggle?.();
+            });
+            header.addEventListener('dragover', (evt)=>{
+                if (!onDrop) return;
+                const allowDrop = onDragStateChange?.(true, evt) ?? true;
+                if (!allowDrop) return;
+                evt.preventDefault();
+                root.classList.add('stwid--isTarget');
+            });
+            header.addEventListener('dragleave', (evt)=>{
+                if (!onDrop) return;
+                root.classList.remove('stwid--isTarget');
+                onDragStateChange?.(false, evt);
+            });
+            header.addEventListener('drop', async(evt)=>{
+                if (!onDrop) return;
+                evt.preventDefault();
+                root.classList.remove('stwid--isTarget');
+                await onDrop(evt);
             });
             const icon = document.createElement('i'); {
                 icon.classList.add('stwid--folderIcon');
