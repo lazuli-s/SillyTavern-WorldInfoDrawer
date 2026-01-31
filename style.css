@@ -741,6 +741,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 
 .stwid--orderHelper .stwid--columnOption .stwid--columnOptionIcon {
   color: var(--customThemeColor);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  width: 1em;
 }
 
 .stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
