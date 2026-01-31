@@ -1,4 +1,5 @@
 import { cloneMetadata } from './sortHelpers.js';
+import { sanitizeFolderMetadata, setFolderInMetadata } from './lorebookFolders.js';
 
 let state = {};
 
@@ -92,6 +93,7 @@ const sortEntriesIfNeeded = (name)=>{
 const setCacheMetadata = (name, metadata = {})=>{
     state.cache[name].metadata = cloneMetadata(metadata);
     state.cache[name].sort = state.getSortFromMetadata(state.cache[name].metadata);
+    sanitizeFolderMetadata(state.cache[name].metadata);
 };
 
 const setBookSortPreference = async(name, sort = null, direction = null)=>{
@@ -121,6 +123,15 @@ const clearBookSortPreferences = async()=>{
         if (!hasSortPreference) continue;
         await setBookSortPreference(name, null, null);
     }
+};
+
+const setBookFolder = async(name, folderName)=>{
+    const metadata = state.cache[name].metadata ?? {};
+    const result = setFolderInMetadata(metadata, folderName);
+    if (!result.ok) return false;
+    state.cache[name].metadata = metadata;
+    await state.saveWorldInfo(name, state.buildSavePayload(name), true);
+    return true;
 };
 
 const selectEnd = ()=>{
@@ -771,6 +782,7 @@ const initListPanel = (options)=>{
         selectEnd,
         selectRemove,
         setBookCollapsed,
+        setBookFolder,
         setCacheMetadata,
         setCollapseState,
         setBookSortPreference,
