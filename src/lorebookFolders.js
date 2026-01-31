@@ -406,6 +406,27 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     }
                                     menu.append(exp);
                                 }
+                                const orderHelper = document.createElement('div'); {
+                                    orderHelper.classList.add('stwid--item');
+                                    orderHelper.classList.add('stwid--orderHelper');
+                                    orderHelper.addEventListener('click', ()=>{
+                                        blocker.remove();
+                                        menuTrigger.style.anchorName = '';
+                                        const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                                        menuActions.openOrderHelper?.(null, bookNames);
+                                    });
+                                    const i = document.createElement('i'); {
+                                        i.classList.add('stwid--icon');
+                                        i.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
+                                        orderHelper.append(i);
+                                    }
+                                    const txt = document.createElement('span'); {
+                                        txt.classList.add('stwid--label');
+                                        txt.textContent = 'Order Helper (Folder)';
+                                        orderHelper.append(txt);
+                                    }
+                                    menu.append(orderHelper);
+                                }
                                 const del = document.createElement('div'); {
                                     del.classList.add('stwid--item');
                                     del.classList.add('stwid--delete');

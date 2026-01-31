@@ -1016,6 +1016,7 @@ const initListPanel = (options)=>{
         download: state.download,
         getWorldNames: () => state.getWorldNames ? state.getWorldNames() : state.world_names,
         getSelectedWorldInfo: () => state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info,
+        openOrderHelper: state.openOrderHelper,
         openImportDialog,
         refreshList,
         setBookFolder,
