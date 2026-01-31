@@ -388,15 +388,46 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
         world.dom.root = book;
         book.classList.add('stwid--book');
         book.addEventListener('dragover', (evt)=>{
+            if (dragBookName) {
+                evt.preventDefault();
+                book.classList.add('stwid--isTarget');
+                return;
+            }
             if (selectFrom === null) return;
             evt.preventDefault();
             book.classList.add('stwid--isTarget');
         });
         book.addEventListener('dragleave', (evt)=>{
+            if (dragBookName) {
+                book.classList.remove('stwid--isTarget');
+                return;
+            }
             if (selectFrom === null) return;
             book.classList.remove('stwid--isTarget');
         });
         book.addEventListener('drop', async(evt)=>{
+            if (dragBookName) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                book.classList.remove('stwid--isTarget');
+                const draggedName = dragBookName;
+                dragBookName = null;
+                const targetFolder = getFolderFromMetadata(state.cache[name]?.metadata);
+                const isCopy = evt.ctrlKey;
+                if (!isCopy) {
+                    const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
+                    if (currentFolder === targetFolder) return;
+                    const updated = await setBookFolder(draggedName, targetFolder);
+                    if (updated) await refreshList();
+                    return;
+                }
+                const duplicatedName = await duplicateBook(draggedName);
+                if (!duplicatedName) return;
+                await refreshList();
+                const updated = await setBookFolder(duplicatedName, targetFolder);
+                if (updated) await refreshList();
+                return;
+            }
             if (selectFrom === null) return;
             evt.preventDefault();
             const isCopy = evt.ctrlKey;
@@ -444,6 +475,9 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     dragBookName = null;
                     for (const folderDom of Object.values(folderDoms)) {
                         folderDom.root.classList.remove('stwid--isTarget');
+                    }
+                    for (const bookDom of Object.values(state.cache)) {
+                        bookDom.dom.root.classList.remove('stwid--isTarget');
                     }
                 });
                 title.addEventListener('click', ()=>{
