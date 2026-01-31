@@ -431,6 +431,10 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             if (selectFrom === null) return;
             evt.preventDefault();
             const isCopy = evt.ctrlKey;
+            if (!selectList?.length) {
+                selectEnd();
+                return;
+            }
             if (selectFrom != name || isCopy) {
                 const srcBook = await state.loadWorldInfo(selectFrom);
                 const dstBook = await state.loadWorldInfo(name);
