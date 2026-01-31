@@ -330,7 +330,8 @@ const addDrawer = ()=>{
     });
     document.addEventListener('keydown', async(evt)=>{
         // only run when drawer is open
-        if (document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2).closest('.stwid--body')) {
+        const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        if (centerEl?.closest?.('.stwid--body')) {
             // abort if no active selection
             if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
             console.log('[STWID]', evt.key);
