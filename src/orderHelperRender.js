@@ -137,6 +137,39 @@ const createOrderHelperRenderer = ({
 
     const renderOrderHelper = (book = null)=>{
         let orderTable = null;
+        const addResizeHandle = (cell, columnKey)=>{
+            if (!RESIZABLE_COLUMNS.has(columnKey)) return;
+            cell.classList.add('stwid--resizable');
+            const handle = document.createElement('div'); {
+                handle.classList.add('stwid--columnResizeHandle');
+                handle.addEventListener('mousedown', (event)=>{
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!orderTable) return;
+                    const startX = event.clientX;
+                    const startWidth = cell.getBoundingClientRect().width;
+                    const minWidth = getMinColumnWidth(columnKey);
+                    const updateWidth = (moveEvent)=>{
+                        const delta = moveEvent.clientX - startX;
+                        const nextWidth = Math.max(minWidth, startWidth + delta);
+                        applyColumnWidth(orderTable, columnKey, nextWidth);
+                    };
+                    const stopResize = ()=>{
+                        document.removeEventListener('mousemove', updateWidth);
+                        document.removeEventListener('mouseup', stopResize);
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                        const finalWidth = cell.getBoundingClientRect().width;
+                        setOrderHelperColumnWidth(orderTable, columnKey, finalWidth);
+                    };
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', updateWidth);
+                    document.addEventListener('mouseup', stopResize);
+                });
+                cell.append(handle);
+            }
+        };
         orderHelperState.book = book;
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
@@ -589,39 +622,6 @@ const createOrderHelperRenderer = ({
                                 'automationId',
                                 'trigger',
                             ]);
-                            const addResizeHandle = (header, columnKey)=>{
-                                if (!RESIZABLE_COLUMNS.has(columnKey)) return;
-                                header.classList.add('stwid--resizable');
-                                const handle = document.createElement('div'); {
-                                    handle.classList.add('stwid--columnResizeHandle');
-                                    handle.addEventListener('mousedown', (event)=>{
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                        if (!orderTable) return;
-                                        const startX = event.clientX;
-                                        const startWidth = header.getBoundingClientRect().width;
-                                        const minWidth = getMinColumnWidth(columnKey);
-                                        const updateWidth = (moveEvent)=>{
-                                            const delta = moveEvent.clientX - startX;
-                                            const nextWidth = Math.max(minWidth, startWidth + delta);
-                                            applyColumnWidth(orderTable, columnKey, nextWidth);
-                                        };
-                                        const stopResize = ()=>{
-                                            document.removeEventListener('mousemove', updateWidth);
-                                            document.removeEventListener('mouseup', stopResize);
-                                            document.body.style.cursor = '';
-                                            document.body.style.userSelect = '';
-                                            const finalWidth = header.getBoundingClientRect().width;
-                                            setOrderHelperColumnWidth(orderTable, columnKey, finalWidth);
-                                        };
-                                        document.body.style.cursor = 'col-resize';
-                                        document.body.style.userSelect = 'none';
-                                        document.addEventListener('mousemove', updateWidth);
-                                        document.addEventListener('mouseup', stopResize);
-                                    });
-                                    header.append(handle);
-                                }
-                            };
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
                                     if (col.key === 'strategy') {
@@ -1391,6 +1391,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const entry = document.createElement('td'); {
                                     entry.setAttribute('data-col', 'entry');
+                                    addResizeHandle(entry, 'entry');
                                     const wrap = document.createElement('div'); {
                                         wrap.classList.add('stwid--colwrap');
                                         wrap.classList.add('stwid--entry');
@@ -1498,6 +1499,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const outlet = document.createElement('td'); {
                                     outlet.setAttribute('data-col', 'outlet');
+                                    addResizeHandle(outlet, 'outlet');
                                     const wrap = document.createElement('div'); {
                                         wrap.classList.add('stwid--colwrap');
                                         wrap.classList.add('stwid--outlet');
@@ -1655,6 +1657,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const automationId = document.createElement('td'); {
                                     automationId.setAttribute('data-col', 'automationId');
+                                    addResizeHandle(automationId, 'automationId');
                                     automationId.classList.add('stwid--orderTable--NumberColumns');
                                     const inp = document.createElement('input'); {
                                         inp.classList.add('stwid--input');
@@ -1751,6 +1754,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const characterFilter = document.createElement('td'); {
                                     characterFilter.setAttribute('data-col', 'characterFilter');
+                                    addResizeHandle(characterFilter, 'characterFilter');
                                     const wrap = document.createElement('div'); {
                                         wrap.classList.add('stwid--colwrap', 'stwid--characterFilterOptions');
                                         const lines = formatCharacterFilter(e.data);

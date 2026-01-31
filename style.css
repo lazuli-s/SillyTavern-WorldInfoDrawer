@@ -913,22 +913,22 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   text-align: center;
 }
 
-.stwid--orderTable thead th.stwid--resizable {
+.stwid--orderTable th.stwid--resizable,
+.stwid--orderTable td.stwid--resizable {
   position: relative;
 }
 
-.stwid--orderTable thead th .stwid--columnResizeHandle {
+.stwid--orderTable .stwid--columnResizeHandle {
   position: absolute;
   top: 0;
   right: 0;
   width: 0.6em;
   height: 100%;
   cursor: col-resize;
-  opacity: 0;
-  transition: opacity 150ms ease-in-out;
+  opacity: 1;
 }
 
-.stwid--orderTable thead th .stwid--columnResizeHandle::after {
+.stwid--orderTable .stwid--columnResizeHandle::after {
   content: '';
   position: absolute;
   top: 20%;
@@ -937,11 +937,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   width: 2px;
   transform: translateX(-50%);
   background-color: var(--SmartThemeBorderColor);
-  opacity: 0.7;
-}
-
-.stwid--orderTable thead th.stwid--resizable:hover .stwid--columnResizeHandle {
-  opacity: 1;
+  opacity: 0.8;
 }
 
 .stwid--orderTable thead th[data-col='entry'] {
