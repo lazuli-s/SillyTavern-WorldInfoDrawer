@@ -420,6 +420,16 @@ const addDrawer = ()=>{
                         });
                         controlsPrimary.append(imp);
                     }
+                    const impFolder = document.createElement('div'); {
+                        impFolder.classList.add('menu_button');
+                        impFolder.classList.add('fa-solid', 'fa-fw', 'fa-folder-open');
+                        impFolder.title = 'Import Folder';
+                        impFolder.setAttribute('aria-label', 'Import Folder');
+                        impFolder.addEventListener('click', ()=>{
+                            listPanelApi?.openFolderImportDialog?.();
+                        });
+                        controlsPrimary.append(impFolder);
+                    }
                     const refresh = document.createElement('div'); {
                         refresh.classList.add('menu_button');
                         refresh.classList.add('fa-solid', 'fa-fw', 'fa-arrows-rotate');
