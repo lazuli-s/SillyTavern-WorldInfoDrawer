@@ -412,7 +412,9 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     orderHelper.addEventListener('click', ()=>{
                                         blocker.remove();
                                         menuTrigger.style.anchorName = '';
-                                        const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                                        const activeNames = menuActions.getSelectedWorldInfo?.() ?? [];
+                                        const bookNames = getFolderBookNames(menuActions.cache, folderName)
+                                            .filter((name)=>activeNames.includes(name));
                                         menuActions.openOrderHelper?.(null, bookNames);
                                     });
                                     const i = document.createElement('i'); {
