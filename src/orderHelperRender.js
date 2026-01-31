@@ -2,6 +2,7 @@ const createOrderHelperRenderer = ({
     dom,
     cache,
     orderHelperState,
+    ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY,
     ORDER_HELPER_COLUMNS_STORAGE_KEY,
     ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
     SORT,
@@ -62,6 +63,48 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
+    const RESIZABLE_COLUMNS = new Set(['entry', 'outlet', 'automationId', 'characterFilter']);
+    const MIN_COLUMN_WIDTHS = {
+        entry: 240,
+        outlet: 140,
+        automationId: 160,
+        characterFilter: 200,
+    };
+    const getMinColumnWidth = (key)=>MIN_COLUMN_WIDTHS[key] ?? 120;
+
+    const applyColumnWidth = (table, key, width)=>{
+        if (!table) return;
+        const cells = table.querySelectorAll(`[data-col='${key}']`);
+        for (const cell of cells) {
+            cell.style.width = Number.isFinite(width) ? `${width}px` : '';
+        }
+    };
+
+    const applyOrderHelperColumnWidths = (table)=>{
+        if (!table) return;
+        for (const key of RESIZABLE_COLUMNS) {
+            const width = orderHelperState.columnWidths?.[key];
+            applyColumnWidth(table, key, Number.isFinite(width) ? width : null);
+        }
+    };
+
+    const setOrderHelperColumnWidth = (table, key, width)=>{
+        orderHelperState.columnWidths[key] = width;
+        localStorage.setItem(
+            ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY,
+            JSON.stringify(orderHelperState.columnWidths),
+        );
+        applyColumnWidth(table, key, width);
+    };
+
+    const resetOrderHelperColumnWidths = (table)=>{
+        orderHelperState.columnWidths = {};
+        localStorage.removeItem(ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY);
+        for (const key of RESIZABLE_COLUMNS) {
+            applyColumnWidth(table, key, null);
+        }
+    };
+
     const formatCharacterFilter = (entry)=>{
         const filter = entry?.characterFilter;
         if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
@@ -93,6 +136,7 @@ const createOrderHelperRenderer = ({
     };
 
     const renderOrderHelper = (book = null)=>{
+        let orderTable = null;
         orderHelperState.book = book;
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
@@ -238,6 +282,14 @@ const createOrderHelperRenderer = ({
                         columnVisibilityWrap.append(menuWrap);
                     }
                     actions.append(columnVisibilityWrap);
+                }
+                const resetColumnWidths = document.createElement('div'); {
+                    resetColumnWidths.classList.add('menu_button', 'fa-solid', 'fa-fw', 'fa-rotate-left');
+                    resetColumnWidths.title = 'Reset column sizes';
+                    resetColumnWidths.addEventListener('click', ()=>{
+                        resetOrderHelperColumnWidths(orderTable ?? body.querySelector('.stwid--orderTable'));
+                    });
+                    actions.append(resetColumnWidths);
                 }
                 const addDivider = ()=>{
                     const divider = document.createElement('div');
@@ -504,6 +556,7 @@ const createOrderHelperRenderer = ({
             const wrap = document.createElement('div'); {
                 wrap.classList.add('stwid--orderTableWrap');
                 const tbl = document.createElement('table'); {
+                    orderTable = tbl;
                     tbl.classList.add('stwid--orderTable');
                     const thead = document.createElement('thead'); {
                         const tr = document.createElement('tr'); {
@@ -536,6 +589,39 @@ const createOrderHelperRenderer = ({
                                 'automationId',
                                 'trigger',
                             ]);
+                            const addResizeHandle = (header, columnKey)=>{
+                                if (!RESIZABLE_COLUMNS.has(columnKey)) return;
+                                header.classList.add('stwid--resizable');
+                                const handle = document.createElement('div'); {
+                                    handle.classList.add('stwid--columnResizeHandle');
+                                    handle.addEventListener('mousedown', (event)=>{
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        if (!orderTable) return;
+                                        const startX = event.clientX;
+                                        const startWidth = header.getBoundingClientRect().width;
+                                        const minWidth = getMinColumnWidth(columnKey);
+                                        const updateWidth = (moveEvent)=>{
+                                            const delta = moveEvent.clientX - startX;
+                                            const nextWidth = Math.max(minWidth, startWidth + delta);
+                                            applyColumnWidth(orderTable, columnKey, nextWidth);
+                                        };
+                                        const stopResize = ()=>{
+                                            document.removeEventListener('mousemove', updateWidth);
+                                            document.removeEventListener('mouseup', stopResize);
+                                            document.body.style.cursor = '';
+                                            document.body.style.userSelect = '';
+                                            const finalWidth = header.getBoundingClientRect().width;
+                                            setOrderHelperColumnWidth(orderTable, columnKey, finalWidth);
+                                        };
+                                        document.body.style.cursor = 'col-resize';
+                                        document.body.style.userSelect = 'none';
+                                        document.addEventListener('mousemove', updateWidth);
+                                        document.addEventListener('mouseup', stopResize);
+                                    });
+                                    header.append(handle);
+                                }
+                            };
                             for (const col of columns) {
                                 const th = document.createElement('th'); {
                                     if (col.key === 'strategy') {
@@ -1127,6 +1213,7 @@ const createOrderHelperRenderer = ({
                                         if (numberColumnKeys.has(col.key)) {
                                             th.classList.add('stwid--orderTable--NumberColumns');
                                         }
+                                        addResizeHandle(th, col.key);
                                     }
                                     tr.append(th);
                                 }
@@ -1700,6 +1787,7 @@ const createOrderHelperRenderer = ({
                         applyOrderHelperGroupFilters();
                         updateOrderHelperSelectAllButton();
                         tbl.append(tbody);
+                        applyOrderHelperColumnWidths(orderTable);
                     }
                     wrap.append(tbl);
                 }

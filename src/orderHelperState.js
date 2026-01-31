@@ -1,6 +1,7 @@
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
 const ORDER_HELPER_COLUMNS_STORAGE_KEY = 'stwid--order-helper-columns';
+const ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY = 'stwid--order-helper-column-widths';
 
 const ORDER_HELPER_DEFAULT_COLUMNS = {
     strategy: true,
@@ -57,6 +58,7 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
         book: null,
         hideKeys: false,
         columns: { ...ORDER_HELPER_DEFAULT_COLUMNS },
+        columnWidths: {},
         filters: {
             strategy: getStrategyValues(),
             position: getPositionValues(),
@@ -94,11 +96,22 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
             }
         }
     } catch { /* empty */ }
+    try {
+        const storedWidths = JSON.parse(localStorage.getItem(ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY));
+        if (storedWidths && typeof storedWidths === 'object') {
+            for (const [key, value] of Object.entries(storedWidths)) {
+                if (Number.isFinite(value) && value > 0) {
+                    state.columnWidths[key] = value;
+                }
+            }
+        }
+    } catch { /* empty */ }
     return state;
 };
 
 export {
     ORDER_HELPER_COLUMNS_STORAGE_KEY,
+    ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY,
     ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
     ORDER_HELPER_SORT_STORAGE_KEY,
     createOrderHelperState,

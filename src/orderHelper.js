@@ -1,4 +1,5 @@
 import {
+    ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY,
     ORDER_HELPER_COLUMNS_STORAGE_KEY,
     ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
     ORDER_HELPER_SORT_STORAGE_KEY,
@@ -299,6 +300,7 @@ export const initOrderHelper = ({
         dom,
         cache,
         orderHelperState,
+        ORDER_HELPER_COLUMN_WIDTHS_STORAGE_KEY,
         ORDER_HELPER_COLUMNS_STORAGE_KEY,
         ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
         SORT,

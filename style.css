@@ -913,6 +913,37 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   text-align: center;
 }
 
+.stwid--orderTable thead th.stwid--resizable {
+  position: relative;
+}
+
+.stwid--orderTable thead th .stwid--columnResizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0.6em;
+  height: 100%;
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 150ms ease-in-out;
+}
+
+.stwid--orderTable thead th .stwid--columnResizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background-color: var(--SmartThemeBorderColor);
+  opacity: 0.7;
+}
+
+.stwid--orderTable thead th.stwid--resizable:hover .stwid--columnResizeHandle {
+  opacity: 1;
+}
+
 .stwid--orderTable thead th[data-col='entry'] {
   text-align: left;
 }
