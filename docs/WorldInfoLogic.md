@@ -203,7 +203,7 @@ This is the core of lorebook logic. Think of it like a checklist for each entry.
 SillyTavern creates a buffer containing:
 
 - Recent chat text
-- Any injected prompts (like extension prompts)
+- Any injected prompts (extra text added before scanning)
 - Recursion text (if recursion is used)
 
 This buffer is what gets searched for keywords.
@@ -219,7 +219,7 @@ For each entry, ST checks things like:
 - Is it filtered by character or tag?
 - Is it blocked by cooldown or delay?
 - Is it forced to activate (decorators)?
-- Is it force‑activated by another system or extension?
+- Is it force‑activated by another system?
 - Does it match primary keywords?
 - If it has secondary keywords, does it pass the selected logic?
 
