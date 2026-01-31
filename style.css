@@ -114,6 +114,9 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books {
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0.35em 0;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader {
@@ -123,6 +126,22 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   padding: 0.35em 0.5em;
   cursor: pointer;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader:hover,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader:focus-within {
+  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 8%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 35%, transparent);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder.stwid--isTarget .stwid--folderHeader {
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 15%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 55%, transparent);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon {
+  color: var(--SmartThemeQuoteColor);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderLabel {
@@ -133,7 +152,11 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderCount {
-  opacity: 0.75;
+  opacity: 0.85;
+  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 12%, transparent);
+  border-radius: 999px;
+  padding: 0.1em 0.45em;
+  font-size: 0.85em;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle {
@@ -144,6 +167,9 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle {
   cursor: pointer;
   opacity: 0.75;
+  accent-color: var(--SmartThemeQuoteColor);
+  min-width: 1.1em;
+  min-height: 1.1em;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle:hover {
@@ -156,6 +182,8 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   cursor: pointer;
   opacity: 0.75;
   transition: 200ms;
+  border-radius: 6px;
+  padding: 0.15em 0.25em;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction:hover {
@@ -166,9 +194,20 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   cursor: pointer;
   opacity: 0.75;
   transition: 200ms;
+  border-radius: 6px;
+  padding: 0.15em 0.25em;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu:hover {
+  opacity: 1;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle:focus-visible,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle:focus-visible,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction:focus-visible,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu:focus-visible {
+  outline: 2px solid var(--SmartThemeQuoteColor);
+  outline-offset: 2px;
   opacity: 1;
 }
 
