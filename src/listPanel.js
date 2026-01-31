@@ -891,6 +891,29 @@ const setupBooks = (list)=>{
     const books = document.createElement('div'); {
         state.dom.books = books;
         books.classList.add('stwid--books');
+        books.addEventListener('dragover', (evt)=>{
+            if (!dragBookName) return;
+            if (evt.target.closest('.stwid--folderHeader')) return;
+            evt.preventDefault();
+        });
+        books.addEventListener('drop', async(evt)=>{
+            if (!dragBookName) return;
+            if (evt.target.closest('.stwid--folderHeader')) return;
+            evt.preventDefault();
+            const draggedName = dragBookName;
+            dragBookName = null;
+            const isCopy = evt.ctrlKey;
+            if (!isCopy) {
+                const updated = await setBookFolder(draggedName, null);
+                if (updated) await refreshList();
+                return;
+            }
+            const duplicatedName = await duplicateBook(draggedName);
+            if (!duplicatedName) return;
+            await refreshList();
+            const updated = await setBookFolder(duplicatedName, null);
+            if (updated) await refreshList();
+        });
         list.append(books);
     }
 };

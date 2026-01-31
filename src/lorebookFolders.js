@@ -14,7 +14,7 @@ const getFolderFromMetadata = (metadata)=>{
     if (!metadata || typeof metadata !== 'object') return null;
     if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
     const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
-    if (!isValid) return null;
+    if (!isValid || !normalized) return null;
     return normalized;
 };
 
@@ -26,6 +26,10 @@ const setFolderInMetadata = (metadata, folderName)=>{
     if (!isValid) {
         return { ok: false, folder: null };
     }
+    if (!normalized) {
+        delete metadata[FOLDER_METADATA_KEY];
+        return { ok: true, folder: null };
+    }
     metadata[FOLDER_METADATA_KEY] = normalized;
     return { ok: true, folder: normalized };
 };
@@ -34,7 +38,7 @@ const sanitizeFolderMetadata = (metadata)=>{
     if (!metadata || typeof metadata !== 'object') return null;
     if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
     const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
-    if (!isValid) {
+    if (!isValid || !normalized) {
         delete metadata[FOLDER_METADATA_KEY];
         return null;
     }
