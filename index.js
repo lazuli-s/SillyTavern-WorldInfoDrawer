@@ -124,6 +124,7 @@ const updateSettingsChange = ()=>{
         }
     }
     listPanelApi?.applyActiveFilter?.();
+    listPanelApi?.updateFolderActiveToggles?.();
 };
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeStarted = createDeferred();
