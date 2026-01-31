@@ -446,7 +446,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                         const bookNames = getFolderBookNames(menuActions.cache, folderName);
                                         if (shouldDeleteBooks) {
                                             for (const bookName of bookNames) {
-                                                await menuActions.deleteBook?.(bookName);
+                                                await menuActions.deleteBook?.(bookName, { skipConfirm: true });
                                             }
                                         } else {
                                             for (const bookName of bookNames) {
