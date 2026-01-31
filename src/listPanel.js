@@ -542,14 +542,43 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                         if (!Popup) return;
                                         const currentFolder = getFolderFromMetadata(state.cache[name]?.metadata);
                                         const folderList = getFolderRegistry();
+                                        const datalistId = 'stwid--folderList';
+                                        const attachDatalist = ()=>{
+                                            const popup = document.querySelector('#popup') ?? document.querySelector('.popup');
+                                            if (!popup) return false;
+                                            const input = popup.querySelector('input[type="text"], input[type="search"], input:not([type])');
+                                            if (!input) return false;
+                                            let datalist = document.getElementById(datalistId);
+                                            if (!datalist) {
+                                                datalist = document.createElement('datalist');
+                                                datalist.id = datalistId;
+                                                for (const folderName of folderList) {
+                                                    const option = document.createElement('option');
+                                                    option.value = folderName;
+                                                    datalist.append(option);
+                                                }
+                                                document.body.append(datalist);
+                                            }
+                                            input.setAttribute('list', datalistId);
+                                            input.setAttribute('placeholder', 'Select a folder or type a new one');
+                                            return true;
+                                        };
+                                        const observer = new MutationObserver(()=>{
+                                            if (attachDatalist()) {
+                                                observer.disconnect();
+                                            }
+                                        });
+                                        observer.observe(document.body, { childList: true, subtree: true });
                                         const folderMessage = folderList.length
-                                            ? `Existing folders: ${folderList.join(', ')}`
-                                            : 'No folders yet.';
+                                            ? 'Pick an existing folder from the dropdown or type a new one.'
+                                            : 'No folders yet (type a new name).';
                                         const nextFolder = await Popup.show.input(
                                             'Move book to folder',
                                             `Enter a folder name (leave blank to remove).\n${folderMessage}`,
                                             currentFolder ?? ''
                                         );
+                                        observer.disconnect();
+                                        document.getElementById(datalistId)?.remove();
                                         if (nextFolder === null || nextFolder === undefined) return;
                                         const updated = await setBookFolder(name, nextFolder);
                                         if (!updated) {
