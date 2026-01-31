@@ -92,7 +92,8 @@ export const initEditorPanel = ({
     };
 
     const appendFocusButton = (editDom) => {
-        const focusContainer = editDom.querySelector('label[for="content "] > small > span > span');
+        const focusContainer = editDom.querySelector('label[for="content"] > small > span > span')
+            ?? editDom.querySelector('label[for="content "] > small > span > span');
         if (!focusContainer) return;
         const btn = document.createElement('div'); {
             btn.classList.add('stwid--focusToggle');
