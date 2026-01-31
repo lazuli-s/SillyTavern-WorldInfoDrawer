@@ -288,6 +288,9 @@ eventSource.on(event_types.WORLDINFO_SETTINGS_UPDATED, ()=>updateSettingsChange(
 
 
 export const jumpToEntry = async(name, uid)=>{
+    const entryDom = cache[name]?.dom?.entry?.[uid]?.root;
+    if (!entryDom) return false;
+
     if (dom.activationToggle.classList.contains('stwid--active')) {
         dom.activationToggle.click();
     }
@@ -295,10 +298,11 @@ export const jumpToEntry = async(name, uid)=>{
         dom.order.toggle.click();
     }
     listPanelApi.setBookCollapsed(name, false);
-    cache[name].dom.entry[uid].root.scrollIntoView({ block:'center', inline:'center' });
+    entryDom.scrollIntoView({ block:'center', inline:'center' });
     if (currentEditor?.name != name || currentEditor?.uid != uid) {
-        cache[name].dom.entry[uid].root.click();
+        entryDom.click();
     }
+    return true;
 };
 
 
