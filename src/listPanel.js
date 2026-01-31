@@ -592,7 +592,8 @@ const renderBook = async(name, before = null, bookData = null)=>{
 
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
-    const books = await Promise.all(state.safeToSorted(state.world_names, (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).map(async(name)=>({ name, data:await state.loadWorldInfo(name) })));
+    const worldNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const books = await Promise.all(state.safeToSorted(worldNames ?? [], (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).map(async(name)=>({ name, data:await state.loadWorldInfo(name) })));
     for (const book of books) {
         await renderBook(book.name, null, book.data);
     }
