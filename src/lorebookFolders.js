@@ -59,7 +59,7 @@ const setFolderCollapsed = (folderDom, isCollapsed)=>{
     }
 };
 
-const createFolderDom = ({ folderName, onToggle })=>{
+const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange })=>{
     const root = document.createElement('div'); {
         root.classList.add('stwid--folder');
         root.dataset.folder = folderName;
@@ -68,6 +68,24 @@ const createFolderDom = ({ folderName, onToggle })=>{
             header.addEventListener('click', (evt)=>{
                 evt.preventDefault();
                 onToggle?.();
+            });
+            header.addEventListener('dragover', (evt)=>{
+                if (!onDrop) return;
+                const allowDrop = onDragStateChange?.(true, evt) ?? true;
+                if (!allowDrop) return;
+                evt.preventDefault();
+                root.classList.add('stwid--isTarget');
+            });
+            header.addEventListener('dragleave', (evt)=>{
+                if (!onDrop) return;
+                root.classList.remove('stwid--isTarget');
+                onDragStateChange?.(false, evt);
+            });
+            header.addEventListener('drop', async(evt)=>{
+                if (!onDrop) return;
+                evt.preventDefault();
+                root.classList.remove('stwid--isTarget');
+                await onDrop(evt);
             });
             const icon = document.createElement('i'); {
                 icon.classList.add('stwid--folderIcon');

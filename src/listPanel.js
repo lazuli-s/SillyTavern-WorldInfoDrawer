@@ -28,6 +28,8 @@ let selectMode = null;
 let selectList = null;
 /** toastr reference showing selection help @type {JQuery<HTMLElement>} */
 let selectToast = null;
+/** Name of the book being dragged @type {string|null} */
+let dragBookName = null;
 
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
@@ -142,6 +144,25 @@ const setBookFolder = async(name, folderName)=>{
     return true;
 };
 
+const duplicateBook = async(name)=>{
+    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+    if (!select) return null;
+    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
+    if (!option) return null;
+    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    select.value = option.value;
+    select.dispatchEvent(new Event('change', { bubbles:true }));
+    await state.delay(500);
+    document.querySelector('#world_duplicate')?.click();
+    for (let i = 0; i < 20; i++) {
+        await state.delay(200);
+        const currentNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+        const newName = currentNames.find((entry)=>!initialNames.includes(entry));
+        if (newName) return newName;
+    }
+    return null;
+};
+
 const selectEnd = ()=>{
     selectFrom = null;
     selectMode = null;
@@ -219,6 +240,28 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                         folderCollapseStates[folderName] = isCollapsed;
                         setFolderCollapsed(folderDoms[folderName], isCollapsed);
                     },
+                    onDragStateChange: (isOver)=>{
+                        if (!dragBookName) return false;
+                        return isOver;
+                    },
+                    onDrop: async(evt)=>{
+                        if (!dragBookName) return;
+                        const draggedName = dragBookName;
+                        dragBookName = null;
+                        const isCopy = evt.ctrlKey;
+                        const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
+                        if (!isCopy) {
+                            if (currentFolder === folderName) return;
+                            const updated = await setBookFolder(draggedName, folderName);
+                            if (updated) await refreshList();
+                            return;
+                        }
+                        const duplicatedName = await duplicateBook(draggedName);
+                        if (!duplicatedName) return;
+                        await refreshList();
+                        const updated = await setBookFolder(duplicatedName, folderName);
+                        if (updated) await refreshList();
+                    },
                 });
                 let insertBefore = null;
                 const normalizedFolder = folderName.toLowerCase();
@@ -292,6 +335,20 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 world.dom.name = title;
                 title.classList.add('stwid--title');
                 title.textContent = name;
+                title.setAttribute('draggable', 'true');
+                title.addEventListener('dragstart', (evt)=>{
+                    dragBookName = name;
+                    if (evt.dataTransfer) {
+                        evt.dataTransfer.effectAllowed = 'copyMove';
+                        evt.dataTransfer.setData('text/plain', name);
+                    }
+                });
+                title.addEventListener('dragend', ()=>{
+                    dragBookName = null;
+                    for (const folderDom of Object.values(folderDoms)) {
+                        folderDom.root.classList.remove('stwid--isTarget');
+                    }
+                });
                 title.addEventListener('click', ()=>{
                     const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
                     setBookCollapsed(name, isCollapsed);
@@ -565,12 +622,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     dup.classList.add('stwid--item');
                                     dup.classList.add('stwid--duplicate');
                                     dup.addEventListener('click', async(evt)=>{
-                                        //TODO cheeky monkey
-                                        const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                        sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                        sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                        await state.delay(500);
-                                        document.querySelector('#world_duplicate').click();
+                                        await duplicateBook(name);
                                     });
                                     const i = document.createElement('i'); {
                                         i.classList.add('stwid--icon');
@@ -688,6 +740,28 @@ const loadList = async()=>{
                 const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
                 folderCollapseStates[folderName] = isCollapsed;
                 setFolderCollapsed(folderDoms[folderName], isCollapsed);
+            },
+            onDragStateChange: (isOver)=>{
+                if (!dragBookName) return false;
+                return isOver;
+            },
+            onDrop: async(evt)=>{
+                if (!dragBookName) return;
+                const draggedName = dragBookName;
+                dragBookName = null;
+                const isCopy = evt.ctrlKey;
+                const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
+                if (!isCopy) {
+                    if (currentFolder === folderName) return;
+                    const updated = await setBookFolder(draggedName, folderName);
+                    if (updated) await refreshList();
+                    return;
+                }
+                const duplicatedName = await duplicateBook(draggedName);
+                if (!duplicatedName) return;
+                await refreshList();
+                const updated = await setBookFolder(duplicatedName, folderName);
+                if (updated) await refreshList();
             },
         });
         state.dom.books.append(folderDoms[folderName].root);
