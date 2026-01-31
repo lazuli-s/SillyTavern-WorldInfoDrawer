@@ -119,13 +119,19 @@ export const initEditorPanel = ({
         entryDom.classList.add('stwid--active');
         clearEditor({ resetCurrent: false });
         appendUnfocusButton();
-        dom.editor.append(
-            document.createRange()
-                .createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders'))
-                .querySelector('#WIEntryHeaderTitlesPC')
-        );
+
+        const header = document.createRange()
+            .createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders'))
+            .querySelector('#WIEntryHeaderTitlesPC');
+        if (header) {
+            dom.editor.append(header);
+        }
+
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
-        $(editDom.querySelector('.inline-drawer')).trigger('inline-drawer-toggle');
+        const drawerToggle = editDom?.querySelector?.('.inline-drawer');
+        if (drawerToggle) {
+            $(drawerToggle).trigger('inline-drawer-toggle');
+        }
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
         dom.editor.append(editDom);

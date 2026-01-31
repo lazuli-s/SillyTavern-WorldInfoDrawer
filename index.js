@@ -704,19 +704,28 @@ const addDrawer = ()=>{
             drawerContent.append(body);
         }
     }
-    drawerContent.querySelector('h3 > span').addEventListener('click', ()=>{
-        const is = document.body.classList.toggle('stwid--');
-        if (!is) {
-            if (dom.activationToggle.classList.contains('stwid--active')) {
-                dom.activationToggle.click();
+    const closeButton = drawerContent.querySelector('h3 > span');
+    if (closeButton) {
+        closeButton.addEventListener('click', ()=>{
+            const is = document.body.classList.toggle('stwid--');
+            if (!is) {
+                if (dom.activationToggle?.classList?.contains('stwid--active')) {
+                    dom.activationToggle.click();
+                }
             }
-        }
-    });
-    const moSel = new MutationObserver(()=>updateWIChangeDebounced());
-    moSel.observe(document.querySelector('#world_editor_select'), { childList: true });
-    const moDrawer = new MutationObserver(evt=>{
-        if (drawerContent.getAttribute('style').includes('display: none;')) return;
-        if (currentEditor) {
+        });
+    }
+
+    const moSelTarget = document.querySelector('#world_editor_select');
+    if (moSelTarget) {
+        const moSel = new MutationObserver(()=>updateWIChangeDebounced());
+        moSel.observe(moSelTarget, { childList: true });
+    }
+
+    const moDrawer = new MutationObserver(()=>{
+        const style = drawerContent.getAttribute('style') ?? '';
+        if (style.includes('display: none;')) return;
+        if (currentEditor && cache[currentEditor.name]?.dom?.entry?.[currentEditor.uid]?.root) {
             cache[currentEditor.name].dom.entry[currentEditor.uid].root.click();
         }
     });
