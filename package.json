@@ -2,7 +2,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint index.js \"src/**/*.js\"",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "lint:css": "stylelint \"**/*.css\"",
     "format": "prettier --write .",

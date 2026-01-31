@@ -42,7 +42,9 @@ export const renderEntry = async(e, name, before = null)=>{
                     // range-select from last clicked entry
                     const start = [...world.dom.entryList.children].indexOf(context.selectLast);
                     const end = [...world.dom.entryList.children].indexOf(entry);
-                    for (let i = Math.min(start, end); i <= end; i++) {
+                    const from = Math.min(start, end);
+                    const to = Math.max(start, end);
+                    for (let i = from; i <= to; i++) {
                         const el = world.dom.entryList.children[i];
                         const data = world.entries[el.dataset.uid];
                         if (!context.selectList.includes(data)) {
@@ -120,7 +122,9 @@ export const renderEntry = async(e, name, before = null)=>{
             status.addEventListener('click', (evt)=>{
                 if (context.currentEditor?.name != name || context.currentEditor?.uid != e.uid) evt.stopPropagation();
             });
-            const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
+            const isEnabledTemplate = document.querySelector('#entry_edit_template [name="entryKillSwitch"]');
+            const isEnabled = /**@type {HTMLSelectElement}*/(isEnabledTemplate?.cloneNode(true)); {
+                if (!isEnabled) return entry;
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
                 if (e.disable) {
@@ -135,7 +139,9 @@ export const renderEntry = async(e, name, before = null)=>{
                 });
                 status.append(isEnabled);
             }
-            const strat = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryStateSelector"]').cloneNode(true)); {
+            const stratTemplate = document.querySelector('#entry_edit_template [name="entryStateSelector"]');
+            const strat = /**@type {HTMLSelectElement}*/(stratTemplate?.cloneNode(true)); {
+                if (!strat) return entry;
                 world.dom.entry[e.uid].strategy = strat;
                 strat.classList.add('stwid--strategy');
                 strat.value = entryState(e);

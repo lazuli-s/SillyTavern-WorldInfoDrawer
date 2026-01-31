@@ -121,7 +121,7 @@ const updateSettingsChange = ()=>{
     console.log('[STWID]', '[UPDATE-SETTINGS]');
     for (const [name, world] of Object.entries(cache)) {
         const active = selected_world_info.includes(name);
-        if (world.dom.active.checked != active) {
+        if (world?.dom?.active && world.dom.active.checked != active) {
             world.dom.active.checked = active;
         }
     }
@@ -334,7 +334,8 @@ const addDrawer = ()=>{
         hljs,
         $,
     });
-    document.addEventListener('keydown', async(evt)=>{
+
+    const onDrawerKeydown = async(evt)=>{
         // only run when drawer is open
         const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
         if (centerEl?.closest?.('.stwid--body')) {
@@ -360,7 +361,14 @@ const addDrawer = ()=>{
                 }
             }
         }
-    });
+    };
+    document.addEventListener('keydown', onDrawerKeydown);
+
+    // Best-effort cleanup: if ST tears down/reloads extensions, remove global listeners.
+    globalThis.addEventListener?.('beforeunload', ()=>{
+        document.removeEventListener('keydown', onDrawerKeydown);
+    }, { once:true });
+
     document.body.classList.add('stwid--');
     const drawerContent = document.querySelector('#WorldInfo'); {
         const SPLITTER_STORAGE_KEY = 'stwid--list-width';

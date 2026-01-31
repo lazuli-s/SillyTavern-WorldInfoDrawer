@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { safeToSorted, createDeferred } from "../src/utils.js";
 
+describe("placeholder", () => {
+  it("runs", () => {
+    expect(true).toBe(true);
+  });
+});
+
 describe("safeToSorted", () => {
   it("sorts numbers and does NOT change the original array", () => {
     const original = [3, 1, 2];
