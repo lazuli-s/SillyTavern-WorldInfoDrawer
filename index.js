@@ -394,27 +394,36 @@ const addDrawer = ()=>{
     const onDrawerKeydown = async(evt)=>{
         // only run when drawer is open
         const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-        if (centerEl?.closest?.('.stwid--body')) {
-            // abort if no active selection
-            if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
-            console.log('[STWID]', evt.key);
-            switch (evt.key) {
-                case 'Delete': {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    const srcBook = await loadWorldInfo(selectionState.selectFrom);
-                    for (const srcEntry of selectionState.selectList) {
-                        const uid = srcEntry.uid;
-                        const deleted = await deleteWorldInfoEntry(srcBook, uid, { silent:true });
-                        if (deleted) {
-                            deleteWIOriginalDataValue(srcBook, uid);
-                        }
+        if (!centerEl?.closest?.('.stwid--body')) return;
+
+        // Prevent global Delete from firing while the user is typing/editing.
+        // This avoids accidental deletion when focus is in any input/textarea/select/contenteditable.
+        const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+        const isTextEditing = Boolean(
+            target?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'),
+        );
+        if (isTextEditing) return;
+
+        // abort if no active selection
+        if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
+
+        console.log('[STWID]', evt.key);
+        switch (evt.key) {
+            case 'Delete': {
+                evt.preventDefault();
+                evt.stopPropagation();
+                const srcBook = await loadWorldInfo(selectionState.selectFrom);
+                for (const srcEntry of selectionState.selectList) {
+                    const uid = srcEntry.uid;
+                    const deleted = await deleteWorldInfoEntry(srcBook, uid, { silent:true });
+                    if (deleted) {
+                        deleteWIOriginalDataValue(srcBook, uid);
                     }
-                    await saveWorldInfo(selectionState.selectFrom, srcBook, true);
-                    updateWIChange(selectionState.selectFrom, srcBook);
-                    listPanelApi.selectEnd();
-                    break;
                 }
+                await saveWorldInfo(selectionState.selectFrom, srcBook, true);
+                updateWIChange(selectionState.selectFrom, srcBook);
+                listPanelApi.selectEnd();
+                break;
             }
         }
     };
