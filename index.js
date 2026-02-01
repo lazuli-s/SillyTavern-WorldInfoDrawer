@@ -755,14 +755,4 @@ const addDrawer = ()=>{
 addDrawer();
 refreshList();
 
-
-let isDiscord;
-const checkDiscord = async()=>{
-    let newIsDiscord = window.getComputedStyle(document.body).getPropertyValue('--nav-bar-width') !== '';
-    if (isDiscord != newIsDiscord) {
-        isDiscord = newIsDiscord;
-        document.body.classList[isDiscord ? 'remove' : 'add']('stwid--nonDiscord');
-    }
-    setTimeout(()=>checkDiscord(), 1000);
-};
-checkDiscord();
+// NOTE: Discord/non-Discord layout detection removed.
