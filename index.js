@@ -413,8 +413,7 @@ const addDrawer = ()=>{
                 evt.preventDefault();
                 evt.stopPropagation();
                 const srcBook = await loadWorldInfo(selectionState.selectFrom);
-                for (const srcEntry of selectionState.selectList) {
-                    const uid = srcEntry.uid;
+                for (const uid of selectionState.selectList) {
                     const deleted = await deleteWorldInfoEntry(srcBook, uid, { silent:true });
                     if (deleted) {
                         deleteWIOriginalDataValue(srcBook, uid);

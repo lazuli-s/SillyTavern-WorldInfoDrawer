@@ -29,7 +29,7 @@ let selectLast = null;
 let selectFrom = null;
 /**@type {'ctrl'|'shift'} */
 let selectMode = null;
-/** List of selected entries (WI data) @type {{}[]} */
+/** List of selected entries (WI uids) @type {string[]} */
 let selectList = null;
 /** toastr reference showing selection help @type {JQuery<HTMLElement>} */
 let selectToast = null;
@@ -438,8 +438,9 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             if (selectFrom != name || isCopy) {
                 const srcBook = await state.loadWorldInfo(selectFrom);
                 const dstBook = await state.loadWorldInfo(name);
-                for (const srcEntry of selectList) {
-                    const uid = srcEntry.uid;
+                for (const uid of selectList) {
+                    const srcEntry = srcBook.entries[uid];
+                    if (!srcEntry) continue;
                     const oData = Object.assign({}, srcEntry);
                     delete oData.uid;
                     const dstEntry = state.createWorldInfoEntry(null, dstBook);

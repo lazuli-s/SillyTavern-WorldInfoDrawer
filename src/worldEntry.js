@@ -23,7 +23,9 @@ export const renderEntry = async(e, name, before = null)=>{
         entry.dataset.uid = e.uid;
         entry.addEventListener('selectstart', (evt)=>evt.preventDefault());
         entry.addEventListener('dragstart', (evt)=>{
-            if (context.selectFrom === null || !context.selectList.includes(e)) {
+            // Selection uses stable uid strings (not entry object identity).
+            // After cache refreshes, entry objects are re-cloned, so identity checks break.
+            if (context.selectFrom === null || !context.selectList?.includes(e.uid)) {
                 evt.preventDefault();
                 return;
             }
@@ -46,16 +48,17 @@ export const renderEntry = async(e, name, before = null)=>{
                     const to = Math.max(start, end);
                     for (let i = from; i <= to; i++) {
                         const el = world.dom.entryList.children[i];
-                        const data = world.entries[el.dataset.uid];
-                        if (!context.selectList.includes(data)) {
+                        const uid = el.dataset.uid;
+                        if (!context.selectList.includes(uid)) {
                             context.selectAdd(el);
-                            context.selectList.push(data);
+                            context.selectList.push(uid);
                         }
                     }
                     context.selectLast = entry;
                 } else {
                     if (context.selectFrom === null) {
                         context.selectFrom = name;
+                        // Store stable identifiers; entry objects are re-created on refresh.
                         context.selectList = [];
                         const help = document.createElement('ul'); {
                             help.classList.add('stwid--helpToast');
@@ -80,16 +83,16 @@ export const renderEntry = async(e, name, before = null)=>{
                         });
                     }
                     // regular single select
-                    if (context.selectList.includes(e)) {
+                    if (context.selectList.includes(e.uid)) {
                         context.selectRemove(entry);
-                        context.selectList.splice(context.selectList.indexOf(e), 1);
+                        context.selectList.splice(context.selectList.indexOf(e.uid), 1);
                         if (context.selectLast == entry) context.selectLast = null;
                         if (context.selectList.length == 0) {
                             context.selectEnd();
                         }
                     } else {
                         context.selectAdd(entry);
-                        context.selectList.push(e);
+                        context.selectList.push(e.uid);
                         context.selectLast = entry;
                     }
                 }
