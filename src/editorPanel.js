@@ -9,6 +9,30 @@ export const initEditorPanel = ({
     getSelectFrom,
     selectEnd,
 }) => {
+    // Tracks whether the currently-open editor has user changes that may not yet
+    // have been saved back into the world-info data model.
+    // Used to avoid "auto-refresh" rebuilds that would discard typed input.
+    let isEditorDirty = false;
+    /**@type {{name:string, uid:string}|null}*/
+    let currentEditorKey = null;
+
+    const markEditorClean = (name, uid)=>{
+        if (!name || !uid) return;
+        currentEditorKey = { name, uid };
+        isEditorDirty = false;
+    };
+
+    const markEditorDirtyIfCurrent = ()=>{
+        // If the editor is currently showing activation settings or order helper,
+        // we treat it as not-dirty from the entry-editor perspective.
+        if (!currentEditorKey) return;
+        isEditorDirty = true;
+    };
+
+    // Event delegation: any typing in the editor marks it dirty.
+    // (We use capture to catch events early, even if inner templates stopPropagation.)
+    dom.editor?.addEventListener?.('input', markEditorDirtyIfCurrent, true);
+    dom.editor?.addEventListener?.('change', markEditorDirtyIfCurrent, true);
     const clearEntryHighlights = () => {
         for (const cb of Object.values(cache)) {
             for (const ce of Object.values(cb.dom.entry)) {
@@ -21,6 +45,8 @@ export const initEditorPanel = ({
         dom.editor.innerHTML = '';
         if (resetCurrent) {
             setCurrentEditor(null);
+            currentEditorKey = null;
+            isEditorDirty = false;
         }
     };
 
@@ -30,12 +56,16 @@ export const initEditorPanel = ({
         activationBlockParent.append(activationBlock);
         clearEditor({ resetCurrent: false });
         setCurrentEditor(null);
+        currentEditorKey = null;
+        isEditorDirty = false;
     };
 
     const showActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
         dom.activationToggle.classList.add('stwid--active');
         setCurrentEditor(null);
+        currentEditorKey = null;
+        isEditorDirty = false;
         clearEditor({ resetCurrent: false });
         if (dom.order.toggle.classList.contains('stwid--active')) {
             dom.order.toggle.click();
@@ -52,6 +82,8 @@ export const initEditorPanel = ({
         if (!activationBlock || !activationBlockParent) return;
         const isActive = dom.activationToggle.classList.toggle('stwid--active');
         setCurrentEditor(null);
+        currentEditorKey = null;
+        isEditorDirty = false;
         if (isActive) {
             clearEditor({ resetCurrent: false });
             if (dom.order.toggle.classList.contains('stwid--active')) {
@@ -110,6 +142,8 @@ export const initEditorPanel = ({
     const openEntryEditor = async ({ entry, entryDom, name, isTokenCurrent }) => {
         if (getSelectFrom()) selectEnd();
         clearEntryHighlights();
+        // Switching entries always re-renders the editor; treat that as clean.
+        markEditorClean(name, entry.uid);
         if (dom.activationToggle.classList.contains('stwid--active')) {
             hideActivationSettings();
         }
@@ -136,6 +170,19 @@ export const initEditorPanel = ({
         appendFocusButton(editDom);
         dom.editor.append(editDom);
         setCurrentEditor({ name, uid: entry.uid });
+        // Editor DOM is now in sync with the underlying entry snapshot.
+        markEditorClean(name, entry.uid);
+    };
+
+    const isDirty = (name, uid)=>{
+        if (!name || !uid) return false;
+        return Boolean(isEditorDirty && currentEditorKey?.name === name && currentEditorKey?.uid === uid);
+    };
+
+    const markClean = (name, uid)=>{
+        if (!name || !uid) return;
+        if (currentEditorKey?.name !== name || currentEditorKey?.uid !== uid) return;
+        isEditorDirty = false;
     };
 
     return {
@@ -146,5 +193,8 @@ export const initEditorPanel = ({
         toggleActivationSettings,
         resetEditorState,
         openEntryEditor,
+        // Dirty-state helpers for updateWIChange guards.
+        isDirty,
+        markClean,
     };
 };

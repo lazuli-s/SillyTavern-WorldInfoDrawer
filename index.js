@@ -111,6 +111,14 @@ let listPanelApi;
 let selectionState;
 let editorPanelApi;
 
+const shouldAutoRefreshEditor = (name, uid)=>{
+    // When the user is actively typing in the editor, rebuilding the editor DOM
+    // (via a synthetic click) can discard unsaved input.
+    // Guard auto-refreshes to prefer preserving in-progress edits.
+    if (!editorPanelApi?.isDirty) return true;
+    return !editorPanelApi.isDirty(name, uid);
+};
+
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
 const buildSavePayload = (name)=>({
@@ -210,7 +218,9 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="content"]'));
                             if (!inp || inp.value != n.content) {
-                                cache[name].dom.entry[e].root.click();
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
                             }
                         }
                         break;
@@ -219,7 +229,9 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="comment"]'));
                             if (!inp || inp.value != n.comment) {
-                                cache[name].dom.entry[e].root.click();
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
                             }
                         }
                         cache[name].dom.entry[e].comment.textContent = n.comment;
@@ -229,7 +241,9 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement}*/(dom.editor.querySelector(`textarea[name="${k}"]`));
                             if (!inp || inp.value != n[k].join(', ')) {
-                                cache[name].dom.entry[e].root.click();
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
                             }
                         }
                         cache[name].dom.entry[e].key.textContent = n.key.join(', ');
@@ -237,7 +251,9 @@ const updateWIChange = async(name = null, data = null)=>{
                     }
                     case 'disable': {
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
-                            cache[name].dom.entry[e].root.click();
+                            if (shouldAutoRefreshEditor(name, e)) {
+                                cache[name].dom.entry[e].root.click();
+                            }
                         }
                         cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'remove' : 'add']('fa-toggle-on');
                         cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'add' : 'remove']('fa-toggle-off');
@@ -246,7 +262,9 @@ const updateWIChange = async(name = null, data = null)=>{
                     case 'constant':
                     case 'vectorized': {
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
-                            cache[name].dom.entry[e].root.click();
+                            if (shouldAutoRefreshEditor(name, e)) {
+                                cache[name].dom.entry[e].root.click();
+                            }
                         }
                         cache[name].dom.entry[e].strategy.value = entryState(n);
                         break;
@@ -255,7 +273,9 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLInputElement}*/(dom.editor.querySelector(`[name="${k}"]`));
                             if (!inp || inp.value != n[k]) {
-                                cache[name].dom.entry[e].root.click();
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
                             }
                         }
                         break;
