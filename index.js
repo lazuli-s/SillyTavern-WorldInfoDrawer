@@ -140,9 +140,15 @@ const updateSettingsChange = ()=>{
 let updateWIChangeStarted = createDeferred();
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeFinished;
+
+// Monotonic token to correlate a wait call with the specific update cycle it should observe.
+// This prevents a wait from resolving due to an earlier/later unrelated update.
+let updateWIChangeToken = 0;
+
 const updateWIChange = async(name = null, data = null)=>{
     console.log('[STWID]', '[UPDATE-WI]', name, data);
     updateWIChangeFinished = createDeferred();
+    updateWIChangeToken += 1;
     updateWIChangeStarted.resolve();
 
     // If called with a book name but without the corresponding data payload,
@@ -295,9 +301,26 @@ const updateWIChange = async(name = null, data = null)=>{
     updateWIChangeFinished.resolve();
 };
 const updateWIChangeDebounced = debounce(updateWIChange);
+
+/**
+ * Waits for the next WORLDINFO update cycle (start -> finish).
+ *
+ * NOTE: This must not resolve due to an update cycle that started before the call,
+ * otherwise callers that open dialogs and then await an update can get a false-positive.
+ */
 const waitForWorldInfoUpdate = async()=>{
-    const startPromise = updateWIChangeStarted.promise;
-    await startPromise;
+    // Capture the token at call time so we only resolve for a strictly later update.
+    const tokenAtCall = updateWIChangeToken;
+
+    // Wait until a new cycle starts.
+    while (updateWIChangeToken === tokenAtCall) {
+        const startPromise = updateWIChangeStarted.promise;
+        await startPromise;
+        // Loop to re-check token in case the promise resolved from an older resolve
+        // (e.g., if an update started and finished before this awaited line ran).
+    }
+
+    // Now wait for the finish of the cycle that started after we entered.
     await updateWIChangeFinished?.promise;
     return true;
 };
