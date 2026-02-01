@@ -130,14 +130,17 @@ export const renderEntry = async(e, name, before = null)=>{
                 if (!isEnabled) return entry;
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
-                if (e.disable) {
-                    isEnabled.classList.toggle('fa-toggle-off');
-                    isEnabled.classList.toggle('fa-toggle-on');
-                }
+
+                const applyEnabledIcon = (disabled)=>{
+                    isEnabled.classList.toggle('fa-toggle-off', Boolean(disabled));
+                    isEnabled.classList.toggle('fa-toggle-on', !Boolean(disabled));
+                };
+
+                applyEnabledIcon(e.disable);
                 isEnabled.addEventListener('click', async()=>{
-                    const dis = isEnabled.classList.toggle('fa-toggle-off');
-                    isEnabled.classList.toggle('fa-toggle-on');
-                    context.cache[name].entries[e.uid].disable = dis;
+                    const nextDisabled = !context.cache[name].entries[e.uid].disable;
+                    context.cache[name].entries[e.uid].disable = nextDisabled;
+                    applyEnabledIcon(nextDisabled);
                     await context.saveWorldInfo(name, context.buildSavePayload(name), true);
                 });
                 status.append(isEnabled);

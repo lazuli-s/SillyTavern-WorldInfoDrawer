@@ -1335,16 +1335,26 @@ const createOrderHelperRenderer = ({
                                     active.setAttribute('data-col', 'enabled');
                                     const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
                                         isEnabled.classList.add('stwid--enabled');
-                                        if (e.data.disable) {
-                                            isEnabled.classList.toggle('fa-toggle-off');
-                                            isEnabled.classList.toggle('fa-toggle-on');
-                                        }
+
+                                        const applyEnabledIcon = (el, disabled)=>{
+                                            el.classList.toggle('fa-toggle-off', Boolean(disabled));
+                                            el.classList.toggle('fa-toggle-on', !Boolean(disabled));
+                                        };
+
+                                        applyEnabledIcon(isEnabled, e.data.disable);
                                         isEnabled.addEventListener('click', async()=>{
-                                            const dis = isEnabled.classList.toggle('fa-toggle-off');
-                                            isEnabled.classList.toggle('fa-toggle-on');
-                                            cache[e.book].dom.entry[e.data.uid].isEnabled.classList.toggle('fa-toggle-off');
-                                            cache[e.book].dom.entry[e.data.uid].isEnabled.classList.toggle('fa-toggle-on');
-                                            cache[e.book].entries[e.data.uid].disable = dis;
+                                            const entryData = cache[e.book].entries[e.data.uid];
+                                            const nextDisabled = !entryData.disable;
+                                            entryData.disable = nextDisabled;
+                                            e.data.disable = nextDisabled;
+                                            applyEnabledIcon(isEnabled, nextDisabled);
+
+                                            // Keep list panel row icon in sync too.
+                                            const listToggle = cache[e.book].dom.entry?.[e.data.uid]?.isEnabled;
+                                            if (listToggle) {
+                                                applyEnabledIcon(listToggle, nextDisabled);
+                                            }
+
                                             await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                         });
                                         active.append(isEnabled);
