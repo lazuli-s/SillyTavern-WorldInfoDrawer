@@ -33,6 +33,56 @@ export const initEditorPanel = ({
     // (We use capture to catch events early, even if inner templates stopPropagation.)
     dom.editor?.addEventListener?.('input', markEditorDirtyIfCurrent, true);
     dom.editor?.addEventListener?.('change', markEditorDirtyIfCurrent, true);
+
+    // Some SillyTavern template controls / widgets may mutate state without emitting
+    // input/change on elements we can easily observe. Make dirty tracking more conservative:
+    // - keydown catches "typing" before an input event (or when value is managed elsewhere)
+    // - pointerdown catches clicking toggles/checkbox-like widgets
+    const shouldMarkDirtyOnKeydown = (evt)=>{
+        // Ignore key combos that are commonly non-editing/navigation.
+        if (evt.ctrlKey || evt.metaKey || evt.altKey) return false;
+        const k = evt.key;
+        const nonEditingKeys = new Set([
+            'Shift',
+            'Control',
+            'Alt',
+            'Meta',
+            'CapsLock',
+            'Tab',
+            'Escape',
+            'Enter',
+            'ArrowUp',
+            'ArrowDown',
+            'ArrowLeft',
+            'ArrowRight',
+            'PageUp',
+            'PageDown',
+            'Home',
+            'End',
+        ]);
+        if (nonEditingKeys.has(k)) return false;
+
+        // Only consider keydown inside typical editable controls.
+        const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+        if (!target) return false;
+        return Boolean(target.closest('input, textarea, [contenteditable=""], [contenteditable="true"]'));
+    };
+
+    dom.editor?.addEventListener?.('keydown', (evt)=>{
+        if (shouldMarkDirtyOnKeydown(evt)) {
+            markEditorDirtyIfCurrent();
+        }
+    }, true);
+
+    dom.editor?.addEventListener?.('pointerdown', (evt)=>{
+        // Conservative: any click within the entry editor could change state.
+        // This reduces the chance of background refreshes discarding edits.
+        const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+        if (!target) return;
+        if (target.closest('input, textarea, select, button, [contenteditable=""], [contenteditable="true"], .checkbox')) {
+            markEditorDirtyIfCurrent();
+        }
+    }, true);
     const clearEntryHighlights = () => {
         for (const cb of Object.values(cache)) {
             for (const ce of Object.values(cb.dom.entry)) {
