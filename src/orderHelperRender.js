@@ -498,31 +498,67 @@ const createOrderHelperRenderer = ({
                                 syntax.scrollTop = scrollTop;
                             };
                             const updateScrollDebounced = debounce(()=>updateScroll(), 150);
+
+                            // Show filter compile/runtime errors inline (non-toastr) to avoid spam.
+                            const errorEl = document.createElement('div');
+                            errorEl.classList.add('stwid--orderFilterError');
+                            errorEl.hidden = true;
+                            main.append(errorEl);
+
+                            const showFilterError = (message)=>{
+                                if (!message) {
+                                    errorEl.hidden = true;
+                                    errorEl.textContent = '';
+                                    return;
+                                }
+                                errorEl.hidden = false;
+                                errorEl.textContent = message;
+                            };
+
                             const updateList = async()=>{
                                 if (!dom.order.filter.root.classList.contains('stwid--active')) return;
+
                                 const closure = new (await SlashCommandParser.getScope())();
                                 filterStack.push(closure);
+
                                 const clone = inp.value;
                                 const script = `return async function orderHelperFilter(data) {${clone}}();`;
+
                                 try {
                                     await closure.compile(script);
+
                                     const entries = getOrderHelperEntries(orderHelperState.book, true);
+
+                                    // Start optimistic: mark all rows as "kept" by the script, then flip to filtered
+                                    // when the script result is not truthy.
                                     for (const e of entries) {
                                         const row = dom.order.entries[e.book][e.data.uid];
                                         setOrderHelperRowFilterState(row, 'stwidFilterScript', true);
                                     }
+
                                     for (const e of entries) {
                                         closure.scope.setVariable('entry', JSON.stringify(Object.assign({ book:e.book }, e.data)));
                                         const result = (await closure.execute()).pipe;
-                                        if (filterStack.at(-1) != closure) {
-                                            filterStack.splice(filterStack.indexOf(closure), 1);
+
+                                        // If a newer closure was queued, abort without touching UI further.
+                                        if (filterStack.at(-1) !== closure) {
                                             return;
                                         }
+
                                         const row = dom.order.entries[e.book][e.data.uid];
                                         setOrderHelperRowFilterState(row, 'stwidFilterScript', !isTrueBoolean(result));
                                     }
-                                    filterStack.splice(filterStack.indexOf(closure), 1);
-                                } catch { /* empty */ }
+
+                                    showFilterError(null);
+                                } catch (error) {
+                                    // Keep previous filter results (avoid "everything" flipping due to transient errors)
+                                    // and surface the error to the user.
+                                    const msg = error instanceof Error ? error.message : String(error);
+                                    showFilterError(`Filter error: ${msg}`);
+                                } finally {
+                                    const idx = filterStack.indexOf(closure);
+                                    if (idx !== -1) filterStack.splice(idx, 1);
+                                }
                             };
                             const updateListDebounced = debounce(()=>updateList(), 1000);
                             inp.addEventListener('input', () => {
