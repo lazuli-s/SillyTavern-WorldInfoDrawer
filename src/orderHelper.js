@@ -368,6 +368,13 @@ export const initOrderHelper = ({
 
     const openOrderHelper = (book = null, scope = null)=>{
         if (!dom.order.toggle) return;
+
+        // Ensure DOM-derived filter option lists (strategy/position) are loaded
+        // at the time Order Helper is opened. These can be empty during early init
+        // if SillyTavern templates are not yet present.
+        syncOrderHelperStrategyFilters();
+        syncOrderHelperPositionFilters();
+
         scopedBookNames = Array.isArray(scope) ? scope : null;
         dom.order.toggle.classList.add('stwid--active');
         renderOrderHelper(book);

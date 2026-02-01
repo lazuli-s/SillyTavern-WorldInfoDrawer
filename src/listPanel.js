@@ -1113,6 +1113,8 @@ const getSelectionState = ()=>({
 const initListPanel = (options)=>{
     state = options;
     loadListDebounced = state.debounceAsync(()=>loadList());
+    let folderImportInProgress = false;
+
     folderMenuActions = {
         Popup: state.Popup,
         buildSavePayload: state.buildSavePayload,
@@ -1130,6 +1132,10 @@ const initListPanel = (options)=>{
         download: state.download,
         getWorldNames: () => state.getWorldNames ? state.getWorldNames() : state.world_names,
         getSelectedWorldInfo: () => state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info,
+        isFolderImporting: ()=>folderImportInProgress,
+        setFolderImporting: (value)=>{
+            folderImportInProgress = Boolean(value);
+        },
         openOrderHelper: state.openOrderHelper,
         openImportDialog,
         refreshList,
