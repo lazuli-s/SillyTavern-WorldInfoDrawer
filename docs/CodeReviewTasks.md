@@ -6,11 +6,11 @@ This checklist is derived from `docs/CodeReviewFindings.md` and is intended to b
 
 - [ ] **T1 (from F1)**: Strengthen dirty-state detection so editor auto-refresh cannot discard in-progress edits.
 
-- [ ] **T2 (from F3)**: Batch move/copy drag-drop saves to avoid per-entry saves and partial-move states.
+- [x] **T2 (from F3)**: Batch move/copy drag-drop saves to avoid per-entry saves and partial-move states.
 
 ## Medium priority (race conditions / async ordering)
 
-- [ ] **T3 (from F2)**: Avoid wasted template rendering when clicking entries rapidly.
+- [x] **T3 (from F2)**: Avoid wasted template rendering when clicking entries rapidly.
 
 - [ ] **T4 (from F4)**: Reduce mis-assignment risk when importing into folder.
 

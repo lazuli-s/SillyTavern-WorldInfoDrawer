@@ -438,26 +438,42 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             if (selectFrom != name || isCopy) {
                 const srcBook = await state.loadWorldInfo(selectFrom);
                 const dstBook = await state.loadWorldInfo(name);
+                // F3: Batch move/copy saves.
+                // Build all destination entries in-memory first, then save once.
+                // If moving, delete from source and save once after all deletions.
+                let hasDstChanges = false;
+                let hasSrcChanges = false;
                 for (const uid of selectList) {
                     const srcEntry = srcBook.entries[uid];
                     if (!srcEntry) continue;
+
                     const oData = Object.assign({}, srcEntry);
                     delete oData.uid;
+
                     const dstEntry = state.createWorldInfoEntry(null, dstBook);
                     Object.assign(dstEntry, oData);
-                    await state.saveWorldInfo(name, dstBook, true);
+                    hasDstChanges = true;
+
                     if (!isCopy) {
                         const deleted = await state.deleteWorldInfoEntry(srcBook, uid, { silent:true });
                         if (deleted) {
                             state.deleteWIOriginalDataValue(srcBook, uid);
+                            hasSrcChanges = true;
                         }
                     }
                 }
-                if (selectFrom != name) {
+
+                // Persist destination once.
+                if (hasDstChanges) {
+                    await state.saveWorldInfo(name, dstBook, true);
+                    state.updateWIChange(name, dstBook);
+                }
+
+                // Persist source once (move only, and only when we actually deleted something).
+                if (!isCopy && selectFrom != name && hasSrcChanges) {
                     await state.saveWorldInfo(selectFrom, srcBook, true);
                     state.updateWIChange(selectFrom, srcBook);
                 }
-                state.updateWIChange(name, dstBook);
             }
             selectEnd();
         });
