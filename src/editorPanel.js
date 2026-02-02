@@ -190,6 +190,10 @@ export const initEditorPanel = ({
     };
 
     const openEntryEditor = async ({ entry, entryDom, name, isTokenCurrent }) => {
+        // Fast-path: if this click is already stale, bail before we do any work.
+        // This prevents upstream template rendering/fetching from running for clicks
+        // that are no longer the "latest" selection.
+        if (!isTokenCurrent?.()) return;
         if (getSelectFrom()) selectEnd();
         clearEntryHighlights();
         // Switching entries always re-renders the editor; treat that as clean.
@@ -204,13 +208,21 @@ export const initEditorPanel = ({
         clearEditor({ resetCurrent: false });
         appendUnfocusButton();
 
+        // The header template is relatively cheap, but still async; avoid awaiting it
+        // if a newer click has already superseded this one.
+        if (!isTokenCurrent()) return;
+        const headerTemplate = await renderTemplateAsync('worldInfoKeywordHeaders');
+        if (!isTokenCurrent()) return;
         const header = document.createRange()
-            .createContextualFragment(await renderTemplateAsync('worldInfoKeywordHeaders'))
+            .createContextualFragment(headerTemplate)
             .querySelector('#WIEntryHeaderTitlesPC');
         if (header) {
             dom.editor.append(header);
         }
 
+        // getWorldEntry is the expensive step (template render + DOM construction).
+        // Guard it so rapid clicking doesn't queue up wasted work.
+        if (!isTokenCurrent()) return;
         const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
         const drawerToggle = editDom?.querySelector?.('.inline-drawer');
         if (drawerToggle) {
