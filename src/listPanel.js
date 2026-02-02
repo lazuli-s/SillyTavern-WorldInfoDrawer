@@ -29,7 +29,7 @@ let selectLast = null;
 let selectFrom = null;
 /**@type {'ctrl'|'shift'} */
 let selectMode = null;
-/** List of selected entries (WI data) @type {{}[]} */
+/** List of selected entries (WI uids) @type {string[]} */
 let selectList = null;
 /** toastr reference showing selection help @type {JQuery<HTMLElement>} */
 let selectToast = null;
@@ -431,11 +431,16 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             if (selectFrom === null) return;
             evt.preventDefault();
             const isCopy = evt.ctrlKey;
+            if (!selectList?.length) {
+                selectEnd();
+                return;
+            }
             if (selectFrom != name || isCopy) {
                 const srcBook = await state.loadWorldInfo(selectFrom);
                 const dstBook = await state.loadWorldInfo(name);
-                for (const srcEntry of selectList) {
-                    const uid = srcEntry.uid;
+                for (const uid of selectList) {
+                    const srcEntry = srcBook.entries[uid];
+                    if (!srcEntry) continue;
                     const oData = Object.assign({}, srcEntry);
                     delete oData.uid;
                     const dstEntry = state.createWorldInfoEntry(null, dstBook);
@@ -850,8 +855,25 @@ const loadList = async()=>{
     for (const key of Object.keys(folderDoms)) {
         delete folderDoms[key];
     }
+
+    // Yield to the UI thread periodically to avoid long main-thread stalls on very
+    // large lore collections.
+    const yieldToUi = ()=>new Promise((resolve)=>setTimeout(resolve, 0));
+
     const worldNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
-    const books = await Promise.all(state.safeToSorted(worldNames ?? [], (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).map(async(name)=>({ name, data:await state.loadWorldInfo(name) })));
+    const sortedNames = state.safeToSorted(worldNames ?? [], (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+
+    // Load sequentially with occasional yields. This is slower than Promise.all,
+    // but keeps the UI responsive for large datasets.
+    const books = [];
+    for (let i = 0; i < sortedNames.length; i++) {
+        const name = sortedNames[i];
+        books.push({ name, data: await state.loadWorldInfo(name) });
+        if (i > 0 && i % 5 === 0) {
+            await yieldToUi();
+        }
+    }
+
     const folderGroups = new Map();
     const rootBooks = [];
     for (const book of books) {
@@ -906,12 +928,21 @@ const loadList = async()=>{
         const initialCollapsed = folderCollapseStates[folderName] ?? false;
         setFolderCollapsed(folderDoms[folderName], initialCollapsed);
         const folderBooks = folderGroups.get(folderName) ?? [];
-        for (const book of folderBooks) {
+        for (let i = 0; i < folderBooks.length; i++) {
+            const book = folderBooks[i];
             await renderBook(book.name, null, book.data, folderDoms[folderName].books);
+            if (i > 0 && i % 2 === 0) {
+                await yieldToUi();
+            }
         }
+        await yieldToUi();
     }
-    for (const book of rootBooks) {
+    for (let i = 0; i < rootBooks.length; i++) {
+        const book = rootBooks[i];
         await renderBook(book.name, null, book.data, state.dom.books);
+        if (i > 0 && i % 2 === 0) {
+            await yieldToUi();
+        }
     }
     updateFolderActiveToggles();
 };
@@ -954,19 +985,23 @@ const setupFilter = (list)=>{
                 return [comment, keys].some(value=>String(value ?? '').toLowerCase().includes(normalizedQuery));
             };
 
-            search.addEventListener('input', ()=>{
+            const applySearchFilter = ()=>{
                 const query = search.value.toLowerCase();
                 const searchEntries = searchEntriesInput.checked;
+                const shouldScanEntries = searchEntries && query.length >= 2;
+
                 for (const b of Object.keys(state.cache)) {
                     if (query.length) {
                         const bookMatch = b.toLowerCase().includes(query);
-                        const entryMatch = searchEntries && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(e, query));
+                        const entryMatch = shouldScanEntries
+                            && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(e, query));
                         if (bookMatch || entryMatch) {
                             state.cache[b].dom.root.classList.remove('stwid--filter-query');
                         } else {
                             state.cache[b].dom.root.classList.add('stwid--filter-query');
                         }
-                        if (searchEntries) {
+
+                        if (shouldScanEntries) {
                             for (const e of Object.values(state.cache[b].entries)) {
                                 if (bookMatch || entryMatchesQuery(e, query)) {
                                     state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
@@ -986,6 +1021,13 @@ const setupFilter = (list)=>{
                         }
                     }
                 }
+            };
+
+            // Debounce to reduce O(total entries) work on every keystroke.
+            const applySearchFilterDebounced = state.debounce(()=>applySearchFilter(), 125);
+
+            search.addEventListener('input', ()=>{
+                applySearchFilterDebounced();
             });
             filter.append(search);
         }
@@ -1109,6 +1151,8 @@ const getSelectionState = ()=>({
 const initListPanel = (options)=>{
     state = options;
     loadListDebounced = state.debounceAsync(()=>loadList());
+    let folderImportInProgress = false;
+
     folderMenuActions = {
         Popup: state.Popup,
         buildSavePayload: state.buildSavePayload,
@@ -1126,6 +1170,10 @@ const initListPanel = (options)=>{
         download: state.download,
         getWorldNames: () => state.getWorldNames ? state.getWorldNames() : state.world_names,
         getSelectedWorldInfo: () => state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info,
+        isFolderImporting: ()=>folderImportInProgress,
+        setFolderImporting: (value)=>{
+            folderImportInProgress = Boolean(value);
+        },
         openOrderHelper: state.openOrderHelper,
         openImportDialog,
         refreshList,

@@ -193,7 +193,7 @@ This document lists all **global/long‑lived state** used by the extension, wit
   - Updated by UI controls in `index.js` (global sort dropdown, per‑book sort toggle).
   - Saved via `Settings.save()` → `saveSettingsDebounced()`.
 - **Explanation:**
-  The extension’s **global settings object**, stored in `extension_settings.wordInfoDrawer`. It remembers default sorting and whether per‑book sorting is enabled.
+The extension’s **global settings object**, stored in `extension_settings.worldInfoDrawer`. It remembers default sorting and whether per‑book sorting is enabled.
 
 ---
 

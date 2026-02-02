@@ -2,6 +2,12 @@ import { describe, it, expect } from "vitest";
 import { getSortLabel } from "../src/utils.js";
 import { SORT, SORT_DIRECTION } from "../src/constants.js";
 
+describe("placeholder", () => {
+  it("runs", () => {
+    expect(true).toBe(true);
+  });
+});
+
 describe("getSortLabel", () => {
   it("returns the correct label for a valid sort/direction", () => {
     const label = getSortLabel(SORT.TITLE, SORT_DIRECTION.ASCENDING);

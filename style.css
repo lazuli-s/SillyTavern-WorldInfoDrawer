@@ -3,7 +3,7 @@ body #WorldInfo > .stwid--body {
   display: none;
 }
 
-body.stwid--.stwid--nonDiscord #WorldInfo {
+body.stwid-- #WorldInfo {
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
   max-height: unset;

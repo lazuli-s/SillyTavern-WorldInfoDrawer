@@ -350,22 +350,46 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                         blocker.remove();
                                         menuTrigger.style.anchorName = '';
                                         if (!menuActions.openImportDialog || !menuActions.getWorldNames) return;
-                                        const beforeNames = new Set(menuActions.getWorldNames());
-                                        menuActions.openImportDialog();
-                                        const updatePromise = menuActions.waitForWorldInfoUpdate?.();
-                                        const hasUpdate = await Promise.race([
-                                            updatePromise ? updatePromise.then(()=>true) : Promise.resolve(false),
-                                            new Promise((resolve)=>setTimeout(()=>resolve(false), 15000)),
-                                        ]);
-                                        if (!hasUpdate) return;
-                                        await menuActions.refreshList?.();
-                                        const afterNames = menuActions.getWorldNames();
-                                        const newNames = afterNames.filter((name)=>!beforeNames.has(name));
-                                        for (const name of newNames) {
-                                            await menuActions.setBookFolder(name, folderName);
-                                        }
-                                        if (newNames.length) {
+
+                                        // Prevent overlapping imports from racing and mis-assigning books.
+                                        if (menuActions.isFolderImporting?.()) return;
+                                        menuActions.setFolderImporting?.(true);
+
+                                        try {
+                                            const beforeNames = new Set(menuActions.getWorldNames());
+                                            menuActions.openImportDialog();
+
+                                            const updatePromise = menuActions.waitForWorldInfoUpdate?.();
+                                            const hasUpdate = await Promise.race([
+                                                updatePromise ? updatePromise.then(()=>true) : Promise.resolve(false),
+                                                new Promise((resolve)=>setTimeout(()=>resolve(false), 15000)),
+                                            ]);
+                                            if (!hasUpdate) return;
+
+                                            // Allow the list of world names to settle (some imports can trigger
+                                            // multiple update cycles).
+                                            const deadline = Date.now() + 4000;
+                                            let lastSnapshot = menuActions.getWorldNames().slice().sort();
+                                            while (Date.now() < deadline) {
+                                                await new Promise((resolve)=>setTimeout(resolve, 250));
+                                                const nextSnapshot = menuActions.getWorldNames().slice().sort();
+                                                const unchanged = nextSnapshot.length === lastSnapshot.length
+                                                    && nextSnapshot.every((v, i)=>v === lastSnapshot[i]);
+                                                if (unchanged) break;
+                                                lastSnapshot = nextSnapshot;
+                                            }
+
                                             await menuActions.refreshList?.();
+                                            const afterNames = menuActions.getWorldNames();
+                                            const newNames = afterNames.filter((name)=>!beforeNames.has(name));
+                                            for (const name of newNames) {
+                                                await menuActions.setBookFolder(name, folderName);
+                                            }
+                                            if (newNames.length) {
+                                                await menuActions.refreshList?.();
+                                            }
+                                        } finally {
+                                            menuActions.setFolderImporting?.(false);
                                         }
                                     });
                                     const i = document.createElement('i'); {

@@ -2,7 +2,7 @@
 
 This repository is a **third-party SillyTavern frontend extension** that replaces the default World Info editor with a custom full-screen drawer UI.
 
-This file defines **mandatory rules and constraints** for AI agents modifying this codebase.  
+This file defines **mandatory rules and constraints** for AI agents modifying this codebase.
 All instructions below MUST be followed unless explicitly overridden by the user.
 
 ---
@@ -19,14 +19,16 @@ All instructions below MUST be followed unless explicitly overridden by the user
 
 Before making changes, always consult:
 
-- `SillyTavern_Extensions_Documentation.md`  
+- `docs/SillyTavern_Extensions_Documentation.md`
   (SillyTavern extension best practices and constraints)
 
 SillyTavern source is available as a **reference-only submodule** under:
 - `/vendor/SillyTavern`
 
+Note: if you don't see that folder, the git submodule is probably not initialized.
+
 - After cloning, initialize submodules:
-  git submodule update --init --recursive
+  `git submodule update --init --recursive`
 
 **DO NOT modify anything under `/vendor/SillyTavern`.**
 
@@ -36,22 +38,48 @@ SillyTavern source is available as a **reference-only submodule** under:
 
 ### Entry point
 - `index.js`
-  - Bootstraps the drawer UI
-  - Wires global events
+  - Watches CSS for local dev (via FilesPluginApi if installed)
+  - Bootstraps the drawer UI + DOM structure (`dom` object)
+  - Wires global events (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`)
+  - Manages the in-memory `cache` of books/entries and updates it incrementally
   - Connects list panel, editor panel, and order helper
 
 ### Core modules (`/src`)
+
 - `listPanel.js`
-  - Renders the left panel (books + entry lists)
-  - Control row: create/import/refresh, search, active filter, sorting
-  - Manages selection state, drag/drop (move/copy/duplicate)
-  - Per-book menus (rename, delete, bulk edit, external editor)
-  - Active-book toggles
+  - Renders the left panel (folders + books + entry lists)
+  - Control row: create book, create folder, import book, import folder, refresh
+  - Search matches books and optionally entries (title + keys)
+  - Active-book filter
+  - Selection system:
+    - Click selects
+    - SHIFT selects range
+    - DEL deletes selected
+    - Drag moves
+    - CTRL modifies copy / duplicate behavior
+  - Per-book menu actions:
+    - Rename / delete (delegates to core WorldInfo UI)
+    - Duplicate book
+    - Export book
+    - Fill empty titles from keywords
+    - Book sort preference
+    - Order Helper shortcut
+    - Optional integration: Bulk Edit, External Editor, Configure STLO
+  - Folder support:
+    - Folder collapse state
+    - Folder active toggle (tri-state)
+    - Folder context menu (export folder, import into folder, rename folder, delete folder)
+
+- `lorebookFolders.js`
+  - Folder metadata and registry helpers
+  - Metadata key: `folder` (top-level book metadata)
+  - Registry stored in localStorage: `stwid--folder-registry`
+  - Folder DOM construction + menu actions
 
 - `worldEntry.js`
   - Renders each entry row
   - Selection UI + help toast
-  - Enable/disable + strategy toggles
+  - Enable/disable toggle + strategy selector
   - Click-to-open editor behavior
 
 - `editorPanel.js`
@@ -59,28 +87,51 @@ SillyTavern source is available as a **reference-only submodule** under:
   - Uses:
     - `renderTemplateAsync('worldInfoKeywordHeaders')`
     - `getWorldEntry(...)`
-  - Handles focus/unfocus
+  - Focus/unfocus support (`stwid--focus`)
   - Moves `#wiActivationSettings` into the editor when shown
 
 - `orderHelper.js`
-  - Renders the Order Helper table
+  - Order Helper orchestration glue:
+    - Creates state
+    - Gathers entries from active books, a single book, or a custom scope (e.g., folder)
+    - Computes derived filter option lists (strategy/position/outlet/automationId/group)
+
+- `orderHelperState.js`
+  - Order Helper persisted state in localStorage:
+    - Sort: `stwid--order-helper-sort`
+    - Hide keys: `stwid--order-helper-hide-keys`
+    - Columns: `stwid--order-helper-columns`
+
+- `orderHelperFilters.js`
+  - Filter logic for Order Helper rows:
+    - Strategy
+    - Position
+    - Recursion
+    - Outlet
+    - Automation ID
+    - Inclusion group
+    - Script filter
+
+- `orderHelperRender.js`
+  - Renders the Order Helper table UI
   - Supports:
-    - Per-book or active-book scope
-    - jQuery sortable drag ordering
-    - Row selection for apply
+    - Sorting (including CUSTOM using `extensions.display_index`)
+    - jQuery sortable drag ordering + keyboard-like move buttons
+    - Row selection for apply + select-all
     - Start / step / direction controls
-    - Inline edits (enabled, strategy, position, depth, order, trigger %)
-    - Jump-to-entry links
+    - Inline edits (enabled, strategy, position, depth, order, sticky, cooldown, delay, automationId, trigger %)
+    - Recursion flags + budget ignore toggle
+    - Inclusion group + prioritize
+    - Character filter display (read-only)
     - Column visibility
     - Hide keys
     - Script-based filtering via `SlashCommandParser`
     - Live preview (`{{var::entry}}`) with `highlight.js`
 
-- `sortHelpers.js`, `utils.js`, `Settings.js`, `constants.js`
-  - Sorting logic
-  - Shared helpers
-  - Persisted settings (`extension_settings.wordInfoDrawer`)
-  - Per-book sort metadata:
+- `sortHelpers.js`, `utils.js`, `constants.js`, `Settings.js`
+  - Sorting logic + shared utilities
+  - Persisted settings stored at: `extension_settings.worldInfoDrawer`
+  - Optional per-book sort preferences stored in book metadata:
     - Namespace: `stwid`
     - Key: `sort`
 
@@ -97,7 +148,8 @@ Do NOT change these unless explicitly instructed:
 
 2. **List Panel**
    - Books can collapse / expand
-   - Search matches books and optionally entries (title / memo / keys)
+   - Folders can collapse / expand
+   - Search matches books and optionally entries (title / keys)
    - Selection system:
      - Click selects
      - SHIFT selects range
@@ -113,14 +165,16 @@ Do NOT change these unless explicitly instructed:
    - Can show entries from:
      - All active books
      - A single book context
+     - A custom scope list (e.g., folder active books)
    - Drag sorting uses jQuery sortable
    - Applying order saves per affected book via:
-     - `saveWorldInfo(buildSavePayload(book), true)`
+     - `saveWorldInfo(bookName, buildSavePayload(bookName), true)`
 
 5. **Sorting**
    - Global defaults come from `Settings`
    - Optional per-book sort preferences stored in metadata
      - Namespace `stwid`, key `sort`
+   - Custom order uses `entry.extensions.display_index`
 
 ---
 
@@ -187,6 +241,8 @@ D) Output results in this format:
 1. Brief summary of what changed and why
 2. List of files modified
 3. Behavior change notes (only if applicable)
+
+(If the task is documentation-only, include the updated doc(s) in the “files modified” list.)
 
 ---
 
