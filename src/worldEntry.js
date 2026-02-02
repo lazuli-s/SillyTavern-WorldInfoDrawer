@@ -192,6 +192,20 @@ export const renderEntry = async(e, name, before = null)=>{
                 isTokenCurrent: () => clickToken === token,
             });
         });
+
+        // Make SHIFT range-selected entries actually draggable.
+        // The selection UI (orange highlight) is applied via CSS classes, but HTML drag-and-drop
+        // only starts when the element has draggable=true. Single-click selection sets this,
+        // but the SHIFT range-path was missing it.
+        entry.addEventListener('pointerdown', (evt)=>{
+            if (evt.button !== 0) return; // left-click only
+            if (context.selectFrom !== name) return;
+            if (!context.selectList?.includes?.(e.uid)) return;
+            // Ensure the dragstart event can fire for any selected row.
+            // (Without this, the UI can look selected but never start dragging.)
+            entry.setAttribute('draggable', 'true');
+        });
+
         if (before) before.insertAdjacentElement('beforebegin', entry);
         else world.dom.entryList.append(entry);
         return entry;
