@@ -30,4 +30,4 @@ This checklist is derived from `docs/CodeReviewFindings.md` and is intended to b
 
 - [ ] **T9 (from F8)**: Ensure list panel reflects Order Helper apply results without requiring manual refresh.
 
-- [ ] **T10 (from F9)**: Replace fixed delays in duplicate/delete with robust waiting.
+- [x] **T10 (from F9)**: Replace fixed delays in duplicate/delete with robust waiting.

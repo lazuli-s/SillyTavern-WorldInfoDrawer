@@ -248,21 +248,122 @@ const openFolderImportDialog = ()=>{
     folderImportInput.click();
 };
 
-const duplicateBook = async(name)=>{
+/**
+ * Waits for a DOM condition to become true.
+ * Uses a MutationObserver where possible to avoid fixed delays.
+ *
+ * @param {() => boolean} condition
+ * @param {{ timeoutMs?: number, root?: ParentNode }} [options]
+ */
+const waitForDom = (condition, { timeoutMs = 5000, root = document } = {})=>new Promise((resolve)=>{
+    if (condition()) {
+        resolve(true);
+        return;
+    }
+
+    let done = false;
+    const finish = (value)=>{
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        observer.disconnect();
+        resolve(value);
+    };
+
+    const observer = new MutationObserver(()=>{
+        if (condition()) finish(true);
+    });
+    // Observe broadly: ST may render buttons/options dynamically.
+    observer.observe(root === document ? document.documentElement : /**@type {Node}*/(root), {
+        childList: true,
+        subtree: true,
+        attributes: true,
+    });
+
+    const timer = setTimeout(()=>finish(false), timeoutMs);
+});
+
+const setSelectedBookInCoreUi = async(bookName)=>{
     const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-    if (!select) return null;
-    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
-    if (!option) return null;
-    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    if (!select) return false;
+    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == bookName);
+    if (!option) return false;
+
+    const previousValue = select.value;
     select.value = option.value;
     select.dispatchEvent(new Event('change', { bubbles:true }));
-    await state.delay(500);
-    document.querySelector('#world_duplicate')?.click();
-    for (let i = 0; i < 20; i++) {
-        await state.delay(200);
-        const currentNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
-        const newName = currentNames.find((entry)=>!initialNames.includes(entry));
-        if (newName) return newName;
+
+    // Wait for the selection to be reflected in the DOM/state.
+    // We can't rely on fixed delays because ST may update asynchronously.
+    // As a minimal robust check, wait until the select reports the new value
+    // and at least one mutation occurs in the WI area (common after change).
+    if (select.value !== option.value) return false;
+    // If selection did not actually change (same value), still allow continuing.
+    if (previousValue === option.value) return true;
+
+    // Prefer waiting for a worldinfo update cycle if available.
+    if (state.waitForWorldInfoUpdate) {
+        // Race a short timeout: selection changes sometimes do not emit WORLDINFO_UPDATED.
+        await Promise.race([
+            state.waitForWorldInfoUpdate(),
+            state.delay(800),
+        ]);
+        return true;
+    }
+    await state.delay(200);
+    return true;
+};
+
+const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
+    const selectors = Array.isArray(possibleSelectors) ? possibleSelectors : [possibleSelectors];
+    const findButton = ()=>selectors
+        .map((sel)=>document.querySelector(sel))
+        .find((el)=>el instanceof HTMLElement);
+
+    const ok = await waitForDom(()=>Boolean(findButton()), { timeoutMs });
+    if (!ok) return false;
+    const btn = /**@type {HTMLElement}*/(findButton());
+    btn.click();
+    return true;
+};
+
+const duplicateBook = async(name)=>{
+    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const selected = await setSelectedBookInCoreUi(name);
+    if (!selected) return null;
+
+    // Click the duplicate action once it exists.
+    // Keep selector list flexible to tolerate minor ST UI changes.
+    const clicked = await clickCoreUiAction([
+        '#world_duplicate',
+        '[id="world_duplicate"]',
+    ]);
+    if (!clicked) return null;
+
+    // Wait for either:
+    // 1) a WORLDINFO update cycle (preferred), then detect new name
+    // 2) or the names list to change in a short polling loop
+    // Avoid hard-coded "sleep then hope".
+    const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const findNewName = ()=>{
+        const currentNames = getNames() ?? [];
+        return currentNames.find((entry)=>!initialNames.includes(entry)) ?? null;
+    };
+
+    // Fast path: if ST immediately updated world_names synchronously.
+    const immediate = findNewName();
+    if (immediate) return immediate;
+
+    const timeoutMs = 8000;
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+        if (state.waitForWorldInfoUpdate) {
+            await Promise.race([state.waitForWorldInfoUpdate(), state.delay(250)]);
+        } else {
+            await state.delay(250);
+        }
+        const next = findNewName();
+        if (next) return next;
     }
     return null;
 };
@@ -272,14 +373,13 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
         await state.deleteWorldInfo(name);
         return;
     }
-    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-    if (!select) return;
-    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
-    if (!option) return;
-    select.value = option.value;
-    select.dispatchEvent(new Event('change', { bubbles:true }));
-    await state.delay(500);
-    document.querySelector('#world_popup_delete')?.click();
+    const selected = await setSelectedBookInCoreUi(name);
+    if (!selected) return;
+
+    await clickCoreUiAction([
+        '#world_popup_delete',
+        '[id="world_popup_delete"]',
+    ]);
 };
 
 const selectEnd = ()=>{
@@ -815,12 +915,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     del.classList.add('stwid--item');
                                     del.classList.add('stwid--delete');
                                     del.addEventListener('click', async(evt)=>{
-                                        //TODO cheeky monkey
-                                        const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                        sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                        sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                        await state.delay(500);
-                                        document.querySelector('#world_popup_delete').click();
+                                        await deleteBook(name);
                                     });
                                     const i = document.createElement('i'); {
                                         i.classList.add('stwid--icon');
