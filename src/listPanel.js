@@ -153,6 +153,158 @@ const setBookFolder = async(name, folderName)=>{
     return true;
 };
 
+const buildMoveBookMenuItem = (name, closeMenu)=>{
+    const item = document.createElement('div'); {
+        item.classList.add('stwid--item');
+        item.classList.add('stwid--moveToFolder');
+        item.addEventListener('click', async(evt)=>{
+            evt.stopPropagation();
+            closeMenu?.();
+
+            const currentFolder = getFolderFromMetadata(state.cache[name]?.metadata);
+            const registry = getFolderRegistry();
+            const folderNames = Array.from(new Set([
+                ...registry,
+                ...Object.keys(folderDoms),
+            ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+
+            const modal = document.createElement('div');
+            modal.classList.add('stwid--blocker');
+            modal.addEventListener('mousedown', (e)=>e.stopPropagation());
+            modal.addEventListener('pointerdown', (e)=>e.stopPropagation());
+            modal.addEventListener('touchstart', (e)=>e.stopPropagation());
+            modal.addEventListener('click', (e)=>{
+                e.stopPropagation();
+                modal.remove();
+            });
+
+            const popup = document.createElement('div');
+            popup.classList.add('stwid--menu');
+            popup.classList.add('stwid--moveBookPopup');
+            popup.addEventListener('click', (e)=>e.stopPropagation());
+
+            const title = document.createElement('div');
+            title.classList.add('stwid--item');
+            title.classList.add('stwid--isHeader');
+            title.textContent = `Move "${name}" to folder`;
+            popup.append(title);
+
+            const row = document.createElement('div');
+            row.classList.add('stwid--item');
+            row.classList.add('stwid--moveBookRow');
+            const select = document.createElement('select');
+            select.classList.add('text_pole');
+            select.disabled = folderNames.length === 0;
+            if (folderNames.length === 0) {
+                const opt = document.createElement('option');
+                opt.textContent = '(no folders yet)';
+                opt.value = '';
+                opt.selected = true;
+                select.append(opt);
+            } else {
+                for (const folderName of folderNames) {
+                    const opt = document.createElement('option');
+                    opt.value = folderName;
+                    opt.textContent = folderName;
+                    if (folderName === currentFolder) opt.selected = true;
+                    select.append(opt);
+                }
+            }
+            row.append(select);
+            popup.append(row);
+
+            const createBtn = document.createElement('button');
+            createBtn.classList.add('menu_button');
+            createBtn.textContent = 'Create new folder';
+            createBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                const nextName = await state.Popup?.show.input('Create folder', 'Enter a new folder name:', 'New Folder');
+                if (!nextName) return;
+                const reg = registerFolderName(nextName);
+                if (!reg.ok) {
+                    if (reg.reason === 'empty') {
+                        toastr.warning('Folder name cannot be empty.');
+                    } else {
+                        toastr.error('Folder names cannot include "/".');
+                    }
+                    return;
+                }
+
+                // Requirement: immediately add the book to the new folder.
+                const updated = await setBookFolder(name, reg.folder);
+                if (updated) {
+                    await refreshList();
+                    // Jump to location: scroll the destination folder/book into view.
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.remove();
+            });
+            popup.append(createBtn);
+
+            const moveBtn = document.createElement('button');
+            moveBtn.classList.add('menu_button');
+            moveBtn.textContent = 'Move';
+            moveBtn.disabled = folderNames.length === 0;
+            moveBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                const selectedFolder = select.disabled ? null : select.value;
+                if (!selectedFolder) return;
+
+                if (selectedFolder === currentFolder) {
+                    toastr.info("Book is already in that folder.");
+                    return;
+                }
+
+                const updated = await setBookFolder(name, selectedFolder);
+                if (updated) {
+                    await refreshList();
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.remove();
+            });
+            popup.append(moveBtn);
+
+            const noFolderBtn = document.createElement('button');
+            noFolderBtn.classList.add('menu_button');
+            noFolderBtn.textContent = 'No Folder';
+            noFolderBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                if (!currentFolder) {
+                    toastr.info('Book is already not in a folder.');
+                    return;
+                }
+                const updated = await setBookFolder(name, null);
+                if (updated) {
+                    await refreshList();
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.remove();
+            });
+            popup.append(noFolderBtn);
+
+            modal.append(popup);
+            document.body.append(modal);
+        });
+        const i = document.createElement('i'); {
+            i.classList.add('stwid--icon');
+            i.classList.add('fa-solid', 'fa-fw', 'fa-folder-tree');
+            item.append(i);
+        }
+        const txt = document.createElement('span'); {
+            txt.classList.add('stwid--label');
+            txt.textContent = 'Move Book to Folder';
+            item.append(txt);
+        }
+    }
+    return item;
+};
+
 const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
     if (!input) return null;
@@ -689,6 +841,10 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                             });
                             const menu = document.createElement('div'); {
                                 menu.classList.add('stwid--menu');
+                                const closeMenu = ()=>{
+                                    blocker.remove();
+                                    menuTrigger.style.anchorName = '';
+                                };
                                 const rename = document.createElement('div'); {
                                     rename.classList.add('stwid--item');
                                     rename.classList.add('stwid--rename');
@@ -712,6 +868,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     }
                                     menu.append(rename);
                                 }
+                                menu.append(buildMoveBookMenuItem(name, closeMenu));
                                 if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
                                     const bulk = document.createElement('div'); {
                                         bulk.classList.add('stwid--item');
