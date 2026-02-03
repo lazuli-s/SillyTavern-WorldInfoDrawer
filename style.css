@@ -627,18 +627,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 45%, transparent);
 }
 
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--item.stwid--isHeader {
-  height: auto;
-  min-height: unset;
-  cursor: default;
+.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup h3 {
+  margin: 0 0 0.75em;
   padding: 0.35em 0.5em;
-  margin: 0 0 0.5em;
   border-left: 3px solid var(--SmartThemeQuoteColor);
   font-weight: 700;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, transparent);
-}
-
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--item.stwid--isHeader:hover {
   background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, transparent);
 }
 
@@ -665,6 +658,10 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   gap: 0.6em;
   justify-content: center;
   margin-top: 0.75em;
+}
+
+.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--moveBookButtons--secondary {
+  margin-top: 0.5em;
 }
 
 .stwid--blocker .stwid--menu {

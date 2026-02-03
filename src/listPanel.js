@@ -184,9 +184,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             popup.classList.add('stwid--moveBookPopup');
             popup.addEventListener('click', (e)=>e.stopPropagation());
 
-            const title = document.createElement('div');
-            title.classList.add('stwid--item');
-            title.classList.add('stwid--isHeader');
+            const title = document.createElement('h3');
             title.textContent = `Move "${name}" to folder`;
             popup.append(title);
 
@@ -214,8 +212,9 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             row.append(select);
             popup.append(row);
 
-            const buttonRow = document.createElement('div');
-            buttonRow.classList.add('stwid--moveBookButtons');
+            const buttonRowA = document.createElement('div');
+            buttonRowA.classList.add('stwid--moveBookButtons');
+            buttonRowA.classList.add('stwid--moveBookButtons--secondary');
 
             const createBtn = document.createElement('button');
             createBtn.classList.add('menu_button');
@@ -245,7 +244,31 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
                 modal.remove();
             });
-            buttonRow.append(createBtn);
+            buttonRowA.append(createBtn);
+
+            const noFolderBtn = document.createElement('button');
+            noFolderBtn.classList.add('menu_button');
+            noFolderBtn.textContent = 'No Folder';
+            noFolderBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                if (!currentFolder) {
+                    toastr.info('Book is already not in a folder.');
+                    return;
+                }
+                const updated = await setBookFolder(name, null);
+                if (updated) {
+                    await refreshList();
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.remove();
+            });
+            buttonRowA.append(noFolderBtn);
+
+            const buttonRowB = document.createElement('div');
+            buttonRowB.classList.add('stwid--moveBookButtons');
+            buttonRowB.classList.add('stwid--moveBookButtons--primary');
 
             const moveBtn = document.createElement('button');
             moveBtn.classList.add('menu_button');
@@ -270,27 +293,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
                 modal.remove();
             });
-            buttonRow.append(moveBtn);
-
-            const noFolderBtn = document.createElement('button');
-            noFolderBtn.classList.add('menu_button');
-            noFolderBtn.textContent = 'No Folder';
-            noFolderBtn.addEventListener('click', async(e)=>{
-                e.preventDefault();
-                e.stopPropagation();
-                if (!currentFolder) {
-                    toastr.info('Book is already not in a folder.');
-                    return;
-                }
-                const updated = await setBookFolder(name, null);
-                if (updated) {
-                    await refreshList();
-                    const target = state.cache[name]?.dom?.root;
-                    target?.scrollIntoView({ block: 'center' });
-                }
-                modal.remove();
-            });
-            buttonRow.append(noFolderBtn);
+            buttonRowB.append(moveBtn);
 
             const cancelBtn = document.createElement('button');
             cancelBtn.classList.add('menu_button');
@@ -300,9 +303,10 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 e.stopPropagation();
                 modal.remove();
             });
-            buttonRow.append(cancelBtn);
+            buttonRowB.append(cancelBtn);
 
-            popup.append(buttonRow);
+            popup.append(buttonRowA);
+            popup.append(buttonRowB);
 
             modal.append(popup);
             document.body.append(modal);
