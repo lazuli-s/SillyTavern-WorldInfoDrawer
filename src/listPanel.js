@@ -170,6 +170,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
 
             const modal = document.createElement('div');
             modal.classList.add('stwid--blocker');
+            modal.classList.add('stwid--modal');
             modal.addEventListener('mousedown', (e)=>e.stopPropagation());
             modal.addEventListener('pointerdown', (e)=>e.stopPropagation());
             modal.addEventListener('touchstart', (e)=>e.stopPropagation());
@@ -213,6 +214,9 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             row.append(select);
             popup.append(row);
 
+            const buttonRow = document.createElement('div');
+            buttonRow.classList.add('stwid--moveBookButtons');
+
             const createBtn = document.createElement('button');
             createBtn.classList.add('menu_button');
             createBtn.textContent = 'Create new folder';
@@ -241,11 +245,11 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
                 modal.remove();
             });
-            popup.append(createBtn);
+            buttonRow.append(createBtn);
 
             const moveBtn = document.createElement('button');
             moveBtn.classList.add('menu_button');
-            moveBtn.textContent = 'Move';
+            moveBtn.textContent = 'Save';
             moveBtn.disabled = folderNames.length === 0;
             moveBtn.addEventListener('click', async(e)=>{
                 e.preventDefault();
@@ -266,7 +270,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
                 modal.remove();
             });
-            popup.append(moveBtn);
+            buttonRow.append(moveBtn);
 
             const noFolderBtn = document.createElement('button');
             noFolderBtn.classList.add('menu_button');
@@ -286,7 +290,19 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
                 modal.remove();
             });
-            popup.append(noFolderBtn);
+            buttonRow.append(noFolderBtn);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.classList.add('menu_button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                modal.remove();
+            });
+            buttonRow.append(cancelBtn);
+
+            popup.append(buttonRow);
 
             modal.append(popup);
             document.body.append(modal);
