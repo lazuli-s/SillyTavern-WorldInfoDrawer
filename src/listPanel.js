@@ -155,7 +155,30 @@ const setBookFolder = async(name, folderName)=>{
 
 const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
-    input?.click();
+    if (!input) return null;
+
+    // For F4: allow callers (folder import into folder) to attribute imported
+    // books without diffing world_names.
+    // We sniff the selected file before ST consumes it.
+    const filePromise = new Promise((resolve)=>{
+        const onChange = async()=>{
+            input.removeEventListener('change', onChange);
+            const [file] = input.files ?? [];
+            if (!file) {
+                resolve(null);
+                return;
+            }
+            try {
+                resolve(JSON.parse(await file.text()));
+            } catch {
+                resolve(null);
+            }
+        };
+        input.addEventListener('change', onChange, { once:true });
+    });
+
+    input.click();
+    return filePromise;
 };
 
 const importFolderFile = async(file)=>{

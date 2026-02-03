@@ -187,6 +187,16 @@ const setFolderCollapsed = (folderDom, isCollapsed)=>{
     }
 };
 
+const hasFolderImportPayload = (payload)=>{
+    const books = payload?.books;
+    return Boolean(books && typeof books === 'object' && !Array.isArray(books));
+};
+
+const getFolderImportBookNames = (payload)=>{
+    if (!hasFolderImportPayload(payload)) return [];
+    return Object.keys(payload.books);
+};
+
 const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menuActions })=>{
     const root = document.createElement('div'); {
         root.classList.add('stwid--folder');
@@ -356,8 +366,14 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                         menuActions.setFolderImporting?.(true);
 
                                         try {
+                                            // F4: Avoid mis-assigning books when other actions create/duplicate
+                                            // books during the import window.
+                                            //
+                                            // Prefer an import-specific identifier: the JSON file's declared
+                                            // book names. This lets us only assign imported books to the folder.
                                             const beforeNames = new Set(menuActions.getWorldNames());
-                                            menuActions.openImportDialog();
+                                            const importPayload = await menuActions.openImportDialog();
+                                            const expectedBookNames = getFolderImportBookNames(importPayload);
 
                                             const updatePromise = menuActions.waitForWorldInfoUpdate?.();
                                             const hasUpdate = await Promise.race([
@@ -382,10 +398,29 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             await menuActions.refreshList?.();
                                             const afterNames = menuActions.getWorldNames();
                                             const newNames = afterNames.filter((name)=>!beforeNames.has(name));
-                                            for (const name of newNames) {
+
+                                            // If we could read the folder import file, only assign books that we
+                                            // can strongly attribute to this import.
+                                            //
+                                            // importFolderFile() can rename books if the raw name already exists,
+                                            // so we match by prefix.
+                                            const importPrefixes = expectedBookNames.map((name)=>`${name} (imported`);
+                                            const attributedNames = expectedBookNames.length
+                                                ? newNames.filter((name)=>expectedBookNames.includes(name)
+                                                    || importPrefixes.some((prefix)=>name.startsWith(prefix)))
+                                                : newNames;
+
+                                            // If there's a mismatch between expected names and what appeared,
+                                            // be conservative: don't move anything automatically.
+                                            if (expectedBookNames.length && attributedNames.length !== newNames.length) {
+                                                toastr.warning('Import finished, but new books could not be confidently identified. No books were moved into the folder.');
+                                                return;
+                                            }
+
+                                            for (const name of attributedNames) {
                                                 await menuActions.setBookFolder(name, folderName);
                                             }
-                                            if (newNames.length) {
+                                            if (attributedNames.length) {
                                                 await menuActions.refreshList?.();
                                             }
                                         } finally {

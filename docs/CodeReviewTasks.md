@@ -12,7 +12,7 @@ This checklist is derived from `docs/CodeReviewFindings.md` and is intended to b
 
 - [x] **T3 (from F2)**: Avoid wasted template rendering when clicking entries rapidly.
 
-- [ ] **T4 (from F4)**: Reduce mis-assignment risk when importing into folder.
+- [x] **T4 (from F4)**: Reduce mis-assignment risk when importing into folder.
 
 ## Medium priority (leaks / repeated handlers)
 
