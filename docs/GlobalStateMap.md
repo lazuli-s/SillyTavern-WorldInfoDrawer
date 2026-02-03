@@ -2,6 +2,10 @@
 
 This document lists all **global/long‑lived state** used by the extension, with plain‑language explanations so a new developer (or non‑programmer) can understand what each piece does.
 
+> Notes
+> - “Global/long‑lived state” includes module‑level variables, shared objects passed between modules (like `context`), and browser persistence (localStorage / `extension_settings`).
+> - SillyTavern’s own state (e.g. `world_names`, `selected_world_info`, and core DOM templates like `#entry_edit_template`) is referenced but not owned by this extension.
+
 ---
 
 ## cache
@@ -89,13 +93,16 @@ This document lists all **global/long‑lived state** used by the extension, wit
 
 ---
 
-## isDiscord
-- **Type:** UI
+## updateWIChangeToken
+- **Type:** control flow (monotonic counter)
 - **Owner:** `index.js`
 - **Mutation points:**
-  - Updated by `checkDiscord()` (polls layout CSS and toggles body class).
+  - Incremented at the start of each `updateWIChange(...)` cycle.
+  - Read by `waitForWorldInfoUpdate()`.
 - **Explanation:**
-  Tracks whether the **Discord‑style layout** is active, so the drawer can adjust classes for spacing and layout differences.
+  A **monotonic “version number”** for WORLDINFO update cycles. `waitForWorldInfoUpdate()` captures the current token and only resolves when a strictly newer update starts and finishes, preventing false positives from older/overlapping updates.
+
+---
 
 ---
 
@@ -139,6 +146,52 @@ This document lists all **global/long‑lived state** used by the extension, wit
 
 ---
 
+## folderCollapseStates
+- **Type:** UI
+- **Owner:** `src/listPanel.js`
+- **Mutation points:**
+  - Updated when a folder header is toggled (via `createFolderDom(...).onToggle`).
+  - Read when folders are re-rendered on refresh to restore collapse state.
+- **Explanation:**
+  Remembers **which folders are collapsed vs. expanded**, so folder sections stay consistent after a refresh.
+
+---
+
+## folderDoms
+- **Type:** UI (DOM registry)
+- **Owner:** `src/listPanel.js`
+- **Mutation points:**
+  - Filled/cleared during `loadList()` and `renderBook()` when folders are created.
+  - Disconnected/cleared during refresh (`refreshList()` cleans observers and map entries).
+- **Explanation:**
+  A lookup table of **folder UI components** (`{ [folderName]: { root, books, observer, ... } }`) so the list panel can:
+  - insert books into the correct folder container,
+  - update folder active toggles,
+  - and clean up observers during refresh.
+
+---
+
+## dragBookName
+- **Type:** UI (drag/drop)
+- **Owner:** `src/listPanel.js`
+- **Mutation points:**
+  - Set on book title `dragstart`.
+  - Cleared on `dragend` and on drop handlers.
+- **Explanation:**
+  Tracks **which book is currently being dragged** (book‑level drag/drop). This is used for moving/duplicating books into folders or back to the root.
+
+---
+
+## folderImportInput
+- **Type:** UI (DOM element)
+- **Owner:** `src/listPanel.js`
+- **Mutation points:**
+  - Lazily created on first call to `openFolderImportDialog()`.
+- **Explanation:**
+  A hidden `<input type="file">` created by the extension to support **folder import** (importing a JSON file that contains multiple books).
+
+---
+
 ## selectLast / selectFrom / selectMode / selectList / selectToast
 - **Type:** UI + data
 - **Owner:** `src/listPanel.js`
@@ -155,6 +208,17 @@ This document lists all **global/long‑lived state** used by the extension, wit
 
 ---
 
+## folderMenuActions
+- **Type:** data (capabilities object)
+- **Owner:** `src/listPanel.js`
+- **Mutation points:**
+  - Built inside `initListPanel(...)`.
+- **Explanation:**
+  A bundle of **callbacks and dependencies** passed to folder UI (`createFolderDom`).
+  It contains things like `openImportDialog`, `setBookFolder`, `refreshList`, and helpers to toggle active books.
+
+---
+
 ## context (worldEntry module state)
 - **Type:** data + UI
 - **Owner:** `src/worldEntry.js`
@@ -162,6 +226,17 @@ This document lists all **global/long‑lived state** used by the extension, wit
   - Set once via `setWorldEntryContext(...)` in `index.js`.
 - **Explanation:**
   A **shared bridge object** that gives each entry row access to the cache, selection helpers, and editor panel without direct imports.
+
+---
+
+## clickToken (per-entry click guard)
+- **Type:** control flow (token string)
+- **Owner:** `src/worldEntry.js` (inside `renderEntry` closure)
+- **Mutation points:**
+  - Set to a fresh `uuidv4()` on each click.
+  - Read by `isTokenCurrent()` to cancel stale async editor rendering.
+- **Explanation:**
+  Prevents a slow async editor render from a previous click from “winning” after the user has already clicked a different entry. Only the latest click token is allowed to finish rendering.
 
 ---
 
@@ -176,6 +251,17 @@ This document lists all **global/long‑lived state** used by the extension, wit
 
 ---
 
+## scopedBookNames
+- **Type:** data (scope override)
+- **Owner:** `src/orderHelper.js`
+- **Mutation points:**
+  - Set when `openOrderHelper(book, scope)` is called.
+  - Read by `getOrderHelperSourceEntries()` to decide which books contribute rows.
+- **Explanation:**
+  An optional override list of book names that defines a **custom Order Helper scope**, e.g. “active books inside this folder.” When present, it replaces the default “all globally active books” scope.
+
+---
+
 ## ORDER_HELPER_*_STORAGE_KEY
 - **Type:** data (persistent storage keys)
 - **Owner:** `src/orderHelper.js`
@@ -183,6 +269,21 @@ This document lists all **global/long‑lived state** used by the extension, wit
   - Used to read/write Order Helper preferences in localStorage.
 - **Explanation:**
   These are the **localStorage keys** used to remember Order Helper settings like sort mode, hidden keys, and column visibility.
+
+---
+
+## stwid--order-* (Order apply controls in localStorage)
+- **Type:** data (persistent)
+- **Owner:** `src/orderHelperRender.js`
+- **Keys:**
+  - `stwid--order-start` (number)
+  - `stwid--order-step` (number)
+  - `stwid--order-direction` (`"up"` or `"down"`)
+  - `stwid--order-filter` (string: STscript snippet)
+- **Mutation points:**
+  - Updated by the Order Helper UI controls (start/spacing/direction/filter textarea).
+- **Explanation:**
+  Persistent user preferences for **how “Apply Order” behaves** and the last used filter script.
 
 ---
 
@@ -194,6 +295,30 @@ This document lists all **global/long‑lived state** used by the extension, wit
   - Saved via `Settings.save()` → `saveSettingsDebounced()`.
 - **Explanation:**
 The extension’s **global settings object**, stored in `extension_settings.worldInfoDrawer`. It remembers default sorting and whether per‑book sorting is enabled.
+
+---
+
+## Folder Registry (localStorage)
+- **Type:** data (persistent)
+- **Owner:** `src/lorebookFolders.js`
+- **Storage key:** `stwid--folder-registry`
+- **Mutation points:**
+  - Read/validated via `getFolderRegistry()`.
+  - Updated via `registerFolderName()` and `removeFolderName()`.
+- **Explanation:**
+  Stores the list of **known folder names** so empty folders can still appear in the UI even if they temporarily contain no books.
+
+---
+
+## Folder assignment in book metadata
+- **Type:** data (persisted with each book)
+- **Owner:** `src/lorebookFolders.js` (helpers), written via `src/listPanel.js`
+- **Metadata key:** `folder` (top-level book metadata)
+- **Mutation points:**
+  - Written by `setFolderInMetadata(...)` and saved with `saveWorldInfo(...)`.
+  - Sanitized by `sanitizeFolderMetadata(...)` to remove invalid values.
+- **Explanation:**
+  Each lorebook stores its folder membership in its own metadata under the `folder` key. This is how folders persist across reloads and exports.
 
 ---
 
