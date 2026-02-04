@@ -30,11 +30,14 @@ body.stwid-- #WorldInfo {
   --stwid-splitter-width: 6px;
   --stwid-splitter-margin-x: 10px;
 
+  /* Phase 3: layout stability (inner content scrolls) */
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
   max-height: unset;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* Show drawer when ST sets openDrawer */
@@ -53,6 +56,8 @@ body.stwid-- #WorldInfo > .stwid--body {
   display: flex;
   gap: 0;
   overflow: hidden;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* Loading overlay */
@@ -83,6 +88,8 @@ body.stwid-- #WorldInfo .stwid--list {
   flex-direction: column;
   overflow: hidden;
   width: 300px;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* Top controls (new book/folder, import/export, search, etc.) */
@@ -145,6 +152,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterActive {
 body.stwid-- #WorldInfo .stwid--list .stwid--books {
   flex: 1 1 auto;
   overflow: auto;
+  min-height: 0;
 }
 
 /* Folders */
@@ -498,8 +506,8 @@ body.stwid--
 
 body.stwid-- #WorldInfo .stwid--splitter {
   flex: 0 0 auto;
-  width: 6px;
-  margin: 0 10px;
+  width: var(--stwid-splitter-width);
+  margin: 0 var(--stwid-splitter-margin-x);
   cursor: col-resize;
   background: var(--SmartThemeBorderColor);
   opacity: 0.6;
@@ -523,6 +531,8 @@ body.stwid-- #WorldInfo .stwid--editor {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+  min-height: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--editor:empty::after {
@@ -589,6 +599,7 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--editor .drag-handle,
@@ -600,6 +611,7 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
   flex: 1 1 auto;
   display: flex !important;
   flex-direction: column;
+  min-height: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit {
@@ -607,12 +619,14 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-height: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > :nth-child(1) {
   flex: 1 1 auto;
   flex-direction: column;
   align-items: stretch;
+  min-height: 0;
 }
 
 body.stwid--
@@ -626,10 +640,13 @@ body.stwid--
 
 body.stwid-- #WorldInfo .stwid--editor [name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
+  min-height: 0;
+  min-width: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--editor [name='content'] {
   flex: 1 1 auto;
+  min-height: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
@@ -794,6 +811,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  min-width: 0;
 }
 
 /* Column toggles */

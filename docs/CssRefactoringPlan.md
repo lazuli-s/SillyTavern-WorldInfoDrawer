@@ -67,17 +67,15 @@ Constraints honored:
 
 ## Phase 2 — Local design tokens (consistency without layout changes)
 
+**Status**: ✅ Implemented
+
 **Scope**
-- Add a small set of CSS custom properties under `body.stwid-- #WorldInfo` (or `.stwid--body`) to keep them extension-scoped.
+- Add a small set of CSS custom properties under `body.stwid-- #WorldInfo` to keep them extension-scoped.
 - Replace repeated “magic numbers” with tokens where safe.
 
-**Allowed changes**
-- Introduce variables like:
-  - `--stwid-gap-xs/s/m`
-  - `--stwid-radius-s/m`
-  - `--stwid-control-height` (already exists in one spot)
-  - `--stwid-border` (theme border color)
-- Replace duplicates *only when value is exactly the same*.
+**What changed (high level)**
+- Added a small set of extension-scoped tokens on `body.stwid-- #WorldInfo` (gaps, radii, control height, splitter sizing).
+- (This phase intentionally keeps behavior/visuals unchanged and avoids touching JS.)
 
 **Definition of Done**
 - Repeated values (e.g., `0.25em`, `0.5em`, `6px`, `2.35em`, common radii) are centralized.
