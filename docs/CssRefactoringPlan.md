@@ -20,9 +20,11 @@ Constraints honored:
 
 ## Phase 1 — Organization + safe micro-dedup (lowest risk)
 
+**Status**: ✅ Implemented
+
 **Scope**
 - `style.css` only.
-- Reorder into clear sections:
+- Reordered into clear sections:
   1) Drawer
   2) List Panel
   3) Splitter
@@ -31,16 +33,15 @@ Constraints honored:
   6) Order Helper (actions, filter, table)
   7) Misc
 
-**Allowed changes**
-- Reorder rules without changing declarations.
-- Add section headers + short “what this is for” comments.
-- Combine selectors *only when declarations are identical*.
-- Remove only **provably duplicated** rules (same selector repeated) or truly dead rules (must be proven by search / no references).
-- No selector specificity reductions that could change who “wins”.
+**What changed (high level)**
+- Reordered rules into the sections above.
+- Added section headers + short explanatory comments.
+- Safe micro-dedup: combined a few selectors where declarations were identical.
+- Ran `stylelint --fix` to satisfy repo lint rules (no behavioral intent).
 
 **Definition of Done**
 - File reads top-to-bottom as a UI tour.
-- No declaration changes intended (except removal of exact duplicates).
+- No declaration changes intended (except removal of exact duplicates / safe combining).
 - No missing rules; no new selectors that could override existing ones.
 
 **Manual verification checklist**

@@ -18,6 +18,18 @@ body #WorldInfo > .stwid--body {
 
 /* Drawer root sizing + layout */
 body.stwid-- #WorldInfo {
+  /* Phase 2: extension-scoped tokens (keep visuals unchanged) */
+  --stwid-gap-xs: 0.25em;
+  --stwid-gap-s: 0.35em;
+  --stwid-gap-m: 0.5em;
+  --stwid-radius-s: 4px;
+  --stwid-radius-m: 6px;
+  --stwid-radius-l: 8px;
+  --stwid-radius-xl: 10px;
+  --stwid-control-height: 2.35em;
+  --stwid-splitter-width: 6px;
+  --stwid-splitter-margin-x: 10px;
+
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
   max-height: unset;
