@@ -217,36 +217,7 @@ Main shared libs include:
 
 ---
 
-## 7. Required Process (MANDATORY)
-
-For every task, the agent MUST:
-
-A) Scan the repository first:
-
-* `index.js`
-* `/src/*.js`
-* `style.css`
-* `manifest.json`
-* `README.md`
-
-B) Identify the correct module(s) for the change
-
-C) Implement **minimal, focused changes**
-
-* Use clear naming
-* Add comments only where they prevent confusion
-
-D) Output results in this format:
-
-1. Brief summary of what changed and why
-2. List of files modified
-3. Behavior change notes (only if applicable)
-
-(If the task is documentation-only, include the updated doc(s) in the “files modified” list.)
-
----
-
-## 8. Explicitly Forbidden Actions
+## 7. Explicitly Forbidden Actions
 
 * Do NOT modify `/vendor/SillyTavern`
 * Do NOT introduce frameworks (React, Vue, etc.)
