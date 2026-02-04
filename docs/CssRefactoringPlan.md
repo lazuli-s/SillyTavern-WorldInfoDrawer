@@ -121,10 +121,18 @@ Constraints honored:
 
 ## Phase 4 — Component polish (menus, buttons, column controls)
 
+**Status**: ✅ Implemented
+
 **Scope**
 - `.stwid--blocker`, `.stwid--menu`, `.stwid--item`
 - Move-to-folder modal styles
 - Order helper column visibility dropdown and filter UI
+
+**What changed (high level)**
+- Added small, extension-scoped component tokens on `body.stwid-- #WorldInfo` for hit padding + focus ring.
+- Consolidated focus-visible styling for the most common clickable “icon button” controls.
+- Standardized menu item transitions + radii and added keyboard focus ring support for menu items.
+- Tweaked Order Helper column menu + filter toggle hit targets (padding) without changing layout/positioning logic.
 
 **Allowed changes**
 - Consolidate duplicated hover/focus/active patterns.
@@ -137,7 +145,7 @@ Constraints honored:
 **Manual verification checklist**
 - Open each menu type and confirm:
   - hover highlight
-  - focus-visible outline
+  - focus-visible outline (Tab navigation)
   - click outside closes
   - modal centered
 
