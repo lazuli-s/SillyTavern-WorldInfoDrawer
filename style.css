@@ -30,6 +30,13 @@ body.stwid-- #WorldInfo {
   --stwid-splitter-width: 6px;
   --stwid-splitter-margin-x: 10px;
 
+  /* Phase 4: component primitives (menus, buttons, control hit targets) */
+  --stwid-hit-padding-y: 0.15em;
+  --stwid-hit-padding-x: 0.25em;
+  --stwid-focus-ring-color: var(--SmartThemeQuoteColor);
+  --stwid-focus-ring: 2px solid var(--stwid-focus-ring-color);
+  --stwid-focus-ring-offset: 2px;
+
   /* Phase 3: layout stability (inner content scrolls) */
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
@@ -238,8 +245,8 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle:focus-visible,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction:focus-visible,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu:focus-visible {
-  outline: 2px solid var(--SmartThemeQuoteColor);
-  outline-offset: 2px;
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;
 }
 
@@ -665,6 +672,18 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   z-index: 30000;
 }
 
+/* Shared menu/item patterns (Phase 4)
+   Keep selectors local to this extension and avoid changing layout/positioning.
+*/
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--columnMenuButton, .stwid--orderFilterButton) {
+  border-radius: var(--stwid-radius-m);
+}
+
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--columnMenuButton, .stwid--orderFilterButton):focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
 /* Move Book to Folder modal */
 .stwid--blocker.stwid--modal {
   display: flex;
@@ -683,7 +702,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   margin-top: 0;
   width: min(520px, calc(100vw - 2.5em));
   padding: 1em;
-  border-radius: 10px;
+  border-radius: var(--stwid-radius-xl);
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 45%, transparent);
 }
 
@@ -737,7 +756,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   z-index: 30000;
   overflow: clip auto;
   border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
+  border-radius: var(--stwid-radius-m);
   display: flex;
   flex-direction: column;
   background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
@@ -752,17 +771,23 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   color: var(--SmartThemeBodyColor);
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
-  transition: 200ms;
+  transition: background-color 200ms, color 200ms, opacity 200ms;
   display: flex;
   flex-direction: row;
   gap: 0.35em;
   align-items: center;
   box-sizing: border-box;
   padding: 3px;
+  border-radius: var(--stwid-radius-m);
 }
 
 .stwid--blocker .stwid--menu .stwid--item:hover {
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
+}
+
+.stwid--blocker .stwid--menu .stwid--item:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
 }
 
 .stwid--blocker .stwid--menu .stwid--item .stwid--icon {
@@ -945,6 +970,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
+  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
 }
 
 .stwid--orderHelper .stwid--columnMenu {
@@ -953,7 +979,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   left: 0;
   background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
   border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
+  border-radius: var(--stwid-radius-m);
   padding: 0.7em;
   display: none;
   flex-direction: column;
@@ -970,6 +996,16 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
   border: 1px solid var(--SmartThemeBorderColor);
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
+}
+
+.stwid--orderHelper .stwid--columnMenu :is(.stwid--columnOption, .stwid--columnVisibilityLabel) {
+  padding: 2px 4px;
+  border-radius: var(--stwid-radius-s);
+}
+
+.stwid--orderHelper .stwid--columnMenu .stwid--columnOption:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: 1px;
 }
 
 .stwid--orderHelper .stwid--columnOption {
@@ -1016,7 +1052,7 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   border: none;
   background: transparent;
   box-shadow: none;
-  padding: 0;
+  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
   min-height: 0;
   min-width: 0;
   line-height: 1;
