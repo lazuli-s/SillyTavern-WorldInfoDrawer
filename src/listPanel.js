@@ -220,6 +220,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
 
             const popupContent = document.createElement('div');
             popupContent.classList.add('popup-content');
+            popupContent.classList.add('stwid--moveBookContent');
 
             const title = document.createElement('h3');
             title.textContent = `Move "${name}" to folder`;
@@ -252,6 +253,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             const buttonRowA = document.createElement('div');
             buttonRowA.classList.add('stwid--moveBookButtons');
             buttonRowA.classList.add('stwid--moveBookButtons--secondary');
+            buttonRowA.classList.add('popup-controls');
 
             const createBtn = document.createElement('button');
             createBtn.classList.add('menu_button');
