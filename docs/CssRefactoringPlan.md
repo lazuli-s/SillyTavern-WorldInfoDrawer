@@ -155,9 +155,17 @@ Constraints honored:
 
 ## Phase 5 — State classes + accessibility consistency
 
+**Status**: ✅ Implemented
+
 **Scope**
 - `.stwid--active`, `.stwid--isSelected`, `.stwid--isTarget`, `.stwid--isFiltered`, `.stwid--focus`.
 - Keyboard focus visibility (`:focus-visible`) across clickable controls.
+
+**What changed (high level)**
+- Added extension-scoped CSS state tokens for target/selected/hover/disabled styling under `body.stwid-- #WorldInfo`.
+- Standardized “target” highlight to `SmartThemeQuoteColor` across folder headers + Order Helper row states.
+- Added missing `:focus-visible` outlines for key Order Helper table controls (move buttons, drag handle, select toggle).
+- Normalized disabled opacity for list entries + Order Helper rows via a shared token.
 
 **Allowed changes**
 - Add missing `:focus-visible` outlines where clearly absent.
@@ -168,7 +176,8 @@ Constraints honored:
 
 **Manual verification checklist**
 - Use Tab/Shift+Tab through controls and menus.
-- Confirm focus ring is visible and not clipped.
+- In Order Helper, Tab onto row controls (move buttons / select); confirm focus ring is visible.
+- Drag over folder/book/Order Helper rows; confirm target highlight is consistent.
 
 **Risk level**: Medium
 
