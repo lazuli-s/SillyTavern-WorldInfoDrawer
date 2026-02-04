@@ -204,25 +204,27 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 ...Object.keys(folderDoms),
             ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
 
-            const modal = document.createElement('div');
-            modal.classList.add('stwid--blocker');
-            modal.classList.add('stwid--modal');
-            modal.addEventListener('mousedown', (e)=>e.stopPropagation());
-            modal.addEventListener('pointerdown', (e)=>e.stopPropagation());
-            modal.addEventListener('touchstart', (e)=>e.stopPropagation());
+            const modal = document.createElement('dialog');
+            modal.classList.add('popup');
             modal.addEventListener('click', (e)=>{
-                e.stopPropagation();
+                if (e.target === modal) {
+                    modal.close();
+                }
+            });
+            modal.addEventListener('close', ()=>{
                 modal.remove();
             });
 
-            const popup = document.createElement('div');
-            popup.classList.add('stwid--menu');
-            popup.classList.add('stwid--moveBookPopup');
-            popup.addEventListener('click', (e)=>e.stopPropagation());
+            const popupBody = document.createElement('div');
+            popupBody.classList.add('popup-body');
+
+            const popupContent = document.createElement('div');
+            popupContent.classList.add('popup-content');
+            popupContent.classList.add('stwid--moveBookContent');
 
             const title = document.createElement('h3');
             title.textContent = `Move "${name}" to folder`;
-            popup.append(title);
+            popupContent.append(title);
 
             const row = document.createElement('div');
             row.classList.add('stwid--item');
@@ -246,11 +248,12 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
             }
             row.append(select);
-            popup.append(row);
+            popupContent.append(row);
 
             const buttonRowA = document.createElement('div');
             buttonRowA.classList.add('stwid--moveBookButtons');
             buttonRowA.classList.add('stwid--moveBookButtons--secondary');
+            buttonRowA.classList.add('popup-controls');
 
             const createBtn = document.createElement('button');
             createBtn.classList.add('menu_button');
@@ -278,7 +281,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                     const target = state.cache[name]?.dom?.root;
                     target?.scrollIntoView({ block: 'center' });
                 }
-                modal.remove();
+                modal.close();
             });
             buttonRowA.append(createBtn);
 
@@ -298,16 +301,18 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                     const target = state.cache[name]?.dom?.root;
                     target?.scrollIntoView({ block: 'center' });
                 }
-                modal.remove();
+                modal.close();
             });
             buttonRowA.append(noFolderBtn);
 
             const buttonRowB = document.createElement('div');
             buttonRowB.classList.add('stwid--moveBookButtons');
             buttonRowB.classList.add('stwid--moveBookButtons--primary');
+            buttonRowB.classList.add('popup-controls');
 
             const moveBtn = document.createElement('button');
             moveBtn.classList.add('menu_button');
+            moveBtn.classList.add('popup-button-ok');
             moveBtn.textContent = 'Save';
             moveBtn.disabled = folderNames.length === 0;
             moveBtn.addEventListener('click', async(e)=>{
@@ -327,25 +332,28 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                     const target = state.cache[name]?.dom?.root;
                     target?.scrollIntoView({ block: 'center' });
                 }
-                modal.remove();
+                modal.close();
             });
             buttonRowB.append(moveBtn);
 
             const cancelBtn = document.createElement('button');
             cancelBtn.classList.add('menu_button');
+            cancelBtn.classList.add('popup-button-cancel');
             cancelBtn.textContent = 'Cancel';
             cancelBtn.addEventListener('click', (e)=>{
                 e.preventDefault();
                 e.stopPropagation();
-                modal.remove();
+                modal.close();
             });
             buttonRowB.append(cancelBtn);
 
-            popup.append(buttonRowA);
-            popup.append(buttonRowB);
+            popupContent.append(buttonRowA);
+            popupContent.append(buttonRowB);
 
-            modal.append(popup);
+            popupBody.append(popupContent);
+            modal.append(popupBody);
             document.body.append(modal);
+            modal.showModal();
         });
         const i = document.createElement('i'); {
             i.classList.add('stwid--icon');

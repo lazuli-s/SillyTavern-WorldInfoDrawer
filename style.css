@@ -688,63 +688,21 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   outline-offset: var(--stwid-focus-ring-offset);
 }
 
-/* Move Book to Folder modal */
-.stwid--blocker.stwid--modal {
+/* Move Book to Folder dialog layout */
+.stwid--moveBookContent {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 1.25em;
-  background-color: rgb(0 0 0 / 0.35);
-  backdrop-filter: blur(2px);
+  text-align: center;
 }
 
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup {
-  position: static;
-  position-anchor: unset;
-  position-area: unset;
-  position-try-fallbacks: unset;
-  margin-top: 0;
-  width: min(520px, calc(100vw - 2.5em));
-  padding: 1em;
-  border-radius: var(--stwid-radius-xl);
-  box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 45%, transparent);
+.stwid--moveBookContent h3 {
+  align-self: stretch;
+  text-align: left;
 }
 
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup h3 {
-  margin: 0 0 0.75em;
-  padding: 0.35em 0.5em;
-  border-left: 3px solid var(--SmartThemeQuoteColor);
-  font-weight: 700;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, transparent);
-}
-
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--moveBookRow {
-  height: auto;
-  min-height: unset;
-  cursor: default;
-  padding: 0.35em 0.5em;
-}
-
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--moveBookRow:hover {
-  background-color: rgba(255, 255, 255, 0);
-}
-
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--moveBookRow select {
+.stwid--moveBookContent .stwid--moveBookRow {
   width: 100%;
-  min-height: 2.35em;
-  margin: 0;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--moveBookButtons {
-  display: flex;
-  gap: 0.6em;
-  justify-content: center;
-  margin-top: 0.75em;
-}
-
-.stwid--blocker.stwid--modal .stwid--menu.stwid--moveBookPopup .stwid--moveBookButtons--secondary {
-  margin-top: 0.5em;
 }
 
 /* Context menu container */
