@@ -216,18 +216,25 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             });
 
             const popup = document.createElement('div');
-            popup.classList.add('stwid--menu');
+            popup.classList.add('popup-body');
             popup.classList.add('stwid--moveBookPopup');
             popup.addEventListener('click', (e)=>e.stopPropagation());
 
+            const content = document.createElement('div');
+            content.classList.add('popup-content');
             const title = document.createElement('h3');
             title.textContent = `Move "${name}" to folder`;
-            popup.append(title);
+            content.append(title);
+            const prompt = document.createElement('div');
+            prompt.textContent = 'Select a folder:';
+            content.append(prompt);
+            popup.append(content);
 
             const row = document.createElement('div');
-            row.classList.add('stwid--item');
+            row.classList.add('popup-inputs');
             row.classList.add('stwid--moveBookRow');
             const select = document.createElement('select');
+            select.classList.add('popup-input');
             select.classList.add('text_pole');
             select.disabled = folderNames.length === 0;
             if (folderNames.length === 0) {
@@ -249,6 +256,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             popup.append(row);
 
             const buttonRowA = document.createElement('div');
+            buttonRowA.classList.add('popup-inputs');
             buttonRowA.classList.add('stwid--moveBookButtons');
             buttonRowA.classList.add('stwid--moveBookButtons--secondary');
 
@@ -303,11 +311,12 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             buttonRowA.append(noFolderBtn);
 
             const buttonRowB = document.createElement('div');
-            buttonRowB.classList.add('stwid--moveBookButtons');
+            buttonRowB.classList.add('popup-controls');
             buttonRowB.classList.add('stwid--moveBookButtons--primary');
 
             const moveBtn = document.createElement('button');
             moveBtn.classList.add('menu_button');
+            moveBtn.classList.add('popup-button-ok');
             moveBtn.textContent = 'Save';
             moveBtn.disabled = folderNames.length === 0;
             moveBtn.addEventListener('click', async(e)=>{
@@ -333,6 +342,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
 
             const cancelBtn = document.createElement('button');
             cancelBtn.classList.add('menu_button');
+            cancelBtn.classList.add('popup-button-cancel');
             cancelBtn.textContent = 'Cancel';
             cancelBtn.addEventListener('click', (e)=>{
                 e.preventDefault();
