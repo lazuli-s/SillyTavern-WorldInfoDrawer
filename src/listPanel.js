@@ -206,7 +206,6 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
 
             const modal = document.createElement('dialog');
             modal.classList.add('popup');
-            modal.classList.add('stwid--moveBookPopup');
             modal.addEventListener('click', (e)=>{
                 if (e.target === modal) {
                     modal.close();

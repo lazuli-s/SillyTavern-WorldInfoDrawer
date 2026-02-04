@@ -688,48 +688,6 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   outline-offset: var(--stwid-focus-ring-offset);
 }
 
-/* Move Book to Folder modal */
-.popup.stwid--moveBookPopup {
-  width: min(520px, calc(100vw - 2.5em));
-}
-
-.popup.stwid--moveBookPopup h3 {
-  margin: 0 0 0.75em;
-  padding: 0.35em 0.5em;
-  border-left: 3px solid var(--SmartThemeQuoteColor);
-  font-weight: 700;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, transparent);
-}
-
-.popup.stwid--moveBookPopup .stwid--moveBookRow {
-  height: auto;
-  min-height: unset;
-  cursor: default;
-  padding: 0.35em 0.5em;
-}
-
-.popup.stwid--moveBookPopup .stwid--moveBookRow:hover {
-  background-color: rgba(255, 255, 255, 0);
-}
-
-.popup.stwid--moveBookPopup .stwid--moveBookRow select {
-  width: 100%;
-  min-height: 2.35em;
-  margin: 0;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.popup.stwid--moveBookPopup .stwid--moveBookButtons {
-  display: flex;
-  gap: 0.6em;
-  justify-content: center;
-  margin-top: 0.75em;
-}
-
-.popup.stwid--moveBookPopup .stwid--moveBookButtons--secondary {
-  margin-top: 0.5em;
-}
-
 /* Context menu container */
 .stwid--blocker .stwid--menu {
   --stwid-menu-item-height: 2.05em;
