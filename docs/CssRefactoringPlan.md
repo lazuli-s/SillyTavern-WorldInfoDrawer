@@ -1,9 +1,9 @@
 # CSS Refactoring Plan (SillyTavern-WorldInfoDrawer)
 
 ## Task list (concise)
-- [ ] Phase 1: Reorganize `style.css` into clear sections; remove only proven duplicates.
-- [ ] Phase 2: Introduce small, extension-scoped CSS tokens; replace repeated magic numbers.
-- [ ] Phase 3: Normalize layout/overflow for drawer/list/editor/splitter (no behavior change).
+- [x] Phase 1: Reorganize `style.css` into clear sections; remove only proven duplicates.
+- [x] Phase 2: Introduce small, extension-scoped CSS tokens; replace repeated magic numbers.
+- [x] Phase 3: Normalize layout/overflow for drawer/list/editor/splitter (no behavior change).
 - [ ] Phase 4: Standardize component styles (menus, buttons, column controls).
 - [ ] Phase 5: Make state + focus styles consistent; accessibility polish.
 - [ ] Phase 6: Cleanup pass (dedupe + reduce specificity only when proven safe).
@@ -91,13 +91,19 @@ Constraints honored:
 
 ## Phase 3 — Layout stability pass (flex/overflow normalization)
 
+**Status**: ✅ Implemented
+
 **Scope**
 - Drawer root layout (`#WorldInfo`, `.stwid--body`, `.stwid--list`, `.stwid--editor`, `.stwid--splitter`).
 - Overflow and min-size rules.
 
-**Allowed changes**
-- Normalize flex patterns and `min-height: 0` / `min-width: 0` where needed to prevent scroll bugs.
-- Keep existing min widths and overall proportions.
+**Decision**
+- ✅ **Inner content scrolls**: the drawer frame stays fixed (`overflow: hidden`), and the list/editor internal regions own scrolling.
+
+**What changed (high level)**
+- Added `min-width: 0` / `min-height: 0` normalization to the drawer root, main split, list, editor, and key editor inner flex wrappers to prevent flexbox overflow/scroll bugs.
+- Ensured the list book area remains the scroll container (`.stwid--books { overflow: auto; min-height: 0; }`).
+- Switched splitter sizing to use Phase 2 tokens (`--stwid-splitter-width`, `--stwid-splitter-margin-x`) (no visual intent).
 
 **Definition of Done**
 - No accidental double scrollbars.
@@ -107,6 +113,7 @@ Constraints honored:
 - Resize the browser window narrow/wide.
 - Drag splitter to min and max.
 - Confirm list scroll and order table scroll still function.
+- Open an entry with a long content field; confirm the content area scrolls without the entire drawer scrolling.
 
 **Risk level**: Medium
 
