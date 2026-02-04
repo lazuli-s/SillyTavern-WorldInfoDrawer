@@ -189,6 +189,68 @@ Constraints honored:
 - Reduce repetitive `body.stwid-- #WorldInfo ...` where safe.
 - Merge repeated selectors; remove redundancy.
 
+### Phase 6.1: merge exact duplicate selectors
+**Goal**: Reduce noise by combining blocks that are *byte-for-byte identical* (same selector list and same declarations).
+
+**Rules (to preserve behavior)**
+- Only merge when declarations are identical (including `!important`).
+- Do **not** reorder declarations inside a block.
+- Do **not** reorder blocks across sections if it could affect later overrides.
+- Keep the merged block at the earliest occurrence; delete later duplicates.
+
+**Steps**
+1) Find duplicates (same selector + same declarations).
+2) Verify there is no nearby override that depended on the duplicate being later.
+3) Keep the first copy, delete the rest.
+4) Re-run a quick visual sweep of the affected component(s).
+
+### Phase 6.2: consolidate focus-visible rules
+**Goal**: Replace scattered `:focus-visible` rules for similar controls with a small number of shared patterns.
+
+**Rules**
+- Keep selectors explicit enough to avoid accidentally styling non-interactive elements.
+- Prefer grouping selectors in-place (local consolidation) rather than creating global “utility” classes (no JS changes).
+
+**Steps**
+1) Inventory all `:focus-visible` blocks inside the extension scope.
+2) Group identical outlines into shared rules.
+3) Ensure focus ring token usage stays consistent with Phase 4/5.
+
+### Phase 6.3: consolidate icon-button primitives
+**Goal**: Make “icon button” controls (folder/book/menu buttons, small action icons) share the same hit target, alignment, and hover/focus behavior.
+
+**Rules**
+- Do not change class names or DOM expectations.
+- Prefer `:is(...)` selector grouping to avoid duplication.
+
+**Steps**
+1) Identify all icon-button-like selectors.
+2) Consolidate identical `display`, `align-items`, padding, hover/focus rules.
+3) Confirm no layout shift (especially in headers with `margin-left: auto`).
+
+### Phase 6.4: local grouping to reduce repetition
+**Goal**: Reduce repetitive long selectors while keeping cascade winners unchanged.
+
+**Rules**
+- Group *within the same section/component* (List / Editor / Order Helper), not across unrelated areas.
+- Avoid “big” scope changes that could alter specificity.
+
+**Steps**
+1) Within a component section, introduce a local prefix comment and group adjacent rules that share the same long prefix.
+2) Use `:is()`/`:where()` only if it does not reduce specificity in a way that changes winners.
+
+### Phase 6.5: remove redundant var redeclarations (if safe)
+**Goal**: Remove repeated `--stwid-*` custom property declarations that are identical and already defined higher in the intended scope.
+
+**Rules**
+- Only remove if the variable is already defined in a strictly broader scope that always applies.
+- Ensure no theme or nested component intentionally overrides that variable.
+
+**Steps**
+1) Grep for repeated `--stwid-` definitions.
+2) Confirm the cascade path (where it’s defined, where it’s used).
+3) Remove only proven redundant redeclarations.
+
 **Allowed changes**
 - Carefully reduce specificity by introducing a safe “root scope” wrapper selector (still within one file) *only if it doesn’t change winners*.
 
