@@ -703,6 +703,29 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 
 .stwid--moveBookContent .stwid--moveBookRow {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.stwid--moveBookContent .stwid--moveBookRow .text_pole {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.stwid--moveBookContent .stwid--moveBookQuickActions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35em;
+}
+
+.stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+  min-width: 2.35em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Context menu container */

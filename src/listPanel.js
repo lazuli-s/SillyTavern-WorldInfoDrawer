@@ -248,16 +248,17 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
             }
             row.append(select);
-            popupContent.append(row);
 
             const buttonRowA = document.createElement('div');
-            buttonRowA.classList.add('stwid--moveBookButtons');
-            buttonRowA.classList.add('stwid--moveBookButtons--secondary');
-            buttonRowA.classList.add('popup-controls');
+            buttonRowA.classList.add('stwid--moveBookQuickActions');
 
             const createBtn = document.createElement('button');
-            createBtn.classList.add('menu_button');
-            createBtn.textContent = 'Create new folder';
+            createBtn.classList.add('menu_button', 'interactable');
+            createBtn.title = 'New Folder';
+            createBtn.setAttribute('aria-label', 'New Folder');
+            const createIcon = document.createElement('i');
+            createIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
+            createBtn.append(createIcon);
             createBtn.addEventListener('click', async(e)=>{
                 e.preventDefault();
                 e.stopPropagation();
@@ -286,8 +287,12 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             buttonRowA.append(createBtn);
 
             const noFolderBtn = document.createElement('button');
-            noFolderBtn.classList.add('menu_button');
-            noFolderBtn.textContent = 'No Folder';
+            noFolderBtn.classList.add('menu_button', 'interactable');
+            noFolderBtn.title = 'No Folder';
+            noFolderBtn.setAttribute('aria-label', 'No Folder');
+            const noFolderIcon = document.createElement('i');
+            noFolderIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-minus');
+            noFolderBtn.append(noFolderIcon);
             noFolderBtn.addEventListener('click', async(e)=>{
                 e.preventDefault();
                 e.stopPropagation();
@@ -304,6 +309,8 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 modal.close();
             });
             buttonRowA.append(noFolderBtn);
+            row.append(buttonRowA);
+            popupContent.append(row);
 
             const buttonRowB = document.createElement('div');
             buttonRowB.classList.add('stwid--moveBookButtons');
@@ -347,7 +354,6 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             });
             buttonRowB.append(cancelBtn);
 
-            popupContent.append(buttonRowA);
             popupContent.append(buttonRowB);
 
             popupBody.append(popupContent);
