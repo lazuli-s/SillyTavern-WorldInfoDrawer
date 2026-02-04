@@ -307,9 +307,11 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             const buttonRowB = document.createElement('div');
             buttonRowB.classList.add('stwid--moveBookButtons');
             buttonRowB.classList.add('stwid--moveBookButtons--primary');
+            buttonRowB.classList.add('popup-controls');
 
             const moveBtn = document.createElement('button');
             moveBtn.classList.add('menu_button');
+            moveBtn.classList.add('popup-button-ok');
             moveBtn.textContent = 'Save';
             moveBtn.disabled = folderNames.length === 0;
             moveBtn.addEventListener('click', async(e)=>{
@@ -335,6 +337,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
 
             const cancelBtn = document.createElement('button');
             cancelBtn.classList.add('menu_button');
+            cancelBtn.classList.add('popup-button-cancel');
             cancelBtn.textContent = 'Cancel';
             cancelBtn.addEventListener('click', (e)=>{
                 e.preventDefault();
