@@ -23,6 +23,42 @@ const collapseStates = {};
 const folderCollapseStates = {};
 const folderDoms = {};
 
+const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
+
+const loadFolderCollapseStates = ()=>{
+    if (typeof localStorage === 'undefined') return {};
+    try {
+        const raw = localStorage.getItem(FOLDER_COLLAPSE_STORAGE_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch (error) {
+        console.warn('[STWID] Failed to load folder collapse states', error);
+        return {};
+    }
+};
+
+const saveFolderCollapseStates = ()=>{
+    if (typeof localStorage === 'undefined') return;
+    try {
+        localStorage.setItem(FOLDER_COLLAPSE_STORAGE_KEY, JSON.stringify(folderCollapseStates));
+    } catch (error) {
+        console.warn('[STWID] Failed to save folder collapse states', error);
+    }
+};
+
+const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand = false } = {})=>{
+    folderCollapseStates[folderName] = Boolean(isCollapsed);
+
+    // "transientExpand" means: show expanded right now, but keep the stored default
+    // unchanged (used for rename/new folder to keep UI friendly).
+    if (!transientExpand) {
+        saveFolderCollapseStates();
+    }
+
+    setFolderCollapsed(folderDoms[folderName], Boolean(isCollapsed));
+};
+
 /** Last clicked/selected DOM (WI entry) @type {HTMLElement} */
 let selectLast = null;
 /** Name of the book to select WI entries from @type {string} */
@@ -628,8 +664,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     folderName,
                     onToggle: ()=>{
                         const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
-                        folderCollapseStates[folderName] = isCollapsed;
-                        setFolderCollapsed(folderDoms[folderName], isCollapsed);
+                        setFolderCollapsedAndPersist(folderName, isCollapsed);
                     },
                     onDragStateChange: (isOver)=>{
                         if (!dragBookName) return false;
@@ -673,7 +708,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 }
                 if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', folderDoms[folderName].root);
                 else state.dom.books.append(folderDoms[folderName].root);
-                const initialCollapsed = folderCollapseStates[folderName] ?? false;
+                const initialCollapsed = folderCollapseStates[folderName] ?? true;
                 setFolderCollapsed(folderDoms[folderName], initialCollapsed);
             }
             targetParent = folderDoms[folderName].books;
@@ -1208,8 +1243,7 @@ const loadList = async()=>{
             folderName,
             onToggle: ()=>{
                 const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
-                folderCollapseStates[folderName] = isCollapsed;
-                setFolderCollapsed(folderDoms[folderName], isCollapsed);
+                setFolderCollapsedAndPersist(folderName, isCollapsed);
             },
             onDragStateChange: (isOver)=>{
                 if (!dragBookName) return false;
@@ -1236,7 +1270,7 @@ const loadList = async()=>{
             menuActions: folderMenuActions,
         });
         state.dom.books.append(folderDoms[folderName].root);
-        const initialCollapsed = folderCollapseStates[folderName] ?? false;
+        const initialCollapsed = folderCollapseStates[folderName] ?? true;
         setFolderCollapsed(folderDoms[folderName], initialCollapsed);
         const folderBooks = folderGroups.get(folderName) ?? [];
         for (let i = 0; i < folderBooks.length; i++) {
@@ -1461,6 +1495,7 @@ const getSelectionState = ()=>({
 
 const initListPanel = (options)=>{
     state = options;
+    Object.assign(folderCollapseStates, loadFolderCollapseStates());
     loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
 
