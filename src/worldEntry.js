@@ -130,6 +130,8 @@ export const renderEntry = async(e, name, before = null)=>{
                 if (!isEnabled) return entry;
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
+                isEnabled.title = 'Enable/disable this entry';
+                isEnabled.setAttribute('aria-label', 'Enable or disable this entry');
 
                 const applyEnabledIcon = (disabled)=>{
                     isEnabled.classList.toggle('fa-toggle-off', Boolean(disabled));
@@ -150,6 +152,8 @@ export const renderEntry = async(e, name, before = null)=>{
                 if (!strat) return entry;
                 world.dom.entry[e.uid].strategy = strat;
                 strat.classList.add('stwid--strategy');
+                strat.title = 'Entry strategy';
+                strat.setAttribute('aria-label', 'Entry strategy');
                 strat.value = entryState(e);
                 strat.addEventListener('change', async()=>{
                     const value = strat.value;
@@ -192,6 +196,20 @@ export const renderEntry = async(e, name, before = null)=>{
                 isTokenCurrent: () => clickToken === token,
             });
         });
+
+        // Make SHIFT range-selected entries actually draggable.
+        // The selection UI (orange highlight) is applied via CSS classes, but HTML drag-and-drop
+        // only starts when the element has draggable=true. Single-click selection sets this,
+        // but the SHIFT range-path was missing it.
+        entry.addEventListener('pointerdown', (evt)=>{
+            if (evt.button !== 0) return; // left-click only
+            if (context.selectFrom !== name) return;
+            if (!context.selectList?.includes?.(e.uid)) return;
+            // Ensure the dragstart event can fire for any selected row.
+            // (Without this, the UI can look selected but never start dragging.)
+            entry.setAttribute('draggable', 'true');
+        });
+
         if (before) before.insertAdjacentElement('beforebegin', entry);
         else world.dom.entryList.append(entry);
         return entry;

@@ -452,6 +452,7 @@ const addDrawer = ()=>{
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
                             add.title = 'Create New Book';
+                            add.setAttribute('aria-label', 'Create New Book');
                             add.querySelector('span')?.remove();
                             add.addEventListener('click', async()=>{
                                 const startPromise = updateWIChangeStarted.promise;
@@ -494,6 +495,7 @@ const addDrawer = ()=>{
                         imp.classList.add('menu_button');
                         imp.classList.add('fa-solid', 'fa-fw', 'fa-file-import');
                         imp.title = 'Import Book';
+                        imp.setAttribute('aria-label', 'Import Book');
                         imp.addEventListener('click', ()=>{
                             /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file')).click();
                         });
@@ -513,6 +515,7 @@ const addDrawer = ()=>{
                         refresh.classList.add('menu_button');
                         refresh.classList.add('fa-solid', 'fa-fw', 'fa-arrows-rotate');
                         refresh.title = 'Refresh';
+                        refresh.setAttribute('aria-label', 'Refresh');
                         refresh.addEventListener('click', async()=>{
                             await refreshList();
                         });
@@ -524,6 +527,7 @@ const addDrawer = ()=>{
             settings.classList.add('menu_button');
             settings.classList.add('fa-solid', 'fa-fw', 'fa-cog');
             settings.title = 'Global Activation Settings';
+            settings.setAttribute('aria-label', 'Global Activation Settings');
             settings.addEventListener('click', ()=>{
                 editorPanelApi.toggleActivationSettings();
             });
@@ -533,7 +537,8 @@ const addDrawer = ()=>{
                         dom.order.toggle = order;
                         order.classList.add('menu_button');
                         order.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
-                        order.title = 'Order Helper\n---\nUse drag and drop to help assign an "Order" value to entries of all active books.';
+                        order.title = 'Open Order Helper (active books)';
+                        order.setAttribute('aria-label', 'Open Order Helper for active books');
                         order.addEventListener('click', ()=>{
                             const isActive = order.classList.contains('stwid--active');
                             if (isActive) {
@@ -567,6 +572,8 @@ const addDrawer = ()=>{
                     controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');
                     const sortSel = document.createElement('select'); {
                         sortSel.classList.add('text_pole');
+                        sortSel.title = 'Global entry sort for the list panel';
+                        sortSel.setAttribute('aria-label', 'Global entry sort');
                         sortSel.addEventListener('change', ()=>{
                             const value = JSON.parse(sortSel.value);
                             Settings.instance.sortLogic = value.sort;

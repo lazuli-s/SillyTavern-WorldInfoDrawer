@@ -23,6 +23,42 @@ const collapseStates = {};
 const folderCollapseStates = {};
 const folderDoms = {};
 
+const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
+
+const loadFolderCollapseStates = ()=>{
+    if (typeof localStorage === 'undefined') return {};
+    try {
+        const raw = localStorage.getItem(FOLDER_COLLAPSE_STORAGE_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch (error) {
+        console.warn('[STWID] Failed to load folder collapse states', error);
+        return {};
+    }
+};
+
+const saveFolderCollapseStates = ()=>{
+    if (typeof localStorage === 'undefined') return;
+    try {
+        localStorage.setItem(FOLDER_COLLAPSE_STORAGE_KEY, JSON.stringify(folderCollapseStates));
+    } catch (error) {
+        console.warn('[STWID] Failed to save folder collapse states', error);
+    }
+};
+
+const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand = false } = {})=>{
+    folderCollapseStates[folderName] = Boolean(isCollapsed);
+
+    // "transientExpand" means: show expanded right now, but keep the stored default
+    // unchanged (used for rename/new folder to keep UI friendly).
+    if (!transientExpand) {
+        saveFolderCollapseStates();
+    }
+
+    setFolderCollapsed(folderDoms[folderName], Boolean(isCollapsed));
+};
+
 /** Last clicked/selected DOM (WI entry) @type {HTMLElement} */
 let selectLast = null;
 /** Name of the book to select WI entries from @type {string} */
@@ -153,9 +189,218 @@ const setBookFolder = async(name, folderName)=>{
     return true;
 };
 
+const buildMoveBookMenuItem = (name, closeMenu)=>{
+    const item = document.createElement('div'); {
+        item.classList.add('stwid--item');
+        item.classList.add('stwid--moveToFolder');
+        item.addEventListener('click', async(evt)=>{
+            evt.stopPropagation();
+            closeMenu?.();
+
+            const currentFolder = getFolderFromMetadata(state.cache[name]?.metadata);
+            const registry = getFolderRegistry();
+            const folderNames = Array.from(new Set([
+                ...registry,
+                ...Object.keys(folderDoms),
+            ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+
+            const modal = document.createElement('dialog');
+            modal.classList.add('popup');
+            modal.addEventListener('click', (e)=>{
+                if (e.target === modal) {
+                    modal.close();
+                }
+            });
+            modal.addEventListener('close', ()=>{
+                modal.remove();
+            });
+
+            const popupBody = document.createElement('div');
+            popupBody.classList.add('popup-body');
+
+            const popupContent = document.createElement('div');
+            popupContent.classList.add('popup-content');
+            popupContent.classList.add('stwid--moveBookContent');
+
+            const title = document.createElement('h3');
+            title.textContent = `Move "${name}" to folder`;
+            popupContent.append(title);
+
+            const row = document.createElement('div');
+            row.classList.add('stwid--item');
+            row.classList.add('stwid--moveBookRow');
+            const select = document.createElement('select');
+            select.classList.add('text_pole');
+            select.disabled = folderNames.length === 0;
+            if (folderNames.length === 0) {
+                const opt = document.createElement('option');
+                opt.textContent = '(no folders yet)';
+                opt.value = '';
+                opt.selected = true;
+                select.append(opt);
+            } else {
+                for (const folderName of folderNames) {
+                    const opt = document.createElement('option');
+                    opt.value = folderName;
+                    opt.textContent = folderName;
+                    if (folderName === currentFolder) opt.selected = true;
+                    select.append(opt);
+                }
+            }
+            row.append(select);
+
+            const buttonRowA = document.createElement('div');
+            buttonRowA.classList.add('stwid--moveBookQuickActions');
+
+            const createBtn = document.createElement('button');
+            createBtn.classList.add('menu_button', 'interactable');
+            createBtn.title = 'New Folder';
+            createBtn.setAttribute('aria-label', 'New Folder');
+            const createIcon = document.createElement('i');
+            createIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
+            createBtn.append(createIcon);
+            createBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                const nextName = await state.Popup?.show.input('Create folder', 'Enter a new folder name:', 'New Folder');
+                if (!nextName) return;
+                const reg = registerFolderName(nextName);
+                if (!reg.ok) {
+                    if (reg.reason === 'empty') {
+                        toastr.warning('Folder name cannot be empty.');
+                    } else {
+                        toastr.error('Folder names cannot include "/".');
+                    }
+                    return;
+                }
+
+                // Requirement: immediately add the book to the new folder.
+                const updated = await setBookFolder(name, reg.folder);
+                if (updated) {
+                    await refreshList();
+                    // Jump to location: scroll the destination folder/book into view.
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.close();
+            });
+            buttonRowA.append(createBtn);
+
+            const noFolderBtn = document.createElement('button');
+            noFolderBtn.classList.add('menu_button', 'interactable');
+            noFolderBtn.title = 'No Folder';
+            noFolderBtn.setAttribute('aria-label', 'No Folder');
+            const noFolderIcon = document.createElement('i');
+            noFolderIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-minus');
+            noFolderBtn.append(noFolderIcon);
+            noFolderBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                if (!currentFolder) {
+                    toastr.info('Book is already not in a folder.');
+                    return;
+                }
+                const updated = await setBookFolder(name, null);
+                if (updated) {
+                    await refreshList();
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.close();
+            });
+            buttonRowA.append(noFolderBtn);
+            row.append(buttonRowA);
+            popupContent.append(row);
+
+            const buttonRowB = document.createElement('div');
+            buttonRowB.classList.add('stwid--moveBookButtons');
+            buttonRowB.classList.add('stwid--moveBookButtons--primary');
+            buttonRowB.classList.add('popup-controls');
+
+            const moveBtn = document.createElement('button');
+            moveBtn.classList.add('menu_button');
+            moveBtn.classList.add('popup-button-ok');
+            moveBtn.textContent = 'Save';
+            moveBtn.disabled = folderNames.length === 0;
+            moveBtn.addEventListener('click', async(e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                const selectedFolder = select.disabled ? null : select.value;
+                if (!selectedFolder) return;
+
+                if (selectedFolder === currentFolder) {
+                    toastr.info("Book is already in that folder.");
+                    return;
+                }
+
+                const updated = await setBookFolder(name, selectedFolder);
+                if (updated) {
+                    await refreshList();
+                    const target = state.cache[name]?.dom?.root;
+                    target?.scrollIntoView({ block: 'center' });
+                }
+                modal.close();
+            });
+            buttonRowB.append(moveBtn);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.classList.add('menu_button');
+            cancelBtn.classList.add('popup-button-cancel');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                modal.close();
+            });
+            buttonRowB.append(cancelBtn);
+
+            popupContent.append(buttonRowB);
+
+            popupBody.append(popupContent);
+            modal.append(popupBody);
+            document.body.append(modal);
+            modal.showModal();
+        });
+        const i = document.createElement('i'); {
+            i.classList.add('stwid--icon');
+            i.classList.add('fa-solid', 'fa-fw', 'fa-folder-tree');
+            item.append(i);
+        }
+        const txt = document.createElement('span'); {
+            txt.classList.add('stwid--label');
+            txt.textContent = 'Move Book to Folder';
+            item.append(txt);
+        }
+    }
+    return item;
+};
+
 const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
-    input?.click();
+    if (!input) return null;
+
+    // For F4: allow callers (folder import into folder) to attribute imported
+    // books without diffing world_names.
+    // We sniff the selected file before ST consumes it.
+    const filePromise = new Promise((resolve)=>{
+        const onChange = async()=>{
+            input.removeEventListener('change', onChange);
+            const [file] = input.files ?? [];
+            if (!file) {
+                resolve(null);
+                return;
+            }
+            try {
+                resolve(JSON.parse(await file.text()));
+            } catch {
+                resolve(null);
+            }
+        };
+        input.addEventListener('change', onChange, { once:true });
+    });
+
+    input.click();
+    return filePromise;
 };
 
 const importFolderFile = async(file)=>{
@@ -225,21 +470,122 @@ const openFolderImportDialog = ()=>{
     folderImportInput.click();
 };
 
-const duplicateBook = async(name)=>{
+/**
+ * Waits for a DOM condition to become true.
+ * Uses a MutationObserver where possible to avoid fixed delays.
+ *
+ * @param {() => boolean} condition
+ * @param {{ timeoutMs?: number, root?: ParentNode }} [options]
+ */
+const waitForDom = (condition, { timeoutMs = 5000, root = document } = {})=>new Promise((resolve)=>{
+    if (condition()) {
+        resolve(true);
+        return;
+    }
+
+    let done = false;
+    const finish = (value)=>{
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        observer.disconnect();
+        resolve(value);
+    };
+
+    const observer = new MutationObserver(()=>{
+        if (condition()) finish(true);
+    });
+    // Observe broadly: ST may render buttons/options dynamically.
+    observer.observe(root === document ? document.documentElement : /**@type {Node}*/(root), {
+        childList: true,
+        subtree: true,
+        attributes: true,
+    });
+
+    const timer = setTimeout(()=>finish(false), timeoutMs);
+});
+
+const setSelectedBookInCoreUi = async(bookName)=>{
     const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-    if (!select) return null;
-    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
-    if (!option) return null;
-    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    if (!select) return false;
+    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == bookName);
+    if (!option) return false;
+
+    const previousValue = select.value;
     select.value = option.value;
     select.dispatchEvent(new Event('change', { bubbles:true }));
-    await state.delay(500);
-    document.querySelector('#world_duplicate')?.click();
-    for (let i = 0; i < 20; i++) {
-        await state.delay(200);
-        const currentNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
-        const newName = currentNames.find((entry)=>!initialNames.includes(entry));
-        if (newName) return newName;
+
+    // Wait for the selection to be reflected in the DOM/state.
+    // We can't rely on fixed delays because ST may update asynchronously.
+    // As a minimal robust check, wait until the select reports the new value
+    // and at least one mutation occurs in the WI area (common after change).
+    if (select.value !== option.value) return false;
+    // If selection did not actually change (same value), still allow continuing.
+    if (previousValue === option.value) return true;
+
+    // Prefer waiting for a worldinfo update cycle if available.
+    if (state.waitForWorldInfoUpdate) {
+        // Race a short timeout: selection changes sometimes do not emit WORLDINFO_UPDATED.
+        await Promise.race([
+            state.waitForWorldInfoUpdate(),
+            state.delay(800),
+        ]);
+        return true;
+    }
+    await state.delay(200);
+    return true;
+};
+
+const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
+    const selectors = Array.isArray(possibleSelectors) ? possibleSelectors : [possibleSelectors];
+    const findButton = ()=>selectors
+        .map((sel)=>document.querySelector(sel))
+        .find((el)=>el instanceof HTMLElement);
+
+    const ok = await waitForDom(()=>Boolean(findButton()), { timeoutMs });
+    if (!ok) return false;
+    const btn = /**@type {HTMLElement}*/(findButton());
+    btn.click();
+    return true;
+};
+
+const duplicateBook = async(name)=>{
+    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const selected = await setSelectedBookInCoreUi(name);
+    if (!selected) return null;
+
+    // Click the duplicate action once it exists.
+    // Keep selector list flexible to tolerate minor ST UI changes.
+    const clicked = await clickCoreUiAction([
+        '#world_duplicate',
+        '[id="world_duplicate"]',
+    ]);
+    if (!clicked) return null;
+
+    // Wait for either:
+    // 1) a WORLDINFO update cycle (preferred), then detect new name
+    // 2) or the names list to change in a short polling loop
+    // Avoid hard-coded "sleep then hope".
+    const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const findNewName = ()=>{
+        const currentNames = getNames() ?? [];
+        return currentNames.find((entry)=>!initialNames.includes(entry)) ?? null;
+    };
+
+    // Fast path: if ST immediately updated world_names synchronously.
+    const immediate = findNewName();
+    if (immediate) return immediate;
+
+    const timeoutMs = 8000;
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+        if (state.waitForWorldInfoUpdate) {
+            await Promise.race([state.waitForWorldInfoUpdate(), state.delay(250)]);
+        } else {
+            await state.delay(250);
+        }
+        const next = findNewName();
+        if (next) return next;
     }
     return null;
 };
@@ -249,14 +595,13 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
         await state.deleteWorldInfo(name);
         return;
     }
-    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-    if (!select) return;
-    const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == name);
-    if (!option) return;
-    select.value = option.value;
-    select.dispatchEvent(new Event('change', { bubbles:true }));
-    await state.delay(500);
-    document.querySelector('#world_popup_delete')?.click();
+    const selected = await setSelectedBookInCoreUi(name);
+    if (!selected) return;
+
+    await clickCoreUiAction([
+        '#world_popup_delete',
+        '[id="world_popup_delete"]',
+    ]);
 };
 
 const selectEnd = ()=>{
@@ -333,8 +678,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     folderName,
                     onToggle: ()=>{
                         const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
-                        folderCollapseStates[folderName] = isCollapsed;
-                        setFolderCollapsed(folderDoms[folderName], isCollapsed);
+                        setFolderCollapsedAndPersist(folderName, isCollapsed);
                     },
                     onDragStateChange: (isOver)=>{
                         if (!dragBookName) return false;
@@ -378,7 +722,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 }
                 if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', folderDoms[folderName].root);
                 else state.dom.books.append(folderDoms[folderName].root);
-                const initialCollapsed = folderCollapseStates[folderName] ?? false;
+                const initialCollapsed = folderCollapseStates[folderName] ?? true;
                 setFolderCollapsed(folderDoms[folderName], initialCollapsed);
             }
             targetParent = folderDoms[folderName].books;
@@ -438,26 +782,42 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             if (selectFrom != name || isCopy) {
                 const srcBook = await state.loadWorldInfo(selectFrom);
                 const dstBook = await state.loadWorldInfo(name);
+                // F3: Batch move/copy saves.
+                // Build all destination entries in-memory first, then save once.
+                // If moving, delete from source and save once after all deletions.
+                let hasDstChanges = false;
+                let hasSrcChanges = false;
                 for (const uid of selectList) {
                     const srcEntry = srcBook.entries[uid];
                     if (!srcEntry) continue;
+
                     const oData = Object.assign({}, srcEntry);
                     delete oData.uid;
+
                     const dstEntry = state.createWorldInfoEntry(null, dstBook);
                     Object.assign(dstEntry, oData);
-                    await state.saveWorldInfo(name, dstBook, true);
+                    hasDstChanges = true;
+
                     if (!isCopy) {
                         const deleted = await state.deleteWorldInfoEntry(srcBook, uid, { silent:true });
                         if (deleted) {
                             state.deleteWIOriginalDataValue(srcBook, uid);
+                            hasSrcChanges = true;
                         }
                     }
                 }
-                if (selectFrom != name) {
+
+                // Persist destination once.
+                if (hasDstChanges) {
+                    await state.saveWorldInfo(name, dstBook, true);
+                    state.updateWIChange(name, dstBook);
+                }
+
+                // Persist source once (move only, and only when we actually deleted something).
+                if (!isCopy && selectFrom != name && hasSrcChanges) {
                     await state.saveWorldInfo(selectFrom, srcBook, true);
                     state.updateWIChange(selectFrom, srcBook);
                 }
-                state.updateWIChange(name, dstBook);
             }
             selectEnd();
         });
@@ -468,6 +828,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 world.dom.name = title;
                 title.classList.add('stwid--title');
                 title.textContent = name;
+                title.title = 'Collapse/expand this book';
                 title.setAttribute('draggable', 'true');
                 title.addEventListener('dragstart', (evt)=>{
                     dragBookName = name;
@@ -495,7 +856,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 actions.classList.add('stwid--actions');
                 const active = document.createElement('input'); {
                     world.dom.active = active;
-                    active.title = 'Globally active';
+                    active.title = 'Toggle global active status for this book';
+                    active.setAttribute('aria-label', 'Toggle global active status for this book');
                     active.type = 'checkbox';
                     const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
                     active.checked = selected.includes(name);
@@ -515,7 +877,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     add.classList.add('stwid--action');
                     add.classList.add('stwid--add');
                     add.classList.add('fa-solid', 'fa-fw', 'fa-plus');
-                    add.title = 'New Entry';
+                    add.title = 'Create new entry in this book';
+                    add.setAttribute('aria-label', 'Create new entry in this book');
                     add.addEventListener('click', async()=>{
                         const data = state.buildSavePayload(name);
                         const newEntry = state.createWorldInfoEntry(name, data);
@@ -530,6 +893,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     menuTrigger.classList.add('stwid--action');
                     menuTrigger.classList.add('stwid--menuTrigger');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+                    menuTrigger.title = 'Book menu';
+                    menuTrigger.setAttribute('aria-label', 'Book menu');
                     menuTrigger.addEventListener('click', ()=>{
                         menuTrigger.style.anchorName = '--stwid--ctxAnchor';
                         const blocker = document.createElement('div'); {
@@ -550,6 +915,10 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                             });
                             const menu = document.createElement('div'); {
                                 menu.classList.add('stwid--menu');
+                                const closeMenu = ()=>{
+                                    blocker.remove();
+                                    menuTrigger.style.anchorName = '';
+                                };
                                 const rename = document.createElement('div'); {
                                     rename.classList.add('stwid--item');
                                     rename.classList.add('stwid--rename');
@@ -573,6 +942,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     }
                                     menu.append(rename);
                                 }
+                                menu.append(buildMoveBookMenuItem(name, closeMenu));
                                 if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
                                     const bulk = document.createElement('div'); {
                                         bulk.classList.add('stwid--item');
@@ -776,12 +1146,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     del.classList.add('stwid--item');
                                     del.classList.add('stwid--delete');
                                     del.addEventListener('click', async(evt)=>{
-                                        //TODO cheeky monkey
-                                        const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                        sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                        sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                        await state.delay(500);
-                                        document.querySelector('#world_popup_delete').click();
+                                        await deleteBook(name);
                                     });
                                     const i = document.createElement('i'); {
                                         i.classList.add('stwid--icon');
@@ -807,6 +1172,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     collapseToggle.classList.add('stwid--action');
                     collapseToggle.classList.add('stwid--collapseToggle');
                     collapseToggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
+                    collapseToggle.title = 'Collapse/expand this book';
+                    collapseToggle.setAttribute('aria-label', 'Collapse or expand this book');
                     collapseToggle.addEventListener('click', ()=>{
                         const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
                         setBookCollapsed(name, isCollapsed);
@@ -897,8 +1264,7 @@ const loadList = async()=>{
             folderName,
             onToggle: ()=>{
                 const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
-                folderCollapseStates[folderName] = isCollapsed;
-                setFolderCollapsed(folderDoms[folderName], isCollapsed);
+                setFolderCollapsedAndPersist(folderName, isCollapsed);
             },
             onDragStateChange: (isOver)=>{
                 if (!dragBookName) return false;
@@ -925,7 +1291,7 @@ const loadList = async()=>{
             menuActions: folderMenuActions,
         });
         state.dom.books.append(folderDoms[folderName].root);
-        const initialCollapsed = folderCollapseStates[folderName] ?? false;
+        const initialCollapsed = folderCollapseStates[folderName] ?? true;
         setFolderCollapsed(folderDoms[folderName], initialCollapsed);
         const folderBooks = folderGroups.get(folderName) ?? [];
         for (let i = 0; i < folderBooks.length; i++) {
@@ -977,6 +1343,8 @@ const setupFilter = (list)=>{
             search.classList.add('text_pole');
             search.type = 'search';
             search.placeholder = 'Search books';
+            search.title = 'Search books by name';
+            search.setAttribute('aria-label', 'Search books');
             searchInput = search;
             const entryMatchesQuery = (entry, query)=>{
                 const comment = entry.comment ?? '';
@@ -1021,6 +1389,7 @@ const setupFilter = (list)=>{
                         }
                     }
                 }
+                updateFolderActiveToggles();
             };
 
             // Debounce to reduce O(total entries) work on every keystroke.
@@ -1059,6 +1428,7 @@ const setupFilter = (list)=>{
                     state.cache[b].dom.root.classList.remove('stwid--filter-active');
                 }
             }
+            updateFolderActiveToggles();
         };
         state.applyActiveFilter = applyActiveFilter;
         const filterActive = document.createElement('label'); {
@@ -1150,6 +1520,7 @@ const getSelectionState = ()=>({
 
 const initListPanel = (options)=>{
     state = options;
+    Object.assign(folderCollapseStates, loadFolderCollapseStates());
     loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
 

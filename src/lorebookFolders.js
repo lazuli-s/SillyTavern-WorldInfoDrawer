@@ -110,8 +110,8 @@ const getFolderBookNames = (cache, folderName)=>{
     return Object.keys(cache).filter((name)=>getFolderFromMetadata(cache[name]?.metadata) === folderName);
 };
 
-const getFolderActiveState = (cache, selected, folderName)=>{
-    const bookNames = getFolderBookNames(cache, folderName);
+const getFolderActiveState = (cache, selected, folderName, bookNamesOverride = null)=>{
+    const bookNames = Array.isArray(bookNamesOverride) ? bookNamesOverride : getFolderBookNames(cache, folderName);
     if (!bookNames.length) {
         return { checked: false, indeterminate: false };
     }
@@ -187,12 +187,23 @@ const setFolderCollapsed = (folderDom, isCollapsed)=>{
     }
 };
 
+const hasFolderImportPayload = (payload)=>{
+    const books = payload?.books;
+    return Boolean(books && typeof books === 'object' && !Array.isArray(books));
+};
+
+const getFolderImportBookNames = (payload)=>{
+    if (!hasFolderImportPayload(payload)) return [];
+    return Object.keys(payload.books);
+};
+
 const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menuActions })=>{
     const root = document.createElement('div'); {
         root.classList.add('stwid--folder');
         root.dataset.folder = folderName;
         const header = document.createElement('div'); {
             header.classList.add('stwid--folderHeader');
+            header.title = 'Collapse/expand this folder';
             if (menuActions) {
                 header.classList.add('stwid--hasMenu');
             }
@@ -235,8 +246,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             const activeToggle = document.createElement('input'); {
                 activeToggle.classList.add('stwid--folderActiveToggle');
                 activeToggle.type = 'checkbox';
-                activeToggle.title = 'Toggle folder active';
-                activeToggle.setAttribute('aria-label', 'Toggle folder active');
+                activeToggle.title = 'Toggle global active status for all books in this folder';
+                activeToggle.setAttribute('aria-label', 'Toggle global active status for all books in this folder');
                 activeToggle.addEventListener('click', (evt)=>{
                     evt.stopPropagation();
                 });
@@ -281,6 +292,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                     menuTrigger.classList.add('stwid--folderMenu');
                     menuTrigger.classList.add('stwid--menuTrigger');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+                    menuTrigger.title = 'Folder menu';
+                    menuTrigger.setAttribute('aria-label', 'Folder menu');
                     menuTrigger.addEventListener('click', (evt)=>{
                         evt.preventDefault();
                         evt.stopPropagation();
@@ -356,8 +369,14 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                         menuActions.setFolderImporting?.(true);
 
                                         try {
+                                            // F4: Avoid mis-assigning books when other actions create/duplicate
+                                            // books during the import window.
+                                            //
+                                            // Prefer an import-specific identifier: the JSON file's declared
+                                            // book names. This lets us only assign imported books to the folder.
                                             const beforeNames = new Set(menuActions.getWorldNames());
-                                            menuActions.openImportDialog();
+                                            const importPayload = await menuActions.openImportDialog();
+                                            const expectedBookNames = getFolderImportBookNames(importPayload);
 
                                             const updatePromise = menuActions.waitForWorldInfoUpdate?.();
                                             const hasUpdate = await Promise.race([
@@ -382,10 +401,29 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             await menuActions.refreshList?.();
                                             const afterNames = menuActions.getWorldNames();
                                             const newNames = afterNames.filter((name)=>!beforeNames.has(name));
-                                            for (const name of newNames) {
+
+                                            // If we could read the folder import file, only assign books that we
+                                            // can strongly attribute to this import.
+                                            //
+                                            // importFolderFile() can rename books if the raw name already exists,
+                                            // so we match by prefix.
+                                            const importPrefixes = expectedBookNames.map((name)=>`${name} (imported`);
+                                            const attributedNames = expectedBookNames.length
+                                                ? newNames.filter((name)=>expectedBookNames.includes(name)
+                                                    || importPrefixes.some((prefix)=>name.startsWith(prefix)))
+                                                : newNames;
+
+                                            // If there's a mismatch between expected names and what appeared,
+                                            // be conservative: don't move anything automatically.
+                                            if (expectedBookNames.length && attributedNames.length !== newNames.length) {
+                                                toastr.warning('Import finished, but new books could not be confidently identified. No books were moved into the folder.');
+                                                return;
+                                            }
+
+                                            for (const name of attributedNames) {
                                                 await menuActions.setBookFolder(name, folderName);
                                             }
-                                            if (newNames.length) {
+                                            if (attributedNames.length) {
                                                 await menuActions.refreshList?.();
                                             }
                                         } finally {
@@ -503,6 +541,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             const toggle = document.createElement('i'); {
                 toggle.classList.add('stwid--folderToggle');
                 toggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
+                toggle.title = 'Collapse/expand this folder';
+                toggle.setAttribute('aria-label', 'Collapse or expand this folder');
                 header.append(toggle);
             }
             root.append(header);
@@ -523,9 +563,31 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     updateFolderCount(count, books.childElementCount);
     const updateActiveToggle = ()=>{
         if (!activeToggle || !menuActions?.cache || !menuActions?.getSelectedWorldInfo) return;
-        const state = getFolderActiveState(menuActions.cache, menuActions.getSelectedWorldInfo(), folderName);
+        const visibleBookNames = getFolderBookNames(menuActions.cache, folderName).filter((name)=>{
+            const bookRoot = menuActions.cache?.[name]?.dom?.root;
+            if (!bookRoot) return false;
+            const isFilteredOut = bookRoot.classList.contains('stwid--filter-query')
+                || bookRoot.classList.contains('stwid--filter-active');
+            return !isFilteredOut;
+        });
+        const state = getFolderActiveState(
+            menuActions.cache,
+            menuActions.getSelectedWorldInfo(),
+            folderName,
+            visibleBookNames
+        );
+        const hasVisibleBooks = visibleBookNames.length > 0;
         activeToggle.checked = state.checked;
         activeToggle.indeterminate = state.indeterminate;
+        activeToggle.disabled = !hasVisibleBooks;
+        activeToggle.dataset.state = !hasVisibleBooks
+            ? 'empty'
+            : state.indeterminate
+                ? 'partial'
+                : state.checked
+                    ? 'on'
+                    : 'off';
+        activeToggle.setAttribute('aria-checked', state.indeterminate ? 'mixed' : String(state.checked));
     };
     updateActiveToggle();
     return {
