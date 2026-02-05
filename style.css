@@ -234,9 +234,52 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle {
   cursor: pointer;
   opacity: 0.75;
-  accent-color: var(--SmartThemeQuoteColor);
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
   min-width: 1.1em;
   min-height: 1.1em;
+  width: 1.1em;
+  height: 1.1em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--SmartThemeQuoteColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='on'],
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='partial'] {
+  border-color: var(--SmartThemeQuoteColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='on']::after {
+  content: '';
+  position: absolute;
+  width: 0.3em;
+  height: 0.6em;
+  left: 0.32em;
+  top: 0.12em;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='partial']::after {
+  content: '';
+  position: absolute;
+  left: 0.2em;
+  right: 0.2em;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='empty'],
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle:disabled {
+  cursor: default;
+  opacity: 0.4;
 }
 
 /* Folder header buttons */

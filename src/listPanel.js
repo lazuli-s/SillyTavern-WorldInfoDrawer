@@ -1389,6 +1389,7 @@ const setupFilter = (list)=>{
                         }
                     }
                 }
+                updateFolderActiveToggles();
             };
 
             // Debounce to reduce O(total entries) work on every keystroke.
@@ -1427,6 +1428,7 @@ const setupFilter = (list)=>{
                     state.cache[b].dom.root.classList.remove('stwid--filter-active');
                 }
             }
+            updateFolderActiveToggles();
         };
         state.applyActiveFilter = applyActiveFilter;
         const filterActive = document.createElement('label'); {

@@ -110,8 +110,8 @@ const getFolderBookNames = (cache, folderName)=>{
     return Object.keys(cache).filter((name)=>getFolderFromMetadata(cache[name]?.metadata) === folderName);
 };
 
-const getFolderActiveState = (cache, selected, folderName)=>{
-    const bookNames = getFolderBookNames(cache, folderName);
+const getFolderActiveState = (cache, selected, folderName, bookNamesOverride = null)=>{
+    const bookNames = Array.isArray(bookNamesOverride) ? bookNamesOverride : getFolderBookNames(cache, folderName);
     if (!bookNames.length) {
         return { checked: false, indeterminate: false };
     }
@@ -563,9 +563,31 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     updateFolderCount(count, books.childElementCount);
     const updateActiveToggle = ()=>{
         if (!activeToggle || !menuActions?.cache || !menuActions?.getSelectedWorldInfo) return;
-        const state = getFolderActiveState(menuActions.cache, menuActions.getSelectedWorldInfo(), folderName);
+        const visibleBookNames = getFolderBookNames(menuActions.cache, folderName).filter((name)=>{
+            const bookRoot = menuActions.cache?.[name]?.dom?.root;
+            if (!bookRoot) return false;
+            const isFilteredOut = bookRoot.classList.contains('stwid--filter-query')
+                || bookRoot.classList.contains('stwid--filter-active');
+            return !isFilteredOut;
+        });
+        const state = getFolderActiveState(
+            menuActions.cache,
+            menuActions.getSelectedWorldInfo(),
+            folderName,
+            visibleBookNames
+        );
+        const hasVisibleBooks = visibleBookNames.length > 0;
         activeToggle.checked = state.checked;
         activeToggle.indeterminate = state.indeterminate;
+        activeToggle.disabled = !hasVisibleBooks;
+        activeToggle.dataset.state = !hasVisibleBooks
+            ? 'empty'
+            : state.indeterminate
+                ? 'partial'
+                : state.checked
+                    ? 'on'
+                    : 'off';
+        activeToggle.setAttribute('aria-checked', state.indeterminate ? 'mixed' : String(state.checked));
     };
     updateActiveToggle();
     return {
