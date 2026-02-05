@@ -243,7 +243,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   height: 1.1em;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 4px;
-  background: transparent;
+  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
   color: var(--SmartThemeQuoteColor);
 }
 
