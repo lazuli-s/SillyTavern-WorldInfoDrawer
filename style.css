@@ -274,7 +274,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   height: 2px;
   margin-top: -1px;
   border-radius: 2px;
-  background: currentColor;
+  background: color-mix(in srgb, var(--SmartThemeQuoteColor) 65%, black 35%);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='empty'],
