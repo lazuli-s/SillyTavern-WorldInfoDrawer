@@ -130,6 +130,8 @@ export const renderEntry = async(e, name, before = null)=>{
                 if (!isEnabled) return entry;
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
+                isEnabled.title = 'Enable/disable this entry';
+                isEnabled.setAttribute('aria-label', 'Enable or disable this entry');
 
                 const applyEnabledIcon = (disabled)=>{
                     isEnabled.classList.toggle('fa-toggle-off', Boolean(disabled));
@@ -150,6 +152,8 @@ export const renderEntry = async(e, name, before = null)=>{
                 if (!strat) return entry;
                 world.dom.entry[e.uid].strategy = strat;
                 strat.classList.add('stwid--strategy');
+                strat.title = 'Entry strategy';
+                strat.setAttribute('aria-label', 'Entry strategy');
                 strat.value = entryState(e);
                 strat.addEventListener('change', async()=>{
                     const value = strat.value;

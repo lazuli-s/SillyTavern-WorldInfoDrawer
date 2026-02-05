@@ -828,6 +828,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 world.dom.name = title;
                 title.classList.add('stwid--title');
                 title.textContent = name;
+                title.title = 'Collapse/expand this book';
                 title.setAttribute('draggable', 'true');
                 title.addEventListener('dragstart', (evt)=>{
                     dragBookName = name;
@@ -855,7 +856,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 actions.classList.add('stwid--actions');
                 const active = document.createElement('input'); {
                     world.dom.active = active;
-                    active.title = 'Globally active';
+                    active.title = 'Toggle global active status for this book';
+                    active.setAttribute('aria-label', 'Toggle global active status for this book');
                     active.type = 'checkbox';
                     const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
                     active.checked = selected.includes(name);
@@ -875,7 +877,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     add.classList.add('stwid--action');
                     add.classList.add('stwid--add');
                     add.classList.add('fa-solid', 'fa-fw', 'fa-plus');
-                    add.title = 'New Entry';
+                    add.title = 'Create new entry in this book';
+                    add.setAttribute('aria-label', 'Create new entry in this book');
                     add.addEventListener('click', async()=>{
                         const data = state.buildSavePayload(name);
                         const newEntry = state.createWorldInfoEntry(name, data);
@@ -890,6 +893,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     menuTrigger.classList.add('stwid--action');
                     menuTrigger.classList.add('stwid--menuTrigger');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+                    menuTrigger.title = 'Book menu';
+                    menuTrigger.setAttribute('aria-label', 'Book menu');
                     menuTrigger.addEventListener('click', ()=>{
                         menuTrigger.style.anchorName = '--stwid--ctxAnchor';
                         const blocker = document.createElement('div'); {
@@ -1167,6 +1172,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     collapseToggle.classList.add('stwid--action');
                     collapseToggle.classList.add('stwid--collapseToggle');
                     collapseToggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
+                    collapseToggle.title = 'Collapse/expand this book';
+                    collapseToggle.setAttribute('aria-label', 'Collapse or expand this book');
                     collapseToggle.addEventListener('click', ()=>{
                         const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
                         setBookCollapsed(name, isCollapsed);
@@ -1336,6 +1343,8 @@ const setupFilter = (list)=>{
             search.classList.add('text_pole');
             search.type = 'search';
             search.placeholder = 'Search books';
+            search.title = 'Search books by name';
+            search.setAttribute('aria-label', 'Search books');
             searchInput = search;
             const entryMatchesQuery = (entry, query)=>{
                 const comment = entry.comment ?? '';

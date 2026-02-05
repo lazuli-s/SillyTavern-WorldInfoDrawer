@@ -203,6 +203,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
         root.dataset.folder = folderName;
         const header = document.createElement('div'); {
             header.classList.add('stwid--folderHeader');
+            header.title = 'Collapse/expand this folder';
             if (menuActions) {
                 header.classList.add('stwid--hasMenu');
             }
@@ -245,8 +246,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             const activeToggle = document.createElement('input'); {
                 activeToggle.classList.add('stwid--folderActiveToggle');
                 activeToggle.type = 'checkbox';
-                activeToggle.title = 'Toggle folder active';
-                activeToggle.setAttribute('aria-label', 'Toggle folder active');
+                activeToggle.title = 'Toggle global active status for all books in this folder';
+                activeToggle.setAttribute('aria-label', 'Toggle global active status for all books in this folder');
                 activeToggle.addEventListener('click', (evt)=>{
                     evt.stopPropagation();
                 });
@@ -291,6 +292,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                     menuTrigger.classList.add('stwid--folderMenu');
                     menuTrigger.classList.add('stwid--menuTrigger');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+                    menuTrigger.title = 'Folder menu';
+                    menuTrigger.setAttribute('aria-label', 'Folder menu');
                     menuTrigger.addEventListener('click', (evt)=>{
                         evt.preventDefault();
                         evt.stopPropagation();
@@ -538,6 +541,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             const toggle = document.createElement('i'); {
                 toggle.classList.add('stwid--folderToggle');
                 toggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
+                toggle.title = 'Collapse/expand this folder';
+                toggle.setAttribute('aria-label', 'Collapse or expand this folder');
                 header.append(toggle);
             }
             root.append(header);

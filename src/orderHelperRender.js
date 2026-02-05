@@ -63,6 +63,15 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
+    const setTooltip = (element, text, { ariaLabel = null } = {})=>{
+        if (!element || !text) return;
+        element.title = text;
+        const label = ariaLabel ?? text.replace(/\s*---\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        if (label) {
+            element.setAttribute('aria-label', label);
+        }
+    };
+
     const formatCharacterFilter = (entry)=>{
         const filter = entry?.characterFilter;
         if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
@@ -124,7 +133,7 @@ const createOrderHelperRenderer = ({
                     dom.order.selectAll = selectAll;
                     selectAll.classList.add('menu_button');
                     selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
-                    selectAll.title = 'Select/unselect all entries for applying Order values';
+                    setTooltip(selectAll, 'Select/unselect all entries for Apply Order');
                     selectAll.addEventListener('click', ()=>{
                         const rows = getOrderHelperRows();
                         const shouldSelect = !rows.length || rows.some(row=>!isOrderHelperRowSelected(row));
@@ -136,7 +145,7 @@ const createOrderHelperRenderer = ({
                 const keyToggle = document.createElement('div'); {
                     keyToggle.classList.add('menu_button');
                     keyToggle.classList.add('fa-solid', 'fa-fw');
-                    keyToggle.title = 'Toggle keyword visibility';
+                    setTooltip(keyToggle, 'Show/hide keyword column text');
                     const applyKeyToggleStyle = ()=>{
                         keyToggle.classList.toggle('fa-eye', !orderHelperState.hideKeys);
                         keyToggle.classList.toggle('fa-eye-slash', orderHelperState.hideKeys);
@@ -167,6 +176,7 @@ const createOrderHelperRenderer = ({
                         const menuButton = document.createElement('div'); {
                             menuButton.classList.add('menu_button', 'stwid--columnMenuButton');
                             menuButton.textContent = 'Select';
+                            setTooltip(menuButton, 'Choose which columns are visible');
                             const caret = document.createElement('i'); {
                                 caret.classList.add('fa-solid', 'fa-fw', 'fa-caret-down');
                                 menuButton.append(caret);
@@ -296,9 +306,11 @@ const createOrderHelperRenderer = ({
                 addDivider();
                 const sortWrap = document.createElement('label'); {
                     sortWrap.classList.add('stwid--inputWrap');
+                    setTooltip(sortWrap, 'Sort rows in the table');
                     sortWrap.append('Sort: ');
                     const sortSel = document.createElement('select'); {
                         sortSel.classList.add('text_pole');
+                        setTooltip(sortSel, 'Sort rows in the table');
                         dom.order.sortSelect = sortSel;
                         appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
                         sortSel.addEventListener('change', async()=>{
@@ -320,7 +332,7 @@ const createOrderHelperRenderer = ({
                 const filterToggle = document.createElement('div'); {
                     filterToggle.classList.add('menu_button');
                     filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
-                    filterToggle.title = 'Filter entries\n---\nOrder will only be applied to unfiltered entries';
+                    setTooltip(filterToggle, 'Open filters. Apply Order only affects rows that are not filtered out');
                     filterToggle.addEventListener('click', ()=>{
                         const is = dom.order.filter.root.classList.toggle('stwid--active');
                         if (is) {
@@ -345,7 +357,7 @@ const createOrderHelperRenderer = ({
                     } else {
                         apply.classList.add('fa-arrow-down-1-9');
                     }
-                    apply.title = 'Apply current sorting as Order';
+                    setTooltip(apply, 'Apply current row order to the Order field');
                     apply.addEventListener('click', async()=>{
                         const start = parseInt(dom.order.start.value);
                         const step = parseInt(dom.order.step.value);
@@ -371,7 +383,7 @@ const createOrderHelperRenderer = ({
                 }
                 const startLbl = document.createElement('label'); {
                     startLbl.classList.add('stwid--inputWrap');
-                    startLbl.title = 'Starting Order (topmost entry in list)';
+                    setTooltip(startLbl, 'Starting Order value');
                     startLbl.append('Start: ');
                     const start = document.createElement('input'); {
                         dom.order.start = start;
@@ -390,6 +402,7 @@ const createOrderHelperRenderer = ({
                 }
                 const stepLbl = document.createElement('label'); {
                     stepLbl.classList.add('stwid--inputWrap');
+                    setTooltip(stepLbl, 'Spacing between Order values');
                     stepLbl.append('Spacing: ');
                     const step = document.createElement('input'); {
                         dom.order.step = step;
@@ -408,12 +421,13 @@ const createOrderHelperRenderer = ({
                 }
                 const dir = document.createElement('div'); {
                     dir.classList.add('stwid--inputWrap');
+                    setTooltip(dir, 'Direction used when applying Order values');
                     dir.append('Direction: ');
                     const wrap = document.createElement('div'); {
                         wrap.classList.add('stwid--toggleWrap');
                         const up = document.createElement('label'); {
                             up.classList.add('stwid--inputWrap');
-                            up.title = 'Start at the bottom of the list';
+                            setTooltip(up, 'Start from the bottom row');
                             const inp = document.createElement('input'); {
                                 dom.order.direction.up = inp;
                                 inp.type = 'radio';
@@ -432,7 +446,7 @@ const createOrderHelperRenderer = ({
                         }
                         const down = document.createElement('label'); {
                             down.classList.add('stwid--inputWrap');
-                            down.title = 'Start at the top of the list';
+                            setTooltip(down, 'Start from the top row');
                             const inp = document.createElement('input'); {
                                 dom.order.direction.down = inp;
                                 inp.type = 'radio';
@@ -1273,7 +1287,7 @@ const createOrderHelperRenderer = ({
                                     const btn = document.createElement('div'); {
                                         btn.classList.add('stwid--orderSelect');
                                         btn.classList.add('fa-solid', 'fa-fw');
-                                        btn.title = 'Toggle selection for applying Order values';
+                                        setTooltip(btn, 'Include/exclude this row from Apply Order');
                                         const icon = document.createElement('i'); {
                                             icon.classList.add('fa-solid', 'fa-fw', 'stwid--icon');
                                             btn.append(icon);
@@ -1294,8 +1308,7 @@ const createOrderHelperRenderer = ({
                                             const button = document.createElement('button');
                                             button.type = 'button';
                                             button.classList.add('stwid--orderMoveButton');
-                                            button.title = `${title}\nDouble-click to jump to ${jumpTitle}`;
-                                            button.setAttribute('aria-label', `${title}. Double-click to jump to ${jumpTitle}.`);
+                                            setTooltip(button, `${title}. Double-click to jump to ${jumpTitle}`);
                                             const icon = document.createElement('i'); {
                                                 icon.classList.add('fa-solid', 'fa-fw', iconClass);
                                                 button.append(icon);
@@ -1361,6 +1374,7 @@ const createOrderHelperRenderer = ({
                                         const dragHandle = document.createElement('div'); {
                                             dragHandle.classList.add('stwid--sortableHandle');
                                             dragHandle.textContent = '☰';
+                                            setTooltip(dragHandle, 'Drag to reorder rows');
                                             controls.append(upButton, dragHandle, downButton);
                                         }
                                         handle.append(controls);
@@ -1371,6 +1385,7 @@ const createOrderHelperRenderer = ({
                                     active.setAttribute('data-col', 'enabled');
                                     const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
                                         isEnabled.classList.add('stwid--enabled');
+                                        setTooltip(isEnabled, 'Enable/disable this entry');
 
                                         const applyEnabledIcon = (el, disabled)=>{
                                             el.classList.toggle('fa-toggle-off', Boolean(disabled));
@@ -1437,6 +1452,7 @@ const createOrderHelperRenderer = ({
                                     strategy.setAttribute('data-col', 'strategy');
                                     const strat = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryStateSelector"]').cloneNode(true)); {
                                         strat.classList.add('stwid--strategy');
+                                        setTooltip(strat, 'Entry strategy');
                                         strat.value = entryState(e.data);
                                         strat.addEventListener('change', async()=>{
                                             const value = strat.value;
@@ -1471,6 +1487,7 @@ const createOrderHelperRenderer = ({
                                     position.setAttribute('data-col', 'position');
                                     cache[e.book].dom.entry[e.data.uid].position = pos;
                                     pos.classList.add('stwid--position');
+                                    setTooltip(pos, 'Where this entry is inserted');
                                     pos.value = e.data.position;
                                     pos.addEventListener('change', async()=>{
                                         const value = pos.value;
@@ -1491,6 +1508,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
                                         inp.name = 'depth';
+                                        setTooltip(inp, 'Entry depth');
                                         inp.min = '0';
                                         inp.max = '99999';
                                         inp.type = 'number';
@@ -1514,6 +1532,7 @@ const createOrderHelperRenderer = ({
                                             input.classList.add('text_pole');
                                             input.classList.add('stwid--orderInputTight');
                                             input.name = 'outletName';
+                                            setTooltip(input, 'Outlet name (used for outlet positions)');
                                             input.type = 'text';
                                             input.value = cache[e.book].entries[e.data.uid].outletName ?? e.data.outletName ?? '';
                                             updateOutlet = ()=>{
@@ -1548,6 +1567,7 @@ const createOrderHelperRenderer = ({
                                             input.classList.add('text_pole');
                                             input.classList.add('stwid--orderInputTight');
                                             input.name = 'group';
+                                            setTooltip(input, 'Inclusion group name');
                                             input.type = 'text';
                                             input.value = cache[e.book].entries[e.data.uid].group ?? '';
                                             input.addEventListener('change', async()=>{
@@ -1565,6 +1585,7 @@ const createOrderHelperRenderer = ({
                                             const input = document.createElement('input'); {
                                                 input.type = 'checkbox';
                                                 input.classList.add('checkbox');
+                                                setTooltip(input, 'Prioritize this entry within its inclusion group');
                                                 input.checked = Boolean(e.data.groupOverride);
                                                 input.addEventListener('change', async()=>{
                                                     const entryData = cache[e.book].entries[e.data.uid];
@@ -1588,6 +1609,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
                                         inp.name = 'order';
+                                        setTooltip(inp, 'Order value');
                                         inp.min = '0';
                                         inp.max = '99999';
                                         inp.type = 'number';
@@ -1608,6 +1630,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
                                         inp.name = 'sticky';
+                                        setTooltip(inp, 'Sticky duration');
                                         inp.min = '0';
                                         inp.max = '99999';
                                         inp.type = 'number';
@@ -1628,6 +1651,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
                                         inp.name = 'cooldown';
+                                        setTooltip(inp, 'Cooldown duration');
                                         inp.min = '0';
                                         inp.max = '99999';
                                         inp.type = 'number';
@@ -1648,6 +1672,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
                                         inp.name = 'delay';
+                                        setTooltip(inp, 'Delay before activation');
                                         inp.min = '0';
                                         inp.max = '99999';
                                         inp.type = 'number';
@@ -1669,6 +1694,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('text_pole');
                                         inp.classList.add('stwid--orderInputTight');
                                         inp.name = 'automationId';
+                                        setTooltip(inp, 'Automation ID');
                                         inp.type = 'text';
                                         inp.value = cache[e.book].entries[e.data.uid].automationId ?? e.data.automationId ?? '';
                                         inp.addEventListener('change', async()=>{
@@ -1688,6 +1714,7 @@ const createOrderHelperRenderer = ({
                                         inp.classList.add('stwid--input');
                                         inp.classList.add('text_pole');
                                         inp.name = 'selective_probability';
+                                        setTooltip(inp, 'Trigger chance percentage');
                                         inp.min = '0';
                                         inp.max = '100';
                                         inp.type = 'number';
@@ -1711,6 +1738,7 @@ const createOrderHelperRenderer = ({
                                                 const input = document.createElement('input'); {
                                                     input.type = 'checkbox';
                                                     input.classList.add('checkbox');
+                                                    setTooltip(input, label);
                                                     input.checked = Boolean(e.data[key]);
                                                     input.addEventListener('change', async()=> {
                                                         const entryData = cache[e.book].entries[e.data.uid];
@@ -1741,6 +1769,7 @@ const createOrderHelperRenderer = ({
                                             const input = document.createElement('input'); {
                                                 input.type = 'checkbox';
                                                 input.classList.add('checkbox');
+                                                setTooltip(input, 'Ignore World Info budget limit for this entry');
                                                 input.checked = Boolean(e.data.ignoreBudget);
                                                 input.addEventListener('change', async()=> {
                                                     const entryData = cache[e.book].entries[e.data.uid];
