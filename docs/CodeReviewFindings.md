@@ -175,9 +175,9 @@ CODE REVIEW FINDINGS
   Reduce per-cycle work by avoiding redundant class writes and using precomputed normalized search strings for entries.
 
 - Proposed fix (description only):
-  [ ] Skip `classList` writes when target state is already correct.
-  [ ] Cache normalized searchable text per entry and refresh cache only when entry fields change.
-  [ ] Keep existing search semantics and thresholds unchanged.
+  [x] Skip `classList` writes when target state is already correct.
+  [x] Cache normalized searchable text per entry and refresh cache only when entry fields change.
+  [x] Keep existing search semantics and thresholds unchanged.
 
 - Why it's safe:
   Search matching behavior and UI states remain the same; only redundant compute/mutation work is reduced.

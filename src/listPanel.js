@@ -18,6 +18,7 @@ let searchEntriesInput;
 let filterActiveInput;
 let loadListDebounced;
 let folderImportInput;
+const entrySearchCache = {};
 
 const collapseStates = {};
 const folderCollapseStates = {};
@@ -1368,6 +1369,36 @@ const updateFolderActiveToggles = ()=>{
 
 const setupFilter = (list)=>{
     const filter = document.createElement('div'); {
+        const setQueryFiltered = (element, isFiltered)=>{
+            if (!element) return;
+            if (isFiltered) {
+                if (!element.classList.contains('stwid--filter-query')) {
+                    element.classList.add('stwid--filter-query');
+                }
+                return;
+            }
+            if (element.classList.contains('stwid--filter-query')) {
+                element.classList.remove('stwid--filter-query');
+            }
+        };
+
+        const buildEntrySearchSignature = (entry)=>{
+            const comment = entry?.comment ?? '';
+            const keys = Array.isArray(entry?.key) ? entry.key.join(', ') : '';
+            return `${String(comment)}\n${String(keys)}`;
+        };
+
+        const getEntrySearchText = (bookName, entry)=>{
+            if (!entry?.uid) return '';
+            const signature = buildEntrySearchSignature(entry);
+            entrySearchCache[bookName] ??= {};
+            const cached = entrySearchCache[bookName][entry.uid];
+            if (cached?.signature === signature) return cached.text;
+            const text = signature.toLowerCase();
+            entrySearchCache[bookName][entry.uid] = { signature, text };
+            return text;
+        };
+
         filter.classList.add('stwid--filter');
         const search = document.createElement('input'); {
             search.classList.add('stwid--search');
@@ -1377,12 +1408,7 @@ const setupFilter = (list)=>{
             search.title = 'Search books by name';
             search.setAttribute('aria-label', 'Search books');
             searchInput = search;
-            const entryMatchesQuery = (entry, query)=>{
-                const comment = entry.comment ?? '';
-                const keys = Array.isArray(entry.key) ? entry.key.join(', ') : '';
-                const normalizedQuery = query.toLowerCase();
-                return [comment, keys].some(value=>String(value ?? '').toLowerCase().includes(normalizedQuery));
-            };
+            const entryMatchesQuery = (bookName, entry, normalizedQuery)=>getEntrySearchText(bookName, entry).includes(normalizedQuery);
 
             const applySearchFilter = ()=>{
                 const query = search.value.toLowerCase();
@@ -1393,30 +1419,22 @@ const setupFilter = (list)=>{
                     if (query.length) {
                         const bookMatch = b.toLowerCase().includes(query);
                         const entryMatch = shouldScanEntries
-                            && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(e, query));
-                        if (bookMatch || entryMatch) {
-                            state.cache[b].dom.root.classList.remove('stwid--filter-query');
-                        } else {
-                            state.cache[b].dom.root.classList.add('stwid--filter-query');
-                        }
+                            && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(b, e, query));
+                        setQueryFiltered(state.cache[b].dom.root, !(bookMatch || entryMatch));
 
                         if (shouldScanEntries) {
                             for (const e of Object.values(state.cache[b].entries)) {
-                                if (bookMatch || entryMatchesQuery(e, query)) {
-                                    state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
-                                } else {
-                                    state.cache[b].dom.entry[e.uid].root.classList.add('stwid--filter-query');
-                                }
+                                setQueryFiltered(state.cache[b].dom.entry[e.uid].root, !(bookMatch || entryMatchesQuery(b, e, query)));
                             }
                         } else {
                             for (const e of Object.values(state.cache[b].entries)) {
-                                state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
+                                setQueryFiltered(state.cache[b].dom.entry[e.uid].root, false);
                             }
                         }
                     } else {
-                        state.cache[b].dom.root.classList.remove('stwid--filter-query');
+                        setQueryFiltered(state.cache[b].dom.root, false);
                         for (const e of Object.values(state.cache[b].entries)) {
-                            state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
+                            setQueryFiltered(state.cache[b].dom.entry[e.uid].root, false);
                         }
                     }
                 }
@@ -1547,6 +1565,9 @@ const getSelectionState = ()=>({
 
 const initListPanel = (options)=>{
     state = options;
+    for (const key of Object.keys(entrySearchCache)) {
+        delete entrySearchCache[key];
+    }
     Object.assign(folderCollapseStates, loadFolderCollapseStates());
     loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
