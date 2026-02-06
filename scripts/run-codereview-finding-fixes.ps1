@@ -7,6 +7,7 @@ param(
     [string]$CodexSandbox = "workspace-write",
     [ValidateSet("untrusted", "on-failure", "on-request", "never")]
     [string]$CodexApproval = "never",
+    [switch]$DangerouslyBypassApprovalsAndSandbox,
     [switch]$SkipSubmoduleInit,
     [switch]$DryRun
 )
@@ -143,11 +144,14 @@ foreach ($finding in $findings) {
         continue
     }
 
-    $codexArgs = @(
-        "--sandbox", $CodexSandbox,
-        "--ask-for-approval", $CodexApproval,
-        "exec", "-"
-    )
+    $codexArgs = @()
+    if ($DangerouslyBypassApprovalsAndSandbox) {
+        $codexArgs += "--dangerously-bypass-approvals-and-sandbox"
+    }
+    else {
+        $codexArgs += @("--sandbox", $CodexSandbox, "--ask-for-approval", $CodexApproval)
+    }
+    $codexArgs += @("exec", "-")
 
     $previousEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
