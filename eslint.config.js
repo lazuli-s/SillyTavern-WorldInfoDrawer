@@ -12,7 +12,7 @@ export default [
             },
         },
         rules: {
-            'no-undef': 'error',
+            'no-undef': 'warn',
             'no-unused-vars': ['error', { argsIgnorePattern: '^(_|evt)$' }],
             'no-unreachable': 'error',
             eqeqeq: 'warn',

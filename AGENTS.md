@@ -137,48 +137,7 @@ Note: if you don't see that folder, the git submodule is probably not initialize
 
 ---
 
-## 4. Critical Behaviors That MUST Be Preserved
-
-Do NOT change these unless explicitly instructed:
-
-1. **Drawer behavior**
-   - Drawer replaces the default World Info UI
-   - CSS hides `#wi-holder`
-   - Drawer is shown when `<body>` has class `stwid--`
-
-2. **List Panel**
-   - Books can collapse / expand
-   - Folders can collapse / expand
-   - Search matches books and optionally entries (title / keys)
-   - Selection system:
-     - Click selects
-     - SHIFT selects range
-     - DEL deletes selected
-     - Drag moves
-     - CTRL modifies copy / duplicate behavior
-
-3. **Editor Panel**
-   - Clicking an entry opens the editor via SillyTavern templates
-   - Activation settings can be toggled into the editor area
-
-4. **Order Helper**
-   - Can show entries from:
-     - All active books
-     - A single book context
-     - A custom scope list (e.g., folder active books)
-   - Drag sorting uses jQuery sortable
-   - Applying order saves per affected book via:
-     - `saveWorldInfo(bookName, buildSavePayload(bookName), true)`
-
-5. **Sorting**
-   - Global defaults come from `Settings`
-   - Optional per-book sort preferences stored in metadata
-     - Namespace `stwid`, key `sort`
-   - Custom order uses `entry.extensions.display_index`
-
----
-
-## 5. Dependencies and Imports
+## 4. Dependencies and Imports
 
 - Prefer **SillyTavern shared frontend libraries**
 - Do NOT add new external dependencies unless explicitly requested
@@ -201,6 +160,20 @@ Main shared libs include:
 * moment
 * morphdom
 * showdown
+
+---
+
+## 5. Style Guide Compliance
+
+Before making any UI or CSS change, always consult:
+
+- `docs/StyleGuide.md`
+
+Style guide requirements are mandatory:
+
+* Reuse existing SillyTavern styles first (check `vendor/SillyTavern` reference files listed in the guide)
+* Only add new extension CSS when no suitable existing style is available
+* Keep styling changes small, targeted, and consistent with the guide
 
 ---
 
