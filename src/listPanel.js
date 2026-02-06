@@ -178,14 +178,24 @@ const clearBookSortPreferences = async()=>{
 };
 
 const setBookFolder = async(name, folderName)=>{
-    const metadata = state.cache[name].metadata ?? {};
-    const result = setFolderInMetadata(metadata, folderName);
+    const latest = await state.loadWorldInfo(name);
+    if (!latest || typeof latest !== 'object') return false;
+
+    const nextPayload = {
+        entries: structuredClone(latest.entries ?? {}),
+        metadata: latest.metadata && typeof latest.metadata === 'object'
+            ? structuredClone(latest.metadata)
+            : {},
+    };
+    const result = setFolderInMetadata(nextPayload.metadata, folderName);
     if (!result.ok) return false;
     if (result.folder) {
         registerFolderName(result.folder);
     }
-    state.cache[name].metadata = metadata;
-    await state.saveWorldInfo(name, state.buildSavePayload(name), true);
+    await state.saveWorldInfo(name, nextPayload, true);
+    if (state.cache[name]) {
+        setCacheMetadata(name, nextPayload.metadata);
+    }
     return true;
 };
 
@@ -379,27 +389,51 @@ const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
     if (!input) return null;
 
-    // For F4: allow callers (folder import into folder) to attribute imported
+    // Allow callers (folder import into folder) to attribute imported
     // books without diffing world_names.
     // We sniff the selected file before ST consumes it.
     const filePromise = new Promise((resolve)=>{
-        const onChange = async()=>{
+        let isDone = false;
+        const finish = (value)=>{
+            if (isDone) return;
+            isDone = true;
             input.removeEventListener('change', onChange);
+            window.removeEventListener('focus', onWindowFocus);
+            clearTimeout(timeoutId);
+            resolve(value);
+        };
+        const onChange = async()=>{
             const [file] = input.files ?? [];
             if (!file) {
-                resolve(null);
+                finish(null);
                 return;
             }
             try {
-                resolve(JSON.parse(await file.text()));
+                finish(JSON.parse(await file.text()));
             } catch {
-                resolve(null);
+                finish(null);
             }
         };
+        const onWindowFocus = ()=>{
+            // Browser file pickers usually return focus once closed.
+            // If no file is selected at that point, treat it as cancel.
+            setTimeout(()=>{
+                if (isDone) return;
+                if ((input.files?.length ?? 0) === 0) {
+                    finish(null);
+                }
+            }, 0);
+        };
+        const timeoutId = setTimeout(()=>finish(null), 15000);
+        input.value = '';
         input.addEventListener('change', onChange, { once:true });
+        window.addEventListener('focus', onWindowFocus, { once:true });
+        try {
+            input.click();
+        } catch {
+            finish(null);
+        }
     });
-
-    input.click();
     return filePromise;
 };
 
@@ -550,7 +584,9 @@ const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
 };
 
 const duplicateBook = async(name)=>{
-    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const initialNames = [...(getNames() ?? [])];
+    const initialNameSet = new Set(initialNames);
     const selected = await setSelectedBookInCoreUi(name);
     if (!selected) return null;
 
@@ -566,10 +602,9 @@ const duplicateBook = async(name)=>{
     // 1) a WORLDINFO update cycle (preferred), then detect new name
     // 2) or the names list to change in a short polling loop
     // Avoid hard-coded "sleep then hope".
-    const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
     const findNewName = ()=>{
         const currentNames = getNames() ?? [];
-        return currentNames.find((entry)=>!initialNames.includes(entry)) ?? null;
+        return currentNames.find((entry)=>!initialNameSet.has(entry)) ?? null;
     };
 
     // Fast path: if ST immediately updated world_names synchronously.
@@ -588,6 +623,14 @@ const duplicateBook = async(name)=>{
         if (next) return next;
     }
     return null;
+};
+
+const duplicateBookIntoFolder = async(name, folderName)=>{
+    const duplicatedName = await duplicateBook(name);
+    if (!duplicatedName) return false;
+    await setBookFolder(duplicatedName, folderName);
+    await refreshList();
+    return true;
 };
 
 const deleteBook = async(name, { skipConfirm = false } = {})=>{
@@ -696,11 +739,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                             if (updated) await refreshList();
                             return;
                         }
-                        const duplicatedName = await duplicateBook(draggedName);
-                        if (!duplicatedName) return;
-                        await refreshList();
-                        const updated = await setBookFolder(duplicatedName, folderName);
-                        if (updated) await refreshList();
+                        await duplicateBookIntoFolder(draggedName, folderName);
                     },
                     menuActions: folderMenuActions,
                 });
@@ -765,11 +804,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     if (updated) await refreshList();
                     return;
                 }
-                const duplicatedName = await duplicateBook(draggedName);
-                if (!duplicatedName) return;
-                await refreshList();
-                const updated = await setBookFolder(duplicatedName, targetFolder);
-                if (updated) await refreshList();
+                await duplicateBookIntoFolder(draggedName, targetFolder);
                 return;
             }
             if (selectFrom === null) return;
@@ -1282,11 +1317,7 @@ const loadList = async()=>{
                     if (updated) await refreshList();
                     return;
                 }
-                const duplicatedName = await duplicateBook(draggedName);
-                if (!duplicatedName) return;
-                await refreshList();
-                const updated = await setBookFolder(duplicatedName, folderName);
-                if (updated) await refreshList();
+                await duplicateBookIntoFolder(draggedName, folderName);
             },
             menuActions: folderMenuActions,
         });
@@ -1470,11 +1501,7 @@ const setupBooks = (list)=>{
                 if (updated) await refreshList();
                 return;
             }
-            const duplicatedName = await duplicateBook(draggedName);
-            if (!duplicatedName) return;
-            await refreshList();
-            const updated = await setBookFolder(duplicatedName, null);
-            if (updated) await refreshList();
+            await duplicateBookIntoFolder(draggedName, null);
         });
         list.append(books);
     }
