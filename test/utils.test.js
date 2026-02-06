@@ -1,9 +1,52 @@
-import { describe, it, expect } from "vitest";
-import { safeToSorted, createDeferred } from "../src/utils.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  appendSortOptions,
+  createDeferred,
+  safeToSorted,
+} from "../src/utils.js";
+import { SORT, SORT_DIRECTION } from "../src/constants.js";
 
-describe("placeholder", () => {
-  it("runs", () => {
-    expect(true).toBe(true);
+describe("appendSortOptions", () => {
+  let originalDocument;
+
+  afterEach(() => {
+    if (originalDocument === undefined) {
+      delete globalThis.document;
+    } else {
+      globalThis.document = originalDocument;
+    }
+    vi.restoreAllMocks();
+  });
+
+  it("appends options and marks the matching sort+direction as selected", () => {
+    originalDocument = globalThis.document;
+    const select = {
+      options: [],
+      append(option) {
+        this.options.push(option);
+      },
+    };
+
+    globalThis.document = {
+      createElement: vi.fn(() => ({
+        value: "",
+        textContent: "",
+        selected: false,
+      })),
+    };
+
+    appendSortOptions(select, SORT.UID, SORT_DIRECTION.DESCENDING);
+
+    expect(select.options.length).toBeGreaterThan(0);
+
+    const selected = select.options.filter((option) => option.selected);
+    expect(selected).toHaveLength(1);
+
+    const selectedValue = JSON.parse(selected[0].value);
+    expect(selectedValue).toEqual({
+      sort: SORT.UID,
+      direction: SORT_DIRECTION.DESCENDING,
+    });
   });
 });
 
@@ -37,9 +80,27 @@ describe("safeToSorted", () => {
     const result = safeToSorted(arr, () => 0);
     expect(result).toEqual([42]);
   });
+
+  it("uses slice().sort fallback when toSorted is unavailable on the array instance", () => {
+    const arr = [3, 2, 1];
+    arr.toSorted = undefined;
+
+    const result = safeToSorted(arr, (a, b) => a - b);
+
+    expect(result).toEqual([1, 2, 3]);
+    expect(arr).toEqual([3, 2, 1]);
+  });
 });
 
 describe("createDeferred", () => {
+  it("returns a promise with externally controlled resolve/reject functions", () => {
+    const d = createDeferred();
+
+    expect(typeof d.resolve).toBe("function");
+    expect(typeof d.reject).toBe("function");
+    expect(d.promise).toBeInstanceOf(Promise);
+  });
+
   it("lets you resolve a promise from the outside", async () => {
     const d = createDeferred();
 
