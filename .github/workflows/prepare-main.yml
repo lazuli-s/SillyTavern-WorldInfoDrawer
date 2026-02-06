@@ -19,6 +19,8 @@ permissions:
 jobs:
   prepare-main:
     runs-on: ubuntu-latest
+    env:
+      PREP_BRANCH: prepare-main/${{ inputs.source_branch }}
     steps:
       - name: Checkout source branch
         uses: actions/checkout@v4
@@ -73,18 +75,58 @@ jobs:
             fi
           done
 
-      - name: Create PR to target branch
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: prepare main from ${{ inputs.source_branch }}"
-          title: "chore: prepare main from ${{ inputs.source_branch }}"
-          body: |
-            Automated prepare-main PR.
+      - name: Commit and push prepare branch
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git checkout -B "$PREP_BRANCH"
+          git add -A
 
-            - Source branch: `${{ inputs.source_branch }}`
-            - Target branch: `${{ inputs.target_branch }}`
-            - Files were filtered to the extension allowlist before this PR was created.
-          branch: prepare-main/${{ inputs.source_branch }}
-          base: ${{ inputs.target_branch }}
-          delete-branch: false
+          if git diff --cached --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No cleanup changes detected."
+            exit 0
+          fi
+
+          git commit -m "chore: prepare main from ${{ inputs.source_branch }}"
+          git push --force-with-lease origin "$PREP_BRANCH"
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update PR to target branch
+        if: steps.prepare.outputs.has_changes == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          title="chore: prepare main from ${{ inputs.source_branch }}"
+          body=$(cat <<'EOF'
+          Automated prepare-main PR.
+
+          - Source branch: `${{ inputs.source_branch }}`
+          - Target branch: `${{ inputs.target_branch }}`
+          - Files were filtered to the extension allowlist before this PR was created.
+          EOF
+          )
+
+          pr_number="$(gh pr list \
+            --head "$PREP_BRANCH" \
+            --base "${{ inputs.target_branch }}" \
+            --state open \
+            --json number \
+            --jq '.[0].number')"
+
+          if [[ -n "$pr_number" ]]; then
+            gh pr edit "$pr_number" --title "$title" --body "$body"
+            echo "Updated existing PR #$pr_number"
+          else
+            gh pr create \
+              --head "$PREP_BRANCH" \
+              --base "${{ inputs.target_branch }}" \
+              --title "$title" \
+              --body "$body"
+            echo "Created a new PR."
+          fi
