@@ -139,8 +139,15 @@ foreach ($finding in $findings) {
         continue
     }
 
-    $prompt | & $codexCmd.Source exec - 2>&1 | Tee-Object -FilePath $logPath
-    $codexExit = $LASTEXITCODE
+    $previousEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $prompt | & $codexCmd.Source exec - 2>&1 | Tee-Object -FilePath $logPath
+        $codexExit = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousEap
+    }
     if ($codexExit -ne 0) {
         Write-ErrLine "codex exec failed for $id (exit $codexExit)"
 
