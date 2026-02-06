@@ -44,7 +44,20 @@ function Invoke-Step {
     & $Command
 }
 
-$repoRoot = (& git rev-parse --show-toplevel).Trim()
+function Get-TrimmedCommandOutput {
+    param([scriptblock]$Command)
+    $raw = & $Command
+    if ($null -eq $raw) {
+        return ""
+    }
+    $text = ($raw | Out-String)
+    if ($null -eq $text) {
+        return ""
+    }
+    return $text.Trim()
+}
+
+$repoRoot = Get-TrimmedCommandOutput { git rev-parse --show-toplevel }
 if (-not $repoRoot) {
     throw "Could not determine git repository root."
 }
@@ -62,7 +75,7 @@ if (-not (Test-Path -Path $PromptTemplate -PathType Leaf)) {
     throw "Prompt template not found: $PromptTemplate"
 }
 
-$gitStatus = (& git status --porcelain).Trim()
+$gitStatus = Get-TrimmedCommandOutput { git status --porcelain }
 if ($gitStatus) {
     throw "Working tree is not clean. Commit/stash changes before running this script."
 }
@@ -131,7 +144,7 @@ foreach ($finding in $findings) {
     if ($codexExit -ne 0) {
         Write-ErrLine "codex exec failed for $id (exit $codexExit)"
 
-        $dirty = (& git status --porcelain).Trim()
+        $dirty = Get-TrimmedCommandOutput { git status --porcelain }
         $stashNote = ""
         if ($dirty) {
             $stashMessage = "codex-finding-failed-$id"
@@ -150,7 +163,7 @@ foreach ($finding in $findings) {
         continue
     }
 
-    $postRunStatus = (& git status --porcelain).Trim()
+    $postRunStatus = Get-TrimmedCommandOutput { git status --porcelain }
     if (-not $postRunStatus) {
         Write-WarnLine "No file changes detected for $id; skipping commit."
         $results.Add([pscustomobject]@{
@@ -195,7 +208,7 @@ foreach ($finding in $findings) {
         continue
     }
 
-    $commitHash = (& git rev-parse --short HEAD).Trim()
+    $commitHash = Get-TrimmedCommandOutput { git rev-parse --short HEAD }
     Write-Info "Committed $id as $commitHash"
     $results.Add([pscustomobject]@{
         Id = $id
