@@ -747,29 +747,47 @@ const addDrawer = ()=>{
                     const clamped = Math.max(MIN_LIST_WIDTH, value);
                     list.style.flexBasis = `${clamped}px`;
                     list.style.width = `${clamped}px`;
+                    return clamped;
                 };
+                let appliedListWidth = MIN_LIST_WIDTH;
                 const storedWidth = Number.parseInt(localStorage.getItem(SPLITTER_STORAGE_KEY) ?? '', 10);
                 if (!Number.isNaN(storedWidth)) {
-                    applyListWidth(storedWidth);
+                    appliedListWidth = applyListWidth(storedWidth);
                 }
                 splitter.addEventListener('pointerdown', (evt)=>{
                     evt.preventDefault();
                     splitter.setPointerCapture(evt.pointerId);
                     const startX = evt.clientX;
                     const startWidth = list.getBoundingClientRect().width;
+                    appliedListWidth = startWidth;
                     const splitterWidth = splitter.getBoundingClientRect().width || 6;
+                    const bodyWidth = body.getBoundingClientRect().width;
+                    const maxWidth = Math.max(MIN_LIST_WIDTH, bodyWidth - splitterWidth - MIN_EDITOR_WIDTH);
+                    let pendingWidth = startWidth;
+                    let rafId = null;
+                    const queueWidthApply = (value)=>{
+                        pendingWidth = value;
+                        if (rafId !== null) return;
+                        rafId = requestAnimationFrame(()=>{
+                            rafId = null;
+                            appliedListWidth = applyListWidth(pendingWidth);
+                        });
+                    };
                     const onMove = (moveEvt)=>{
                         const delta = moveEvt.clientX - startX;
-                        const maxWidth = Math.max(MIN_LIST_WIDTH, body.clientWidth - splitterWidth - MIN_EDITOR_WIDTH);
                         const nextWidth = Math.min(Math.max(MIN_LIST_WIDTH, startWidth + delta), maxWidth);
-                        applyListWidth(nextWidth);
+                        queueWidthApply(nextWidth);
                     };
                     const onUp = (upEvt)=>{
                         splitter.releasePointerCapture(upEvt.pointerId);
                         window.removeEventListener('pointermove', onMove);
                         window.removeEventListener('pointerup', onUp);
-                        const finalWidth = Math.round(list.getBoundingClientRect().width);
-                        localStorage.setItem(SPLITTER_STORAGE_KEY, String(finalWidth));
+                        if (rafId !== null) {
+                            cancelAnimationFrame(rafId);
+                            rafId = null;
+                            appliedListWidth = applyListWidth(pendingWidth);
+                        }
+                        localStorage.setItem(SPLITTER_STORAGE_KEY, String(Math.round(appliedListWidth)));
                     };
                     window.addEventListener('pointermove', onMove);
                     window.addEventListener('pointerup', onUp);

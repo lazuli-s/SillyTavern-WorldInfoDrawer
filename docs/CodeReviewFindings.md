@@ -30,9 +30,9 @@ CODE REVIEW FINDINGS
   Keep pointermove work to a single write path. Precompute stable geometry where possible and/or batch updates with `requestAnimationFrame` so reads/writes are not interleaved per move event.
 
 - Proposed fix (description only):
-  [ ] Capture invariant values at `pointerdown` and avoid per-move layout reads where possible.
-  [ ] Gate width writes through one animation-frame callback.
-  [ ] Verify splitter behavior and persisted width remain unchanged.
+  [x] Capture invariant values at `pointerdown` and avoid per-move layout reads where possible.
+  [x] Gate width writes through one animation-frame callback.
+  [x] Verify splitter behavior and persisted width remain unchanged.
 
 - Why it's safe:
   Drag direction, width clamping, and saved splitter width behavior remain unchanged; only update cadence is optimized.
