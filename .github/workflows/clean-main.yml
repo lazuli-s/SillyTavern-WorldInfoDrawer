@@ -1,8 +1,7 @@
 name: Clean main
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,7 +17,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          allowed_files=(index.js style.css style.less manifest.json README.md LICENSE .gitignore)
+          allowed_files=(index.js style.css manifest.json README.md)
           allowed_dirs=(src .github)
 
           in_allowed_files() {
