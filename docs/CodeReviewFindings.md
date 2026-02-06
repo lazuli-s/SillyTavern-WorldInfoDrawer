@@ -250,9 +250,9 @@ CODE REVIEW FINDINGS
   Replace fixed sleep with condition-based waits for the specific target element, and guard optional integrations before invoking.
 
 - Proposed fix (description only):
-  [ ] Wait for target action element presence instead of fixed 500ms delay.
-  [ ] Add null-safe guards before invoking `.click()`.
-  [ ] Keep existing menu action flow and target actions unchanged.
+  [x] Wait for target action element presence instead of fixed 500ms delay.
+  [x] Add null-safe guards before invoking `.click()`.
+  [x] Keep existing menu action flow and target actions unchanged.
 
 - Why it's safe:
   Same actions are triggered, but with deterministic readiness checks; no change to intended user-visible workflow.

@@ -959,12 +959,11 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     rename.classList.add('stwid--item');
                                     rename.classList.add('stwid--rename');
                                     rename.addEventListener('click', async(evt)=>{
-                                        //TODO cheeky monkey
-                                        const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                        sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                        sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                        await state.delay(500);
-                                        document.querySelector('#world_popup_name_button').click();
+                                        const selected = await setSelectedBookInCoreUi(name);
+                                        if (!selected) return;
+                                        await clickCoreUiAction([
+                                            '#world_popup_name_button',
+                                        ]);
                                     });
                                     const i = document.createElement('i'); {
                                         i.classList.add('stwid--icon');
@@ -984,12 +983,11 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                         bulk.classList.add('stwid--item');
                                         bulk.classList.add('stwid--bulkEdit');
                                         bulk.addEventListener('click', async(evt)=>{
-                                            //TODO cheeky monkey
-                                            const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                            sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                            sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                            await state.delay(500);
-                                            document.querySelector('.stwibe--trigger').click();
+                                            const selected = await setSelectedBookInCoreUi(name);
+                                            if (!selected) return;
+                                            await clickCoreUiAction([
+                                                '.stwibe--trigger',
+                                            ]);
                                         });
                                         const i = document.createElement('i'); {
                                             i.classList.add('stwid--icon');
