@@ -6,8 +6,8 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 
 - Adds a full screen drawer layout for editing lorebook entries, so you can focus entirely on lore and worldbuilding.
 - Provides one-click collapse/expand for all books and a quick refresh to pull the latest lorebook state without reloading the page.
-- **LOREBOOK FOLDERS** for organizing your collection of lorebooks. You can create folders, export and import entire folder sets, and manage folder actions from a context menu.
-- **ORDER HELPER** panel for mass updates. Drag to reorder entries, filter by strategy/position/recursion/outlet/automation ID/inclusion group, choose which columns to show, and bulk-apply changes in order.
+- 📁 **LOREBOOK FOLDERS** for organizing your collection of lorebooks. You can create folders, export and import entire folder sets, and manage folder actions from a context menu.
+- 📇 **ORDER HELPER** panel for mass updates. Drag to reorder entries, filter by strategy/position/recursion/outlet/automation ID/inclusion group, choose which columns to show, and bulk-apply changes in order.
 
 ## Main features
 
@@ -15,13 +15,13 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 - Full-screen World Info drawer, so you can focus on editing without the cramped default panel and visualize books and entries more clearly.
 - CTRL click, SHIFT range select, and multi-select support for faster entry management, including moving entries across lorebooks more easily.
 
-### Lorebook folders
+### 📁 Lorebook folders
 - Create folders and group lorebooks in a cleaner structure.
 - Import and export many lorebooks at once when they are grouped in the same folder.
 - Folder actions from the menu: rename, delete, export, import into folder, and create book in folder.
 - Apply Order Helper to an entire folder scope when you want to reorder only that folder's active books.
 
-### Order Helper for bulk work
+### 📇 Order Helper for bulk work
 - Table view for active entries with custom drag ordering.
 - Use it by scope: all active books, one book, or a folder scope.
 - Filter rows by strategy, position, recursion flags, outlet, automation ID, and inclusion group.
@@ -32,6 +32,7 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 ### Custom sorting
 - Give each lorebook its own sorting preference, or use one global sorting override across all books.
 
+## Screenshots
 
 ### Interface
 <img width="960" height="471" alt="editing_entry" src="https://github.com/user-attachments/assets/a5cc31c5-c0a8-4a4d-a8c7-ae4c609c7a9a" />
@@ -72,10 +73,10 @@ Please tell me if you have any ideas or suggestions as well. I think World Info 
 ## Updates
 
 ### Version 2.2.0
-- New feature: **LOREBOOK FOLDERS**. Added a full folder system for lorebooks, including folder grouping, folder import/create controls, and drag-and-drop moving of books between folders and root.
+- New feature: 📁 **LOREBOOK FOLDERS**. Added a full folder system for lorebooks, including folder grouping, folder import/create controls, and drag-and-drop moving of books between folders and root.
    - Added folder-level active toggles with tri-state behavior, folder context actions (rename/delete/export/import/create book), and folder collapse-state persistence.
    - Added folder-scoped Order Helper support so you can apply ordering to a specific folder's active books.
-- **EXPANDED ORDER HELPER** with filters (strategy, position, recursion flags, outlet, automation ID, inclusion group), direct editing, move controls, and the option to choose which columns to show or hide.
+- 📇 **EXPANDED ORDER HELPER** with filters (strategy, position, recursion flags, outlet, automation ID, inclusion group), direct editing, move controls, and the option to choose which columns to show or hide.
 - Improved reliability in day-to-day editing: safer selection behavior, better protection against accidental Delete key actions while typing, better editor dirty-state handling during refresh, and more reliable folder import/update syncing. Compared to the previous release, this version is more reliable and performs better.
 
 ### Version 2.1.0
