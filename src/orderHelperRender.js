@@ -109,6 +109,9 @@ const createOrderHelperRenderer = ({
         syncOrderHelperOutletFilters();
         syncOrderHelperAutomationIdFilters();
         syncOrderHelperGroupFilters();
+        let refreshOutletFilterIndicator = ()=>{};
+        let refreshAutomationIdFilterIndicator = ()=>{};
+        let refreshGroupFilterIndicator = ()=>{};
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
         dom.order.entries = {};
@@ -982,6 +985,7 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.outlet.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            refreshOutletFilterIndicator = updateFilterIndicator;
                                                             const updateOutletFilters = ()=>{
                                                                 orderHelperState.filters.outlet = normalizeOutletFilters(orderHelperState.filters.outlet);
                                                                 updateFilterIndicator();
@@ -1076,6 +1080,7 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.automationId.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            refreshAutomationIdFilterIndicator = updateFilterIndicator;
                                                             const updateAutomationIdFilters = ()=>{
                                                                 orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
                                                                 updateFilterIndicator();
@@ -1170,6 +1175,7 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.group.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            refreshGroupFilterIndicator = updateFilterIndicator;
                                                             const updateGroupFilters = ()=>{
                                                                 orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
                                                                 updateFilterIndicator();
@@ -1547,6 +1553,9 @@ const createOrderHelperRenderer = ({
                                                 const value = input.value;
                                                 cache[e.book].entries[e.data.uid].outletName = value;
                                                 e.data.outletName = value;
+                                                syncOrderHelperOutletFilters();
+                                                refreshOutletFilterIndicator();
+                                                applyOrderHelperOutletFilters();
                                                 await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                                 updateOutlet();
                                             });
@@ -1575,6 +1584,9 @@ const createOrderHelperRenderer = ({
                                                 const entryData = cache[e.book].entries[e.data.uid];
                                                 entryData.group = value;
                                                 e.data.group = value;
+                                                syncOrderHelperGroupFilters();
+                                                refreshGroupFilterIndicator();
+                                                applyOrderHelperGroupFilters();
                                                 await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                             });
                                             wrap.append(input);
@@ -1701,6 +1713,9 @@ const createOrderHelperRenderer = ({
                                             const value = inp.value;
                                             cache[e.book].entries[e.data.uid].automationId = value;
                                             e.data.automationId = value;
+                                            syncOrderHelperAutomationIdFilters();
+                                            refreshAutomationIdFilterIndicator();
+                                            applyOrderHelperAutomationIdFilters();
                                             await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                         });
                                         automationId.append(inp);

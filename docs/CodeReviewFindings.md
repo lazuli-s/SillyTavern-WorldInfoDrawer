@@ -103,9 +103,9 @@ CODE REVIEW FINDINGS
   Re-sync option sets and reapply the affected filter immediately after inline edits that mutate filter-relevant values.
 
 - Proposed fix (description only):
-  [ ] After outlet/group/automation ID edits, update corresponding filter value lists.
-  [ ] Reapply the matching filter state to the edited row (or all rows if option domains changed).
-  [ ] Verify filter button active state reflects the updated domains.
+  [x] After outlet/group/automation ID edits, update corresponding filter value lists.
+  [x] Reapply the matching filter state to the edited row (or all rows if option domains changed).
+  [x] Verify filter button active state reflects the updated domains.
 
 - Why it's safe:
   Data-edit behavior and persisted values remain unchanged; only filter correctness is updated to reflect current row values.
