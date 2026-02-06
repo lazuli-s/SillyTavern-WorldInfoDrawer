@@ -23,7 +23,9 @@ export const renderEntry = async(e, name, before = null)=>{
         entry.dataset.uid = e.uid;
         entry.addEventListener('selectstart', (evt)=>evt.preventDefault());
         entry.addEventListener('dragstart', (evt)=>{
-            if (context.selectFrom === null || !context.selectList.includes(e)) {
+            // Selection uses stable uid strings (not entry object identity).
+            // After cache refreshes, entry objects are re-cloned, so identity checks break.
+            if (context.selectFrom === null || !context.selectList?.includes(e.uid)) {
                 evt.preventDefault();
                 return;
             }
@@ -42,18 +44,21 @@ export const renderEntry = async(e, name, before = null)=>{
                     // range-select from last clicked entry
                     const start = [...world.dom.entryList.children].indexOf(context.selectLast);
                     const end = [...world.dom.entryList.children].indexOf(entry);
-                    for (let i = Math.min(start, end); i <= end; i++) {
+                    const from = Math.min(start, end);
+                    const to = Math.max(start, end);
+                    for (let i = from; i <= to; i++) {
                         const el = world.dom.entryList.children[i];
-                        const data = world.entries[el.dataset.uid];
-                        if (!context.selectList.includes(data)) {
+                        const uid = el.dataset.uid;
+                        if (!context.selectList.includes(uid)) {
                             context.selectAdd(el);
-                            context.selectList.push(data);
+                            context.selectList.push(uid);
                         }
                     }
                     context.selectLast = entry;
                 } else {
                     if (context.selectFrom === null) {
                         context.selectFrom = name;
+                        // Store stable identifiers; entry objects are re-created on refresh.
                         context.selectList = [];
                         const help = document.createElement('ul'); {
                             help.classList.add('stwid--helpToast');
@@ -78,16 +83,16 @@ export const renderEntry = async(e, name, before = null)=>{
                         });
                     }
                     // regular single select
-                    if (context.selectList.includes(e)) {
+                    if (context.selectList.includes(e.uid)) {
                         context.selectRemove(entry);
-                        context.selectList.splice(context.selectList.indexOf(e), 1);
+                        context.selectList.splice(context.selectList.indexOf(e.uid), 1);
                         if (context.selectLast == entry) context.selectLast = null;
                         if (context.selectList.length == 0) {
                             context.selectEnd();
                         }
                     } else {
                         context.selectAdd(entry);
-                        context.selectList.push(e);
+                        context.selectList.push(e.uid);
                         context.selectLast = entry;
                     }
                 }
@@ -120,24 +125,35 @@ export const renderEntry = async(e, name, before = null)=>{
             status.addEventListener('click', (evt)=>{
                 if (context.currentEditor?.name != name || context.currentEditor?.uid != e.uid) evt.stopPropagation();
             });
-            const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
+            const isEnabledTemplate = document.querySelector('#entry_edit_template [name="entryKillSwitch"]');
+            const isEnabled = /**@type {HTMLSelectElement}*/(isEnabledTemplate?.cloneNode(true)); {
+                if (!isEnabled) return entry;
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
-                if (e.disable) {
-                    isEnabled.classList.toggle('fa-toggle-off');
-                    isEnabled.classList.toggle('fa-toggle-on');
-                }
+                isEnabled.title = 'Enable/disable this entry';
+                isEnabled.setAttribute('aria-label', 'Enable or disable this entry');
+
+                const applyEnabledIcon = (disabled)=>{
+                    isEnabled.classList.toggle('fa-toggle-off', Boolean(disabled));
+                    isEnabled.classList.toggle('fa-toggle-on', !Boolean(disabled));
+                };
+
+                applyEnabledIcon(e.disable);
                 isEnabled.addEventListener('click', async()=>{
-                    const dis = isEnabled.classList.toggle('fa-toggle-off');
-                    isEnabled.classList.toggle('fa-toggle-on');
-                    context.cache[name].entries[e.uid].disable = dis;
+                    const nextDisabled = !context.cache[name].entries[e.uid].disable;
+                    context.cache[name].entries[e.uid].disable = nextDisabled;
+                    applyEnabledIcon(nextDisabled);
                     await context.saveWorldInfo(name, context.buildSavePayload(name), true);
                 });
                 status.append(isEnabled);
             }
-            const strat = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryStateSelector"]').cloneNode(true)); {
+            const stratTemplate = document.querySelector('#entry_edit_template [name="entryStateSelector"]');
+            const strat = /**@type {HTMLSelectElement}*/(stratTemplate?.cloneNode(true)); {
+                if (!strat) return entry;
                 world.dom.entry[e.uid].strategy = strat;
                 strat.classList.add('stwid--strategy');
+                strat.title = 'Entry strategy';
+                strat.setAttribute('aria-label', 'Entry strategy');
                 strat.value = entryState(e);
                 strat.addEventListener('change', async()=>{
                     const value = strat.value;
@@ -180,6 +196,20 @@ export const renderEntry = async(e, name, before = null)=>{
                 isTokenCurrent: () => clickToken === token,
             });
         });
+
+        // Make SHIFT range-selected entries actually draggable.
+        // The selection UI (orange highlight) is applied via CSS classes, but HTML drag-and-drop
+        // only starts when the element has draggable=true. Single-click selection sets this,
+        // but the SHIFT range-path was missing it.
+        entry.addEventListener('pointerdown', (evt)=>{
+            if (evt.button !== 0) return; // left-click only
+            if (context.selectFrom !== name) return;
+            if (!context.selectList?.includes?.(e.uid)) return;
+            // Ensure the dragstart event can fire for any selected row.
+            // (Without this, the UI can look selected but never start dragging.)
+            entry.setAttribute('draggable', 'true');
+        });
+
         if (before) before.insertAdjacentElement('beforebegin', entry);
         else world.dom.entryList.append(entry);
         return entry;

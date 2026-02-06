@@ -44,3 +44,9 @@ jobs:
 
       - name: Run lint
         run: npm run lint
+
+      - name: Run stylelint
+        run: npm run lint:css
+        
+      - name: Run Prettier check
+        run: npm run format:check

@@ -21,8 +21,8 @@ export class Settings {
     useBookSorts = true;
 
     constructor() {
-        Object.assign(this, extension_settings.wordInfoDrawer ?? {});
-        extension_settings.wordInfoDrawer = this;
+        Object.assign(this, extension_settings.worldInfoDrawer ?? {});
+        extension_settings.worldInfoDrawer = this;
 
         if (!Object.values(SORT).includes(this.sortLogic)) {
             this.sortLogic = SORT.TITLE;

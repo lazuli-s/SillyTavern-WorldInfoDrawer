@@ -4,10 +4,11 @@ import { Popup } from '../../../popup.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { renderTemplateAsync } from '../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../utils.js';
-import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../world-info.js';
+import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './src/Settings.js';
 import { initEditorPanel } from './src/editorPanel.js';
 import { initListPanel, refreshList } from './src/listPanel.js';
+import { registerFolderName } from './src/lorebookFolders.js';
 import { initOrderHelper } from './src/orderHelper.js';
 import { cloneMetadata, getSortFromMetadata, sortEntries } from './src/sortHelpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './src/worldEntry.js';
@@ -33,7 +34,9 @@ const watchCss = async()=>{
             style.innerHTML = await (await FilesPluginApi.get(path)).text();
             document.querySelector(`#third-party_${NAME}-css`)?.remove();
         });
-    } catch { /* empty */ }
+    } catch (error) {
+        console.debug('[STWID] CSS watch disabled', error);
+    }
 };
 watchCss();
 
@@ -108,6 +111,14 @@ let listPanelApi;
 let selectionState;
 let editorPanelApi;
 
+const shouldAutoRefreshEditor = (name, uid)=>{
+    // When the user is actively typing in the editor, rebuilding the editor DOM
+    // (via a synthetic click) can discard unsaved input.
+    // Guard auto-refreshes to prefer preserving in-progress edits.
+    if (!editorPanelApi?.isDirty) return true;
+    return !editorPanelApi.isDirty(name, uid);
+};
+
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
 const buildSavePayload = (name)=>({
@@ -118,20 +129,34 @@ const updateSettingsChange = ()=>{
     console.log('[STWID]', '[UPDATE-SETTINGS]');
     for (const [name, world] of Object.entries(cache)) {
         const active = selected_world_info.includes(name);
-        if (world.dom.active.checked != active) {
+        if (world?.dom?.active && world.dom.active.checked != active) {
             world.dom.active.checked = active;
         }
     }
     listPanelApi?.applyActiveFilter?.();
+    listPanelApi?.updateFolderActiveToggles?.();
 };
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeStarted = createDeferred();
 /**@type {ReturnType<typeof createDeferred>} */
 let updateWIChangeFinished;
+
+// Monotonic token to correlate a wait call with the specific update cycle it should observe.
+// This prevents a wait from resolving due to an earlier/later unrelated update.
+let updateWIChangeToken = 0;
+
 const updateWIChange = async(name = null, data = null)=>{
     console.log('[STWID]', '[UPDATE-WI]', name, data);
     updateWIChangeFinished = createDeferred();
+    updateWIChangeToken += 1;
     updateWIChangeStarted.resolve();
+
+    // If called with a book name but without the corresponding data payload,
+    // fall back to a full refresh (robust against mutation observer / unexpected callers).
+    if (name && cache[name] && !data) {
+        name = null;
+    }
+
     // removed books
     for (const [n, w] of Object.entries(cache)) {
         if (world_names.includes(n)) continue;
@@ -196,14 +221,24 @@ const updateWIChange = async(name = null, data = null)=>{
                 hasUpdate = true;
                 switch (k) {
                     case 'content': {
-                        if (currentEditor?.name == name && currentEditor?.uid == e && dom.editor.querySelector('[name="content"]').value != n.content) {
-                            cache[name].dom.entry[e].root.click();
+                        if (currentEditor?.name == name && currentEditor?.uid == e) {
+                            const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="content"]'));
+                            if (!inp || inp.value != n.content) {
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
+                            }
                         }
                         break;
                     }
                     case 'comment': {
-                        if (currentEditor?.name == name && currentEditor?.uid == e && dom.editor.querySelector('[name="comment"]').value != n.comment) {
-                            cache[name].dom.entry[e].root.click();
+                        if (currentEditor?.name == name && currentEditor?.uid == e) {
+                            const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="comment"]'));
+                            if (!inp || inp.value != n.comment) {
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
+                            }
                         }
                         cache[name].dom.entry[e].comment.textContent = n.comment;
                         break;
@@ -212,7 +247,9 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement}*/(dom.editor.querySelector(`textarea[name="${k}"]`));
                             if (!inp || inp.value != n[k].join(', ')) {
-                                cache[name].dom.entry[e].root.click();
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
                             }
                         }
                         cache[name].dom.entry[e].key.textContent = n.key.join(', ');
@@ -220,7 +257,9 @@ const updateWIChange = async(name = null, data = null)=>{
                     }
                     case 'disable': {
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
-                            cache[name].dom.entry[e].root.click();
+                            if (shouldAutoRefreshEditor(name, e)) {
+                                cache[name].dom.entry[e].root.click();
+                            }
                         }
                         cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'remove' : 'add']('fa-toggle-on');
                         cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'add' : 'remove']('fa-toggle-off');
@@ -229,7 +268,9 @@ const updateWIChange = async(name = null, data = null)=>{
                     case 'constant':
                     case 'vectorized': {
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
-                            cache[name].dom.entry[e].root.click();
+                            if (shouldAutoRefreshEditor(name, e)) {
+                                cache[name].dom.entry[e].root.click();
+                            }
                         }
                         cache[name].dom.entry[e].strategy.value = entryState(n);
                         break;
@@ -238,7 +279,9 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLInputElement}*/(dom.editor.querySelector(`[name="${k}"]`));
                             if (!inp || inp.value != n[k]) {
-                                cache[name].dom.entry[e].root.click();
+                                if (shouldAutoRefreshEditor(name, e)) {
+                                    cache[name].dom.entry[e].root.click();
+                                }
                             }
                         }
                         break;
@@ -258,6 +301,29 @@ const updateWIChange = async(name = null, data = null)=>{
     updateWIChangeFinished.resolve();
 };
 const updateWIChangeDebounced = debounce(updateWIChange);
+
+/**
+ * Waits for the next WORLDINFO update cycle (start -> finish).
+ *
+ * NOTE: This must not resolve due to an update cycle that started before the call,
+ * otherwise callers that open dialogs and then await an update can get a false-positive.
+ */
+const waitForWorldInfoUpdate = async()=>{
+    // Capture the token at call time so we only resolve for a strictly later update.
+    const tokenAtCall = updateWIChangeToken;
+
+    // Wait until a new cycle starts.
+    while (updateWIChangeToken === tokenAtCall) {
+        const startPromise = updateWIChangeStarted.promise;
+        await startPromise;
+        // Loop to re-check token in case the promise resolved from an older resolve
+        // (e.g., if an update started and finished before this awaited line ran).
+    }
+
+    // Now wait for the finish of the cycle that started after we entered.
+    await updateWIChangeFinished?.promise;
+    return true;
+};
 
 const fillEmptyTitlesWithKeywords = async(name)=>{
     const data = await loadWorldInfo(name);
@@ -280,6 +346,9 @@ eventSource.on(event_types.WORLDINFO_SETTINGS_UPDATED, ()=>updateSettingsChange(
 
 
 export const jumpToEntry = async(name, uid)=>{
+    const entryDom = cache[name]?.dom?.entry?.[uid]?.root;
+    if (!entryDom) return false;
+
     if (dom.activationToggle.classList.contains('stwid--active')) {
         dom.activationToggle.click();
     }
@@ -287,10 +356,11 @@ export const jumpToEntry = async(name, uid)=>{
         dom.order.toggle.click();
     }
     listPanelApi.setBookCollapsed(name, false);
-    cache[name].dom.entry[uid].root.scrollIntoView({ block:'center', inline:'center' });
+    entryDom.scrollIntoView({ block:'center', inline:'center' });
     if (currentEditor?.name != name || currentEditor?.uid != uid) {
-        cache[name].dom.entry[uid].root.click();
+        entryDom.click();
     }
+    return true;
 };
 
 
@@ -320,32 +390,49 @@ const addDrawer = ()=>{
         hljs,
         $,
     });
-    document.addEventListener('keydown', async(evt)=>{
+
+    const onDrawerKeydown = async(evt)=>{
         // only run when drawer is open
-        if (document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2).closest('.stwid--body')) {
-            // abort if no active selection
-            if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
-            console.log('[STWID]', evt.key);
-            switch (evt.key) {
-                case 'Delete': {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    const srcBook = await loadWorldInfo(selectionState.selectFrom);
-                    for (const srcEntry of selectionState.selectList) {
-                        const uid = srcEntry.uid;
-                        const deleted = await deleteWorldInfoEntry(srcBook, uid, { silent:true });
-                        if (deleted) {
-                            deleteWIOriginalDataValue(srcBook, uid);
-                        }
+        const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        if (!centerEl?.closest?.('.stwid--body')) return;
+
+        // Prevent global Delete from firing while the user is typing/editing.
+        // This avoids accidental deletion when focus is in any input/textarea/select/contenteditable.
+        const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+        const isTextEditing = Boolean(
+            target?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'),
+        );
+        if (isTextEditing) return;
+
+        // abort if no active selection
+        if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
+
+        console.log('[STWID]', evt.key);
+        switch (evt.key) {
+            case 'Delete': {
+                evt.preventDefault();
+                evt.stopPropagation();
+                const srcBook = await loadWorldInfo(selectionState.selectFrom);
+                for (const uid of selectionState.selectList) {
+                    const deleted = await deleteWorldInfoEntry(srcBook, uid, { silent:true });
+                    if (deleted) {
+                        deleteWIOriginalDataValue(srcBook, uid);
                     }
-                    await saveWorldInfo(selectionState.selectFrom, srcBook, true);
-                    updateWIChange(selectionState.selectFrom, srcBook);
-                    listPanelApi.selectEnd();
-                    break;
                 }
+                await saveWorldInfo(selectionState.selectFrom, srcBook, true);
+                updateWIChange(selectionState.selectFrom, srcBook);
+                listPanelApi.selectEnd();
+                break;
             }
         }
-    });
+    };
+    document.addEventListener('keydown', onDrawerKeydown);
+
+    // Best-effort cleanup: if ST tears down/reloads extensions, remove global listeners.
+    globalThis.addEventListener?.('beforeunload', ()=>{
+        document.removeEventListener('keydown', onDrawerKeydown);
+    }, { once:true });
+
     document.body.classList.add('stwid--');
     const drawerContent = document.querySelector('#WorldInfo'); {
         const SPLITTER_STORAGE_KEY = 'stwid--list-width';
@@ -365,6 +452,7 @@ const addDrawer = ()=>{
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
                             add.title = 'Create New Book';
+                            add.setAttribute('aria-label', 'Create New Book');
                             add.querySelector('span')?.remove();
                             add.addEventListener('click', async()=>{
                                 const startPromise = updateWIChangeStarted.promise;
@@ -382,19 +470,52 @@ const addDrawer = ()=>{
                         });
                         controlsPrimary.append(add);
                     }
+                    const addFolder = document.createElement('div'); {
+                        addFolder.classList.add('menu_button');
+                        addFolder.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
+                        addFolder.title = 'New Folder';
+                        addFolder.setAttribute('aria-label', 'New Folder');
+                        addFolder.addEventListener('click', async()=>{
+                            const folderName = await Popup.show.input('Create a new folder', 'Enter a name for the new folder:', 'New Folder');
+                            if (!folderName) return;
+                            const result = registerFolderName(folderName);
+                            if (!result.ok) {
+                                if (result.reason === 'invalid') {
+                                    toastr.error('Folder names cannot include "/".');
+                                    return;
+                                }
+                                toastr.warning('Folder name cannot be empty.');
+                                return;
+                            }
+                            await refreshList();
+                        });
+                        controlsPrimary.append(addFolder);
+                    }
                     const imp = document.createElement('div'); {
                         imp.classList.add('menu_button');
                         imp.classList.add('fa-solid', 'fa-fw', 'fa-file-import');
                         imp.title = 'Import Book';
+                        imp.setAttribute('aria-label', 'Import Book');
                         imp.addEventListener('click', ()=>{
                             /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file')).click();
                         });
                         controlsPrimary.append(imp);
                     }
+                    const impFolder = document.createElement('div'); {
+                        impFolder.classList.add('menu_button');
+                        impFolder.classList.add('fa-solid', 'fa-fw', 'fa-folder-open');
+                        impFolder.title = 'Import Folder';
+                        impFolder.setAttribute('aria-label', 'Import Folder');
+                        impFolder.addEventListener('click', ()=>{
+                            listPanelApi?.openFolderImportDialog?.();
+                        });
+                        controlsPrimary.append(impFolder);
+                    }
                     const refresh = document.createElement('div'); {
                         refresh.classList.add('menu_button');
                         refresh.classList.add('fa-solid', 'fa-fw', 'fa-arrows-rotate');
                         refresh.title = 'Refresh';
+                        refresh.setAttribute('aria-label', 'Refresh');
                         refresh.addEventListener('click', async()=>{
                             await refreshList();
                         });
@@ -406,6 +527,7 @@ const addDrawer = ()=>{
             settings.classList.add('menu_button');
             settings.classList.add('fa-solid', 'fa-fw', 'fa-cog');
             settings.title = 'Global Activation Settings';
+            settings.setAttribute('aria-label', 'Global Activation Settings');
             settings.addEventListener('click', ()=>{
                 editorPanelApi.toggleActivationSettings();
             });
@@ -415,7 +537,8 @@ const addDrawer = ()=>{
                         dom.order.toggle = order;
                         order.classList.add('menu_button');
                         order.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
-                        order.title = 'Order Helper\n---\nUse drag and drop to help assign an "Order" value to entries of all active books.';
+                        order.title = 'Open Order Helper (active books)';
+                        order.setAttribute('aria-label', 'Open Order Helper for active books');
                         order.addEventListener('click', ()=>{
                             const isActive = order.classList.contains('stwid--active');
                             if (isActive) {
@@ -449,6 +572,8 @@ const addDrawer = ()=>{
                     controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');
                     const sortSel = document.createElement('select'); {
                         sortSel.classList.add('text_pole');
+                        sortSel.title = 'Global entry sort for the list panel';
+                        sortSel.setAttribute('aria-label', 'Global entry sort');
                         sortSel.addEventListener('change', ()=>{
                             const value = JSON.parse(sortSel.value);
                             Settings.instance.sortLogic = value.sort;
@@ -536,6 +661,7 @@ const addDrawer = ()=>{
                     debounce,
                     debounceAsync,
                     deleteWIOriginalDataValue,
+                    deleteWorldInfo,
                     deleteWorldInfoEntry,
                     delay,
                     dom,
@@ -550,6 +676,7 @@ const addDrawer = ()=>{
                     loadWorldInfo,
                     onWorldInfoChange,
                     openOrderHelper,
+                    Popup,
                     renderEntry,
                     resetEditor: ()=>{
                         editorPanelApi.clearEditor();
@@ -557,8 +684,10 @@ const addDrawer = ()=>{
                     safeToSorted,
                     saveWorldInfo,
                     getSelectedWorldInfo: () => selected_world_info,
+                    getWorldNames: () => world_names,
                     sortEntries,
                     updateWIChange,
+                    waitForWorldInfoUpdate,
                     world_names,
                     createNewWorldInfo,
                     createWorldInfoEntry,
@@ -654,19 +783,28 @@ const addDrawer = ()=>{
             drawerContent.append(body);
         }
     }
-    drawerContent.querySelector('h3 > span').addEventListener('click', ()=>{
-        const is = document.body.classList.toggle('stwid--');
-        if (!is) {
-            if (dom.activationToggle.classList.contains('stwid--active')) {
-                dom.activationToggle.click();
+    const closeButton = drawerContent.querySelector('h3 > span');
+    if (closeButton) {
+        closeButton.addEventListener('click', ()=>{
+            const is = document.body.classList.toggle('stwid--');
+            if (!is) {
+                if (dom.activationToggle?.classList?.contains('stwid--active')) {
+                    dom.activationToggle.click();
+                }
             }
-        }
-    });
-    const moSel = new MutationObserver(()=>updateWIChangeDebounced());
-    moSel.observe(document.querySelector('#world_editor_select'), { childList: true });
-    const moDrawer = new MutationObserver(evt=>{
-        if (drawerContent.getAttribute('style').includes('display: none;')) return;
-        if (currentEditor) {
+        });
+    }
+
+    const moSelTarget = document.querySelector('#world_editor_select');
+    if (moSelTarget) {
+        const moSel = new MutationObserver(()=>updateWIChangeDebounced());
+        moSel.observe(moSelTarget, { childList: true });
+    }
+
+    const moDrawer = new MutationObserver(()=>{
+        const style = drawerContent.getAttribute('style') ?? '';
+        if (style.includes('display: none;')) return;
+        if (currentEditor && cache[currentEditor.name]?.dom?.entry?.[currentEditor.uid]?.root) {
             cache[currentEditor.name].dom.entry[currentEditor.uid].root.click();
         }
     });
@@ -675,14 +813,4 @@ const addDrawer = ()=>{
 addDrawer();
 refreshList();
 
-
-let isDiscord;
-const checkDiscord = async()=>{
-    let newIsDiscord = window.getComputedStyle(document.body).getPropertyValue('--nav-bar-width') !== '';
-    if (isDiscord != newIsDiscord) {
-        isDiscord = newIsDiscord;
-        document.body.classList[isDiscord ? 'remove' : 'add']('stwid--nonDiscord');
-    }
-    setTimeout(()=>checkDiscord(), 1000);
-};
-checkDiscord();
+// NOTE: Discord/non-Discord layout detection removed.
