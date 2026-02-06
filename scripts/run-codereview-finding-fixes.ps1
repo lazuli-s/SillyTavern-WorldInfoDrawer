@@ -3,6 +3,10 @@ param(
     [string]$FindingsFile = "docs/CodeReviewFindings.md",
     [string]$PromptTemplate = "scripts/codereview-finding-prompt.md",
     [string[]]$OnlyFinding = @(),
+    [ValidateSet("read-only", "workspace-write", "danger-full-access")]
+    [string]$CodexSandbox = "workspace-write",
+    [ValidateSet("untrusted", "on-failure", "on-request", "never")]
+    [string]$CodexApproval = "never",
     [switch]$SkipSubmoduleInit,
     [switch]$DryRun
 )
@@ -139,10 +143,16 @@ foreach ($finding in $findings) {
         continue
     }
 
+    $codexArgs = @(
+        "--sandbox", $CodexSandbox,
+        "--ask-for-approval", $CodexApproval,
+        "exec", "-"
+    )
+
     $previousEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
-        $prompt | & $codexCmd.Source exec - 2>&1 | Tee-Object -FilePath $logPath
+        $prompt | & $codexCmd.Source @codexArgs 2>&1 | Tee-Object -FilePath $logPath
         $codexExit = $LASTEXITCODE
     }
     finally {
