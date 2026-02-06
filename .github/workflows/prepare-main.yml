@@ -74,7 +74,7 @@ jobs:
           done
 
       - name: Create PR to target branch
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: prepare main from ${{ inputs.source_branch }}"
