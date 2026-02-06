@@ -1250,6 +1250,13 @@ const createOrderHelperRenderer = ({
                     }
                     const tbody = document.createElement('tbody'); {
                         dom.order.tbody = tbody;
+                        const entryEditTemplate = document.querySelector('#entry_edit_template');
+                        const enabledToggleTemplate = entryEditTemplate?.querySelector('[name="entryKillSwitch"]');
+                        const strategyTemplate = entryEditTemplate?.querySelector('[name="entryStateSelector"]');
+                        const positionTemplate = entryEditTemplate?.querySelector('[name="position"]');
+                        if (!enabledToggleTemplate || !strategyTemplate || !positionTemplate) {
+                            throw new Error('[WorldInfoDrawer] Missing entry edit template controls for Order Helper render.');
+                        }
                         const getVisibleOrderHelperRows = ()=>{
                             const rows = getOrderHelperRows();
                             return rows.filter((row)=>!row.classList.contains('stwid--isFiltered'));
@@ -1397,7 +1404,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const active = document.createElement('td'); {
                                     active.setAttribute('data-col', 'enabled');
-                                    const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
+                                    const isEnabled = /**@type {HTMLSelectElement}*/(enabledToggleTemplate.cloneNode(true)); {
                                         isEnabled.classList.add('stwid--enabled');
                                         setTooltip(isEnabled, 'Enable/disable this entry');
 
@@ -1464,7 +1471,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const strategy = document.createElement('td'); {
                                     strategy.setAttribute('data-col', 'strategy');
-                                    const strat = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryStateSelector"]').cloneNode(true)); {
+                                    const strat = /**@type {HTMLSelectElement}*/(strategyTemplate.cloneNode(true)); {
                                         strat.classList.add('stwid--strategy');
                                         setTooltip(strat, 'Entry strategy');
                                         strat.value = entryState(e.data);
@@ -1496,7 +1503,7 @@ const createOrderHelperRenderer = ({
                                     tr.append(strategy);
                                 }
                                 let updateOutlet;
-                                const pos = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="position"]').cloneNode(true));
+                                const pos = /**@type {HTMLSelectElement}*/(positionTemplate.cloneNode(true));
                                 const position = document.createElement('td'); {
                                     position.setAttribute('data-col', 'position');
                                     cache[e.book].dom.entry[e.data.uid].position = pos;

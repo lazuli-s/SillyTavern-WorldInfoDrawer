@@ -214,9 +214,9 @@ CODE REVIEW FINDINGS
   Resolve base template elements once before the row loop and clone cached nodes for each row.
 
 - Proposed fix (description only):
-  [ ] Hoist shared template lookups out of the per-row loop.
-  [ ] Reuse/cloned cached template nodes per row.
-  [ ] Confirm row controls and event wiring remain identical.
+  [x] Hoist shared template lookups out of the per-row loop.
+  [x] Reuse/cloned cached template nodes per row.
+  [x] Confirm row controls and event wiring remain identical.
 
 - Why it's safe:
   UI structure and control behavior remain unchanged; only repeated selector overhead is removed.
