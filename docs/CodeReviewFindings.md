@@ -139,9 +139,9 @@ CODE REVIEW FINDINGS
   Block apply when `start` or `step` is non-finite/non-positive and surface clear user feedback.
 
 - Proposed fix (description only):
-  [ ] Validate parsed `start` and `step` before iterating rows.
-  [ ] Abort apply on invalid values and notify the user.
-  [ ] Keep current apply algorithm unchanged for valid values.
+  [x] Validate parsed `start` and `step` before iterating rows.
+  [x] Abort apply on invalid values and notify the user.
+  [x] Keep current apply algorithm unchanged for valid values.
 
 - Why it's safe:
   Valid apply flows are unaffected; only invalid input paths are rejected instead of corrupting order values.

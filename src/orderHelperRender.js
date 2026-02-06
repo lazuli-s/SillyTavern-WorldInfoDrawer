@@ -362,8 +362,16 @@ const createOrderHelperRenderer = ({
                     }
                     setTooltip(apply, 'Apply current row order to the Order field');
                     apply.addEventListener('click', async()=>{
-                        const start = parseInt(dom.order.start.value);
-                        const step = parseInt(dom.order.step.value);
+                        const start = Number.parseInt(dom.order.start.value, 10);
+                        const step = Number.parseInt(dom.order.step.value, 10);
+                        if (!Number.isInteger(start) || start <= 0) {
+                            toastr.warning('Start must be a positive whole number.');
+                            return;
+                        }
+                        if (!Number.isInteger(step) || step <= 0) {
+                            toastr.warning('Spacing must be a positive whole number.');
+                            return;
+                        }
                         const up = dom.order.direction.up.checked;
                         let order = start;
                         let rows = [...dom.order.tbody.children];
