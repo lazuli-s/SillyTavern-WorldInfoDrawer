@@ -1,6 +1,6 @@
 CODE REVIEW FINDINGS
 
-1. Splitter drag performs layout reads and style writes in a high-frequency loop, creating reflow pressure.
+## Finding F01: Splitter drag performs layout reads and style writes in a high-frequency loop, creating reflow pressure.
 
 - Location:
   `index.js` + `addDrawer` (splitter `pointerdown` handlers), anchor snippet:
@@ -37,7 +37,7 @@ CODE REVIEW FINDINGS
 - Why it's safe:
   Drag direction, width clamping, and saved splitter width behavior remain unchanged; only update cadence is optimized.
 
-2. Entry refresh can trigger multiple synthetic editor opens for one update cycle.
+## Finding F02: Entry refresh can trigger multiple synthetic editor opens for one update cycle.
 
 - Location:
   `index.js` + `updateWIChange`, anchor snippet:
@@ -73,7 +73,7 @@ CODE REVIEW FINDINGS
 - Why it's safe:
   Editor still auto-refreshes when needed, but redundant refreshes are removed; entry data sync behavior is unchanged.
 
-3. Order Helper outlet/group/automation filters can become stale after inline edits.
+## Finding F03: Order Helper outlet/group/automation filters can become stale after inline edits.
 
 - Location:
   `src/orderHelperRender.js` + `renderOrderHelper` row editors, anchor snippets:
@@ -109,7 +109,7 @@ CODE REVIEW FINDINGS
 - Why it's safe:
   Data-edit behavior and persisted values remain unchanged; only filter correctness is updated to reflect current row values.
 
-4. Apply Order accepts invalid numeric inputs and can write `NaN` order values.
+## Finding F04: Apply Order accepts invalid numeric inputs and can write `NaN` order values.
 
 - Location:
   `src/orderHelperRender.js` + `renderOrderHelper` apply button handler, anchor snippet:
@@ -145,7 +145,7 @@ CODE REVIEW FINDINGS
 - Why it's safe:
   Valid apply flows are unaffected; only invalid input paths are rejected instead of corrupting order values.
 
-5. Entry search performs full-cache scans and mass DOM class toggles on each input cycle.
+## Finding F05: Entry search performs full-cache scans and mass DOM class toggles on each input cycle.
 
 - Location:
   `src/listPanel.js` + `setupFilter` -> `applySearchFilter`, anchor snippet:
@@ -181,7 +181,7 @@ CODE REVIEW FINDINGS
 - Why it's safe:
   Search matching behavior and UI states remain the same; only redundant compute/mutation work is reduced.
 
-6. Order Helper row construction repeatedly re-queries template nodes inside a large synchronous loop.
+## Finding F06: Order Helper row construction repeatedly re-queries template nodes inside a large synchronous loop.
 
 - Location:
   `src/orderHelperRender.js` + `renderOrderHelper`, anchor snippet:
@@ -220,7 +220,7 @@ CODE REVIEW FINDINGS
 - Why it's safe:
   UI structure and control behavior remain unchanged; only repeated selector overhead is removed.
 
-7. Book menu integrations rely on fixed delay and unguarded selectors, creating race-prone failures.
+## Finding F07: Book menu integrations rely on fixed delay and unguarded selectors, creating race-prone failures.
 
 - Location:
   `src/listPanel.js` + `renderBook` (book menu actions), anchor snippets:
@@ -255,3 +255,4 @@ CODE REVIEW FINDINGS
 
 - Why it's safe:
   Same actions are triggered, but with deterministic readiness checks; no change to intended user-visible workflow.
+
