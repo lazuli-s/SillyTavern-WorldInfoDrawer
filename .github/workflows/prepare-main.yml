@@ -1,17 +1,30 @@
-name: Clean main
+name: Prepare main
 
 on:
   workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Branch to prepare from"
+        required: true
+        default: "dev"
+      target_branch:
+        description: "Branch to open the PR into"
+        required: true
+        default: "main"
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  clean-main:
+  prepare-main:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout source branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_branch }}
+          fetch-depth: 0
 
       - name: Remove disallowed files
         shell: bash
@@ -60,14 +73,18 @@ jobs:
             fi
           done
 
-      - name: Commit cleanup if needed
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add -A
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: strip main to extension files"
-            git push
-          fi
+      - name: Create PR to target branch
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: prepare main from ${{ inputs.source_branch }}"
+          title: "chore: prepare main from ${{ inputs.source_branch }}"
+          body: |
+            Automated prepare-main PR.
+
+            - Source branch: `${{ inputs.source_branch }}`
+            - Target branch: `${{ inputs.target_branch }}`
+            - Files were filtered to the extension allowlist before this PR was created.
+          branch: prepare-main/${{ inputs.source_branch }}
+          base: ${{ inputs.target_branch }}
+          delete-branch: false
