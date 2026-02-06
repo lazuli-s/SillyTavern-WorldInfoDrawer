@@ -32,6 +32,7 @@ CODE REVIEW FINDINGS
 - Proposed fix (description only):
   [x] Capture invariant values at `pointerdown` and avoid per-move layout reads where possible.
   [x] Gate width writes through one animation-frame callback.
+  [x] Skip redundant width style writes when the target width is unchanged.
   [x] Verify splitter behavior and persisted width remain unchanged.
 
 - Why it's safe:

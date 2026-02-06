@@ -743,13 +743,15 @@ const addDrawer = ()=>{
             const splitter = document.createElement('div'); {
                 splitter.classList.add('stwid--splitter');
                 body.append(splitter);
+                let appliedListWidth = MIN_LIST_WIDTH;
                 const applyListWidth = (value)=>{
                     const clamped = Math.max(MIN_LIST_WIDTH, value);
-                    list.style.flexBasis = `${clamped}px`;
-                    list.style.width = `${clamped}px`;
+                    const width = `${clamped}px`;
+                    if (clamped === appliedListWidth && list.style.flexBasis === width && list.style.width === width) return clamped;
+                    if (list.style.flexBasis !== width) list.style.flexBasis = width;
+                    if (list.style.width !== width) list.style.width = width;
                     return clamped;
                 };
-                let appliedListWidth = MIN_LIST_WIDTH;
                 const storedWidth = Number.parseInt(localStorage.getItem(SPLITTER_STORAGE_KEY) ?? '', 10);
                 if (!Number.isNaN(storedWidth)) {
                     appliedListWidth = applyListWidth(storedWidth);
