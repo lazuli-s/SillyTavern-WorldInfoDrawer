@@ -67,9 +67,9 @@ CODE REVIEW FINDINGS
   Compute one `needsEditorRefresh` flag per entry per update pass and trigger a single refresh after field comparisons complete.
 
 - Proposed fix (description only):
-  [ ] Track whether any changed field requires editor refresh for the current entry.
-  [ ] Remove per-field immediate clicks and perform one click at the end of that entry's comparison loop.
-  [ ] Keep dirty-editor guards (`shouldAutoRefreshEditor`) exactly as-is.
+  [x] Track whether any changed field requires editor refresh for the current entry.
+  [x] Remove per-field immediate clicks and perform one click at the end of that entry's comparison loop.
+  [x] Keep dirty-editor guards (`shouldAutoRefreshEditor`) exactly as-is.
 
 - Why it's safe:
   Editor still auto-refreshes when needed, but redundant refreshes are removed; entry data sync behavior is unchanged.
