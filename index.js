@@ -144,6 +144,9 @@ let updateWIChangeFinished;
 // Monotonic token to correlate a wait call with the specific update cycle it should observe.
 // This prevents a wait from resolving due to an earlier/later unrelated update.
 let updateWIChangeToken = 0;
+const EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS = 15000;
+const editorDuplicateRefreshQueue = [];
+let isEditorDuplicateRefreshWorkerRunning = false;
 
 const updateWIChange = async(name = null, data = null)=>{
     console.log('[STWID]', '[UPDATE-WI]', name, data);
@@ -214,6 +217,12 @@ const updateWIChange = async(name = null, data = null)=>{
         for (const [e,o] of Object.entries(cache[name].entries)) {
             const n = world.entries[e];
             let hasChange = false;
+            let needsEditorRefresh = false;
+            const triggerEditorRefreshOnce = ()=>{
+                if (shouldAutoRefreshEditor(name, e)) {
+                    needsEditorRefresh = true;
+                }
+            };
             for (const k of new Set([...Object.keys(o), ...Object.keys(n)])) {
                 if (o[k] == n[k]) continue;
                 if (typeof o[k] == 'object' && JSON.stringify(o[k]) == JSON.stringify(n[k])) continue;
@@ -224,9 +233,7 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="content"]'));
                             if (!inp || inp.value != n.content) {
-                                if (shouldAutoRefreshEditor(name, e)) {
-                                    cache[name].dom.entry[e].root.click();
-                                }
+                                triggerEditorRefreshOnce();
                             }
                         }
                         break;
@@ -235,9 +242,7 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement|HTMLInputElement}*/(dom.editor.querySelector('[name="comment"]'));
                             if (!inp || inp.value != n.comment) {
-                                if (shouldAutoRefreshEditor(name, e)) {
-                                    cache[name].dom.entry[e].root.click();
-                                }
+                                triggerEditorRefreshOnce();
                             }
                         }
                         cache[name].dom.entry[e].comment.textContent = n.comment;
@@ -247,9 +252,7 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLTextAreaElement}*/(dom.editor.querySelector(`textarea[name="${k}"]`));
                             if (!inp || inp.value != n[k].join(', ')) {
-                                if (shouldAutoRefreshEditor(name, e)) {
-                                    cache[name].dom.entry[e].root.click();
-                                }
+                                triggerEditorRefreshOnce();
                             }
                         }
                         cache[name].dom.entry[e].key.textContent = n.key.join(', ');
@@ -257,9 +260,7 @@ const updateWIChange = async(name = null, data = null)=>{
                     }
                     case 'disable': {
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
-                            if (shouldAutoRefreshEditor(name, e)) {
-                                cache[name].dom.entry[e].root.click();
-                            }
+                            triggerEditorRefreshOnce();
                         }
                         cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'remove' : 'add']('fa-toggle-on');
                         cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'add' : 'remove']('fa-toggle-off');
@@ -268,9 +269,7 @@ const updateWIChange = async(name = null, data = null)=>{
                     case 'constant':
                     case 'vectorized': {
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
-                            if (shouldAutoRefreshEditor(name, e)) {
-                                cache[name].dom.entry[e].root.click();
-                            }
+                            triggerEditorRefreshOnce();
                         }
                         cache[name].dom.entry[e].strategy.value = entryState(n);
                         break;
@@ -279,14 +278,15 @@ const updateWIChange = async(name = null, data = null)=>{
                         if (hasChange && currentEditor?.name == name && currentEditor?.uid == e) {
                             const inp = /**@type {HTMLInputElement}*/(dom.editor.querySelector(`[name="${k}"]`));
                             if (!inp || inp.value != n[k]) {
-                                if (shouldAutoRefreshEditor(name, e)) {
-                                    cache[name].dom.entry[e].root.click();
-                                }
+                                triggerEditorRefreshOnce();
                             }
                         }
                         break;
                     }
                 }
+            }
+            if (needsEditorRefresh) {
+                cache[name].dom.entry[e].root.click();
             }
         }
         cache[name].entries = world.entries;
@@ -323,6 +323,47 @@ const waitForWorldInfoUpdate = async()=>{
     // Now wait for the finish of the cycle that started after we entered.
     await updateWIChangeFinished?.promise;
     return true;
+};
+
+const waitForWorldInfoUpdateWithTimeout = async(waitPromise, timeoutMs = EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS)=>{
+    const result = await Promise.race([
+        waitPromise.then(() => true),
+        delay(timeoutMs).then(() => false),
+    ]);
+    return result;
+};
+
+const reopenEditorEntry = (editorState)=>{
+    if (!editorState?.name || !editorState?.uid) return;
+    const entryDom = cache[editorState.name]?.dom?.entry?.[editorState.uid]?.root;
+    if (entryDom) {
+        entryDom.click();
+    }
+};
+
+const runEditorDuplicateRefreshWorker = async()=>{
+    if (isEditorDuplicateRefreshWorkerRunning) return;
+    isEditorDuplicateRefreshWorkerRunning = true;
+    try {
+        while (editorDuplicateRefreshQueue.length > 0) {
+            const waitPromise = editorDuplicateRefreshQueue.shift();
+            const hasUpdate = await waitForWorldInfoUpdateWithTimeout(waitPromise);
+            if (!hasUpdate) continue;
+
+            const reopenTarget = currentEditor ? { ...currentEditor } : null;
+            await refreshList();
+            reopenEditorEntry(reopenTarget);
+        }
+    } finally {
+        isEditorDuplicateRefreshWorkerRunning = false;
+    }
+};
+
+const queueEditorDuplicateRefresh = ()=>{
+    // Capture the specific "next update cycle" at click time so each duplicate click
+    // maps to the update it triggers, then process refreshes serially.
+    editorDuplicateRefreshQueue.push(waitForWorldInfoUpdate());
+    void runEditorDuplicateRefreshWorker();
 };
 
 const fillEmptyTitlesWithKeywords = async(name)=>{
@@ -743,33 +784,53 @@ const addDrawer = ()=>{
             const splitter = document.createElement('div'); {
                 splitter.classList.add('stwid--splitter');
                 body.append(splitter);
+                let appliedListWidth = MIN_LIST_WIDTH;
                 const applyListWidth = (value)=>{
                     const clamped = Math.max(MIN_LIST_WIDTH, value);
-                    list.style.flexBasis = `${clamped}px`;
-                    list.style.width = `${clamped}px`;
+                    const width = `${clamped}px`;
+                    if (clamped === appliedListWidth && list.style.flexBasis === width && list.style.width === width) return clamped;
+                    if (list.style.flexBasis !== width) list.style.flexBasis = width;
+                    if (list.style.width !== width) list.style.width = width;
+                    return clamped;
                 };
                 const storedWidth = Number.parseInt(localStorage.getItem(SPLITTER_STORAGE_KEY) ?? '', 10);
                 if (!Number.isNaN(storedWidth)) {
-                    applyListWidth(storedWidth);
+                    appliedListWidth = applyListWidth(storedWidth);
                 }
                 splitter.addEventListener('pointerdown', (evt)=>{
                     evt.preventDefault();
                     splitter.setPointerCapture(evt.pointerId);
                     const startX = evt.clientX;
                     const startWidth = list.getBoundingClientRect().width;
+                    appliedListWidth = startWidth;
                     const splitterWidth = splitter.getBoundingClientRect().width || 6;
+                    const bodyWidth = body.getBoundingClientRect().width;
+                    const maxWidth = Math.max(MIN_LIST_WIDTH, bodyWidth - splitterWidth - MIN_EDITOR_WIDTH);
+                    let pendingWidth = startWidth;
+                    let rafId = null;
+                    const queueWidthApply = (value)=>{
+                        pendingWidth = value;
+                        if (rafId !== null) return;
+                        rafId = requestAnimationFrame(()=>{
+                            rafId = null;
+                            appliedListWidth = applyListWidth(pendingWidth);
+                        });
+                    };
                     const onMove = (moveEvt)=>{
                         const delta = moveEvt.clientX - startX;
-                        const maxWidth = Math.max(MIN_LIST_WIDTH, body.clientWidth - splitterWidth - MIN_EDITOR_WIDTH);
                         const nextWidth = Math.min(Math.max(MIN_LIST_WIDTH, startWidth + delta), maxWidth);
-                        applyListWidth(nextWidth);
+                        queueWidthApply(nextWidth);
                     };
                     const onUp = (upEvt)=>{
                         splitter.releasePointerCapture(upEvt.pointerId);
                         window.removeEventListener('pointermove', onMove);
                         window.removeEventListener('pointerup', onUp);
-                        const finalWidth = Math.round(list.getBoundingClientRect().width);
-                        localStorage.setItem(SPLITTER_STORAGE_KEY, String(finalWidth));
+                        if (rafId !== null) {
+                            cancelAnimationFrame(rafId);
+                            rafId = null;
+                            appliedListWidth = applyListWidth(pendingWidth);
+                        }
+                        localStorage.setItem(SPLITTER_STORAGE_KEY, String(Math.round(appliedListWidth)));
                     };
                     window.addEventListener('pointermove', onMove);
                     window.addEventListener('pointerup', onUp);
@@ -778,6 +839,11 @@ const addDrawer = ()=>{
             const editor = document.createElement('div'); {
                 dom.editor = editor;
                 editor.classList.add('stwid--editor');
+                editor.addEventListener('click', (evt)=>{
+                    const target = evt.target instanceof HTMLElement ? evt.target : null;
+                    if (!target?.closest('.duplicate_entry_button')) return;
+                    queueEditorDuplicateRefresh();
+                }, true);
                 body.append(editor);
             }
             drawerContent.append(body);

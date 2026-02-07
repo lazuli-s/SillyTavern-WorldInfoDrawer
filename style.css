@@ -1144,6 +1144,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 .stwid--orderTableWrap {
   flex: 1 1 auto;
   min-height: 0;
+  min-height: 0;
   overflow: auto;
 }
 
@@ -1248,19 +1249,16 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 .stwid--orderHelper .stwid--orderTable tr th[data-col='strategy'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='strategy'] {
   min-width: 5em;
-  text-align: center;
 }
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='position'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='position'] {
   min-width: 7em;
-  text-align: center;
 }
 
 .stwid--orderHelper .stwid--orderTable tr th[data-col='outlet'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='outlet'] {
   min-width: 8em;
-  text-align: center;
 }
 
 .stwid--orderHelper .stwid--orderTable .stwid--orderTable--NumberColumns {
@@ -1280,7 +1278,6 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 .stwid--orderHelper .stwid--orderTable tr th[data-col='budget'],
 .stwid--orderHelper .stwid--orderTable tr td[data-col='budget'] {
   min-width: 7em;
-  text-align: center;
 }
 
 /* Row details */

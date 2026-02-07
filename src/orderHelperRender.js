@@ -109,6 +109,9 @@ const createOrderHelperRenderer = ({
         syncOrderHelperOutletFilters();
         syncOrderHelperAutomationIdFilters();
         syncOrderHelperGroupFilters();
+        let refreshOutletFilterIndicator = ()=>{};
+        let refreshAutomationIdFilterIndicator = ()=>{};
+        let refreshGroupFilterIndicator = ()=>{};
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
         dom.order.entries = {};
@@ -359,8 +362,16 @@ const createOrderHelperRenderer = ({
                     }
                     setTooltip(apply, 'Apply current row order to the Order field');
                     apply.addEventListener('click', async()=>{
-                        const start = parseInt(dom.order.start.value);
-                        const step = parseInt(dom.order.step.value);
+                        const start = Number.parseInt(dom.order.start.value, 10);
+                        const step = Number.parseInt(dom.order.step.value, 10);
+                        if (!Number.isInteger(start) || start <= 0) {
+                            toastr.warning('Start must be a positive whole number.');
+                            return;
+                        }
+                        if (!Number.isInteger(step) || step <= 0) {
+                            toastr.warning('Spacing must be a positive whole number.');
+                            return;
+                        }
                         const up = dom.order.direction.up.checked;
                         let order = start;
                         let rows = [...dom.order.tbody.children];
@@ -982,6 +993,7 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.outlet.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            refreshOutletFilterIndicator = updateFilterIndicator;
                                                             const updateOutletFilters = ()=>{
                                                                 orderHelperState.filters.outlet = normalizeOutletFilters(orderHelperState.filters.outlet);
                                                                 updateFilterIndicator();
@@ -1076,6 +1088,7 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.automationId.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            refreshAutomationIdFilterIndicator = updateFilterIndicator;
                                                             const updateAutomationIdFilters = ()=>{
                                                                 orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
                                                                 updateFilterIndicator();
@@ -1170,6 +1183,7 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.group.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            refreshGroupFilterIndicator = updateFilterIndicator;
                                                             const updateGroupFilters = ()=>{
                                                                 orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
                                                                 updateFilterIndicator();
@@ -1236,6 +1250,13 @@ const createOrderHelperRenderer = ({
                     }
                     const tbody = document.createElement('tbody'); {
                         dom.order.tbody = tbody;
+                        const entryEditTemplate = document.querySelector('#entry_edit_template');
+                        const enabledToggleTemplate = entryEditTemplate?.querySelector('[name="entryKillSwitch"]');
+                        const strategyTemplate = entryEditTemplate?.querySelector('[name="entryStateSelector"]');
+                        const positionTemplate = entryEditTemplate?.querySelector('[name="position"]');
+                        if (!enabledToggleTemplate || !strategyTemplate || !positionTemplate) {
+                            throw new Error('[WorldInfoDrawer] Missing entry edit template controls for Order Helper render.');
+                        }
                         const getVisibleOrderHelperRows = ()=>{
                             const rows = getOrderHelperRows();
                             return rows.filter((row)=>!row.classList.contains('stwid--isFiltered'));
@@ -1383,7 +1404,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const active = document.createElement('td'); {
                                     active.setAttribute('data-col', 'enabled');
-                                    const isEnabled = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryKillSwitch"]').cloneNode(true)); {
+                                    const isEnabled = /**@type {HTMLSelectElement}*/(enabledToggleTemplate.cloneNode(true)); {
                                         isEnabled.classList.add('stwid--enabled');
                                         setTooltip(isEnabled, 'Enable/disable this entry');
 
@@ -1450,7 +1471,7 @@ const createOrderHelperRenderer = ({
                                 }
                                 const strategy = document.createElement('td'); {
                                     strategy.setAttribute('data-col', 'strategy');
-                                    const strat = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="entryStateSelector"]').cloneNode(true)); {
+                                    const strat = /**@type {HTMLSelectElement}*/(strategyTemplate.cloneNode(true)); {
                                         strat.classList.add('stwid--strategy');
                                         setTooltip(strat, 'Entry strategy');
                                         strat.value = entryState(e.data);
@@ -1482,7 +1503,7 @@ const createOrderHelperRenderer = ({
                                     tr.append(strategy);
                                 }
                                 let updateOutlet;
-                                const pos = /**@type {HTMLSelectElement}*/(document.querySelector('#entry_edit_template [name="position"]').cloneNode(true));
+                                const pos = /**@type {HTMLSelectElement}*/(positionTemplate.cloneNode(true));
                                 const position = document.createElement('td'); {
                                     position.setAttribute('data-col', 'position');
                                     cache[e.book].dom.entry[e.data.uid].position = pos;
@@ -1547,6 +1568,9 @@ const createOrderHelperRenderer = ({
                                                 const value = input.value;
                                                 cache[e.book].entries[e.data.uid].outletName = value;
                                                 e.data.outletName = value;
+                                                syncOrderHelperOutletFilters();
+                                                refreshOutletFilterIndicator();
+                                                applyOrderHelperOutletFilters();
                                                 await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                                 updateOutlet();
                                             });
@@ -1575,6 +1599,9 @@ const createOrderHelperRenderer = ({
                                                 const entryData = cache[e.book].entries[e.data.uid];
                                                 entryData.group = value;
                                                 e.data.group = value;
+                                                syncOrderHelperGroupFilters();
+                                                refreshGroupFilterIndicator();
+                                                applyOrderHelperGroupFilters();
                                                 await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                             });
                                             wrap.append(input);
@@ -1701,6 +1728,9 @@ const createOrderHelperRenderer = ({
                                             const value = inp.value;
                                             cache[e.book].entries[e.data.uid].automationId = value;
                                             e.data.automationId = value;
+                                            syncOrderHelperAutomationIdFilters();
+                                            refreshAutomationIdFilterIndicator();
+                                            applyOrderHelperAutomationIdFilters();
                                             await saveWorldInfo(e.book, buildSavePayload(e.book), true);
                                         });
                                         automationId.append(inp);

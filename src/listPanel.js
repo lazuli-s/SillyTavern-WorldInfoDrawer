@@ -18,6 +18,7 @@ let searchEntriesInput;
 let filterActiveInput;
 let loadListDebounced;
 let folderImportInput;
+const entrySearchCache = {};
 
 const collapseStates = {};
 const folderCollapseStates = {};
@@ -178,14 +179,24 @@ const clearBookSortPreferences = async()=>{
 };
 
 const setBookFolder = async(name, folderName)=>{
-    const metadata = state.cache[name].metadata ?? {};
-    const result = setFolderInMetadata(metadata, folderName);
+    const latest = await state.loadWorldInfo(name);
+    if (!latest || typeof latest !== 'object') return false;
+
+    const nextPayload = {
+        entries: structuredClone(latest.entries ?? {}),
+        metadata: latest.metadata && typeof latest.metadata === 'object'
+            ? structuredClone(latest.metadata)
+            : {},
+    };
+    const result = setFolderInMetadata(nextPayload.metadata, folderName);
     if (!result.ok) return false;
     if (result.folder) {
         registerFolderName(result.folder);
     }
-    state.cache[name].metadata = metadata;
-    await state.saveWorldInfo(name, state.buildSavePayload(name), true);
+    await state.saveWorldInfo(name, nextPayload, true);
+    if (state.cache[name]) {
+        setCacheMetadata(name, nextPayload.metadata);
+    }
     return true;
 };
 
@@ -379,27 +390,51 @@ const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
     if (!input) return null;
 
-    // For F4: allow callers (folder import into folder) to attribute imported
+    // Allow callers (folder import into folder) to attribute imported
     // books without diffing world_names.
     // We sniff the selected file before ST consumes it.
     const filePromise = new Promise((resolve)=>{
-        const onChange = async()=>{
+        let isDone = false;
+        const finish = (value)=>{
+            if (isDone) return;
+            isDone = true;
             input.removeEventListener('change', onChange);
+            window.removeEventListener('focus', onWindowFocus);
+            clearTimeout(timeoutId);
+            resolve(value);
+        };
+        const onChange = async()=>{
             const [file] = input.files ?? [];
             if (!file) {
-                resolve(null);
+                finish(null);
                 return;
             }
             try {
-                resolve(JSON.parse(await file.text()));
+                finish(JSON.parse(await file.text()));
             } catch {
-                resolve(null);
+                finish(null);
             }
         };
+        const onWindowFocus = ()=>{
+            // Browser file pickers usually return focus once closed.
+            // If no file is selected at that point, treat it as cancel.
+            setTimeout(()=>{
+                if (isDone) return;
+                if ((input.files?.length ?? 0) === 0) {
+                    finish(null);
+                }
+            }, 0);
+        };
+        const timeoutId = setTimeout(()=>finish(null), 15000);
+        input.value = '';
         input.addEventListener('change', onChange, { once:true });
+        window.addEventListener('focus', onWindowFocus, { once:true });
+        try {
+            input.click();
+        } catch {
+            finish(null);
+        }
     });
-
-    input.click();
     return filePromise;
 };
 
@@ -550,7 +585,9 @@ const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
 };
 
 const duplicateBook = async(name)=>{
-    const initialNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
+    const initialNames = [...(getNames() ?? [])];
+    const initialNameSet = new Set(initialNames);
     const selected = await setSelectedBookInCoreUi(name);
     if (!selected) return null;
 
@@ -566,10 +603,9 @@ const duplicateBook = async(name)=>{
     // 1) a WORLDINFO update cycle (preferred), then detect new name
     // 2) or the names list to change in a short polling loop
     // Avoid hard-coded "sleep then hope".
-    const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
     const findNewName = ()=>{
         const currentNames = getNames() ?? [];
-        return currentNames.find((entry)=>!initialNames.includes(entry)) ?? null;
+        return currentNames.find((entry)=>!initialNameSet.has(entry)) ?? null;
     };
 
     // Fast path: if ST immediately updated world_names synchronously.
@@ -588,6 +624,14 @@ const duplicateBook = async(name)=>{
         if (next) return next;
     }
     return null;
+};
+
+const duplicateBookIntoFolder = async(name, folderName)=>{
+    const duplicatedName = await duplicateBook(name);
+    if (!duplicatedName) return false;
+    await setBookFolder(duplicatedName, folderName);
+    await refreshList();
+    return true;
 };
 
 const deleteBook = async(name, { skipConfirm = false } = {})=>{
@@ -696,11 +740,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                             if (updated) await refreshList();
                             return;
                         }
-                        const duplicatedName = await duplicateBook(draggedName);
-                        if (!duplicatedName) return;
-                        await refreshList();
-                        const updated = await setBookFolder(duplicatedName, folderName);
-                        if (updated) await refreshList();
+                        await duplicateBookIntoFolder(draggedName, folderName);
                     },
                     menuActions: folderMenuActions,
                 });
@@ -765,11 +805,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     if (updated) await refreshList();
                     return;
                 }
-                const duplicatedName = await duplicateBook(draggedName);
-                if (!duplicatedName) return;
-                await refreshList();
-                const updated = await setBookFolder(duplicatedName, targetFolder);
-                if (updated) await refreshList();
+                await duplicateBookIntoFolder(draggedName, targetFolder);
                 return;
             }
             if (selectFrom === null) return;
@@ -923,12 +959,11 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     rename.classList.add('stwid--item');
                                     rename.classList.add('stwid--rename');
                                     rename.addEventListener('click', async(evt)=>{
-                                        //TODO cheeky monkey
-                                        const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                        sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                        sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                        await state.delay(500);
-                                        document.querySelector('#world_popup_name_button').click();
+                                        const selected = await setSelectedBookInCoreUi(name);
+                                        if (!selected) return;
+                                        await clickCoreUiAction([
+                                            '#world_popup_name_button',
+                                        ]);
                                     });
                                     const i = document.createElement('i'); {
                                         i.classList.add('stwid--icon');
@@ -948,12 +983,11 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                         bulk.classList.add('stwid--item');
                                         bulk.classList.add('stwid--bulkEdit');
                                         bulk.addEventListener('click', async(evt)=>{
-                                            //TODO cheeky monkey
-                                            const sel = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
-                                            sel.value = /**@type {HTMLOptionElement[]}*/([...sel.children]).find(it=>it.textContent == name).value;
-                                            sel.dispatchEvent(new Event('change', { bubbles:true }));
-                                            await state.delay(500);
-                                            document.querySelector('.stwibe--trigger').click();
+                                            const selected = await setSelectedBookInCoreUi(name);
+                                            if (!selected) return;
+                                            await clickCoreUiAction([
+                                                '.stwibe--trigger',
+                                            ]);
                                         });
                                         const i = document.createElement('i'); {
                                             i.classList.add('stwid--icon');
@@ -1282,11 +1316,7 @@ const loadList = async()=>{
                     if (updated) await refreshList();
                     return;
                 }
-                const duplicatedName = await duplicateBook(draggedName);
-                if (!duplicatedName) return;
-                await refreshList();
-                const updated = await setBookFolder(duplicatedName, folderName);
-                if (updated) await refreshList();
+                await duplicateBookIntoFolder(draggedName, folderName);
             },
             menuActions: folderMenuActions,
         });
@@ -1337,6 +1367,36 @@ const updateFolderActiveToggles = ()=>{
 
 const setupFilter = (list)=>{
     const filter = document.createElement('div'); {
+        const setQueryFiltered = (element, isFiltered)=>{
+            if (!element) return;
+            if (isFiltered) {
+                if (!element.classList.contains('stwid--filter-query')) {
+                    element.classList.add('stwid--filter-query');
+                }
+                return;
+            }
+            if (element.classList.contains('stwid--filter-query')) {
+                element.classList.remove('stwid--filter-query');
+            }
+        };
+
+        const buildEntrySearchSignature = (entry)=>{
+            const comment = entry?.comment ?? '';
+            const keys = Array.isArray(entry?.key) ? entry.key.join(', ') : '';
+            return `${String(comment)}\n${String(keys)}`;
+        };
+
+        const getEntrySearchText = (bookName, entry)=>{
+            if (!entry?.uid) return '';
+            const signature = buildEntrySearchSignature(entry);
+            entrySearchCache[bookName] ??= {};
+            const cached = entrySearchCache[bookName][entry.uid];
+            if (cached?.signature === signature) return cached.text;
+            const text = signature.toLowerCase();
+            entrySearchCache[bookName][entry.uid] = { signature, text };
+            return text;
+        };
+
         filter.classList.add('stwid--filter');
         const search = document.createElement('input'); {
             search.classList.add('stwid--search');
@@ -1346,12 +1406,7 @@ const setupFilter = (list)=>{
             search.title = 'Search books by name';
             search.setAttribute('aria-label', 'Search books');
             searchInput = search;
-            const entryMatchesQuery = (entry, query)=>{
-                const comment = entry.comment ?? '';
-                const keys = Array.isArray(entry.key) ? entry.key.join(', ') : '';
-                const normalizedQuery = query.toLowerCase();
-                return [comment, keys].some(value=>String(value ?? '').toLowerCase().includes(normalizedQuery));
-            };
+            const entryMatchesQuery = (bookName, entry, normalizedQuery)=>getEntrySearchText(bookName, entry).includes(normalizedQuery);
 
             const applySearchFilter = ()=>{
                 const query = search.value.toLowerCase();
@@ -1362,30 +1417,22 @@ const setupFilter = (list)=>{
                     if (query.length) {
                         const bookMatch = b.toLowerCase().includes(query);
                         const entryMatch = shouldScanEntries
-                            && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(e, query));
-                        if (bookMatch || entryMatch) {
-                            state.cache[b].dom.root.classList.remove('stwid--filter-query');
-                        } else {
-                            state.cache[b].dom.root.classList.add('stwid--filter-query');
-                        }
+                            && Object.values(state.cache[b].entries).find(e=>entryMatchesQuery(b, e, query));
+                        setQueryFiltered(state.cache[b].dom.root, !(bookMatch || entryMatch));
 
                         if (shouldScanEntries) {
                             for (const e of Object.values(state.cache[b].entries)) {
-                                if (bookMatch || entryMatchesQuery(e, query)) {
-                                    state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
-                                } else {
-                                    state.cache[b].dom.entry[e.uid].root.classList.add('stwid--filter-query');
-                                }
+                                setQueryFiltered(state.cache[b].dom.entry[e.uid].root, !(bookMatch || entryMatchesQuery(b, e, query)));
                             }
                         } else {
                             for (const e of Object.values(state.cache[b].entries)) {
-                                state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
+                                setQueryFiltered(state.cache[b].dom.entry[e.uid].root, false);
                             }
                         }
                     } else {
-                        state.cache[b].dom.root.classList.remove('stwid--filter-query');
+                        setQueryFiltered(state.cache[b].dom.root, false);
                         for (const e of Object.values(state.cache[b].entries)) {
-                            state.cache[b].dom.entry[e.uid].root.classList.remove('stwid--filter-query');
+                            setQueryFiltered(state.cache[b].dom.entry[e.uid].root, false);
                         }
                     }
                 }
@@ -1470,11 +1517,7 @@ const setupBooks = (list)=>{
                 if (updated) await refreshList();
                 return;
             }
-            const duplicatedName = await duplicateBook(draggedName);
-            if (!duplicatedName) return;
-            await refreshList();
-            const updated = await setBookFolder(duplicatedName, null);
-            if (updated) await refreshList();
+            await duplicateBookIntoFolder(draggedName, null);
         });
         list.append(books);
     }
@@ -1520,6 +1563,9 @@ const getSelectionState = ()=>({
 
 const initListPanel = (options)=>{
     state = options;
+    for (const key of Object.keys(entrySearchCache)) {
+        delete entrySearchCache[key];
+    }
     Object.assign(folderCollapseStates, loadFolderCollapseStates());
     loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;

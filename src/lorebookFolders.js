@@ -110,6 +110,22 @@ const getFolderBookNames = (cache, folderName)=>{
     return Object.keys(cache).filter((name)=>getFolderFromMetadata(cache[name]?.metadata) === folderName);
 };
 
+const getVisibleFolderBookNames = (cache, folderName)=>getFolderBookNames(cache, folderName).filter((name)=>{
+    const bookRoot = cache?.[name]?.dom?.root;
+    if (!bookRoot) return false;
+    const isFilteredOut = bookRoot.classList.contains('stwid--filter-query')
+        || bookRoot.classList.contains('stwid--filter-active');
+    return !isFilteredOut;
+});
+
+const summarizeBookNames = (bookNames, { max = 3 } = {})=>{
+    const names = Array.isArray(bookNames) ? bookNames : [];
+    if (!names.length) return '';
+    if (names.length <= max) return names.join(', ');
+    const preview = names.slice(0, max).join(', ');
+    return `${preview}, +${names.length - max} more`;
+};
+
 const getFolderActiveState = (cache, selected, folderName, bookNamesOverride = null)=>{
     const bookNames = Array.isArray(bookNamesOverride) ? bookNamesOverride : getFolderBookNames(cache, folderName);
     if (!bookNames.length) {
@@ -246,14 +262,14 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             const activeToggle = document.createElement('input'); {
                 activeToggle.classList.add('stwid--folderActiveToggle');
                 activeToggle.type = 'checkbox';
-                activeToggle.title = 'Toggle global active status for all books in this folder';
-                activeToggle.setAttribute('aria-label', 'Toggle global active status for all books in this folder');
+                activeToggle.title = 'Toggle global active status for visible books in this folder';
+                activeToggle.setAttribute('aria-label', 'Toggle global active status for visible books in this folder');
                 activeToggle.addEventListener('click', (evt)=>{
                     evt.stopPropagation();
                 });
                 activeToggle.addEventListener('change', async()=>{
                     if (!menuActions?.setBooksActive) return;
-                    const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                    const bookNames = getVisibleFolderBookNames(menuActions.cache, folderName);
                     if (!bookNames.length) {
                         activeToggle.checked = false;
                         activeToggle.indeterminate = false;
@@ -336,12 +352,32 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             return;
                                         }
                                         if (normalized === folderName) return;
+                                        const targetFolderExisted = getFolderRegistry().includes(normalized);
                                         registerFolderName(normalized);
                                         const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                                        const failedBookNames = [];
                                         for (const bookName of bookNames) {
-                                            await menuActions.setBookFolder(bookName, normalized);
+                                            try {
+                                                const updated = await menuActions.setBookFolder(bookName, normalized);
+                                                if (!updated) {
+                                                    failedBookNames.push(bookName);
+                                                }
+                                            } catch (error) {
+                                                console.warn(`[STWID] Failed to move "${bookName}" while renaming folder "${folderName}"`, error);
+                                                failedBookNames.push(bookName);
+                                            }
                                         }
-                                        removeFolderName(folderName);
+                                        if (!failedBookNames.length) {
+                                            removeFolderName(folderName);
+                                        } else {
+                                            const movedCount = Math.max(bookNames.length - failedBookNames.length, 0);
+                                            if (movedCount === 0 && !targetFolderExisted) {
+                                                removeFolderName(normalized);
+                                            }
+                                            toastr.warning(
+                                                `Folder rename partially completed (${movedCount}/${bookNames.length} books moved). Failed: ${summarizeBookNames(failedBookNames)}.`
+                                            );
+                                        }
                                         await menuActions.refreshList?.();
                                     });
                                     const i = document.createElement('i'); {
@@ -376,14 +412,22 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             // book names. This lets us only assign imported books to the folder.
                                             const beforeNames = new Set(menuActions.getWorldNames());
                                             const importPayload = await menuActions.openImportDialog();
+                                            if (!importPayload) return;
                                             const expectedBookNames = getFolderImportBookNames(importPayload);
+                                            if (!expectedBookNames.length) {
+                                                toastr.warning('This import format cannot be attributed safely. New books will not be auto-moved into the folder.');
+                                                return;
+                                            }
 
                                             const updatePromise = menuActions.waitForWorldInfoUpdate?.();
                                             const hasUpdate = await Promise.race([
                                                 updatePromise ? updatePromise.then(()=>true) : Promise.resolve(false),
                                                 new Promise((resolve)=>setTimeout(()=>resolve(false), 15000)),
                                             ]);
-                                            if (!hasUpdate) return;
+                                            if (!hasUpdate) {
+                                                toastr.warning('Import did not complete in time. No books were moved into the folder.');
+                                                return;
+                                            }
 
                                             // Allow the list of world names to settle (some imports can trigger
                                             // multiple update cycles).
@@ -411,7 +455,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             const attributedNames = expectedBookNames.length
                                                 ? newNames.filter((name)=>expectedBookNames.includes(name)
                                                     || importPrefixes.some((prefix)=>name.startsWith(prefix)))
-                                                : newNames;
+                                                : [];
 
                                             // If there's a mismatch between expected names and what appeared,
                                             // be conservative: don't move anything automatically.
@@ -506,16 +550,38 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             'Move books out'
                                         );
                                         const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                                        const failedBookNames = [];
                                         if (shouldDeleteBooks) {
                                             for (const bookName of bookNames) {
-                                                await menuActions.deleteBook?.(bookName, { skipConfirm: true });
+                                                try {
+                                                    await menuActions.deleteBook?.(bookName, { skipConfirm: true });
+                                                } catch (error) {
+                                                    console.warn(`[STWID] Failed to delete "${bookName}" while deleting folder "${folderName}"`, error);
+                                                    failedBookNames.push(bookName);
+                                                }
                                             }
                                         } else {
                                             for (const bookName of bookNames) {
-                                                await menuActions.setBookFolder(bookName, null);
+                                                try {
+                                                    const updated = await menuActions.setBookFolder(bookName, null);
+                                                    if (!updated) {
+                                                        failedBookNames.push(bookName);
+                                                    }
+                                                } catch (error) {
+                                                    console.warn(`[STWID] Failed to move "${bookName}" out of folder "${folderName}"`, error);
+                                                    failedBookNames.push(bookName);
+                                                }
                                             }
                                         }
-                                        removeFolderName(folderName);
+                                        if (!failedBookNames.length) {
+                                            removeFolderName(folderName);
+                                        } else {
+                                            const completedCount = Math.max(bookNames.length - failedBookNames.length, 0);
+                                            const action = shouldDeleteBooks ? 'deleted' : 'moved out';
+                                            toastr.warning(
+                                                `Folder delete partially completed (${completedCount}/${bookNames.length} books ${action}). Failed: ${summarizeBookNames(failedBookNames)}. Folder was kept.`
+                                            );
+                                        }
                                         await menuActions.refreshList?.();
                                     });
                                     const i = document.createElement('i'); {
@@ -563,13 +629,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     updateFolderCount(count, books.childElementCount);
     const updateActiveToggle = ()=>{
         if (!activeToggle || !menuActions?.cache || !menuActions?.getSelectedWorldInfo) return;
-        const visibleBookNames = getFolderBookNames(menuActions.cache, folderName).filter((name)=>{
-            const bookRoot = menuActions.cache?.[name]?.dom?.root;
-            if (!bookRoot) return false;
-            const isFilteredOut = bookRoot.classList.contains('stwid--filter-query')
-                || bookRoot.classList.contains('stwid--filter-active');
-            return !isFilteredOut;
-        });
+        const visibleBookNames = getVisibleFolderBookNames(menuActions.cache, folderName);
         const state = getFolderActiveState(
             menuActions.cache,
             menuActions.getSelectedWorldInfo(),
