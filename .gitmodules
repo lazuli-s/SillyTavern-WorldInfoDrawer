@@ -1,0 +1,3 @@
+[submodule "vendor/SillyTavern"]
+	path = vendor/SillyTavern
+	url = https://github.com/SillyTavern/SillyTavern.git
