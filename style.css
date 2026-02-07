@@ -330,6 +330,21 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .st
   align-items: center;
 }
 
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
+  display: inline-flex;
+  gap: 0.1em;
+  align-items: center;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--isEmpty {
+  display: none;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
+  opacity: 0.75;
+  color: var(--SmartThemeQuoteColor);
+}
+
 body.stwid--
   #WorldInfo
   .stwid--list

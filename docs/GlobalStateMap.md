@@ -21,6 +21,20 @@ This document lists all **global/long‑lived state** used by the extension, wit
 
 ---
 
+## lorebookSourceLinks / lorebookSourceLinksSignature
+- **Type:** data
+- **Owner:** `index.js`
+- **Mutation points:**
+  - Recomputed in `refreshBookSourceLinks(...)`.
+  - Triggered by `updateWIChange(...)` and `updateSettingsChange(...)`.
+  - Triggered by context events (`CHAT_CHANGED`, `GROUP_UPDATED`, `CHARACTER_EDITED`, `CHARACTER_PAGE_LOADED`, `SETTINGS_UPDATED`).
+  - Triggered by popup selector changes for chat/persona lorebook assignment.
+- **Explanation:**
+  `lorebookSourceLinks` stores per-book source badges (`character`, `chat`, `persona`) used by lorebook rows in the list panel.
+  `lorebookSourceLinksSignature` stores a snapshot hash used to skip redundant UI updates when source membership did not change.
+
+---
+
 ## currentEditor
 - **Type:** UI
 - **Owner:** `index.js`

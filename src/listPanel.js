@@ -73,6 +73,11 @@ let selectToast = null;
 /** Name of the book being dragged @type {string|null} */
 let dragBookName = null;
 let folderMenuActions;
+const SOURCE_ICON_DEFINITIONS = Object.freeze([
+    { key:'character', icon:'fa-user', label:'Character' },
+    { key:'chat', icon:'fa-comments', label:'Chat' },
+    { key:'persona', icon:'fa-id-badge', label:'Persona' },
+]);
 
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
@@ -122,6 +127,40 @@ const getBookSortChoice = (name)=>{
         sort: bookSort?.sort ?? state.Settings.instance.sortLogic,
         direction: bookSort?.direction ?? state.Settings.instance.sortDirection,
     };
+};
+
+const normalizeBookSourceLinks = (links)=>({
+    character: Boolean(links?.character),
+    chat: Boolean(links?.chat),
+    persona: Boolean(links?.persona),
+});
+
+const renderBookSourceLinks = (sourceLinksContainer, links = null)=>{
+    if (!sourceLinksContainer) return;
+    sourceLinksContainer.innerHTML = '';
+    const normalized = normalizeBookSourceLinks(links);
+    for (const def of SOURCE_ICON_DEFINITIONS) {
+        if (!normalized[def.key]) continue;
+        const icon = document.createElement('i');
+        icon.classList.add('stwid--sourceIcon', 'fa-solid', 'fa-fw', def.icon);
+        icon.title = `${def.label} linked`;
+        icon.setAttribute('aria-label', `${def.label} linked`);
+        sourceLinksContainer.append(icon);
+    }
+    sourceLinksContainer.classList.toggle('stwid--isEmpty', sourceLinksContainer.childElementCount === 0);
+};
+
+const updateBookSourceLinks = (name, links = null)=>{
+    const sourceLinksContainer = state.cache[name]?.dom?.sourceLinks;
+    if (!sourceLinksContainer) return;
+    const resolved = links ?? state.getBookSourceLinks?.(name);
+    renderBookSourceLinks(sourceLinksContainer, resolved);
+};
+
+const updateAllBookSourceLinks = (linksByBook = null)=>{
+    for (const name of Object.keys(state.cache)) {
+        updateBookSourceLinks(name, linksByBook?.[name]);
+    }
 };
 
 const sortEntriesIfNeeded = (name)=>{
@@ -705,6 +744,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
         /**@type {HTMLElement} */
         name: undefined,
         /**@type {HTMLElement} */
+        sourceLinks: undefined,
+        /**@type {HTMLElement} */
         active: undefined,
         /**@type {HTMLElement} */
         entryList: undefined,
@@ -890,6 +931,11 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             }
             const actions = document.createElement('div'); {
                 actions.classList.add('stwid--actions');
+                const sourceLinks = document.createElement('div'); {
+                    world.dom.sourceLinks = sourceLinks;
+                    sourceLinks.classList.add('stwid--sourceLinks', 'stwid--isEmpty');
+                    actions.append(sourceLinks);
+                }
                 const active = document.createElement('input'); {
                     world.dom.active = active;
                     active.title = 'Toggle global active status for this book';
@@ -1214,6 +1260,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     });
                     actions.append(collapseToggle);
                 }
+                updateBookSourceLinks(name);
                 head.append(actions);
             }
             book.append(head);
@@ -1616,6 +1663,8 @@ const initListPanel = (options)=>{
         setCollapseState,
         setBookSortPreference,
         sortEntriesIfNeeded,
+        updateAllBookSourceLinks,
+        updateBookSourceLinks,
         updateFolderActiveToggles,
         updateCollapseAllToggle,
     };
