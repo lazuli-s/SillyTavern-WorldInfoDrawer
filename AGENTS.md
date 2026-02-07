@@ -1,4 +1,4 @@
-# AGENTS.md — AI Agent Rules for This Repository
+# AGENTS.md - AI Agent Rules for This Repository
 
 This repository is a **third-party SillyTavern frontend extension** that replaces the default World Info editor with a custom full-screen drawer UI.
 
@@ -197,3 +197,4 @@ Style guide requirements are mandatory:
 * Do NOT reformat unrelated code
 * Do NOT refactor large sections unless explicitly asked
 * Do NOT change public APIs unintentionally
+
