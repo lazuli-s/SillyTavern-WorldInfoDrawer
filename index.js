@@ -144,6 +144,9 @@ let updateWIChangeFinished;
 // Monotonic token to correlate a wait call with the specific update cycle it should observe.
 // This prevents a wait from resolving due to an earlier/later unrelated update.
 let updateWIChangeToken = 0;
+const EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS = 15000;
+const editorDuplicateRefreshQueue = [];
+let isEditorDuplicateRefreshWorkerRunning = false;
 
 const updateWIChange = async(name = null, data = null)=>{
     console.log('[STWID]', '[UPDATE-WI]', name, data);
@@ -320,6 +323,47 @@ const waitForWorldInfoUpdate = async()=>{
     // Now wait for the finish of the cycle that started after we entered.
     await updateWIChangeFinished?.promise;
     return true;
+};
+
+const waitForWorldInfoUpdateWithTimeout = async(waitPromise, timeoutMs = EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS)=>{
+    const result = await Promise.race([
+        waitPromise.then(() => true),
+        delay(timeoutMs).then(() => false),
+    ]);
+    return result;
+};
+
+const reopenEditorEntry = (editorState)=>{
+    if (!editorState?.name || !editorState?.uid) return;
+    const entryDom = cache[editorState.name]?.dom?.entry?.[editorState.uid]?.root;
+    if (entryDom) {
+        entryDom.click();
+    }
+};
+
+const runEditorDuplicateRefreshWorker = async()=>{
+    if (isEditorDuplicateRefreshWorkerRunning) return;
+    isEditorDuplicateRefreshWorkerRunning = true;
+    try {
+        while (editorDuplicateRefreshQueue.length > 0) {
+            const waitPromise = editorDuplicateRefreshQueue.shift();
+            const hasUpdate = await waitForWorldInfoUpdateWithTimeout(waitPromise);
+            if (!hasUpdate) continue;
+
+            const reopenTarget = currentEditor ? { ...currentEditor } : null;
+            await refreshList();
+            reopenEditorEntry(reopenTarget);
+        }
+    } finally {
+        isEditorDuplicateRefreshWorkerRunning = false;
+    }
+};
+
+const queueEditorDuplicateRefresh = ()=>{
+    // Capture the specific "next update cycle" at click time so each duplicate click
+    // maps to the update it triggers, then process refreshes serially.
+    editorDuplicateRefreshQueue.push(waitForWorldInfoUpdate());
+    void runEditorDuplicateRefreshWorker();
 };
 
 const fillEmptyTitlesWithKeywords = async(name)=>{
@@ -795,6 +839,11 @@ const addDrawer = ()=>{
             const editor = document.createElement('div'); {
                 dom.editor = editor;
                 editor.classList.add('stwid--editor');
+                editor.addEventListener('click', (evt)=>{
+                    const target = evt.target instanceof HTMLElement ? evt.target : null;
+                    if (!target?.closest('.duplicate_entry_button')) return;
+                    queueEditorDuplicateRefresh();
+                }, true);
                 body.append(editor);
             }
             drawerContent.append(body);
