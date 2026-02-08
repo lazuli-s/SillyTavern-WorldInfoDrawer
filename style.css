@@ -190,7 +190,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
   flex: 1 1 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownWrap {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuWrap {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -198,14 +198,14 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   flex: 0 0 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownButton {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
   padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownMenu {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -220,7 +220,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   min-width: max-content;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownMenu.stwid--active {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenu.stwid--active {
   display: flex;
   opacity: 1 !important;
   background-color: var(--SmartThemeBlurTintColor) !important;
@@ -230,7 +230,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption {
   display: flex;
   align-items: center;
   gap: 0.35em;
@@ -243,25 +243,25 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   text-align: left;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption:hover {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption:hover {
   color: var(--customThemeColor) !important;
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption.stwid--active {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption.stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption:focus-visible {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: 1px;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionIcon {
   color: var(--customThemeColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionCheckbox {
   width: 0.85em;
   height: 0.85em;
 }
@@ -350,21 +350,9 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   line-height: 1.2;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderControls {
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle {
   margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-}
-
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderControls .stwid--folderToggle {
   opacity: 0.75;
-}
-
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderControls .stwid--folderSourceLane {
-  flex: 0 0 3.95em;
-  width: 3.95em;
-  pointer-events: none;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon,
@@ -409,7 +397,19 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder :is(.stwid--fo
   opacity: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderControls {
+/* Folder header layout tweaks when menu exists */
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderMenu,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderToggle {
+  margin-left: 0;
+}
+
+body.stwid--
+  #WorldInfo
+  .stwid--list
+  .stwid--books
+  .stwid--folder
+  .stwid--folderHeader.stwid--hasMenu
+  .stwid--folderActiveToggle {
   margin-left: auto;
 }
 
@@ -837,11 +837,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 /* Shared menu/item patterns (Phase 4)
    Keep selectors local to this extension and avoid changing layout/positioning.
 */
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--multiselectDropdownButton, .stwid--orderFilterButton) {
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--columnMenuButton, .stwid--orderFilterButton) {
   border-radius: var(--stwid-radius-m);
 }
 
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--multiselectDropdownButton, .stwid--orderFilterButton):focus-visible {
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--columnMenuButton, .stwid--orderFilterButton):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
@@ -887,7 +887,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 }
 
 /* Context menu container */
-.stwid--blocker .stwid--listDropdownMenu {
+.stwid--blocker .stwid--menu {
   --stwid-menu-item-height: 2.05em;
 
   position: fixed;
@@ -907,7 +907,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   padding: 0.5em;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
+.stwid--blocker .stwid--menu .stwid--item {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
   opacity: 1;
@@ -924,39 +924,39 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   border-radius: var(--stwid-radius-m);
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem:hover {
+.stwid--blocker .stwid--menu .stwid--item:hover {
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem:focus-visible {
+.stwid--blocker .stwid--menu .stwid--item:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
+.stwid--blocker .stwid--menu .stwid--item .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+.stwid--blocker .stwid--menu .stwid--item .stwid--label {
   flex: 1 1 auto;
   min-width: fit-content;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem #lorebook_ordering_button {
+.stwid--blocker .stwid--menu .stwid--item #lorebook_ordering_button {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.35em;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem.stwid--bookSort {
+.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
   opacity: 1;
   cursor: default;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem.stwid--bookSort select {
+.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
   width: fit-content;
   color: inherit;
   background-color: rgba(255, 255, 255, 0.05);
@@ -1104,19 +1104,19 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   margin-right: 0.5em;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownWrap {
+.stwid--orderHelper .stwid--columnMenuWrap {
   position: relative;
   display: inline-flex;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownButton {
+.stwid--orderHelper .stwid--columnMenuButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
   padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownMenu {
+.stwid--orderHelper .stwid--columnMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -1130,7 +1130,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   z-index: 3;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownMenu.stwid--active {
+.stwid--orderHelper .stwid--columnMenu.stwid--active {
   display: flex;
   width: max-content;
   opacity: 1 !important;
@@ -1141,17 +1141,17 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownMenu :is(.stwid--multiselectDropdownOption, .stwid--columnVisibilityLabel) {
+.stwid--orderHelper .stwid--columnMenu :is(.stwid--columnOption, .stwid--columnVisibilityLabel) {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownMenu .stwid--multiselectDropdownOption:focus-visible {
+.stwid--orderHelper .stwid--columnMenu .stwid--columnOption:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: 1px;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownOption {
+.stwid--orderHelper .stwid--columnOption {
   display: flex;
   align-items: center;
   gap: 0.3em;
@@ -1160,11 +1160,11 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   transition: color 150ms ease;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownOption:hover {
+.stwid--orderHelper .stwid--columnOption:hover {
   color: var(--customThemeColor) !important;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
+.stwid--orderHelper .stwid--columnOption .stwid--columnOptionIcon {
   color: var(--customThemeColor);
   display: inline-flex;
   align-items: center;
@@ -1173,7 +1173,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   width: 1em;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownOption input[type='checkbox'] {
+.stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
   width: 0.85em;
   height: 0.85em;
 }
