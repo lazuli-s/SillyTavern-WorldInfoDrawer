@@ -280,6 +280,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChips {
   flex-wrap: wrap;
   flex: 1 1 auto;
   min-width: 0;
+  align-self: center;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip {
