@@ -16,7 +16,7 @@ let state = {};
 let searchInput;
 let searchEntriesInput;
 let filterActiveInput;
-let bookVisibilityMode = 'allActive';
+let bookVisibilityMode = 'allBooks';
 let bookVisibilitySelections = new Set();
 let bookVisibilityMenu;
 let bookVisibilityChips;
@@ -86,6 +86,7 @@ const SOURCE_ICON_DEFINITION_MAP = Object.freeze(
     Object.fromEntries(SOURCE_ICON_DEFINITIONS.map((def)=>[def.key, def])),
 );
 const BOOK_VISIBILITY_MODES = Object.freeze({
+    ALL_BOOKS: 'allBooks',
     ALL_ACTIVE: 'allActive',
     CUSTOM: 'custom',
     GLOBAL: 'global',
@@ -94,6 +95,7 @@ const BOOK_VISIBILITY_MODES = Object.freeze({
     CHARACTER: 'character',
 });
 const BOOK_VISIBILITY_OPTIONS = Object.freeze([
+    { mode:BOOK_VISIBILITY_MODES.ALL_BOOKS, icon:'fa-book-open', label:'All Books' },
     { mode:BOOK_VISIBILITY_MODES.ALL_ACTIVE, icon:'fa-layer-group', label:'All Active' },
     { mode:BOOK_VISIBILITY_MODES.GLOBAL, icon:'fa-globe', label:'Global' },
     { mode:BOOK_VISIBILITY_MODES.CHAT, icon:SOURCE_ICON_DEFINITION_MAP.chat.icon, label:'Chat' },
@@ -101,6 +103,7 @@ const BOOK_VISIBILITY_OPTIONS = Object.freeze([
     { mode:BOOK_VISIBILITY_MODES.CHARACTER, icon:SOURCE_ICON_DEFINITION_MAP.character.icon, label:'Character' },
 ]);
 const BOOK_VISIBILITY_OPTION_TOOLTIPS = Object.freeze({
+    [BOOK_VISIBILITY_MODES.ALL_BOOKS]: 'Show all books in the list, including books that are not currently active from any source.',
     [BOOK_VISIBILITY_MODES.ALL_ACTIVE]: 'Show books active from any source (Global, Chat, Persona, or Character). This shows all books currently added to context by these sources.',
     [BOOK_VISIBILITY_MODES.GLOBAL]: 'Include books enabled globally in World Info settings.',
     [BOOK_VISIBILITY_MODES.CHAT]: 'Include books linked to the current chat.',
@@ -1605,7 +1608,14 @@ const setupFilter = (list)=>{
         const getBookVisibilityOption = (mode)=>
             BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
 
+        const isAllBooksVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
+
         const isAllActiveVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+
+        const setAllBooksVisibility = ()=>{
+            bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
+            bookVisibilitySelections.clear();
+        };
 
         const setAllActiveVisibility = ()=>{
             bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
@@ -1614,7 +1624,7 @@ const setupFilter = (list)=>{
 
         const toggleVisibilitySelection = (mode)=>{
             if (!BOOK_VISIBILITY_MULTISELECT_MODES.includes(mode)) return;
-            if (isAllActiveVisibility()) {
+            if (isAllBooksVisibility() || isAllActiveVisibility()) {
                 bookVisibilityMode = BOOK_VISIBILITY_MODES.CUSTOM;
                 bookVisibilitySelections.clear();
                 bookVisibilitySelections.add(mode);
@@ -1626,7 +1636,7 @@ const setupFilter = (list)=>{
                 bookVisibilitySelections.add(mode);
             }
             if (bookVisibilitySelections.size === 0) {
-                setAllActiveVisibility();
+                setAllBooksVisibility();
             }
         };
 
@@ -1642,7 +1652,18 @@ const setupFilter = (list)=>{
         const renderVisibilityChips = ()=>{
             if (!bookVisibilityChips) return;
             bookVisibilityChips.innerHTML = '';
-            if (isAllActiveVisibility()) {
+            if (isAllBooksVisibility()) {
+                const visibilityOption = getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_BOOKS);
+                const visibilityChip = document.createElement('span');
+                visibilityChip.classList.add('stwid--visibilityChip');
+                visibilityChip.append(createBookVisibilityIcon(visibilityOption, 'stwid--icon'));
+                const visibilityLabel = document.createElement('span');
+                visibilityLabel.textContent = visibilityOption.label;
+                visibilityChip.append(visibilityLabel);
+                visibilityChip.title = `Active filter: ${visibilityOption.label}.`;
+                visibilityChip.setAttribute('aria-label', `Active filter: ${visibilityOption.label}.`);
+                bookVisibilityChips.append(visibilityChip);
+            } else if (isAllActiveVisibility()) {
                 const visibilityOption = getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE);
                 const visibilityChip = document.createElement('span');
                 visibilityChip.classList.add('stwid--visibilityChip');
@@ -1692,13 +1713,16 @@ const setupFilter = (list)=>{
             const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
             const selectedLookup = new Set(selected ?? []);
             const isLegacyGlobalFilter = Boolean(filterActiveInput?.checked);
+            const isAllBooks = isAllBooksVisibility();
             const isAllActive = isAllActiveVisibility();
             for (const b of Object.keys(state.cache)) {
                 const flags = getBookVisibilityFlags(b, selectedLookup);
                 const hideByGlobalFilter = isLegacyGlobalFilter && !flags.global;
-                const visibilityMatch = isAllActive
-                    ? flags.allActive
-                    : BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>bookVisibilitySelections.has(mode) && flags[mode]);
+                const visibilityMatch = isAllBooks
+                    ? true
+                    : isAllActive
+                        ? flags.allActive
+                        : BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>bookVisibilitySelections.has(mode) && flags[mode]);
                 const hideByVisibilityFilter = !visibilityMatch;
                 state.cache[b].dom.root.classList.toggle('stwid--filter-active', hideByGlobalFilter);
                 state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
@@ -1706,9 +1730,14 @@ const setupFilter = (list)=>{
             if (bookVisibilityMenu) {
                 for (const option of bookVisibilityMenu.querySelectorAll('.stwid--columnOption')) {
                     const optionMode = option.getAttribute('data-mode');
-                    const isActive = optionMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE
-                        ? isAllActive
-                        : bookVisibilitySelections.has(optionMode);
+                    let isActive = false;
+                    if (optionMode === BOOK_VISIBILITY_MODES.ALL_BOOKS) {
+                        isActive = isAllBooks;
+                    } else if (optionMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
+                        isActive = isAllActive;
+                    } else {
+                        isActive = bookVisibilitySelections.has(optionMode);
+                    }
                     option.classList.toggle('stwid--active', isActive);
                     option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
                     const optionCheckbox = option.querySelector('.stwid--columnOptionCheckbox');
@@ -1762,7 +1791,7 @@ const setupFilter = (list)=>{
                 optionButton.setAttribute('aria-pressed', 'false');
                 optionButton.title = optionTooltip;
                 optionButton.setAttribute('aria-label', optionTooltip);
-                if (option.mode !== BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
+                if (option.mode !== BOOK_VISIBILITY_MODES.ALL_BOOKS && option.mode !== BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
                     const optionCheckbox = document.createElement('input');
                     optionCheckbox.type = 'checkbox';
                     optionCheckbox.classList.add('checkbox', 'stwid--columnOptionCheckbox');
@@ -1775,7 +1804,9 @@ const setupFilter = (list)=>{
                 optionLabel.textContent = option.label;
                 optionButton.append(optionLabel);
                 optionButton.addEventListener('click', ()=>{
-                    if (option.mode === BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
+                    if (option.mode === BOOK_VISIBILITY_MODES.ALL_BOOKS) {
+                        setAllBooksVisibility();
+                    } else if (option.mode === BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
                         setAllActiveVisibility();
                     } else {
                         toggleVisibilitySelection(option.mode);
@@ -1898,7 +1929,7 @@ const getSelectionState = ()=>({
 
 const initListPanel = (options)=>{
     state = options;
-    bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+    bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
     bookVisibilitySelections = new Set();
     bookVisibilityMenu = null;
     bookVisibilityChips = null;

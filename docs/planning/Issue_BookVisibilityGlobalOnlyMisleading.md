@@ -259,3 +259,37 @@ Like: "Lorebook linked to character: Seraphina"
     - `Lorebook linked to characters: <Name1>, <Name2>, ...`
     - `Lorebook linked to active persona: <Name>`
   - Existing icon classes, icon set, and source-link refresh/filter reapplication flow are unchanged.
+
+### 6) Add an `All Books` preset to Book Visibility and make it the default
+
+#### User Report
+  > "Ok, we also need to add an option (not multiselect, a preset) right at the top of the book visibility dropdown to show All books (including the ones that are not active), and make this option the default one"
+
+#### Mental Map
+  1. The user opens the drawer and currently sees only books considered `All Active` by default, because `bookVisibilityMode` starts as `allActive`.
+  2. In code, this default comes from `bookVisibilityMode` initialization and `initListPanel()` reset, and `applyActiveFilter()` then hides books where `flags.allActive` is false.
+  3. `flags.allActive` is derived from `global OR chat OR persona OR character`, so any book not linked to those sources is hidden even before the user makes a visibility choice.
+  4. The request is to add a new top-level preset that means "show everything in the list", including books with no active source links and no global activation.
+  5. This new preset must be exclusive (like `All Active`), not part of the multiselect source set (`Global/Chat/Persona/Character`).
+  6. The dropdown order matters: `All Books` should be the first option so it is immediately discoverable.
+  7. The default selection should switch from `All Active` to `All Books`, which means changing initial filter state and menu/chip rendering defaults.
+  8. Legacy `Active` checkbox behavior should remain additive (`AND`) on top, so enabling it still narrows list visibility to globally active books.
+  9. Timing/event behavior should remain unchanged: source-link refresh (`refreshBookSourceLinks()`) still triggers `applyActiveFilter()`, but in `All Books` mode that re-filter pass should not hide anything by visibility rules.
+  10. This is a small UI/filter-state adjustment inside extension-owned surfaces (`src/listPanel.js` and scoped style/docs if needed), with no SillyTavern core ownership changes.
+
+#### TASK CHECKLIST
+  Smallest Change Set Checklist:
+  [x] In `src/listPanel.js`, add an exclusive `All Books` visibility mode constant and option metadata, placed first in `BOOK_VISIBILITY_OPTIONS`.
+  [x] In `src/listPanel.js`, add tooltip copy for `All Books` clarifying it shows every book in the list (active and inactive).
+  [x] In `src/listPanel.js`, change default visibility state initialization/reset from `All Active` to `All Books` (`bookVisibilityMode` module init + `initListPanel()`).
+  [x] In `src/listPanel.js`, update menu click handling so `All Books` behaves as an exclusive preset (not multiselect), parallel to `All Active`.
+  [x] In `src/listPanel.js`, update `applyActiveFilter()` so `All Books` mode never applies `stwid--filter-visibility` hiding (except legacy `Active` if checked).
+  [x] In `src/listPanel.js`, update chip rendering logic so default chip is `All Books` and current preset remains visible at a glance.
+  [x] Keep `Global/Chat/Persona/Character` multiselect behavior unchanged, and keep legacy `Active` checkbox as additive filter.
+  [x] After implementation, update `FEATURE_MAP.md`/`ARCHITECTURE.md` only if behavior ownership wording needs to reflect the new default preset.
+
+#### AFTER IMPLEMENTATION NOTES
+  - `Book Visibility` now has `All Books` as the first dropdown option and default preset.
+  - `All Books` is exclusive (preset), and `All Active` remains an exclusive preset.
+  - Multiselect source filters (`Global`, `Chat`, `Persona`, `Character`) remain unchanged, and the legacy `Active` checkbox is still additive.
+  - `FEATURE_MAP.md` and `ARCHITECTURE.md` were updated to reflect the new default/option model.
