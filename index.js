@@ -798,6 +798,7 @@ const addDrawer = ()=>{
                     activationBlockParent,
                     renderTemplateAsync,
                     getWorldEntry,
+                    buildSavePayload,
                     cache,
                     setCurrentEditor: (value) => {
                         currentEditor = value;
