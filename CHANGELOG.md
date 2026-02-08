@@ -10,6 +10,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 
 #### Folders & Book Organization
+
 - Added a full lorebook folder system with per-book folder metadata and persisted folder registry.
 - Added folder rendering/grouping in the list panel (books nested under folder headers).
 - Added list controls for creating folders and importing folders.
@@ -20,6 +21,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Added folder-scoped Order Helper action.
 
 #### Order Helper Capabilities
+
 - Added Order Helper filters for strategy, position, recursion flags, outlet, automation ID, and inclusion group (including prioritize handling).
 - Added outlet and automation ID editing/display support in Order Helper rows.
 - Added entry move controls in the Order Helper drag column.
@@ -28,15 +30,18 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Changed
 
 #### UI/UX Consistency
+
 - Removed Discord-layout-specific styling logic and simplified CSS behavior.
 
 #### Architecture & Maintainability
+
 - Refactored Order Helper internals into dedicated modules (`orderHelper*` split).
 - Reorganized and standardized CSS (feature grouping, scoped tokens, focus/state primitives).
 
 ### Fixed
 
 #### Folder & Import Reliability
+
 - Fixed folder import assignment to prevent books being placed in wrong folders.
 - Fixed race conditions from overlapping folder imports.
 - Fixed folder active-toggle state updates while filtering books.
@@ -44,16 +49,19 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Fixed list panel entry-search reset behavior.
 
 #### Selection, Drag & Input Safety
+
 - Fixed selection stability by using UID-based selection logic.
 - Fixed SHIFT range-selected entry drag behavior.
 - Fixed accidental Delete-key deletions while typing in inputs/editors.
 
 #### Editor & Update Lifecycle
+
 - Fixed editor dirty-state tracking to reduce unsaved-input loss during refresh.
 - Fixed stale-click handling in editor entry opening.
 - Fixed world-info update synchronization using monotonic update-token handling.
 
 #### Defensive Runtime Fixes
+
 - Fixed multiple null/guard edge cases across render/update/jump paths.
 - Fixed duplicate/delete book action reliability via safer core-UI interaction helpers.
 - Fixed jump-to-entry DOM validation and scroll/click behavior.
@@ -61,6 +69,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ## [2.1.0]
 
 ### Added
+
 - Extended Order Helper from reordering-only into a full active-entry table view.
 - Added configurable table columns, including recursion, budget, and inclusion group fields.
 - Added custom ordering driven by drag-and-drop inside Order Helper.
@@ -68,10 +77,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ## [2.0.2]
 
 ### Changed
+
 - Reworked the Order Helper layout to improve scanability of controls and columns.
 - Tightened column labels for clearer ordering context.
 
 ### Added
+
 - Outlet name column in Order Helper.
 - Clickable comment links in Order Helper to jump directly to entries.
 - Draggable splitter between World Info list and editor for adjustable panel width.
@@ -83,11 +94,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ## [2.0.1]
 
 ### Added
-- Added support for the "ST Lorebook Ordering" extension integration.
 
+- Added support for the "ST Lorebook Ordering" extension integration.
 
 ## [2.0.0]
 
 ### Added
+
 - Refresh control for quickly syncing lorebook state.
 - Fill empty titles toggle to auto-label entries without titles.

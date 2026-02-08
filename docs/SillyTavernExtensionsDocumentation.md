@@ -6,8 +6,8 @@ To extend the functionality of the Node.js server, see the [Server Plugins](http
 
 **Can't write JavaScript?**
 
--   Consider [STscript](https://docs.sillytavern.app/usage/st-script/) as a simpler alternative to writing a full-fledged extension.
--   Go through the [MDN Course](https://developer.mozilla.org/en-US/docs/Learn/JavaScript) and come back when you're done.
+- Consider [STscript](https://docs.sillytavern.app/usage/st-script/) as a simpler alternative to writing a full-fledged extension.
+- Go through the [MDN Course](https://developer.mozilla.org/en-US/docs/Learn/JavaScript) and come back when you're done.
 
 ## [#](#extension-submissions)Extension submissions
 
@@ -15,24 +15,24 @@ Want to contribute your extensions to the [official content repository](https://
 
 To ensure that all extensions are safe and easy to use, we have a few requirements:
 
-1.  Your extension must be open-source and have a libre license (see [Choose a License](https://choosealicense.com/licenses/)). If you are unsure, AGPLv3 is a good choice.
-2.  Extensions must be compatible with the latest release version of SillyTavern. Please be ready to update your extension if something in the core changes.
-3.  Extensions must be well-documented. This includes a README file with installation instructions, usage examples, and a list of features.
-4.  Extensions that have a server plugin requirement to function will not be accepted.
+1. Your extension must be open-source and have a libre license (see [Choose a License](https://choosealicense.com/licenses/)). If you are unsure, AGPLv3 is a good choice.
+2. Extensions must be compatible with the latest release version of SillyTavern. Please be ready to update your extension if something in the core changes.
+3. Extensions must be well-documented. This includes a README file with installation instructions, usage examples, and a list of features.
+4. Extensions that have a server plugin requirement to function will not be accepted.
 
 ## [#](#examples)Examples
 
 See live examples of simple SillyTavern extensions:
 
--   [https://github.com/city-unit/st-extension-example](https://github.com/city-unit/st-extension-example) - basic extension template. Showcases manifest creation, local script imports, adding a settings UI panel, and persistent extension settings usage.
--   [https://github.com/search?q=topic%3Aextension+org%3ASillyTavern&type=Repositories](https://github.com/search?q=topic%3Aextension+org%3ASillyTavern&type=Repositories) - a list of all official SillyTavern extensions on GitHub.
+- [https://github.com/city-unit/st-extension-example](https://github.com/city-unit/st-extension-example) - basic extension template. Showcases manifest creation, local script imports, adding a settings UI panel, and persistent extension settings usage.
+- [https://github.com/search?q=topic%3Aextension+org%3ASillyTavern&type=Repositories](https://github.com/search?q=topic%3Aextension+org%3ASillyTavern&type=Repositories) - a list of all official SillyTavern extensions on GitHub.
 
 ## [#](#bundling)Bundling
 
 Extensions can also utilize bundling to isolate themselves from the rest of the modules and use any dependencies from NPM, including UI frameworks like Vue, React, etc.
 
--   [https://github.com/SillyTavern/Extension-WebpackTemplate](https://github.com/SillyTavern/Extension-WebpackTemplate) - template repository of an extension using TypeScript and Webpack (no React).
--   [https://github.com/SillyTavern/Extension-ReactTemplate](https://github.com/SillyTavern/Extension-ReactTemplate) - template repository of a bare-bones extension using React and Webpack.
+- [https://github.com/SillyTavern/Extension-WebpackTemplate](https://github.com/SillyTavern/Extension-WebpackTemplate) - template repository of an extension using TypeScript and Webpack (no React).
+- [https://github.com/SillyTavern/Extension-ReactTemplate](https://github.com/SillyTavern/Extension-ReactTemplate) - template repository of a bare-bones extension using React and Webpack.
 
 To use relative imports from the bundle, you may need to create an import wrapper. Here's an example for Webpack:
 
@@ -64,31 +64,35 @@ export async function importFromUrl(url, what, defaultValue = null) {
 const generateRaw = await importFromUrl('/script.js', 'generateRaw');
 ```
 
-
-
-
-
 ```
 
 ## [#](#manifestjson)manifest.json
 
 Every extension must have a folder in 
 ```
+
 data/<user-handle>/extensions
+
 ```
  and a 
 ```
+
 manifest.json
+
 ```
  file, which contains metadata about the extension and a path to a JS script file that is the entry point of the extension.
 
 Downloadable extensions are mounted into the 
 ```
+
 /scripts/extensions/third-party
+
 ```
  folder when serving over HTTP, so relative imports should be used based on that. To ease local development, consider placing your extension repository in the 
 ```
+
 /scripts/extensions/third-party
+
 ```
  folder (the "Install for all users" option).
 
@@ -114,10 +118,6 @@ Downloadable extensions are mounted into the
     }
 }
 ```
-
-
-
-
 
 ```
 
@@ -174,7 +174,9 @@ Extensions can also depend on other SillyTavern extensions. The extension will n
 
 Dependencies are specified by their **folder name** as it appears in the 
 ```
+
 public/extensions
+
 ```
  directory.
 
@@ -211,11 +213,15 @@ Examples:
 
 To check which modules are currently provided by the connected Extras API, import the 
 ```
+
 modules
+
 ```
  array from 
 ```
+
 scripts/extensions.js
+
 ```
 .
 
@@ -225,11 +231,15 @@ scripts/extensions.js
 
 The 
 ```
+
 getContext()
+
 ```
  function in the 
 ```
+
 SillyTavern
+
 ```
  global object gives you access to the SillyTavern context, which is a collection of all the main app state objects, useful functions, and utilities.
 
@@ -246,10 +256,6 @@ context.groupId; // ID of the current group
 // And many more...
 ```
 
-
-
-
-
 ```
 
 You can find the full list of available properties and functions in the [SillyTavern source code](https://github.com/SillyTavern/SillyTavern/blob/staging/public/scripts/st-context.js).
@@ -258,11 +264,15 @@ You can find the full list of available properties and functions in the [SillyTa
 
 Most of the npm libraries used internally by the SillyTavern frontend are shared in the 
 ```
+
 libs
+
 ```
  property of the 
 ```
+
 SillyTavern
+
 ```
  global object.
 
@@ -308,35 +318,41 @@ const { DOMPurify } = SillyTavern.libs;
 const sanitizedHtml = DOMPurify.sanitize('<script>"dirty HTML"</script>');
 ```
 
-
-
-
-
 ```
 
 ### [#](#typescript-notice)TypeScript notice
 
 If you want access to autocomplete for all methods in the 
 ```
+
 SillyTavern
+
 ```
  global object (and you probably do), including 
 ```
+
 getContext()
+
 ```
  and 
 ```
+
 libs
+
 ```
 , you should add a TypeScript 
 ```
+
 .d.ts
+
 ```
  module declaration. This declaration should import global types from SillyTavern's source, depending on your extension's location. Below is an example that works for both installation types: "all users" and "current user."
 
 **global.d.ts** - place this file in the root of your extension directory (next to 
 ```
+
 manifest.json
+
 ```
 ):
 
@@ -356,10 +372,6 @@ declare global {
     // Add global type declarations here
 }
 ```
-
-
-
-
 
 ```
 
@@ -382,10 +394,6 @@ async function handleMessage(data) {
 }
 ```
 
-
-
-
-
 ```
 
 ## [#](#state-management)State management
@@ -394,17 +402,23 @@ async function handleMessage(data) {
 
 When an extension needs to persist its state, it can use the 
 ```
+
 extensionSettings
+
 ```
  object from the 
 ```
+
 getContext()
+
 ```
  function to store and retrieve data. An extension can store any JSON-serializable data in the settings object and must use a unique key to avoid conflicts with other extensions.
 
 To persist the settings, use the 
 ```
+
 saveSettingsDebounced()
+
 ```
  function, which will save the settings to the server.
 
@@ -449,27 +463,29 @@ settings.option1 = 'new value';
 saveSettingsDebounced();
 ```
 
-
-
-
-
 ```
 
 ### [#](#chat-metadata)Chat metadata
 
 To bind some data to a specific chat, you can use the 
 ```
+
 chatMetadata
+
 ```
  object from the 
 ```
+
 getContext()
+
 ```
  function. This object allows you to store arbitrary data associated with a chat, which can be useful for storing extension-specific state.
 
 To persist the metadata, use the 
 ```
+
 saveMetadata()
+
 ```
  function, which will save the metadata to the server.
 
@@ -489,10 +505,6 @@ const value = chatMetadata['my_key'];
 await saveMetadata();
 ```
 
-
-
-
-
 ```
 
 ### [#](#character-cards)Character cards
@@ -503,11 +515,15 @@ This is useful for extensions that need to store additional data associated with
 
 To write data to the character card [extensions](https://github.com/malfoyslastname/character-card-spec-v2/blob/main/spec_v2.md#extensions) data field, use the 
 ```
+
 writeExtensionField
+
 ```
  function from the 
 ```
+
 getContext()
+
 ```
  function. This function takes a character ID, a string key, and a value to write. The value must be JSON-serializable.
 
@@ -528,10 +544,6 @@ const character = SillyTavern.getContext().characters[characterId];
 // The data is stored in the `extensions` object of the character's data
 const myData = character.data?.extensions?.my_extension_key;
 ```
-
-
-
-
 
 ```
 
@@ -567,43 +579,51 @@ await pm.writePresetExtensionField({ path: 'hello', value: 'world' });
 const value = pm.readPresetExtensionField({ path: 'hello' });
 ```
 
-
-
-
-
 ```
 
 ## [#](#internationalization)Internationalization
 
 Extensions can provide additional localized strings for use with the 
 ```
+
 t
+
 ```
 , 
 ```
+
 translate
+
 ```
  functions and the 
 ```
+
 data-i18n
+
 ```
  attribute in HTML templates.
 
 See the list of supported locales here (
 ```
+
 lang
+
 ```
  key): [https://github.com/SillyTavern/SillyTavern/blob/release/public/locales/lang.json](https://github.com/SillyTavern/SillyTavern/blob/release/public/locales/lang.json)
 
 ### [#](#direct-addlocaledata-call)Direct 
 ```
+
 addLocaleData
+
 ```
  call
 
 Pass a locale code and an object with the translations to the 
 ```
+
 addLocaleData
+
 ```
  function. Overrides of existing keys are _NOT_ allowed. If the passed locale code is not a currently chosen locale, the data will be silently ignored.
 
@@ -614,10 +634,6 @@ addLocaleData
 SillyTavern.getContext().addLocaleData('fr-fr', { 'Hello': 'Bonjour' });
 SillyTavern.getContext().addLocaleData('de-de', { 'Hello': 'Hallo' });
 ```
-
-
-
-
 
 ```
 
@@ -640,21 +656,21 @@ Add an i18n object with a list of supported locales and their corresponding JSON
 }
 ```
 
-
-
-
-
 ```
 
 ## [#](#registering-slash-commands-new-way)Registering slash commands (new way)
 
 While 
 ```
+
 registerSlashCommand
+
 ```
  still exists for backward compatibility, new slash commands should now be registered through 
 ```
+
 SlashCommandParser.addCommandObject()
+
 ```
  to provide extended details about the command and its parameters to the parser (and, in turn, to autocomplete and the command help).
 
@@ -711,10 +727,6 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'repeat',
 }));
 ```
 
-
-
-
-
 ```
 
 All registered commands can be used in [STscript](https://docs.sillytavern.app/usage/st-script/) in any possible way.
@@ -725,7 +737,9 @@ All registered commands can be used in [STscript](https://docs.sillytavern.app/u
 
 Use 
 ```
+
 eventSource.on(eventType, eventHandler)
+
 ```
  to listen for events:
 
@@ -741,10 +755,6 @@ function handleIncomingMessage(data) {
     // Handle message
 }
 ```
-
-
-
-
 
 ```
 
@@ -805,7 +815,9 @@ The rest can be found [in the source](https://github.com/SillyTavern/SillyTavern
 
 You can produce any application events from extensions, including custom events, by calling 
 ```
+
 eventSource.emit(eventType, ...eventData)
+
 ```
 :
 
@@ -822,10 +834,6 @@ const eventType = 'myCustomEvent';
 await eventSource.emit(eventType, { data: 'custom event data' });
 ```
 
-
-
-
-
 ```
 
 ## [#](#prompt-interceptors)Prompt Interceptors
@@ -834,23 +842,33 @@ Prompt Interceptors provide a way for extensions to perform any activity such as
 
 Interceptors from different extensions are run sequentially. The order is determined by the 
 ```
+
 loading_order
+
 ```
  field in their respective 
 ```
+
 manifest.json
+
 ```
  files. Extensions with lower 
 ```
+
 loading_order
+
 ```
  values run earlier. If 
 ```
+
 loading_order
+
 ```
  is not specified, 
 ```
+
 display_name
+
 ```
  is used as a fallback. If neither is specified, the order is undefined.
 
@@ -858,11 +876,15 @@ display_name
 
 To define a prompt interceptor, add a 
 ```
+
 generate_interceptor
+
 ```
  field to your extension's 
 ```
+
 manifest.json
+
 ```
  file. The value should be the name of a global function that will be called by SillyTavern.
 
@@ -878,25 +900,27 @@ manifest.json
 }
 ```
 
-
-
-
-
 ```
 
 ### [#](#interceptor-function)Interceptor Function
 
 The 
 ```
+
 generate_interceptor
+
 ```
  function is a global function that will be called upon generation requests that are not dry runs. It must be defined in the global scope (e.g., 
 ```
+
 globalThis.myCustomInterceptorFunction = async function(...) { ... }
+
 ```
 ) and can return a 
 ```
+
 Promise
+
 ```
  if it needs to perform any asynchronous operations.
 
@@ -962,10 +986,6 @@ globalThis.myCustomInterceptorFunction = async function(chat, contextSize, abort
 }
 ```
 
-
-
-
-
 ```
 
 ## [#](#generating-text)Generating text
@@ -976,7 +996,9 @@ SillyTavern provides several functions to generate text in different contexts us
 
 The 
 ```
+
 generateQuietPrompt()
+
 ```
  function is used to generate text in the context of a chat with an added "quiet" prompt (post-history instruction) in the background (the output is not rendered in the UI). This is useful for generating text without interrupting the user experience while also keeping the relevant chat and character data intact, such as generating a summary or an image prompt.
 
@@ -993,31 +1015,35 @@ const result = await generateQuietPrompt({
 });
 ```
 
-
-
-
-
 ```
 
 ### [#](#raw-generation)Raw generation
 
 The 
 ```
+
 generateRaw()
+
 ```
  function is used to generate text without any chat context. It is useful when you want to fully control the prompt-building process.
 
 It accepts a 
 ```
+
 prompt
+
 ```
  as a Text Completion string or an array of Chat Completion objects, constructing the request with an appropriate format depending on the selected API type, e.g., converting between chat/text modes, applying instruct formatting, etc. You can also pass an additional 
 ```
+
 systemPrompt
+
 ```
  and a 
 ```
+
 prefill
+
 ```
  to the function for even more control over the generation process.
 
@@ -1052,10 +1078,6 @@ const result = await generateRaw({
 });
 ```
 
-
-
-
-
 ```
 
 ### [#](#structured-outputs)Structured Outputs
@@ -1064,11 +1086,15 @@ You can use the structured outputs feature to ensure the model produces a valid 
 
 To use structured outputs, you must pass a JSON schema object to 
 ```
+
 generateRaw()
+
 ```
  or 
 ```
+
 generateQuietPrompt()
+
 ```
 . The model will then generate a response that matches the schema, and it will be returned as a stringified JSON object.
 
@@ -1122,10 +1148,6 @@ const quietResult = await generateQuietPrompt({
 });
 ```
 
-
-
-
-
 ```
 
 ## [#](#registering-custom-macros)Registering custom macros
@@ -1134,19 +1156,27 @@ You can register custom macros that can be used anywhere where macro substitutio
 
 To register a macro, use the 
 ```
+
 registerMacro()
+
 ```
  function from the 
 ```
+
 SillyTavern.getContext()
+
 ```
  object. The function accepts a macro name that should be a unique string, and a string or a function that returns a string. The function will be called with a unique 
 ```
+
 nonce
+
 ```
  string that will be different between each 
 ```
+
 substituteParams
+
 ```
  call.
 
@@ -1164,15 +1194,13 @@ registerMacro('tomorrow', () => {
 });
 ```
 
-
-
-
-
 ```
 
 When a custom macro is no longer needed, remove it using the 
 ```
+
 unregisterMacro()
+
 ```
  function:
 
@@ -1185,10 +1213,6 @@ const { unregisterMacro } = SillyTavern.getContext();
 // Unregister the 'fizz' macro
 unregisterMacro('fizz');
 ```
-
-
-
-
 
 ```
 
@@ -1209,13 +1233,17 @@ unregisterMacro('fizz');
 
 The 
 ```
+
 doExtrasFetch()
+
 ```
  function allows you to make requests to your SillyTavern Extras API server.
 
 For example, to call the 
 ```
+
 /api/summarize
+
 ```
  endpoint:
 
@@ -1240,20 +1268,20 @@ const apiResult = await doExtrasFetch(url, {
 });
 ```
 
-
-
-
-
 ```
 
 ```
+
 getApiUrl()
+
 ```
  returns the base URL of the Extras server.
 
 The 
 ```
+
 doExtrasFetch()
+
 ```
  function:
 
@@ -1284,7 +1312,9 @@ You can specify:
 
 **Never store API keys or secrets in 
 ```
+
 extensionSettings
+
 ```
 **
 
@@ -1301,10 +1331,6 @@ extensionSettings[MODULE_NAME].apiKey = 'secret_key_123';
 // If you need to handle sensitive data, use server plugins instead.
 // See: https://docs.sillytavern.app/for-contributors/server-plugins/
 ```
-
-
-
-
 
 ```
 
@@ -1326,19 +1352,19 @@ const { DOMPurify } = SillyTavern.libs;
 const cleanInput = DOMPurify.sanitize(userInput);
 ```
 
-
-
-
-
 ```
 
 **Avoid using 
 ```
+
 eval()
+
 ```
  or 
 ```
+
 Function()
+
 ```
  constructors**
 
@@ -1348,7 +1374,9 @@ These can execute arbitrary code and pose security risks. If you need dynamic ev
 
 **Don't store large data in 
 ```
+
 extensionSettings
+
 ```
 **
 
@@ -1369,10 +1397,6 @@ await localforage.setItem(`${MODULE_NAME}_data`, largeData);
 localStorage.setItem(`${MODULE_NAME}_data`, JSON.stringify(smallData));
 ```
 
-
-
-
-
 ```
 
 **Clean up event listeners**
@@ -1388,10 +1412,6 @@ function cleanup() {
     document.getElementById('myElement').removeEventListener('click', handleClick);
 }
 ```
-
-
-
-
 
 ```
 
@@ -1420,17 +1440,15 @@ async function heavyComputation(data) {
 }
 ```
 
-
-
-
-
 ```
 
 ### [#](#compatibility)Compatibility
 
 **Prefer 
 ```
+
 getContext()
+
 ```
  over direct imports**
 
@@ -1446,10 +1464,6 @@ const { chat, characters, saveSettingsDebounced } = SillyTavern.getContext();
 // AVOID - May break with internal changes
 import { chat, characters } from '../../../../script.js';
 ```
-
-
-
-
 
 ```
 
@@ -1467,10 +1481,6 @@ const MODULE_NAME = 'my_extension_name';
 // BAD - Too generic, likely to conflict
 const MODULE_NAME = 'settings';
 ```
-
-
-
-
 
 ```
 
@@ -1501,10 +1511,6 @@ const userInput = await Popup.show.input('Input', 'Please enter a value:', 'defa
 await Popup.show.text('Info', 'Operation completed successfully.');
 ```
 
-
-
-
-
 ```
 
 **Provide helpful console messages**
@@ -1522,17 +1528,15 @@ console.debug(`[${MODULE_NAME}] Processing data:`, data);
 console.error(`[${MODULE_NAME}] Error occurred:`, error);
 ```
 
-
-
-
-
 ```
 
 ### [#](#code-quality)Code Quality
 
 **Use bundled libraries from 
 ```
+
 lib.js
+
 ```
 **
 
@@ -1562,31 +1566,37 @@ const { moment } = SillyTavern.libs;
 const formatted = moment().format('YYYY-MM-DD HH:mm:ss');
 ```
 
-
-
-
-
 ```
 
 Other available libraries include: 
 ```
+
 DOMPurify
+
 ```
 , 
 ```
+
 localforage
+
 ```
 , 
 ```
+
 hljs
+
 ```
 , 
 ```
+
 showdown
+
 ```
 , 
 ```
+
 yaml
+
 ```
 , and more. Check [lib.js](https://github.com/SillyTavern/SillyTavern/blob/release/public/lib.js) for the full list.
 
@@ -1606,9 +1616,5 @@ function loadSettings() {
     );
 }
 ```
-
-
-
-
 
 ```

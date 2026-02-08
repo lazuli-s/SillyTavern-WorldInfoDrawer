@@ -1,4 +1,4 @@
-# DETAILED IMPLEMENTATION PLAN: Lorebook Row Source Icons (Character, Chat, Persona)
+# IMPLEMENTATION: Lorebook Row Source Icons (Character, Chat, Persona)
 
 ## Step S01: Add source icons to each lorebook row and keep them synchronized with chat/persona/character context changes.
 
@@ -31,12 +31,12 @@
   Keep icon display rules fixed: show nothing for global-only linkage, show character/chat/persona icons only for those sources, and show multiple icons when multiple sources apply.
 
 - **Smallest Change Set Checklist**
-  [ ] Add one source-membership state object in `index.js` keyed by lorebook name with three booleans (`character`, `chat`, `persona`) and one recompute function that reads current ST context and group members.
-  [ ] Add one event-wiring block in `index.js` that calls the recompute function and row-refresh hook on all required context-change events, including existing WI events and additional chat/persona/character-relevant events.
-  [ ] Extend `src/listPanel.js` lorebook row render to create/store a source-icon container DOM reference immediately before the existing activation checkbox inside `.stwid--actions`.
-  [ ] Add one `src/listPanel.js` row-level updater that receives per-book source flags and renders icons in strict order `character -> chat -> persona` with per-icon tooltip text.
-  [ ] Trigger that updater during initial row render and during incremental updates, reusing existing cache DOM references instead of rebuilding book rows.
-  [ ] Add minimal scoped CSS in `style.css` for source-icon container spacing, icon alignment, and non-interactive visual styling consistent with existing action-row density.
+  [x] Add one source-membership state object in `index.js` keyed by lorebook name with three booleans (`character`, `chat`, `persona`) and one recompute function that reads current ST context and group members.
+  [x] Add one event-wiring block in `index.js` that calls the recompute function and row-refresh hook on all required context-change events, including existing WI events and additional chat/persona/character-relevant events.
+  [x] Extend `src/listPanel.js` lorebook row render to create/store a source-icon container DOM reference immediately before the existing activation checkbox inside `.stwid--actions`.
+  [x] Add one `src/listPanel.js` row-level updater that receives per-book source flags and renders icons in strict order `character -> chat -> persona` with per-icon tooltip text.
+  [x] Trigger that updater during initial row render and during incremental updates, reusing existing cache DOM references instead of rebuilding book rows.
+  [x] Add minimal scoped CSS in `style.css` for source-icon container spacing, icon alignment, and non-interactive visual styling consistent with existing action-row density.
   [ ] Document the new source-membership state and update triggers in `docs/GlobalStateMap.md`.
 
 - **Risks**
