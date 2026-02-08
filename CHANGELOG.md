@@ -6,6 +6,10 @@
 
 - Added a Book Visibility filter with source-based modes (`All Active`, `Global`, `Chat`, `Persona`, `Character`) and inline chips.
 
+### Changed
+
+- Changed Book Visibility defaults to include an `All Books` preset (shown first in the menu) so the list starts by showing both active and inactive books.
+
 ### Fixed
 
 - Fixed folder visibility so folders with no currently visible books are hidden when visibility/search filters are active.

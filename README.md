@@ -23,6 +23,7 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 - Edit in a full-screen World Info drawer so you can focus on writing instead of fighting a cramped panel.
 - Manage many entries quickly with `Ctrl` click, `Shift` range select, and multi-select support.
 - Move selected entries between lorebooks with less clicking and less scrolling.
+- Use Book Visibility presets to control what appears in the list, with `All Books` as the default view.
 - Hover book source icons to see which active character or persona is linked to that lorebook.
 
 ### 📁 Lorebook folders
