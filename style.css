@@ -262,13 +262,8 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
-  width: 1em;
-  text-align: center;
-  color: var(--SmartThemeEmColor);
-}
-
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
-  color: var(--SmartThemeQuoteColor);
+  width: 0.85em;
+  height: 0.85em;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--bookVisibilityHelp {
@@ -842,11 +837,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 /* Shared menu/item patterns (Phase 4)
    Keep selectors local to this extension and avoid changing layout/positioning.
 */
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--listDropdownTrigger, .stwid--folderToggle, .stwid--multiselectDropdownButton, .stwid--orderFilterButton) {
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--multiselectDropdownButton, .stwid--orderFilterButton) {
   border-radius: var(--stwid-radius-m);
 }
 
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--listDropdownTrigger, .stwid--folderToggle, .stwid--multiselectDropdownButton, .stwid--orderFilterButton):focus-visible {
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--multiselectDropdownButton, .stwid--orderFilterButton):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
@@ -1178,22 +1173,9 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   width: 1em;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownInput {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
-  width: 1em;
-  text-align: center;
-  color: var(--SmartThemeEmColor);
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
-  color: var(--SmartThemeQuoteColor);
+.stwid--orderHelper .stwid--multiselectDropdownOption input[type='checkbox'] {
+  width: 0.85em;
+  height: 0.85em;
 }
 
 /* Filters */
@@ -1312,6 +1294,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 /* Table wrapper */
 .stwid--orderTableWrap {
   flex: 1 1 auto;
+  min-height: 0;
   min-height: 0;
   overflow: auto;
 }
