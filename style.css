@@ -182,10 +182,12 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterActive {
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   gap: 0.35em;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
+  flex: 1 1 auto;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuWrap {
@@ -193,6 +195,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
+  flex: 0 0 auto;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuButton {
@@ -270,10 +273,13 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChips {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  align-content: flex-start;
   gap: 0.35em;
   flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip {

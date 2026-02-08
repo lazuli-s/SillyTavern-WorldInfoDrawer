@@ -167,3 +167,30 @@
   - The Book Visibility row no longer renders a separate text label.
   - The dropdown trigger now has stable text (`Book Visibility`), while chips remain the active-state summary.
   - Multiselect options (`Global`, `Chat`, `Persona`, `Character`) now show checkbox affordance in the menu; `All Active` stays exclusive.
+
+### 3) Visibility chips must wrap inside their own lane while staying anchored beside the button
+
+#### User Report
+  > "within the chip list, you can wrap to a line below. but it must always remain aligned to the book visibility button."
+
+#### Mental Map
+  1. The Book Visibility row has two visual parts: the left button/help cluster and the right chips area.
+  2. Current layout lets the whole `stwid--bookVisibility` container wrap, so chips can drop below the button cluster instead of staying in the right-side lane.
+  3. The desired behavior is not "no wrap"; it is "wrap only inside the chips area."
+  4. In practice, this means the button block keeps fixed width on the left, while chips get the remaining width and can create second/third lines within that area.
+  5. This is a CSS layout issue only (flex wrapping/sizing), not a filter logic/state/event issue.
+  6. The smallest safe fix is to keep existing DOM and JS untouched, and change flex rules in `style.css`:
+     - prevent wrapping on `.stwid--bookVisibility`
+     - keep `.stwid--columnMenuWrap` fixed (`flex: 0 0 auto`)
+     - let `.stwid--visibilityChips` grow/shrink and wrap internally (`flex: 1 1 auto; min-width: 0; flex-wrap: wrap`)
+
+#### TASK CHECKLIST
+  Smallest Change Set Checklist:
+  [x] In `style.css`, make `.stwid--bookVisibility` a non-wrapping horizontal flex container across the full visibility row.
+  [x] In `style.css`, keep `.stwid--columnMenuWrap` fixed-size so the button/help block stays anchored on the left.
+  [x] In `style.css`, make `.stwid--visibilityChips` the flexible area that wraps internally to additional lines when needed.
+  [x] In this markdown file, mark this checklist as complete after applying the CSS-only change.
+
+#### AFTER IMPLEMENTATION NOTES
+  - Chips now wrap only inside the chips area.
+  - The chips area remains aligned beside the `Book Visibility` button/help block instead of dropping below it.
