@@ -316,7 +316,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   display: flex;
   align-items: center;
   gap: 0.5em;
-  padding: 0.35em 0.5em;
+  padding: 0 0.5em;
   cursor: pointer;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
   transition: background-color 150ms ease, box-shadow 150ms ease;
