@@ -58,8 +58,35 @@
 
 ## TASK CHECKLIST
   Smallest Change Set Checklist:
-  [ ] In `src/lorebookFolders.js` `createFolderDom(...)`, insert a non-interactive folder source-lane placeholder immediately before `activeToggle`.
-  [ ] In `style.css`, add scoped selector(s) for the new folder source-lane class and size it to the same effective geometry as book source-links spacing.
-  [ ] In `style.css`, keep `.stwid--folderHeader.stwid--hasMenu .stwid--folderActiveToggle` as the right-edge anchor and adjust only the minimum spacing rules needed for parity with book rows.
+  [x] In `src/lorebookFolders.js` `createFolderDom(...)`, insert a non-interactive folder source-lane placeholder immediately before `activeToggle`.
+  [x] In `style.css`, add scoped selector(s) for the new folder source-lane class and size it to the same effective geometry as book source-links spacing.
+  [x] In `style.css`, align folder controls using a dedicated right-side controls rail so the folder active checkbox column matches the book active-checkbox column anchor.
   [ ] Verify the active-checkbox column alignment in: root books, folder books, visible source-icon books, source-icon-empty books, filtered lists, and collapsed/expanded folders.
   [ ] Confirm no functional regressions: folder active toggle states (`on`/`off`/`partial`/`empty`) and folder menu/add/collapse interactions remain unchanged.
+
+## AFTER IMPLEMENTATION
+
+### What changed
+  - `src/lorebookFolders.js`
+    - Added `.stwid--folderControls` container in `createFolderDom(...)` to group right-side folder controls.
+    - Added non-interactive `.stwid--folderSourceLane` placeholder (`aria-hidden`) before `.stwid--folderActiveToggle`.
+    - Moved folder right-side controls into the new controls rail (toggle, source lane, active toggle, add, menu) without changing their handlers.
+  - `style.css`
+    - Added scoped styles for `.stwid--folderControls` and `.stwid--folderSourceLane`.
+    - Updated folder layout rules to anchor the controls rail at the right with book-matching control spacing.
+    - Removed obsolete folder-header auto-margin alignment rules tied to the previous flat header control layout.
+
+### Risks/What might break
+  - This touches folder header layout flow, so very narrow list widths may truncate folder names/counters sooner.
+  - This changes folder control positioning, so chevron/toggle visual placement may feel different than before.
+  - This touches folder-header CSS selectors, so future folder/menu style updates could accidentally bypass the new controls rail.
+
+### Manual checks
+  - Open a mix of root books and foldered books; compare folder active checkbox vs book active checkbox column.  
+    Success looks like: right-edge checkbox column lines up visually.
+  - Use folders with and without visible source-link icons on nearby books; toggle search/visibility filters.  
+    Success looks like: folder checkbox alignment remains stable while list content changes.
+  - Click folder chevron, folder active checkbox, add button, and folder menu trigger in several folders.  
+    Success looks like: collapse/expand, active state updates, add flow, and menu open behavior all still work.
+  - Set folder active state where folder has mixed active/inactive visible books.  
+    Success looks like: partial state still appears and transitions correctly (`partial` -> `on`/`off`).
