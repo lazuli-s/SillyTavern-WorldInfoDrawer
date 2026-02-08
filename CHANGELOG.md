@@ -9,6 +9,7 @@
 ### Fixed
 
 - Fixed folder visibility so folders with no currently visible books are hidden when visibility/search filters are active.
+- Fixed source icon tooltips to show linked character/persona attribution when available instead of only generic source labels.
 - Fixed stale entry rendering in the editor by resolving entries from a fresh save payload before opening.
 - Fixed duplicate-entry refresh races by serializing refresh/reopen handling after duplicate actions.
 - Fixed book menu rename/bulk-edit actions to wait for core UI actions instead of using fixed delays.

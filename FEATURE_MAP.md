@@ -8,9 +8,9 @@ Where each feature or behavior is implemented in the codebase.
 - Dev CSS watch/reload via FilesPluginApi (when available) → index.js
 - Incremental cache updates after World Info changes (books and entries) → index.js
 - World Info update waiting/token coordination for async UI actions → index.js, src/utils.js
-- Book source-link detection (character/chat/persona) and refresh triggers → index.js
+- Book source-link detection (character/chat/persona), attribution metadata (character/persona names), and refresh triggers → index.js
 - Source-link refresh applying list visibility filters after map updates → index.js
-- Source-link icon rendering on book rows → src/listPanel.js
+- Source-link icon rendering on book rows, including attribution tooltips/aria labels for character/persona links → src/listPanel.js
 - Jump-to-entry API (open book, scroll, focus editor) → index.js
 - Drawer keyboard handling for selected-entry delete → index.js
 - List/editor splitter drag resize + saved width → index.js
