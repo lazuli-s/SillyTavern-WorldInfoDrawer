@@ -64,7 +64,7 @@ Main shared libs include:
 
 Before making any UI or CSS change, always consult:
 
-- `docs/StyleGuide.md`
+- `STYLE_GUIDE.md`
 
 Style guide requirements are mandatory:
 
