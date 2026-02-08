@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.3.0] - 2026-02-08
+
+### Added
+
+- Added a Book Visibility filter with source-based modes (`All Active`, `Global`, `Chat`, `Persona`, `Character`) and inline chips.
+
+### Fixed
+
+- Fixed folder visibility so folders with no currently visible books are hidden when visibility/search filters are active.
+- Fixed stale entry rendering in the editor by resolving entries from a fresh save payload before opening.
+- Fixed duplicate-entry refresh races by serializing refresh/reopen handling after duplicate actions.
+- Fixed book menu rename/bulk-edit actions to wait for core UI actions instead of using fixed delays.
+- Fixed Order Helper filter correctness after inline outlet/group/automation ID edits.
+- Fixed Order Helper apply-order validation to reject invalid start/spacing values before writes.
+- Fixed redundant editor refresh clicks during world-info updates to reduce flicker and extra rebuilds.
+- Fixed Book Visibility control layout issues (menu clarity, chip wrapping/alignment, and contextual help text).
+
+### Performance
+
+- Reduced splitter drag reflow pressure by batching width updates and skipping redundant style writes.
+- Reduced entry-search filter overhead by caching normalized entry search text and minimizing unnecessary class toggles.
+- Reduced Order Helper render cost by caching entry template node lookups outside per-row loops.
+
 ## [2.2.0]
 
 ### Added
