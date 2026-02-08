@@ -201,6 +201,7 @@ const refreshBookSourceLinks = (reason = 'manual')=>{
     lorebookSourceLinks = nextLinks;
     lorebookSourceLinksSignature = signature;
     listPanelApi?.updateAllBookSourceLinks?.(nextLinks);
+    listPanelApi?.applyActiveFilter?.();
     console.debug(SOURCE_ICON_LOG_PREFIX, reason, summarizeSourceLinks(nextLinks));
     return true;
 };

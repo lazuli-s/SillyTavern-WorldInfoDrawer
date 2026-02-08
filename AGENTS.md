@@ -17,21 +17,21 @@ Before making changes, always consult:
 
 - `docs/SillyTavernExtensionsDocumentation.md`
   (SillyTavern extension best practices and constraints)
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-  (ownership boundaries, integration contract, and safe hook points)
 - `FEATURE_MAP.md`
-  (where each feature/behavior is implemented)
+  (where each extension feature/behavior is implemented)
 - `ARCHITECTURE.md`
   (module boundaries, responsibilities, and runtime model)
+- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
+  (ownership boundaries, integration contract, and safe hook points)
 - **ST Context**
   relevant SillyTavern state, APIs, helpers, or events
-  (from `vendor/SillyTavern/public/scripts/st-context.js` or known globals)
+  (from `vendor/SillyTavern/public/scripts/st-context.js`)
 
 SillyTavern source is available as a **reference-only submodule** under: `/vendor/SillyTavern`
 
 Note: if you don't see that folder, the git submodule is probably not initialized.
 
-- After cloning, initialize submodules:
+- After cloning, always initialize submodules:
   `git submodule update --init --recursive`
 
 **DO NOT modify anything under `/vendor/SillyTavern`.**

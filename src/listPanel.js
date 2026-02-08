@@ -16,6 +16,10 @@ let state = {};
 let searchInput;
 let searchEntriesInput;
 let filterActiveInput;
+let bookVisibilityMode = 'allActive';
+let bookVisibilityButtonLabel;
+let bookVisibilityMenu;
+let bookVisibilityChips;
 let loadListDebounced;
 let folderImportInput;
 const entrySearchCache = {};
@@ -78,6 +82,23 @@ const SOURCE_ICON_DEFINITIONS = Object.freeze([
     { key:'chat', icon:'fa-comments', label:'Chat' },
     { key:'persona', icon:'fa-id-badge', label:'Persona' },
 ]);
+const SOURCE_ICON_DEFINITION_MAP = Object.freeze(
+    Object.fromEntries(SOURCE_ICON_DEFINITIONS.map((def)=>[def.key, def])),
+);
+const BOOK_VISIBILITY_MODES = Object.freeze({
+    ALL_ACTIVE: 'allActive',
+    GLOBAL: 'global',
+    CHAT: 'chat',
+    PERSONA: 'persona',
+    CHARACTER: 'character',
+});
+const BOOK_VISIBILITY_OPTIONS = Object.freeze([
+    { mode:BOOK_VISIBILITY_MODES.ALL_ACTIVE, icon:'fa-layer-group', label:'All Active' },
+    { mode:BOOK_VISIBILITY_MODES.GLOBAL, icon:'fa-toggle-on', label:'Global' },
+    { mode:BOOK_VISIBILITY_MODES.CHAT, icon:SOURCE_ICON_DEFINITION_MAP.chat.icon, label:'Chat' },
+    { mode:BOOK_VISIBILITY_MODES.PERSONA, icon:SOURCE_ICON_DEFINITION_MAP.persona.icon, label:'Persona' },
+    { mode:BOOK_VISIBILITY_MODES.CHARACTER, icon:SOURCE_ICON_DEFINITION_MAP.character.icon, label:'Character' },
+]);
 
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
@@ -134,6 +155,21 @@ const normalizeBookSourceLinks = (links)=>({
     chat: Boolean(links?.chat),
     persona: Boolean(links?.persona),
 });
+
+const getBookVisibilityFlags = (name, selectedLookup = null)=>{
+    const links = normalizeBookSourceLinks(state.getBookSourceLinks?.(name));
+    const selected = selectedLookup instanceof Set
+        ? selectedLookup
+        : new Set(state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info);
+    const global = selected.has(name);
+    return {
+        global,
+        chat: links.chat,
+        persona: links.persona,
+        character: links.character,
+        allActive: global || links.chat || links.persona || links.character,
+    };
+};
 
 const renderBookSourceLinks = (sourceLinksContainer, links = null)=>{
     if (!sourceLinksContainer) return;
@@ -1387,7 +1423,7 @@ const loadList = async()=>{
             await yieldToUi();
         }
     }
-    updateFolderActiveToggles();
+    state.applyActiveFilter?.();
 };
 
 const refreshList = async()=>{
@@ -1508,23 +1544,148 @@ const setupFilter = (list)=>{
             searchEntries.append('Entries');
             filter.append(searchEntries);
         }
+        const getBookVisibilityOption = (mode)=>
+            BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
+
+        const createBookVisibilityIcon = (option, extraClass = '')=>{
+            const icon = document.createElement('i');
+            icon.classList.add('fa-solid', 'fa-fw', option.icon);
+            if (extraClass) {
+                icon.classList.add(extraClass);
+            }
+            return icon;
+        };
+
+        const renderVisibilityChips = ()=>{
+            if (!bookVisibilityChips) return;
+            bookVisibilityChips.innerHTML = '';
+            const visibilityOption = getBookVisibilityOption(bookVisibilityMode);
+
+            const visibilityChip = document.createElement('span');
+            visibilityChip.classList.add('stwid--visibilityChip');
+            visibilityChip.append(createBookVisibilityIcon(visibilityOption, 'stwid--icon'));
+            const visibilityLabel = document.createElement('span');
+            visibilityLabel.textContent = visibilityOption.label;
+            visibilityChip.append(visibilityLabel);
+            bookVisibilityChips.append(visibilityChip);
+
+            if (filterActiveInput?.checked) {
+                const activeChip = document.createElement('span');
+                activeChip.classList.add('stwid--visibilityChip');
+                const activeIcon = document.createElement('i');
+                activeIcon.classList.add('fa-solid', 'fa-fw', 'fa-toggle-on', 'stwid--icon');
+                activeChip.append(activeIcon);
+                const activeLabel = document.createElement('span');
+                activeLabel.textContent = 'Active';
+                activeChip.append(activeLabel);
+                bookVisibilityChips.append(activeChip);
+            }
+        };
+
+        const closeBookVisibilityMenu = ()=>{
+            if (!bookVisibilityMenu) return;
+            bookVisibilityMenu.classList.remove('stwid--active');
+            bookVisibilityMenu.previousElementSibling?.setAttribute('aria-expanded', 'false');
+        };
+
         const applyActiveFilter = ()=>{
-            if (!filterActiveInput) return;
             const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
+            const selectedLookup = new Set(selected ?? []);
+            const visibilityOption = getBookVisibilityOption(bookVisibilityMode);
+            bookVisibilityMode = visibilityOption.mode;
+            const isLegacyGlobalFilter = Boolean(filterActiveInput?.checked);
             for (const b of Object.keys(state.cache)) {
-                if (filterActiveInput.checked) {
-                    if (selected.includes(b)) {
-                        state.cache[b].dom.root.classList.remove('stwid--filter-active');
-                    } else {
-                        state.cache[b].dom.root.classList.add('stwid--filter-active');
-                    }
-                } else {
-                    state.cache[b].dom.root.classList.remove('stwid--filter-active');
+                const flags = getBookVisibilityFlags(b, selectedLookup);
+                const hideByGlobalFilter = isLegacyGlobalFilter && !flags.global;
+                const hideByVisibilityFilter = !flags[bookVisibilityMode];
+                state.cache[b].dom.root.classList.toggle('stwid--filter-active', hideByGlobalFilter);
+                state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
+            }
+            if (bookVisibilityButtonLabel) {
+                bookVisibilityButtonLabel.textContent = visibilityOption.label;
+            }
+            if (bookVisibilityMenu) {
+                for (const option of bookVisibilityMenu.querySelectorAll('.stwid--columnOption')) {
+                    option.classList.toggle('stwid--active', option.getAttribute('data-mode') === visibilityOption.mode);
                 }
             }
+            renderVisibilityChips();
             updateFolderActiveToggles();
         };
         state.applyActiveFilter = applyActiveFilter;
+        const bookVisibility = document.createElement('div'); {
+            bookVisibility.classList.add('stwid--bookVisibility');
+            const label = document.createElement('span');
+            label.classList.add('stwid--bookVisibilityLabel');
+            label.textContent = 'Book Visibility';
+            bookVisibility.append(label);
+
+            const menuWrap = document.createElement('div');
+            menuWrap.classList.add('stwid--columnMenuWrap');
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.classList.add('menu_button', 'stwid--columnMenuButton');
+            trigger.title = 'Select which book source category is visible';
+            trigger.setAttribute('aria-label', 'Book visibility mode');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.setAttribute('aria-haspopup', 'true');
+            const triggerIcon = document.createElement('i');
+            triggerIcon.classList.add('fa-solid', 'fa-fw', 'fa-filter');
+            trigger.append(triggerIcon);
+            const triggerLabel = document.createElement('span');
+            triggerLabel.classList.add('stwid--bookVisibilityButtonLabel');
+            trigger.append(triggerLabel);
+            bookVisibilityButtonLabel = triggerLabel;
+            menuWrap.append(trigger);
+
+            const menu = document.createElement('div');
+            menu.classList.add('stwid--columnMenu', 'stwid--bookVisibilityMenu');
+            bookVisibilityMenu = menu;
+
+            for (const option of BOOK_VISIBILITY_OPTIONS) {
+                const optionButton = document.createElement('button');
+                optionButton.type = 'button';
+                optionButton.classList.add('stwid--columnOption');
+                optionButton.setAttribute('data-mode', option.mode);
+                optionButton.append(createBookVisibilityIcon(option, 'stwid--columnOptionIcon'));
+                const optionLabel = document.createElement('span');
+                optionLabel.textContent = option.label;
+                optionButton.append(optionLabel);
+                optionButton.addEventListener('click', ()=>{
+                    bookVisibilityMode = option.mode;
+                    closeBookVisibilityMenu();
+                    applyActiveFilter();
+                });
+                menu.append(optionButton);
+            }
+            menuWrap.append(menu);
+
+            trigger.addEventListener('click', (evt)=>{
+                evt.preventDefault();
+                evt.stopPropagation();
+                const shouldOpen = !menu.classList.contains('stwid--active');
+                closeBookVisibilityMenu();
+                if (shouldOpen) {
+                    menu.classList.add('stwid--active');
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+            });
+            filter.append(bookVisibility);
+
+            const chips = document.createElement('div');
+            chips.classList.add('stwid--visibilityChips');
+            bookVisibilityChips = chips;
+            bookVisibility.append(menuWrap);
+            bookVisibility.append(chips);
+
+            document.addEventListener('click', (evt)=>{
+                if (!menu.classList.contains('stwid--active')) return;
+                const target = evt.target instanceof HTMLElement ? evt.target : null;
+                if (target?.closest('.stwid--bookVisibility')) return;
+                closeBookVisibilityMenu();
+            });
+        }
         const filterActive = document.createElement('label'); {
             filterActive.classList.add('stwid--filterActive');
             filterActive.title = 'Only show globally active books';
@@ -1539,6 +1700,7 @@ const setupFilter = (list)=>{
             filterActive.append('Active');
             filter.append(filterActive);
         }
+        applyActiveFilter();
         list.append(filter);
     }
 };
@@ -1610,6 +1772,10 @@ const getSelectionState = ()=>({
 
 const initListPanel = (options)=>{
     state = options;
+    bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+    bookVisibilityButtonLabel = null;
+    bookVisibilityMenu = null;
+    bookVisibilityChips = null;
     for (const key of Object.keys(entrySearchCache)) {
         delete entrySearchCache[key];
     }

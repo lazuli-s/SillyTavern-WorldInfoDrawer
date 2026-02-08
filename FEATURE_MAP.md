@@ -9,6 +9,7 @@ Where each feature or behavior is implemented in the codebase.
 - Incremental cache updates after World Info changes (books and entries) → index.js
 - World Info update waiting/token coordination for async UI actions → index.js, src/utils.js
 - Book source-link detection (character/chat/persona) and refresh triggers → index.js
+- Source-link refresh applying list visibility filters after map updates → index.js
 - Source-link icon rendering on book rows → src/listPanel.js
 - Jump-to-entry API (open book, scroll, focus editor) → index.js
 - Drawer keyboard handling for selected-entry delete → index.js
@@ -60,7 +61,7 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/listPanel.js
 - Delete selected entries (Del key) with save/update propagation → index.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.js
-- Filter list to active books only → src/listPanel.js
+- Book visibility filter (`All Active`/`Global`/`Chat`/`Persona`/`Character`) + legacy global `Active` additive filter → src/listPanel.js
 
 ## Sorting & ordering
 

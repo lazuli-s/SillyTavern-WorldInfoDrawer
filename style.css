@@ -154,6 +154,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter {
   display: flex;
   gap: 0.75em;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--searchEntries,
@@ -161,6 +162,109 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterActive {
   display: flex;
   gap: 0.5em;
   align-items: center;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  flex-wrap: wrap;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--bookVisibilityLabel {
+  color: var(--SmartThemeEmColor);
+  font-size: 0.85em;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenu {
+  position: absolute;
+  top: calc(100% + 0.35em);
+  left: 0;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-m);
+  padding: 0.45em;
+  display: none;
+  flex-direction: column;
+  gap: 0.3em;
+  z-index: 3;
+  min-width: max-content;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenu.stwid--active {
+  display: flex;
+  opacity: 1 !important;
+  background-color: var(--SmartThemeBlurTintColor) !important;
+  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
+  border: 1px solid var(--SmartThemeBorderColor);
+  text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 2px 4px;
+  border-radius: var(--stwid-radius-s);
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption:hover {
+  color: var(--customThemeColor) !important;
+  background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption.stwid--active {
+  color: var(--SmartThemeQuoteColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: 1px;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionIcon {
+  color: var(--customThemeColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChips {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  flex-wrap: wrap;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 999px;
+  padding: 0.1em 0.45em;
+  font-size: 0.8em;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip .stwid--icon {
+  color: var(--SmartThemeQuoteColor);
 }
 
 /* Scrollable book list */
@@ -293,6 +397,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget 
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-active,
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-visibility,
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-query {
   display: none;
 }

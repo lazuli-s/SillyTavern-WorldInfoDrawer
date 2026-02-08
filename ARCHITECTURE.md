@@ -40,6 +40,7 @@
   - Bootstraps the drawer UI + DOM structure (`dom` object)
   - Wires global events (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`)
   - Manages the in-memory `cache` of books/entries and updates it incrementally
+  - Recomputes lorebook source links (chat/persona/character) and reapplies list visibility filters on source-link changes
   - Connects list panel, editor panel, and order helper
 
 #### Core modules (`/src`)
@@ -48,7 +49,8 @@
   - Renders the left panel (folders + books + entry lists)
   - Control row: create book, create folder, import book, import folder, refresh
   - Search matches books and optionally entries (title + keys)
-  - Active-book filter
+  - Book visibility filter (`All Active`, `Global`, `Chat`, `Persona`, `Character`) with inline chips
+  - Legacy global `Active` filter retained as additive (AND) behavior
   - Selection system:
     - Click selects
     - SHIFT selects range
