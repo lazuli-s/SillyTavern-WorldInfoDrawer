@@ -20,42 +20,46 @@
 ## PLAN
 
 ### Goal
-  Make folder header controls use the same right-side control geometry as book rows, so the folder active toggle aligns to the same right-edge checkbox column as book active toggles in every list state.
+  Make folder headers follow the same right-side lane geometry used by book headers so the folder global-active checkbox ends on the same horizontal column as the book global-active checkbox, while keeping all existing folder/book behaviors unchanged.
 
 ### Extension Modules
   1. `src/lorebookFolders.js`
-     - Owns folder header DOM creation.
-     - Add a dedicated spacer element in the folder control sequence so folders reserve the source-icon lane before the active toggle.
+     - Owner of folder header markup via `createFolderDom(...)`.
+     - Add one non-interactive spacer lane node in the header control sequence immediately before `.stwid--folderActiveToggle` to mirror the book source-links lane.
   2. `src/listPanel.js`
-     - Owns book row DOM/action structure and overall list render flow.
-     - Reuse existing action structure/classes as alignment reference and verify folder/book rows keep a compatible control order.
+     - Owner of book header reference structure via `renderBook(...)` (`.stwid--actions > .stwid--sourceLinks + input[type='checkbox'] + action icons`).
+     - Used as the alignment contract; no functional behavior change planned.
   3. `style.css`
-     - Owns visual layout for folder headers and book action columns.
-     - Define shared column sizing/alignment rules so book and folder controls resolve to the same right-edge checkbox column.
+     - Owner of folder/book row layout selectors (`.stwid--folderHeader`, `.stwid--folderActiveToggle`, `.stwid--book .stwid--head .stwid--actions`, `.stwid--sourceLinks`).
+     - Add scoped lane sizing/alignment rules so folder spacer + folder active checkbox resolve to the same right-edge column as book active checkboxes.
 
 ### ST Context
-  1. No new SillyTavern data/state API is required for this fix; it is a presentation-layer alignment issue inside extension-owned DOM/CSS.
-  2. Existing list re-render triggers (from extension world-info update handling) already rebuild folder/book rows, so alignment must be enforced in base row styles/markup rather than event-specific logic.
-  3. Existing host-provided icon/class patterns (`fa-*`, `.checkbox`, extension row/action classes) are reused; no vendor core modifications are involved.
+  1. This is extension-owned presentation work only; no new SillyTavern API integration is needed.
+  2. Relevant ST context surfaces remain unchanged: `eventSource`/`eventTypes` and WI reload paths that already trigger list rerenders (from `WORLDINFO_UPDATED` / `WORLDINFO_SETTINGS_UPDATED` handling in extension runtime).
+  3. Relevant context functions exposed by ST (`loadWorldInfo`, `saveWorldInfo`) are not touched because this issue does not alter WI data, only DOM/CSS alignment.
+  4. Host-provided runtime classes/assets already in use (`fa-*`, ST checkbox styling) are reused; `/vendor/SillyTavern` remains reference-only.
 
 ### Decision Points
-  1. Spacer strategy: use a folder-only placeholder lane that mirrors the book source-links lane width, instead of shifting real controls with ad-hoc margins.
-  2. Alignment anchor: treat the active-toggle column as the primary anchor and align by right edge, independent of whether source icons are present on a book.
-  3. Scope of layout rule: apply at base row selectors so alignment remains stable during filtering, searching, and folder collapse/expand states.
+  1. Spacer placement: insert the folder spacer before `.stwid--folderActiveToggle` (not before add/menu/toggle) so the active checkbox column is the alignment anchor.
+  2. Lane sizing source: reuse existing book action/source-link geometry where possible; only introduce minimal new scoped CSS if direct reuse cannot produce stable alignment.
+  3. Alignment metric: align by the active checkbox right edge (explicit requirement), not by folder/book action container left edge.
+  4. Scope: enforce at base row selectors so alignment holds in normal, filtered (`stwid--filter-*`), and collapsed folder states.
 
 ### Evidence-based fix
-  1. Add a small placeholder node in folder header actions in `createFolderDom(...)` so folder rows always include a source-lane equivalent before their active toggle.
-  2. In `style.css`, introduce shared control-lane sizing (via existing row/action selectors and minimal new scoped selectors) to keep book and folder toggle columns at the same right-edge coordinate.
-  3. Keep existing behavior and interaction unchanged (folder toggle logic, menu actions, active state changes, visibility filters); only DOM lane reservation + layout rules are adjusted.
+  1. In `createFolderDom(...)`, add a dedicated folder source-lane placeholder element before `activeToggle` and mark it non-interactive (`aria-hidden`, no click handlers).
+  2. In `style.css`, map that placeholder to the same effective lane width used by book source-links/action spacing so folder active checkboxes land on the same right-edge column as book active checkboxes.
+  3. Keep existing folder logic intact (`updateActiveToggle`, folder toggle/menu/add handlers, drag/drop hooks); only header markup order and lane styling are adjusted.
+  4. Preserve existing book behavior in `renderBook(...)` (including `.stwid--sourceLinks.stwid--isEmpty` behavior) unless a tiny selector adjustment is strictly required for stable shared lane sizing.
 
 ### Risks/cons
-  1. Fixed/shared lane sizing can compress folder title space on narrow widths if not tuned to current responsive constraints.
-  2. If spacer width does not exactly match book source-links lane behavior, alignment may improve in one state but drift in others.
-  3. Because folder and book controls are rendered by different modules, future UI changes in one module can reintroduce drift unless both selectors stay coupled.
+  1. If spacer width is overestimated, folder title/counter space can shrink on narrow list widths.
+  2. If spacer width underestimates actual book source-link lane geometry, alignment can still drift when source icons are visible on books.
+  3. Because folder and book header controls are defined in separate modules, future control-order changes in one module can silently break column parity.
 
 ## TASK CHECKLIST
   Smallest Change Set Checklist:
-  [ ] In `src/lorebookFolders.js`, add a folder-header spacer element positioned before `stwid--folderActiveToggle` to reserve the source-icon lane.
-  [ ] In `style.css`, add/update scoped rules so the folder spacer uses the same effective lane width as the book source-links lane.
-  [ ] In `style.css`, align folder/book active toggle columns to the same right-edge anchor without changing existing control behavior.
-  [ ] Verify that no filter/collapse/search state selector overrides the shared alignment rules for folder/book rows.
+  [ ] In `src/lorebookFolders.js` `createFolderDom(...)`, insert a non-interactive folder source-lane placeholder immediately before `activeToggle`.
+  [ ] In `style.css`, add scoped selector(s) for the new folder source-lane class and size it to the same effective geometry as book source-links spacing.
+  [ ] In `style.css`, keep `.stwid--folderHeader.stwid--hasMenu .stwid--folderActiveToggle` as the right-edge anchor and adjust only the minimum spacing rules needed for parity with book rows.
+  [ ] Verify the active-checkbox column alignment in: root books, folder books, visible source-icon books, source-icon-empty books, filtered lists, and collapsed/expanded folders.
+  [ ] Confirm no functional regressions: folder active toggle states (`on`/`off`/`partial`/`empty`) and folder menu/add/collapse interactions remain unchanged.
