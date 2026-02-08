@@ -72,6 +72,37 @@ const createOrderHelperRenderer = ({
         }
     };
 
+    const closeOpenMultiselectDropdownMenus = (exceptMenu = null)=>{
+        for (const openMenu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--active')) {
+            if (openMenu === exceptMenu) continue;
+            const closeMenu = openMenu.stwidCloseMenu;
+            if (typeof closeMenu === 'function') {
+                closeMenu();
+                continue;
+            }
+            openMenu.classList.remove('stwid--active');
+        }
+    };
+
+    const decorateMultiselectDropdownInput = (input)=>{
+        input.classList.add('stwid--multiselectDropdownInput');
+        input.tabIndex = -1;
+        const icon = document.createElement('i');
+        icon.classList.add(
+            'fa-regular',
+            'fa-fw',
+            'stwid--multiselectDropdownOptionCheckbox',
+        );
+        const sync = ()=>{
+            icon.classList.toggle('fa-square-check', input.checked);
+            icon.classList.toggle('fa-square', !input.checked);
+        };
+        sync();
+        input.stwidSyncCheckboxIcon = sync;
+        input.addEventListener('change', sync);
+        return icon;
+    };
+
     const formatCharacterFilter = (entry)=>{
         const filter = entry?.characterFilter;
         if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
@@ -175,9 +206,9 @@ const createOrderHelperRenderer = ({
                         columnVisibilityWrap.append(labelWrap);
                     }
                     const menuWrap = document.createElement('div'); {
-                        menuWrap.classList.add('stwid--columnMenuWrap');
+                        menuWrap.classList.add('stwid--multiselectDropdownWrap');
                         const menuButton = document.createElement('div'); {
-                            menuButton.classList.add('menu_button', 'stwid--columnMenuButton');
+                            menuButton.classList.add('menu_button', 'stwid--multiselectDropdownButton');
                             menuButton.textContent = 'Select';
                             setTooltip(menuButton, 'Choose which columns are visible');
                             const caret = document.createElement('i'); {
@@ -187,14 +218,16 @@ const createOrderHelperRenderer = ({
                             menuWrap.append(menuButton);
                         }
                         const menu = document.createElement('div'); {
-                            menu.classList.add('stwid--columnMenu');
+                            menu.classList.add('stwid--multiselectDropdownMenu');
                             const closeMenu = ()=>{
                                 if (!menu.classList.contains('stwid--active')) return;
                                 menu.classList.remove('stwid--active');
                                 document.removeEventListener('click', handleOutsideClick);
                             };
+                            menu.stwidCloseMenu = closeMenu;
                             const openMenu = ()=>{
                                 if (menu.classList.contains('stwid--active')) return;
+                                closeOpenMultiselectDropdownMenus(menu);
                                 menu.classList.add('stwid--active');
                                 document.addEventListener('click', handleOutsideClick);
                             };
@@ -228,7 +261,7 @@ const createOrderHelperRenderer = ({
                                     const nextValue = Boolean(overrides[column.key]);
                                     orderHelperState.columns[column.key] = nextValue;
                                     const input = columnInputs.get(column.key);
-                                    if (input) input.checked = nextValue;
+                                    if (input) { input.checked = nextValue; input.stwidSyncCheckboxIcon?.(); }
                                 }
                                 localStorage.setItem(
                                     ORDER_HELPER_COLUMNS_STORAGE_KEY,
@@ -239,10 +272,10 @@ const createOrderHelperRenderer = ({
                             };
                             const addColumnAction = ({ label, icon, onClick })=>{
                                 const action = document.createElement('div'); {
-                                    action.classList.add('stwid--columnOption');
+                                    action.classList.add('stwid--multiselectDropdownOption');
                                     action.style.fontWeight = 'bold';
                                     const iconEl = document.createElement('i'); {
-                                        iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--columnOptionIcon');
+                                        iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--multiselectDropdownOptionIcon');
                                         action.append(iconEl);
                                     }
                                     const labelText = document.createElement('span'); {
@@ -267,7 +300,7 @@ const createOrderHelperRenderer = ({
                             });
                             for (const column of columns) {
                                 const option = document.createElement('label'); {
-                                    option.classList.add('stwid--columnOption');
+                                    option.classList.add('stwid--multiselectDropdownOption');
                                     const input = document.createElement('input'); {
                                         input.type = 'checkbox';
                                         input.checked = Boolean(orderHelperState.columns[column.key]);
@@ -280,7 +313,7 @@ const createOrderHelperRenderer = ({
                                             );
                                             applyOrderHelperColumnVisibility(body);
                                         });
-                                        option.append(input);
+                                        option.append(input, decorateMultiselectDropdownInput(input));
                                     }
                                     option.append(column.label);
                                     menu.append(option);
@@ -658,7 +691,7 @@ const createOrderHelperRenderer = ({
                                             const filterWrap = document.createElement('div'); {
                                                 filterWrap.classList.add('stwid--columnFilter');
                                                 const menuWrap = document.createElement('div'); {
-                                                    menuWrap.classList.add('stwid--columnMenuWrap');
+                                                    menuWrap.classList.add('stwid--multiselectDropdownWrap');
                                                     const menuButton = document.createElement('div'); {
                                                         menuButton.classList.add(
                                                             'menu_button',
@@ -666,19 +699,21 @@ const createOrderHelperRenderer = ({
                                                             'fa-fw',
                                                             'fa-filter',
                                                             'stwid--orderFilterButton',
-                                                            'stwid--columnMenuButton',
+                                                            'stwid--multiselectDropdownButton',
                                                         );
                                                         menuWrap.append(menuButton);
                                                     }
                                                     const menu = document.createElement('div'); {
-                                                        menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.add('stwid--multiselectDropdownMenu');
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
                                                             menu.classList.remove('stwid--active');
                                                             document.removeEventListener('click', handleOutsideClick);
                                                         };
-                                                        const openMenu = ()=>{
+                                                            menu.stwidCloseMenu = closeMenu;
+                                                            const openMenu = ()=>{
                                                             if (menu.classList.contains('stwid--active')) return;
+                                                            closeOpenMultiselectDropdownMenus(menu);
                                                             menu.classList.add('stwid--active');
                                                             document.addEventListener('click', handleOutsideClick);
                                                         };
@@ -707,7 +742,7 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         for (const optionData of strategyOptions) {
                                                             const option = document.createElement('label'); {
-                                                                option.classList.add('stwid--columnOption');
+                                                                option.classList.add('stwid--multiselectDropdownOption');
                                                                 const input = document.createElement('input'); {
                                                                     input.type = 'checkbox';
                                                                     input.checked = orderHelperState.filters.strategy.includes(optionData.value);
@@ -722,7 +757,7 @@ const createOrderHelperRenderer = ({
                                                                         }
                                                                         updateStrategyFilters();
                                                                     });
-                                                                    option.append(input);
+                                                                    option.append(input, decorateMultiselectDropdownInput(input));
                                                                 }
                                                                 option.append(optionData.label);
                                                                 menu.append(option);
@@ -756,7 +791,7 @@ const createOrderHelperRenderer = ({
                                             const filterWrap = document.createElement('div'); {
                                                 filterWrap.classList.add('stwid--columnFilter');
                                                 const menuWrap = document.createElement('div'); {
-                                                    menuWrap.classList.add('stwid--columnMenuWrap');
+                                                    menuWrap.classList.add('stwid--multiselectDropdownWrap');
                                                     const menuButton = document.createElement('div'); {
                                                         menuButton.classList.add(
                                                             'menu_button',
@@ -764,19 +799,21 @@ const createOrderHelperRenderer = ({
                                                             'fa-fw',
                                                             'fa-filter',
                                                             'stwid--orderFilterButton',
-                                                            'stwid--columnMenuButton',
+                                                            'stwid--multiselectDropdownButton',
                                                         );
                                                         menuWrap.append(menuButton);
                                                     }
                                                     const menu = document.createElement('div'); {
-                                                        menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.add('stwid--multiselectDropdownMenu');
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
                                                             menu.classList.remove('stwid--active');
                                                             document.removeEventListener('click', handleOutsideClick);
                                                         };
-                                                        const openMenu = ()=>{
+                                                            menu.stwidCloseMenu = closeMenu;
+                                                            const openMenu = ()=>{
                                                             if (menu.classList.contains('stwid--active')) return;
+                                                            closeOpenMultiselectDropdownMenus(menu);
                                                             menu.classList.add('stwid--active');
                                                             document.addEventListener('click', handleOutsideClick);
                                                         };
@@ -805,7 +842,7 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         for (const optionData of positionOptions) {
                                                             const option = document.createElement('label'); {
-                                                                option.classList.add('stwid--columnOption');
+                                                                option.classList.add('stwid--multiselectDropdownOption');
                                                                 const input = document.createElement('input'); {
                                                                     input.type = 'checkbox';
                                                                     input.checked = orderHelperState.filters.position.includes(optionData.value);
@@ -820,7 +857,7 @@ const createOrderHelperRenderer = ({
                                                                         }
                                                                         updatePositionFilters();
                                                                     });
-                                                                    option.append(input);
+                                                                    option.append(input, decorateMultiselectDropdownInput(input));
                                                                 }
                                                                 option.append(optionData.label);
                                                                 menu.append(option);
@@ -854,7 +891,7 @@ const createOrderHelperRenderer = ({
                                             const filterWrap = document.createElement('div'); {
                                                 filterWrap.classList.add('stwid--columnFilter');
                                                 const menuWrap = document.createElement('div'); {
-                                                    menuWrap.classList.add('stwid--columnMenuWrap');
+                                                    menuWrap.classList.add('stwid--multiselectDropdownWrap');
                                                     const menuButton = document.createElement('div'); {
                                                         menuButton.classList.add(
                                                             'menu_button',
@@ -862,19 +899,21 @@ const createOrderHelperRenderer = ({
                                                             'fa-fw',
                                                             'fa-filter',
                                                             'stwid--orderFilterButton',
-                                                            'stwid--columnMenuButton',
+                                                            'stwid--multiselectDropdownButton',
                                                         );
                                                         menuWrap.append(menuButton);
                                                     }
                                                     const menu = document.createElement('div'); {
-                                                        menu.classList.add('stwid--columnMenu');
+                                                        menu.classList.add('stwid--multiselectDropdownMenu');
                                                         const closeMenu = ()=>{
                                                             if (!menu.classList.contains('stwid--active')) return;
                                                             menu.classList.remove('stwid--active');
                                                             document.removeEventListener('click', handleOutsideClick);
                                                         };
-                                                        const openMenu = ()=>{
+                                                            menu.stwidCloseMenu = closeMenu;
+                                                            const openMenu = ()=>{
                                                             if (menu.classList.contains('stwid--active')) return;
+                                                            closeOpenMultiselectDropdownMenus(menu);
                                                             menu.classList.add('stwid--active');
                                                             document.addEventListener('click', handleOutsideClick);
                                                         };
@@ -906,7 +945,7 @@ const createOrderHelperRenderer = ({
                                                         };
                                                         for (const optionData of getRecursionOptions()) {
                                                             const option = document.createElement('label'); {
-                                                                option.classList.add('stwid--columnOption');
+                                                                option.classList.add('stwid--multiselectDropdownOption');
                                                                 const input = document.createElement('input'); {
                                                                     input.type = 'checkbox';
                                                                     input.checked = orderHelperState.filters.recursion.includes(optionData.value);
@@ -921,7 +960,7 @@ const createOrderHelperRenderer = ({
                                                                         }
                                                                         updateRecursionFilters();
                                                                     });
-                                                                    option.append(input);
+                                                                    option.append(input, decorateMultiselectDropdownInput(input));
                                                                 }
                                                                 option.append(optionData.label);
                                                                 menu.append(option);
@@ -956,7 +995,7 @@ const createOrderHelperRenderer = ({
                                                 const filterWrap = document.createElement('div'); {
                                                     filterWrap.classList.add('stwid--columnFilter');
                                                     const menuWrap = document.createElement('div'); {
-                                                        menuWrap.classList.add('stwid--columnMenuWrap');
+                                                        menuWrap.classList.add('stwid--multiselectDropdownWrap');
                                                         const menuButton = document.createElement('div'); {
                                                             menuButton.classList.add(
                                                                 'menu_button',
@@ -964,19 +1003,21 @@ const createOrderHelperRenderer = ({
                                                                 'fa-fw',
                                                                 'fa-filter',
                                                                 'stwid--orderFilterButton',
-                                                                'stwid--columnMenuButton',
+                                                                'stwid--multiselectDropdownButton',
                                                             );
                                                             menuWrap.append(menuButton);
                                                         }
                                                         const menu = document.createElement('div'); {
-                                                            menu.classList.add('stwid--columnMenu');
+                                                            menu.classList.add('stwid--multiselectDropdownMenu');
                                                             const closeMenu = ()=>{
                                                                 if (!menu.classList.contains('stwid--active')) return;
                                                                 menu.classList.remove('stwid--active');
                                                                 document.removeEventListener('click', handleOutsideClick);
                                                             };
-                                                            const openMenu = ()=>{
+                                                                menu.stwidCloseMenu = closeMenu;
+                                                                const openMenu = ()=>{
                                                                 if (menu.classList.contains('stwid--active')) return;
+                                                                closeOpenMultiselectDropdownMenus(menu);
                                                                 menu.classList.add('stwid--active');
                                                                 document.addEventListener('click', handleOutsideClick);
                                                             };
@@ -1002,7 +1043,7 @@ const createOrderHelperRenderer = ({
                                                             const outletOptions = getOutletOptions();
                                                             for (const optionData of outletOptions) {
                                                                 const option = document.createElement('label'); {
-                                                                    option.classList.add('stwid--columnOption');
+                                                                    option.classList.add('stwid--multiselectDropdownOption');
                                                                     const input = document.createElement('input'); {
                                                                         input.type = 'checkbox';
                                                                         input.checked = orderHelperState.filters.outlet.includes(optionData.value);
@@ -1017,7 +1058,7 @@ const createOrderHelperRenderer = ({
                                                                             }
                                                                             updateOutletFilters();
                                                                         });
-                                                                        option.append(input);
+                                                                        option.append(input, decorateMultiselectDropdownInput(input));
                                                                     }
                                                                     option.append(optionData.label);
                                                                     menu.append(option);
@@ -1051,7 +1092,7 @@ const createOrderHelperRenderer = ({
                                                 const filterWrap = document.createElement('div'); {
                                                     filterWrap.classList.add('stwid--columnFilter');
                                                     const menuWrap = document.createElement('div'); {
-                                                        menuWrap.classList.add('stwid--columnMenuWrap');
+                                                        menuWrap.classList.add('stwid--multiselectDropdownWrap');
                                                         const menuButton = document.createElement('div'); {
                                                             menuButton.classList.add(
                                                                 'menu_button',
@@ -1059,19 +1100,21 @@ const createOrderHelperRenderer = ({
                                                                 'fa-fw',
                                                                 'fa-filter',
                                                                 'stwid--orderFilterButton',
-                                                                'stwid--columnMenuButton',
+                                                                'stwid--multiselectDropdownButton',
                                                             );
                                                             menuWrap.append(menuButton);
                                                         }
                                                         const menu = document.createElement('div'); {
-                                                            menu.classList.add('stwid--columnMenu');
+                                                            menu.classList.add('stwid--multiselectDropdownMenu');
                                                             const closeMenu = ()=>{
                                                                 if (!menu.classList.contains('stwid--active')) return;
                                                                 menu.classList.remove('stwid--active');
                                                                 document.removeEventListener('click', handleOutsideClick);
                                                             };
-                                                            const openMenu = ()=>{
+                                                                menu.stwidCloseMenu = closeMenu;
+                                                                const openMenu = ()=>{
                                                                 if (menu.classList.contains('stwid--active')) return;
+                                                                closeOpenMultiselectDropdownMenus(menu);
                                                                 menu.classList.add('stwid--active');
                                                                 document.addEventListener('click', handleOutsideClick);
                                                             };
@@ -1097,7 +1140,7 @@ const createOrderHelperRenderer = ({
                                                             const automationIdOptions = getAutomationIdOptions();
                                                             for (const optionData of automationIdOptions) {
                                                                 const option = document.createElement('label'); {
-                                                                    option.classList.add('stwid--columnOption');
+                                                                    option.classList.add('stwid--multiselectDropdownOption');
                                                                     const input = document.createElement('input'); {
                                                                         input.type = 'checkbox';
                                                                         input.checked = orderHelperState.filters.automationId.includes(optionData.value);
@@ -1112,7 +1155,7 @@ const createOrderHelperRenderer = ({
                                                                             }
                                                                             updateAutomationIdFilters();
                                                                         });
-                                                                        option.append(input);
+                                                                        option.append(input, decorateMultiselectDropdownInput(input));
                                                                     }
                                                                     option.append(optionData.label);
                                                                     menu.append(option);
@@ -1146,7 +1189,7 @@ const createOrderHelperRenderer = ({
                                                 const filterWrap = document.createElement('div'); {
                                                     filterWrap.classList.add('stwid--columnFilter');
                                                     const menuWrap = document.createElement('div'); {
-                                                        menuWrap.classList.add('stwid--columnMenuWrap');
+                                                        menuWrap.classList.add('stwid--multiselectDropdownWrap');
                                                         const menuButton = document.createElement('div'); {
                                                             menuButton.classList.add(
                                                                 'menu_button',
@@ -1154,19 +1197,21 @@ const createOrderHelperRenderer = ({
                                                                 'fa-fw',
                                                                 'fa-filter',
                                                                 'stwid--orderFilterButton',
-                                                                'stwid--columnMenuButton',
+                                                                'stwid--multiselectDropdownButton',
                                                             );
                                                             menuWrap.append(menuButton);
                                                         }
                                                         const menu = document.createElement('div'); {
-                                                            menu.classList.add('stwid--columnMenu');
+                                                            menu.classList.add('stwid--multiselectDropdownMenu');
                                                             const closeMenu = ()=>{
                                                                 if (!menu.classList.contains('stwid--active')) return;
                                                                 menu.classList.remove('stwid--active');
                                                                 document.removeEventListener('click', handleOutsideClick);
                                                             };
-                                                            const openMenu = ()=>{
+                                                                menu.stwidCloseMenu = closeMenu;
+                                                                const openMenu = ()=>{
                                                                 if (menu.classList.contains('stwid--active')) return;
+                                                                closeOpenMultiselectDropdownMenus(menu);
                                                                 menu.classList.add('stwid--active');
                                                                 document.addEventListener('click', handleOutsideClick);
                                                             };
@@ -1192,7 +1237,7 @@ const createOrderHelperRenderer = ({
                                                             const groupOptions = getGroupOptions();
                                                             for (const optionData of groupOptions) {
                                                                 const option = document.createElement('label'); {
-                                                                    option.classList.add('stwid--columnOption');
+                                                                    option.classList.add('stwid--multiselectDropdownOption');
                                                                     const input = document.createElement('input'); {
                                                                         input.type = 'checkbox';
                                                                         input.checked = orderHelperState.filters.group.includes(optionData.value);
@@ -1207,7 +1252,7 @@ const createOrderHelperRenderer = ({
                                                                             }
                                                                             updateGroupFilters();
                                                                         });
-                                                                        option.append(input);
+                                                                        option.append(input, decorateMultiselectDropdownInput(input));
                                                                     }
                                                                     option.append(optionData.label);
                                                                     menu.append(option);
