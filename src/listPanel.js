@@ -18,7 +18,6 @@ let searchEntriesInput;
 let filterActiveInput;
 let bookVisibilityMode = 'allActive';
 let bookVisibilitySelections = new Set();
-let bookVisibilityButtonLabel;
 let bookVisibilityMenu;
 let bookVisibilityChips;
 let loadListDebounced;
@@ -1584,15 +1583,6 @@ const setupFilter = (list)=>{
             }
         };
 
-        const getVisibilityButtonLabel = ()=>{
-            if (isAllActiveVisibility()) return getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE).label;
-            if (bookVisibilitySelections.size === 1) {
-                const [singleMode] = [...bookVisibilitySelections];
-                return getBookVisibilityOption(singleMode).label;
-            }
-            return `${bookVisibilitySelections.size} Sources`;
-        };
-
         const createBookVisibilityIcon = (option, extraClass = '')=>{
             const icon = document.createElement('i');
             icon.classList.add('fa-solid', 'fa-fw', option.icon);
@@ -1662,9 +1652,6 @@ const setupFilter = (list)=>{
                 state.cache[b].dom.root.classList.toggle('stwid--filter-active', hideByGlobalFilter);
                 state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
             }
-            if (bookVisibilityButtonLabel) {
-                bookVisibilityButtonLabel.textContent = getVisibilityButtonLabel();
-            }
             if (bookVisibilityMenu) {
                 for (const option of bookVisibilityMenu.querySelectorAll('.stwid--columnOption')) {
                     const optionMode = option.getAttribute('data-mode');
@@ -1673,6 +1660,10 @@ const setupFilter = (list)=>{
                         : bookVisibilitySelections.has(optionMode);
                     option.classList.toggle('stwid--active', isActive);
                     option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    const optionCheckbox = option.querySelector('.stwid--columnOptionCheckbox');
+                    if (optionCheckbox) {
+                        optionCheckbox.checked = isActive;
+                    }
                 }
             }
             renderVisibilityChips();
@@ -1681,10 +1672,6 @@ const setupFilter = (list)=>{
         state.applyActiveFilter = applyActiveFilter;
         const bookVisibility = document.createElement('div'); {
             bookVisibility.classList.add('stwid--bookVisibility');
-            const label = document.createElement('span');
-            label.classList.add('stwid--bookVisibilityLabel');
-            label.textContent = 'Book Visibility';
-            bookVisibility.append(label);
 
             const menuWrap = document.createElement('div');
             menuWrap.classList.add('stwid--columnMenuWrap');
@@ -1701,8 +1688,8 @@ const setupFilter = (list)=>{
             trigger.append(triggerIcon);
             const triggerLabel = document.createElement('span');
             triggerLabel.classList.add('stwid--bookVisibilityButtonLabel');
+            triggerLabel.textContent = 'Book Visibility';
             trigger.append(triggerLabel);
-            bookVisibilityButtonLabel = triggerLabel;
             menuWrap.append(trigger);
 
             const menu = document.createElement('div');
@@ -1715,6 +1702,14 @@ const setupFilter = (list)=>{
                 optionButton.classList.add('stwid--columnOption');
                 optionButton.setAttribute('data-mode', option.mode);
                 optionButton.setAttribute('aria-pressed', 'false');
+                if (option.mode !== BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
+                    const optionCheckbox = document.createElement('input');
+                    optionCheckbox.type = 'checkbox';
+                    optionCheckbox.classList.add('checkbox', 'stwid--columnOptionCheckbox');
+                    optionCheckbox.tabIndex = -1;
+                    optionCheckbox.setAttribute('aria-hidden', 'true');
+                    optionButton.append(optionCheckbox);
+                }
                 optionButton.append(createBookVisibilityIcon(option, 'stwid--columnOptionIcon'));
                 const optionLabel = document.createElement('span');
                 optionLabel.textContent = option.label;
@@ -1845,7 +1840,6 @@ const initListPanel = (options)=>{
     state = options;
     bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
     bookVisibilitySelections = new Set();
-    bookVisibilityButtonLabel = null;
     bookVisibilityMenu = null;
     bookVisibilityChips = null;
     for (const key of Object.keys(entrySearchCache)) {

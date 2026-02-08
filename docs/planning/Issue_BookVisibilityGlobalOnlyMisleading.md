@@ -138,3 +138,32 @@
   - `Book Visibility` now renders in its own filter row below the search row.
   - `Global/Chat/Persona/Character` now behave as multiselect filters; `All Active` is exclusive and resets manual selection.
   - `Global` now uses a globe icon (`fa-globe`) in the menu/chips.
+
+### 2) Book Visibility button text/affordance mismatch
+
+#### User Report
+  > "Remove stwid--bookVisibilityLabel. stwid--columnMenuWrap: change it to a dropdown menu button, and the default text must be 'Book Visibility' (the chips already show which ones are active). We need to add checkboxes to 'global, chat, persona and character' options, so the user knows they are multiselect."
+
+#### Mental Map
+  1. The user sees a separate text label (`stwid--bookVisibilityLabel`) plus a dropdown trigger, which duplicates the same concept and adds visual noise.
+  2. The current dropdown trigger text is state-driven (`Global`, `2 Sources`, etc.), while chips already show active filters; this causes redundant or conflicting status signals.
+  3. The expected interaction model is a stable control entrypoint: the trigger itself should read `Book Visibility` by default, and chips should be the only persistent state summary.
+  4. The menu currently highlights selected items via active styling/`aria-pressed`, but without checkbox affordance users may miss that options are multiselect.
+  5. Because selection logic is multiselect for `global/chat/persona/character` and exclusive for `allActive`, menu visuals should make that distinction explicit (checkboxes on multiselect options only).
+  6. This is a UI-language/affordance issue; filter computation (`applyActiveFilter()` with source flags), event timing (`refreshBookSourceLinks()` reapply), and core ST ownership boundaries remain unchanged.
+  7. The smallest safe change is to keep existing filter state variables and behavior, and only adjust the trigger text policy + option-row rendering in `setupFilter()` and local CSS selectors.
+
+#### TASK CHECKLIST
+  Smallest Change Set Checklist:
+  [x] In `src/listPanel.js`, remove the standalone `stwid--bookVisibilityLabel` element from the Book Visibility row.
+  [x] In `src/listPanel.js`, keep the dropdown trigger as the main control and set its label text to constant `Book Visibility` (do not mirror active selections there).
+  [x] In `src/listPanel.js`, render a checkbox control for `Global`, `Chat`, `Persona`, and `Character` options inside the menu, bound to existing multiselect state.
+  [x] In `src/listPanel.js`, keep `All Active` as exclusive and without a multiselect checkbox affordance.
+  [x] In `src/listPanel.js`, keep chips as the active-selection indicator and ensure chip rendering remains source-of-truth for visible state summary.
+  [x] In `style.css`, remove/reduce now-unused label styling (`.stwid--bookVisibilityLabel`) and adjust menu option layout to align icon + checkbox + text without changing unrelated controls.
+  [x] In `style.css`, ensure focus/hover styles remain consistent with existing menu/button patterns.
+
+#### AFTER IMPLEMENTATION NOTES
+  - The Book Visibility row no longer renders a separate text label.
+  - The dropdown trigger now has stable text (`Book Visibility`), while chips remain the active-state summary.
+  - Multiselect options (`Global`, `Chat`, `Persona`, `Character`) now show checkbox affordance in the menu; `All Active` stays exclusive.

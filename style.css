@@ -188,11 +188,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
   flex-wrap: wrap;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--bookVisibilityLabel {
-  color: var(--SmartThemeEmColor);
-  font-size: 0.85em;
-}
-
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuWrap {
   position: relative;
   display: inline-flex;
@@ -259,6 +254,12 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionIcon {
   color: var(--customThemeColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionCheckbox {
+  width: 0.85em;
+  height: 0.85em;
+  pointer-events: none;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChips {
