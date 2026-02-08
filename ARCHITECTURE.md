@@ -49,7 +49,7 @@
   - Renders the left panel (folders + books + entry lists)
   - Control row: create book, create folder, import book, import folder, refresh
   - Search matches books and optionally entries (title + keys)
-  - Book visibility filter (`All Active`, `Global`, `Chat`, `Persona`, `Character`) with inline chips
+  - Book visibility filter (`All Active` exclusive preset + multi-select `Global`/`Chat`/`Persona`/`Character`) with inline chips
   - Legacy global `Active` filter retained as additive (AND) behavior
   - Selection system:
     - Click selects

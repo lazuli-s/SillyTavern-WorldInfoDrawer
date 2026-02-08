@@ -152,9 +152,25 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--active {
 /* Search / active filter row */
 body.stwid-- #WorldInfo .stwid--list .stwid--filter {
   display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  align-items: stretch;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterRow {
+  display: flex;
   gap: 0.75em;
   align-items: center;
   flex-wrap: wrap;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterRow--visibility {
+  padding-top: 0.1em;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterRow--search .stwid--search {
+  flex: 1 1 12em;
+  min-width: 10em;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--searchEntries,

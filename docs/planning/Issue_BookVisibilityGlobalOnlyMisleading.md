@@ -107,3 +107,34 @@
   - Success looks like: list reacts without manual refresh and row source icons stay correct.
 - Use search (with and without `Entries`) while changing visibility mode; confirm search behavior remains unchanged.
   - Success looks like: search still filters as before, on top of visibility filtering.
+
+## NEW ISSUES/FIXES AFTER IMPLEMENTATION
+
+### 1) Book Visibility control layout and selection model mismatch
+
+#### User Report
+  > "The css is bad. I want this new feature to be on it's own SEPARATE ROW. Change the global icon to a 'world globe'. Global, chat, persona and character must be all MULTISELECT (except all active option)"
+
+#### Mental Map
+  1. The user opens the filter area and sees the new `Book Visibility` control mixed into the same row as search/options, which feels visually crowded and harder to scan.
+  2. The control currently behaves like a single-choice mode (`bookVisibilityMode`), so selecting one source (for example `Chat`) replaces the previous one instead of combining sources.
+  3. The user expectation is category-combination behavior: `Global`, `Chat`, `Persona`, and `Character` should be selectable together as a set.
+  4. The current `All Active` option is a union preset (`global OR chat OR persona OR character`) and is conceptually different from manual multi-select combinations, so it should remain exclusive.
+  5. The icon language currently uses a toggle icon for `Global` (`fa-toggle-on`), but the user expects semantic consistency with source meaning (world/global scope), so a globe icon is clearer.
+  6. Filtering is applied in `applyActiveFilter()` and row visibility is class-based (`stwid--filter-active`, `stwid--filter-visibility`), so this bug is primarily UI-state modeling and filter-condition composition, not data persistence.
+  7. Source-link updates already trigger re-filtering through `refreshBookSourceLinks()` in `index.js`, so once selection model is corrected, timing/event wiring should continue to work without new event surfaces.
+
+#### TASK CHECKLIST
+  Smallest Change Set Checklist:
+  [x] In `src/listPanel.js`, replace single `bookVisibilityMode` state with a multi-select source set for `global/chat/persona/character`, plus an explicit `allActive` exclusive mode.
+  [x] In `src/listPanel.js`, update the visibility menu option behavior so `All Active` clears manual selections, and manual selections disable `All Active`.
+  [x] In `src/listPanel.js`, update `applyActiveFilter()` conditions to match multi-select semantics (`show if any selected source flag matches`) while preserving legacy `Active` checkbox as additive AND filter.
+  [x] In `src/listPanel.js`, switch the `Global` option/chip icon from toggle to globe (`fa-globe` or `fa-earth-americas`, whichever matches existing icon set usage).
+  [x] In `style.css`, move Book Visibility UI into its own dedicated filter row container under the current search row using existing spacing/tokens.
+  [x] In `style.css`, adjust chips/menu styles for the two-row layout so wrapping and focus behavior remain readable on narrow widths.
+  [x] In this markdown file, mark checklist completion and append post-implementation notes for this new issue block.
+
+#### AFTER IMPLEMENTATION NOTES
+  - `Book Visibility` now renders in its own filter row below the search row.
+  - `Global/Chat/Persona/Character` now behave as multiselect filters; `All Active` is exclusive and resets manual selection.
+  - `Global` now uses a globe icon (`fa-globe`) in the menu/chips.

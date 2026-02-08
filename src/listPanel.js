@@ -17,6 +17,7 @@ let searchInput;
 let searchEntriesInput;
 let filterActiveInput;
 let bookVisibilityMode = 'allActive';
+let bookVisibilitySelections = new Set();
 let bookVisibilityButtonLabel;
 let bookVisibilityMenu;
 let bookVisibilityChips;
@@ -87,6 +88,7 @@ const SOURCE_ICON_DEFINITION_MAP = Object.freeze(
 );
 const BOOK_VISIBILITY_MODES = Object.freeze({
     ALL_ACTIVE: 'allActive',
+    CUSTOM: 'custom',
     GLOBAL: 'global',
     CHAT: 'chat',
     PERSONA: 'persona',
@@ -94,10 +96,16 @@ const BOOK_VISIBILITY_MODES = Object.freeze({
 });
 const BOOK_VISIBILITY_OPTIONS = Object.freeze([
     { mode:BOOK_VISIBILITY_MODES.ALL_ACTIVE, icon:'fa-layer-group', label:'All Active' },
-    { mode:BOOK_VISIBILITY_MODES.GLOBAL, icon:'fa-toggle-on', label:'Global' },
+    { mode:BOOK_VISIBILITY_MODES.GLOBAL, icon:'fa-globe', label:'Global' },
     { mode:BOOK_VISIBILITY_MODES.CHAT, icon:SOURCE_ICON_DEFINITION_MAP.chat.icon, label:'Chat' },
     { mode:BOOK_VISIBILITY_MODES.PERSONA, icon:SOURCE_ICON_DEFINITION_MAP.persona.icon, label:'Persona' },
     { mode:BOOK_VISIBILITY_MODES.CHARACTER, icon:SOURCE_ICON_DEFINITION_MAP.character.icon, label:'Character' },
+]);
+const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
+    BOOK_VISIBILITY_MODES.GLOBAL,
+    BOOK_VISIBILITY_MODES.CHAT,
+    BOOK_VISIBILITY_MODES.PERSONA,
+    BOOK_VISIBILITY_MODES.CHARACTER,
 ]);
 
 const setCollapseState = (name, isCollapsed)=>{
@@ -1450,6 +1458,10 @@ const updateFolderActiveToggles = ()=>{
 
 const setupFilter = (list)=>{
     const filter = document.createElement('div'); {
+        const searchRow = document.createElement('div');
+        searchRow.classList.add('stwid--filterRow', 'stwid--filterRow--search');
+        const visibilityRow = document.createElement('div');
+        visibilityRow.classList.add('stwid--filterRow', 'stwid--filterRow--visibility');
         const setQueryFiltered = (element, isFiltered)=>{
             if (!element) return;
             if (isFiltered) {
@@ -1528,7 +1540,7 @@ const setupFilter = (list)=>{
             search.addEventListener('input', ()=>{
                 applySearchFilterDebounced();
             });
-            filter.append(search);
+            searchRow.append(search);
         }
         const searchEntries = document.createElement('label'); {
             searchEntries.classList.add('stwid--searchEntries');
@@ -1542,10 +1554,44 @@ const setupFilter = (list)=>{
                 searchEntries.append(inp);
             }
             searchEntries.append('Entries');
-            filter.append(searchEntries);
+            searchRow.append(searchEntries);
         }
         const getBookVisibilityOption = (mode)=>
             BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
+
+        const isAllActiveVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+
+        const setAllActiveVisibility = ()=>{
+            bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+            bookVisibilitySelections.clear();
+        };
+
+        const toggleVisibilitySelection = (mode)=>{
+            if (!BOOK_VISIBILITY_MULTISELECT_MODES.includes(mode)) return;
+            if (isAllActiveVisibility()) {
+                bookVisibilityMode = BOOK_VISIBILITY_MODES.CUSTOM;
+                bookVisibilitySelections.clear();
+                bookVisibilitySelections.add(mode);
+                return;
+            }
+            if (bookVisibilitySelections.has(mode)) {
+                bookVisibilitySelections.delete(mode);
+            } else {
+                bookVisibilitySelections.add(mode);
+            }
+            if (bookVisibilitySelections.size === 0) {
+                setAllActiveVisibility();
+            }
+        };
+
+        const getVisibilityButtonLabel = ()=>{
+            if (isAllActiveVisibility()) return getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE).label;
+            if (bookVisibilitySelections.size === 1) {
+                const [singleMode] = [...bookVisibilitySelections];
+                return getBookVisibilityOption(singleMode).label;
+            }
+            return `${bookVisibilitySelections.size} Sources`;
+        };
 
         const createBookVisibilityIcon = (option, extraClass = '')=>{
             const icon = document.createElement('i');
@@ -1559,15 +1605,28 @@ const setupFilter = (list)=>{
         const renderVisibilityChips = ()=>{
             if (!bookVisibilityChips) return;
             bookVisibilityChips.innerHTML = '';
-            const visibilityOption = getBookVisibilityOption(bookVisibilityMode);
-
-            const visibilityChip = document.createElement('span');
-            visibilityChip.classList.add('stwid--visibilityChip');
-            visibilityChip.append(createBookVisibilityIcon(visibilityOption, 'stwid--icon'));
-            const visibilityLabel = document.createElement('span');
-            visibilityLabel.textContent = visibilityOption.label;
-            visibilityChip.append(visibilityLabel);
-            bookVisibilityChips.append(visibilityChip);
+            if (isAllActiveVisibility()) {
+                const visibilityOption = getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE);
+                const visibilityChip = document.createElement('span');
+                visibilityChip.classList.add('stwid--visibilityChip');
+                visibilityChip.append(createBookVisibilityIcon(visibilityOption, 'stwid--icon'));
+                const visibilityLabel = document.createElement('span');
+                visibilityLabel.textContent = visibilityOption.label;
+                visibilityChip.append(visibilityLabel);
+                bookVisibilityChips.append(visibilityChip);
+            } else {
+                for (const mode of BOOK_VISIBILITY_MULTISELECT_MODES) {
+                    if (!bookVisibilitySelections.has(mode)) continue;
+                    const option = getBookVisibilityOption(mode);
+                    const chip = document.createElement('span');
+                    chip.classList.add('stwid--visibilityChip');
+                    chip.append(createBookVisibilityIcon(option, 'stwid--icon'));
+                    const chipLabel = document.createElement('span');
+                    chipLabel.textContent = option.label;
+                    chip.append(chipLabel);
+                    bookVisibilityChips.append(chip);
+                }
+            }
 
             if (filterActiveInput?.checked) {
                 const activeChip = document.createElement('span');
@@ -1591,22 +1650,29 @@ const setupFilter = (list)=>{
         const applyActiveFilter = ()=>{
             const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
             const selectedLookup = new Set(selected ?? []);
-            const visibilityOption = getBookVisibilityOption(bookVisibilityMode);
-            bookVisibilityMode = visibilityOption.mode;
             const isLegacyGlobalFilter = Boolean(filterActiveInput?.checked);
+            const isAllActive = isAllActiveVisibility();
             for (const b of Object.keys(state.cache)) {
                 const flags = getBookVisibilityFlags(b, selectedLookup);
                 const hideByGlobalFilter = isLegacyGlobalFilter && !flags.global;
-                const hideByVisibilityFilter = !flags[bookVisibilityMode];
+                const visibilityMatch = isAllActive
+                    ? flags.allActive
+                    : BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>bookVisibilitySelections.has(mode) && flags[mode]);
+                const hideByVisibilityFilter = !visibilityMatch;
                 state.cache[b].dom.root.classList.toggle('stwid--filter-active', hideByGlobalFilter);
                 state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
             }
             if (bookVisibilityButtonLabel) {
-                bookVisibilityButtonLabel.textContent = visibilityOption.label;
+                bookVisibilityButtonLabel.textContent = getVisibilityButtonLabel();
             }
             if (bookVisibilityMenu) {
                 for (const option of bookVisibilityMenu.querySelectorAll('.stwid--columnOption')) {
-                    option.classList.toggle('stwid--active', option.getAttribute('data-mode') === visibilityOption.mode);
+                    const optionMode = option.getAttribute('data-mode');
+                    const isActive = optionMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE
+                        ? isAllActive
+                        : bookVisibilitySelections.has(optionMode);
+                    option.classList.toggle('stwid--active', isActive);
+                    option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
                 }
             }
             renderVisibilityChips();
@@ -1648,13 +1714,17 @@ const setupFilter = (list)=>{
                 optionButton.type = 'button';
                 optionButton.classList.add('stwid--columnOption');
                 optionButton.setAttribute('data-mode', option.mode);
+                optionButton.setAttribute('aria-pressed', 'false');
                 optionButton.append(createBookVisibilityIcon(option, 'stwid--columnOptionIcon'));
                 const optionLabel = document.createElement('span');
                 optionLabel.textContent = option.label;
                 optionButton.append(optionLabel);
                 optionButton.addEventListener('click', ()=>{
-                    bookVisibilityMode = option.mode;
-                    closeBookVisibilityMenu();
+                    if (option.mode === BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
+                        setAllActiveVisibility();
+                    } else {
+                        toggleVisibilitySelection(option.mode);
+                    }
                     applyActiveFilter();
                 });
                 menu.append(optionButton);
@@ -1671,7 +1741,7 @@ const setupFilter = (list)=>{
                     trigger.setAttribute('aria-expanded', 'true');
                 }
             });
-            filter.append(bookVisibility);
+            visibilityRow.append(bookVisibility);
 
             const chips = document.createElement('div');
             chips.classList.add('stwid--visibilityChips');
@@ -1698,8 +1768,9 @@ const setupFilter = (list)=>{
                 filterActive.append(inp);
             }
             filterActive.append('Active');
-            filter.append(filterActive);
+            searchRow.append(filterActive);
         }
+        filter.append(searchRow, visibilityRow);
         applyActiveFilter();
         list.append(filter);
     }
@@ -1773,6 +1844,7 @@ const getSelectionState = ()=>({
 const initListPanel = (options)=>{
     state = options;
     bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+    bookVisibilitySelections = new Set();
     bookVisibilityButtonLabel = null;
     bookVisibilityMenu = null;
     bookVisibilityChips = null;
