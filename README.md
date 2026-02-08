@@ -1,4 +1,4 @@
-# SillyTavern-WorldInfoDrawer
+# World Info Drawer - A SillyTavern Extension
 
 This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTavern. I've been using this extension since I discovered SillyTavern, but I felt it was missing some features that make working with lorebooks much easier.
 
@@ -9,28 +9,40 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 - 📁 **LOREBOOK FOLDERS** for organizing your collection of lorebooks. You can create folders, export and import entire folder sets, and manage folder actions from a context menu.
 - 📇 **ORDER HELPER** panel for mass updates. Drag to reorder entries, filter by strategy/position/recursion/outlet/automation ID/inclusion group, choose which columns to show, and bulk-apply changes in order.
 
+## Installation
+
+1. Paste this link into SillyTavern extensions panel:
+   ```
+   https://github.com/lazuli-s/SillyTavern-WorldInfoDrawer
+   ```
+2. Restart SillyTavern.
+
 ## Main features
 
-### Better editing flow
-- Full-screen World Info drawer, so you can focus on editing without the cramped default panel and visualize books and entries more clearly.
-- CTRL click, SHIFT range select, and multi-select support for faster entry management, including moving entries across lorebooks more easily.
+### 🖥️ Better editing flow
+- Edit in a full-screen World Info drawer so you can focus on writing instead of fighting a cramped panel.
+- Manage many entries quickly with `Ctrl` click, `Shift` range select, and multi-select support.
+- Move selected entries between lorebooks with less clicking and less scrolling.
+- Use Book Visibility presets to control what appears in the list, with `All Books` as the default view.
+- Hover book source icons to see which active character or persona is linked to that lorebook.
 
 ### 📁 Lorebook folders
-- Create folders and group lorebooks in a cleaner structure.
-- Import and export many lorebooks at once when they are grouped in the same folder.
-- Folder actions from the menu: rename, delete, export, import into folder, and create book in folder.
-- Apply Order Helper to an entire folder scope when you want to reorder only that folder's active books.
+- Organize your lorebooks into folders to keep large projects clean and easy to navigate.
+- Import or export whole folder groups to move sets of books in one step.
+- Use folder actions (rename, delete, export, import, create book) from one menu.
+- Run Order Helper on a single folder scope when you only want to reorder books in that folder.
 
 ### 📇 Order Helper for bulk work
-- Table view for active entries with custom drag ordering.
-- Use it by scope: all active books, one book, or a folder scope.
-- Filter rows by strategy, position, recursion flags, outlet, automation ID, and inclusion group.
+- View active entries in a table and reorder them with drag-and-drop.
+- Choose your scope: all active books, one book, or one folder scope.
+- Filter by strategy, position, recursion flags, outlet, automation ID, and inclusion group to find exactly what you need.
 
-### Fill empty titles
-- Use "Fill empty titles" to automatically name entries that do not have titles yet.
+### 🏷️ Fill empty titles
+- Use `Fill empty titles` to auto-name entries that are still untitled, which makes large books easier to scan.
 
-### Custom sorting
-- Give each lorebook its own sorting preference, or use one global sorting override across all books.
+### 🔀 Custom sorting
+- Set sorting per lorebook when different books need different organization.
+- Or apply one global sorting override for a consistent order across all books.
 
 ## Screenshots
 
@@ -43,13 +55,6 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 ### Order Helper
 <img width="960" height="468" alt="order_helper" src="https://github.com/user-attachments/assets/d5d1f66f-bfa4-4548-b54c-d9da729b03d5" />
 
-## Installation
-
-1. Paste this link into SillyTavern extensions panel:
-   ```
-   https://github.com/lazuli-s/SillyTavern-WorldInfoDrawer
-   ```
-2. Restart SillyTavern.
 
 ## To-do list
 - Make the filter system easier to use.
@@ -69,25 +74,3 @@ A warning: I have no idea what I'm doing with my life, and this was completely v
 So if you find a bug or a potential issue, please tell me and I'll do my best to ask GPT 5.2 to fix it (or please do the git thing if you actually know something about coding and want to fix the issue yourself).
 
 Please tell me if you have any ideas or suggestions as well. I think World Info is probably the best ST feature so far, and I've probably spent a very shameful amount of hours editing lore on this extension drawer. I'm very glad Lenny made this, and I hope more users become aware of this great extension.
-
-## Updates
-
-### Version 2.2.0
-- New feature: 📁 **LOREBOOK FOLDERS**. Added a full folder system for lorebooks, including folder grouping, folder import/create controls, and drag-and-drop moving of books between folders and root.
-   - Added folder-level active toggles with tri-state behavior, folder context actions (rename/delete/export/import/create book), and folder collapse-state persistence.
-   - Added folder-scoped Order Helper support so you can apply ordering to a specific folder's active books.
-- 📇 **EXPANDED ORDER HELPER** with filters (strategy, position, recursion flags, outlet, automation ID, inclusion group), direct editing, move controls, and the option to choose which columns to show or hide.
-- Improved reliability in day-to-day editing: safer selection behavior, better protection against accidental Delete key actions while typing, better editor dirty-state handling during refresh, and more reliable folder import/update syncing. Compared to the previous release, this version is more reliable and performs better.
-
-### Version 2.1.0
-- The Order Helper is now more than just reordering: you can visualize all active entries in a table, and select which columns to show. Also added new columns such as Recursion settings, budget, Inclusion Groups, etc.
-- Added custom ordering: the order is manually defined inside the Order Helper by dragging entries.
-
-### Version 2.0.2
-- Reworked the Order Helper layout to make the controls and columns easier to scan.
-- Added an outlet name column and tightened column labels for clearer ordering context.
-- Made Order Helper comments clickable links to jump directly to entries.
-- Added a draggable splitter between the World Info list and editor, allowing to change the width.
-
-### Version 2.0.1
-- Added support to the extension ST Lorebook Ordering.

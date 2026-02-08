@@ -4,6 +4,7 @@ export const initEditorPanel = ({
     activationBlockParent,
     renderTemplateAsync,
     getWorldEntry,
+    buildSavePayload,
     cache,
     setCurrentEditor,
     getSelectFrom,
@@ -223,7 +224,10 @@ export const initEditorPanel = ({
         // getWorldEntry is the expensive step (template render + DOM construction).
         // Guard it so rapid clicking doesn't queue up wasted work.
         if (!isTokenCurrent()) return;
-        const editDom = (await getWorldEntry(name, { entries: cache[name].entries }, cache[name].entries[entry.uid]))[0];
+        const payload = buildSavePayload(name);
+        const payloadEntry = payload?.entries?.[entry.uid];
+        if (!payloadEntry) return;
+        const editDom = (await getWorldEntry(name, payload, payloadEntry))[0];
         const drawerToggle = editDom?.querySelector?.('.inline-drawer');
         if (drawerToggle) {
             $(drawerToggle).trigger('inline-drawer-toggle');
