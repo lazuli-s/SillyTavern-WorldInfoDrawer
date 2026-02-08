@@ -32,6 +32,9 @@
 |-- README.md
 |-- CHANGELOG.md
 |-- AGENTS.md
+|-- SILLYTAVERN_OWNERSHIP_BOUNDARY.md  # Ownership contract: vanilla ST vs extension responsibilities and safe integration surfaces
+|-- STYLE_GUIDE.md               # UI/CSS rules emphasizing reuse of existing SillyTavern styles before adding extension CSS
+|-- FEATURE_MAP.md               # Feature-to-module index showing where each behavior is implemented
 └-- ARCHITECTURE.md              # This document
 
 ### EXISTING MODULES AND RESPONSIBILITIES

@@ -114,7 +114,8 @@ const getVisibleFolderBookNames = (cache, folderName)=>getFolderBookNames(cache,
     const bookRoot = cache?.[name]?.dom?.root;
     if (!bookRoot) return false;
     const isFilteredOut = bookRoot.classList.contains('stwid--filter-query')
-        || bookRoot.classList.contains('stwid--filter-active');
+        || bookRoot.classList.contains('stwid--filter-active')
+        || bookRoot.classList.contains('stwid--filter-visibility');
     return !isFilteredOut;
 });
 

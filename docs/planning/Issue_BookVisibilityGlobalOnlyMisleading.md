@@ -194,3 +194,30 @@
 #### AFTER IMPLEMENTATION NOTES
   - Chips now wrap only inside the chips area.
   - The chips area remains aligned beside the `Book Visibility` button/help block instead of dropping below it.
+
+### 4) Book Visibility filters books but does not hide folders with no visible books
+
+#### User Report
+  > "when I select an option inside the book visibility, the list currently shows all folders, even the ones that have no active books. I want to change that - only show folders with active books when I set the book visibility."
+
+#### Mental Map
+  1. The user chooses a `Book Visibility` option (for example `Global`, `Chat`, `Persona`, or `Character`) expecting the list to narrow to only relevant content.
+  2. Book rows are filtered correctly in `src/listPanel.js` by `applyActiveFilter()`, which toggles `stwid--filter-visibility` on each `.stwid--book`.
+  3. Folder containers are created from folder registry/book metadata and remain rendered even when every child book in that folder is currently hidden by visibility filters.
+  4. This produces a UI mismatch: books disappear, but empty-looking folders still remain in the list, making the filter feel incomplete or misleading.
+  5. Folder active-toggle logic in `src/lorebookFolders.js` uses `getVisibleFolderBookNames(...)`, but that helper currently excludes only `stwid--filter-query` and `stwid--filter-active`; it does not treat `stwid--filter-visibility` as hidden.
+  6. Timing/event flow already re-runs filtering after source-link and settings updates (`refreshBookSourceLinks()` and `WORLDINFO_SETTINGS_UPDATED` paths call `listPanelApi.applyActiveFilter()`), so the main gap is folder-level visibility reconciliation after those filter passes.
+  7. `updateFolderActiveToggles()` currently updates checkbox state only; it does not hide/show folder roots based on whether any child books remain visible.
+  8. The expected behavior is: when Book Visibility is applied, folders with zero currently visible books should be hidden from the list, and reappear automatically when matching books become visible again.
+
+#### TASK CHECKLIST
+  Smallest Change Set Checklist:
+  [x] In `src/lorebookFolders.js`, update `getVisibleFolderBookNames(...)` so visibility-filtered books (`stwid--filter-visibility`) are treated as hidden, consistent with query/global filters.
+  [x] In `src/listPanel.js`, add a small folder-visibility reconciliation pass (reuse `folderDoms` + cache DOM state) that hides folder roots when they have zero visible books and shows them otherwise.
+  [x] In `src/listPanel.js`, call that folder-visibility pass wherever list filters are applied (`applyActiveFilter()` and search filter path) so folder visibility stays in sync with both visibility mode and search.
+  [x] Keep existing book filtering, source-link icon rendering, and event subscriptions unchanged; only extend folder presentation logic.
+  [ ] Validate behavior manually: switching Book Visibility modes should hide empty folders immediately and restore them when matching books return.
+
+#### AFTER IMPLEMENTATION NOTES
+  - Folder visibility now follows effective visible-book state (query + legacy active + book visibility filters).
+  - Folders with zero visible books are now hidden and re-shown automatically when matching books become visible again.

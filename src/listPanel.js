@@ -1456,10 +1456,26 @@ const refreshList = async()=>{
     }
 };
 
+const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--filter-query')
+    || bookRoot.classList.contains('stwid--filter-active')
+    || bookRoot.classList.contains('stwid--filter-visibility');
+
+const updateFolderVisibility = ()=>{
+    for (const folderDom of Object.values(folderDoms)) {
+        const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
+            if (!(child instanceof HTMLElement)) return false;
+            if (!child.classList.contains('stwid--book')) return false;
+            return !isBookDomFilteredOut(child);
+        });
+        folderDom.root.hidden = !hasVisibleBooks;
+    }
+};
+
 const updateFolderActiveToggles = ()=>{
     for (const folderDom of Object.values(folderDoms)) {
         folderDom.updateActiveToggle?.();
     }
+    updateFolderVisibility();
 };
 
 const setupFilter = (list)=>{
