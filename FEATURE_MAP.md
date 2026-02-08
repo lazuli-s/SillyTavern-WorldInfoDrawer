@@ -61,7 +61,8 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/listPanel.js
 - Delete selected entries (Del key) with save/update propagation → index.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.js
-- Book visibility filter (`All Active` exclusive preset + multi-select `Global`/`Chat`/`Persona`/`Character`) + legacy global `Active` additive filter → src/listPanel.js
+- Book visibility filter (`All Active` exclusive preset + multi-select `Global`/`Chat`/`Persona`/`Character`) + legacy global `Active` additive filter, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.js
+- Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
 
 ## Sorting & ordering
 
