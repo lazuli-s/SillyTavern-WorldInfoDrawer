@@ -1,4 +1,4 @@
-import { chat_metadata, characters, event_types, eventSource, getRequestHeaders, this_chid } from '../../../../script.js';
+import { chat_metadata, characters, event_types, eventSource, getRequestHeaders, name1, this_chid } from '../../../../script.js';
 import { extensionNames } from '../../../extensions.js';
 import { groups, selected_group } from '../../../group-chats.js';
 import { power_user } from '../../../power-user.js';
@@ -123,9 +123,19 @@ let lorebookSourceLinksSignature = '';
 
 const addCharacterLinkedBooks = (target, character, fallbackCharacterId = null)=>{
     if (!character || typeof character !== 'object') return;
+    const characterName = typeof character?.name === 'string' ? character.name.trim() : '';
+    const addBookLink = (worldName)=>{
+        if (typeof worldName !== 'string' || !worldName) return;
+        if (!target.has(worldName)) {
+            target.set(worldName, new Set());
+        }
+        if (characterName) {
+            target.get(worldName).add(characterName);
+        }
+    };
     const primaryWorld = character?.data?.extensions?.world;
     if (typeof primaryWorld === 'string' && primaryWorld) {
-        target.add(primaryWorld);
+        addBookLink(primaryWorld);
     }
 
     let avatarFileName = null;
@@ -141,17 +151,52 @@ const addCharacterLinkedBooks = (target, character, fallbackCharacterId = null)=
         : null;
     const extraBooks = Array.isArray(extraCharLore?.extraBooks) ? extraCharLore.extraBooks : [];
     for (const worldName of extraBooks) {
-        if (typeof worldName !== 'string' || !worldName) continue;
-        target.add(worldName);
+        addBookLink(worldName);
     }
 };
 
+const getActivePersonaName = ()=>{
+    const personaMap = power_user?.personas;
+    if (!personaMap || typeof personaMap !== 'object') return '';
+
+    const lockedPersonaAvatar = chat_metadata?.persona;
+    if (typeof lockedPersonaAvatar === 'string' && lockedPersonaAvatar) {
+        const lockedPersonaName = personaMap[lockedPersonaAvatar];
+        if (typeof lockedPersonaName === 'string' && lockedPersonaName.trim()) {
+            return lockedPersonaName.trim();
+        }
+    }
+
+    const currentLorebook = power_user?.persona_description_lorebook;
+    if (typeof currentLorebook === 'string' && currentLorebook) {
+        const descriptors = power_user?.persona_descriptions;
+        if (descriptors && typeof descriptors === 'object') {
+            for (const [avatar, descriptor] of Object.entries(descriptors)) {
+                if (descriptor?.lorebook !== currentLorebook) continue;
+                const mappedName = personaMap[avatar];
+                if (typeof mappedName === 'string' && mappedName.trim()) {
+                    return mappedName.trim();
+                }
+            }
+        }
+    }
+
+    if (typeof name1 === 'string' && name1.trim()) {
+        return name1.trim();
+    }
+    return '';
+};
+
 const buildLorebookSourceLinks = ()=>{
-    /**@type {{[book:string]:{character:boolean,chat:boolean,persona:boolean}}} */
+    /**@type {{[book:string]:{character:boolean,chat:boolean,persona:boolean,characterNames:string[],personaName:string}}} */
     const linksByBook = {};
     const allWorldNames = Array.isArray(world_names) ? world_names : [];
     for (const bookName of allWorldNames) {
-        linksByBook[bookName] = { ...EMPTY_BOOK_SOURCE_LINKS };
+        linksByBook[bookName] = {
+            ...EMPTY_BOOK_SOURCE_LINKS,
+            characterNames: [],
+            personaName: '',
+        };
     }
 
     const chatWorld = chat_metadata?.[METADATA_KEY];
@@ -162,9 +207,13 @@ const buildLorebookSourceLinks = ()=>{
     const personaWorld = power_user?.persona_description_lorebook;
     if (typeof personaWorld === 'string' && linksByBook[personaWorld]) {
         linksByBook[personaWorld].persona = true;
+        const activePersonaName = getActivePersonaName();
+        if (activePersonaName) {
+            linksByBook[personaWorld].personaName = activePersonaName;
+        }
     }
 
-    const characterBooks = new Set();
+    const characterBooks = new Map();
     if (selected_group) {
         const activeGroup = groups.find((group)=>group?.id == selected_group);
         const members = Array.isArray(activeGroup?.members) ? activeGroup.members : [];
@@ -176,9 +225,10 @@ const buildLorebookSourceLinks = ()=>{
         addCharacterLinkedBooks(characterBooks, characters[this_chid], this_chid);
     }
 
-    for (const worldName of characterBooks) {
+    for (const [worldName, characterNameSet] of characterBooks.entries()) {
         if (!linksByBook[worldName]) continue;
         linksByBook[worldName].character = true;
+        linksByBook[worldName].characterNames = [...characterNameSet];
     }
 
     return linksByBook;

@@ -221,3 +221,41 @@
 #### AFTER IMPLEMENTATION NOTES
   - Folder visibility now follows effective visible-book state (query + legacy active + book visibility filters).
   - Folders with zero visible books are now hidden and re-shown automatically when matching books become visible again.
+
+### 5) Source icon tooltip is too generic for character/persona-linked books
+
+#### User Report
+  > "make it so the 'stwid--sourceIcon' tooltip shows which character or persona they are linked to.
+Like: "Lorebook linked to character: Seraphina"
+"Lorebook linked to active persona: Elara""
+
+#### Mental Map
+  1. The user looks at the source icons on each book row to understand why that book is considered active in context.
+  2. Today, hovering those icons only shows generic text (`Character linked`, `Persona linked`) from `renderBookSourceLinks()` in `src/listPanel.js`, so the user does not learn *who* caused the link.
+  3. The UI is already showing the correct icon timing-wise, because `index.js` recomputes source links via `refreshBookSourceLinks()` whenever chat/character/persona-related events fire.
+  4. The data passed to the list is currently only booleans (`character/chat/persona`) from `buildLorebookSourceLinks()` in `index.js`, so `src/listPanel.js` cannot render specific names even if it wants to.
+  5. Character-linked books can come from either the current character or group members (`selected_group` path), so one book may be linked by more than one character at once.
+  6. Persona-linked books come from the active persona lorebook binding (`power_user.persona_description_lorebook`), so the tooltip needs persona display-name context in addition to the boolean flag.
+  7. The bug is not about filtering or activation rules; it is about missing explanatory text in tooltip copy for existing source icons.
+  8. The expected UX is: icon still indicates source type quickly, and tooltip gives concrete attribution (for example, `Lorebook linked to character: Seraphina` or `Lorebook linked to active persona: Elara`).
+  9. This should stay a small extension-only change: enrich source-link metadata in the existing source-link map and reuse current icon render/update paths.
+
+#### TASK CHECKLIST
+  Smallest Change Set Checklist:
+  [x] In `index.js`, extend `buildLorebookSourceLinks()` output to include optional attribution metadata (for example `characterNames[]`, `personaName`) while preserving existing boolean keys used by filters.
+  [x] In `index.js`, collect character attribution names from the same logic that marks character-linked books (single character or group members), deduplicated and stable in order.
+  [x] In `index.js`, resolve the active persona display name from existing ST context (with a safe fallback label when unavailable) when marking persona-linked books.
+  [x] In `src/listPanel.js`, update `renderBookSourceLinks()` to build tooltip/aria-label text from attribution metadata for `character` and `persona` icons, with current generic fallback when metadata is absent.
+  [x] In `src/listPanel.js`, keep icon set/class usage unchanged (`stwid--sourceIcon`, existing Font Awesome icons); only tooltip text behavior changes.
+  [x] Keep `refreshBookSourceLinks()` and `updateAllBookSourceLinks()` flow unchanged except for passing richer source-link payloads through existing APIs.
+  [ ] Validate manually: tooltip text updates correctly after chat switch, character/group switch, and persona switch without requiring page reload.
+
+#### AFTER IMPLEMENTATION NOTES
+  - `index.js` now enriches per-book source-link state with `characterNames` and `personaName` while keeping existing boolean keys unchanged for filtering.
+  - Character-linked attribution is deduplicated and ordered by discovery order from current character/group member resolution.
+  - Persona-linked attribution now resolves from active ST persona context with fallback behavior.
+  - `src/listPanel.js` now renders source icon tooltips/aria labels using the richer metadata:
+    - `Lorebook linked to character: <Name>`
+    - `Lorebook linked to characters: <Name1>, <Name2>, ...`
+    - `Lorebook linked to active persona: <Name>`
+  - Existing icon classes, icon set, and source-link refresh/filter reapplication flow are unchanged.

@@ -170,6 +170,28 @@ const normalizeBookSourceLinks = (links)=>({
     persona: Boolean(links?.persona),
 });
 
+const normalizeBookSourceLinkDetails = (links)=>({
+    characterNames: Array.isArray(links?.characterNames)
+        ? links.characterNames
+            .filter((name)=>typeof name === 'string' && name.trim())
+            .map((name)=>name.trim())
+        : [],
+    personaName: typeof links?.personaName === 'string' ? links.personaName.trim() : '',
+});
+
+const getSourceIconTooltip = (sourceKey, label, details)=>{
+    if (sourceKey === 'character' && details.characterNames.length === 1) {
+        return `Lorebook linked to character: ${details.characterNames[0]}`;
+    }
+    if (sourceKey === 'character' && details.characterNames.length > 1) {
+        return `Lorebook linked to characters: ${details.characterNames.join(', ')}`;
+    }
+    if (sourceKey === 'persona' && details.personaName) {
+        return `Lorebook linked to active persona: ${details.personaName}`;
+    }
+    return `${label} linked`;
+};
+
 const getBookVisibilityFlags = (name, selectedLookup = null)=>{
     const links = normalizeBookSourceLinks(state.getBookSourceLinks?.(name));
     const selected = selectedLookup instanceof Set
@@ -189,12 +211,14 @@ const renderBookSourceLinks = (sourceLinksContainer, links = null)=>{
     if (!sourceLinksContainer) return;
     sourceLinksContainer.innerHTML = '';
     const normalized = normalizeBookSourceLinks(links);
+    const details = normalizeBookSourceLinkDetails(links);
     for (const def of SOURCE_ICON_DEFINITIONS) {
         if (!normalized[def.key]) continue;
         const icon = document.createElement('i');
         icon.classList.add('stwid--sourceIcon', 'fa-solid', 'fa-fw', def.icon);
-        icon.title = `${def.label} linked`;
-        icon.setAttribute('aria-label', `${def.label} linked`);
+        const tooltip = getSourceIconTooltip(def.key, def.label, details);
+        icon.title = tooltip;
+        icon.setAttribute('aria-label', tooltip);
         sourceLinksContainer.append(icon);
     }
     sourceLinksContainer.classList.toggle('stwid--isEmpty', sourceLinksContainer.childElementCount === 0);
