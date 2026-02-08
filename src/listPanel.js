@@ -100,6 +100,13 @@ const BOOK_VISIBILITY_OPTIONS = Object.freeze([
     { mode:BOOK_VISIBILITY_MODES.PERSONA, icon:SOURCE_ICON_DEFINITION_MAP.persona.icon, label:'Persona' },
     { mode:BOOK_VISIBILITY_MODES.CHARACTER, icon:SOURCE_ICON_DEFINITION_MAP.character.icon, label:'Character' },
 ]);
+const BOOK_VISIBILITY_OPTION_TOOLTIPS = Object.freeze({
+    [BOOK_VISIBILITY_MODES.ALL_ACTIVE]: 'Show books active from any source (Global, Chat, Persona, or Character). This shows all books currently added to context by these sources.',
+    [BOOK_VISIBILITY_MODES.GLOBAL]: 'Include books enabled globally in World Info settings.',
+    [BOOK_VISIBILITY_MODES.CHAT]: 'Include books linked to the current chat.',
+    [BOOK_VISIBILITY_MODES.PERSONA]: 'Include books linked to the active persona.',
+    [BOOK_VISIBILITY_MODES.CHARACTER]: 'Include books linked to the current character (or all group members).',
+});
 const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
     BOOK_VISIBILITY_MODES.GLOBAL,
     BOOK_VISIBILITY_MODES.CHAT,
@@ -1603,6 +1610,8 @@ const setupFilter = (list)=>{
                 const visibilityLabel = document.createElement('span');
                 visibilityLabel.textContent = visibilityOption.label;
                 visibilityChip.append(visibilityLabel);
+                visibilityChip.title = `Active filter: ${visibilityOption.label}.`;
+                visibilityChip.setAttribute('aria-label', `Active filter: ${visibilityOption.label}.`);
                 bookVisibilityChips.append(visibilityChip);
             } else {
                 for (const mode of BOOK_VISIBILITY_MULTISELECT_MODES) {
@@ -1614,6 +1623,8 @@ const setupFilter = (list)=>{
                     const chipLabel = document.createElement('span');
                     chipLabel.textContent = option.label;
                     chip.append(chipLabel);
+                    chip.title = `Active filter: ${option.label}.`;
+                    chip.setAttribute('aria-label', `Active filter: ${option.label}.`);
                     bookVisibilityChips.append(chip);
                 }
             }
@@ -1679,7 +1690,7 @@ const setupFilter = (list)=>{
             const trigger = document.createElement('button');
             trigger.type = 'button';
             trigger.classList.add('menu_button', 'stwid--columnMenuButton');
-            trigger.title = 'Select which book source category is visible';
+            trigger.title = 'Select which book sources are visible in the list.';
             trigger.setAttribute('aria-label', 'Book visibility mode');
             trigger.setAttribute('aria-expanded', 'false');
             trigger.setAttribute('aria-haspopup', 'true');
@@ -1691,23 +1702,32 @@ const setupFilter = (list)=>{
             triggerLabel.textContent = 'Book Visibility';
             trigger.append(triggerLabel);
             menuWrap.append(trigger);
+            const helper = document.createElement('i');
+            helper.classList.add('fa-solid', 'fa-circle-question', 'stwid--bookVisibilityHelp');
+            helper.title = 'This only affects which books are shown in the list panel. It does not change which books are added to the prompt/context.';
+            helper.setAttribute('aria-label', helper.title);
+            helper.tabIndex = 0;
+            menuWrap.append(helper);
 
             const menu = document.createElement('div');
             menu.classList.add('stwid--columnMenu', 'stwid--bookVisibilityMenu');
             bookVisibilityMenu = menu;
 
             for (const option of BOOK_VISIBILITY_OPTIONS) {
+                const optionTooltip = BOOK_VISIBILITY_OPTION_TOOLTIPS[option.mode] ?? option.label;
                 const optionButton = document.createElement('button');
                 optionButton.type = 'button';
                 optionButton.classList.add('stwid--columnOption');
                 optionButton.setAttribute('data-mode', option.mode);
                 optionButton.setAttribute('aria-pressed', 'false');
+                optionButton.title = optionTooltip;
+                optionButton.setAttribute('aria-label', optionTooltip);
                 if (option.mode !== BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
                     const optionCheckbox = document.createElement('input');
                     optionCheckbox.type = 'checkbox';
                     optionCheckbox.classList.add('checkbox', 'stwid--columnOptionCheckbox');
                     optionCheckbox.tabIndex = -1;
-                    optionCheckbox.setAttribute('aria-hidden', 'true');
+                    optionCheckbox.title = optionTooltip;
                     optionButton.append(optionCheckbox);
                 }
                 optionButton.append(createBookVisibilityIcon(option, 'stwid--columnOptionIcon'));
@@ -1753,7 +1773,7 @@ const setupFilter = (list)=>{
         }
         const filterActive = document.createElement('label'); {
             filterActive.classList.add('stwid--filterActive');
-            filterActive.title = 'Only show globally active books';
+            filterActive.title = 'Also require global activation (applies on top of Book Visibility).';
             const inp = document.createElement('input'); {
                 inp.type = 'checkbox';
                 filterActiveInput = inp;
