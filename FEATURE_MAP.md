@@ -89,7 +89,7 @@ Where each feature or behavior is implemented in the codebase.
 - Core World Info API usage (load/save/create/delete book/entry) → index.js, src/listPanel.js, src/orderHelperRender.js
 - Event bus subscriptions (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`, context events) → index.js
 - Core template usage (`renderTemplateAsync`, `getWorldEntry`) → src/editorPanel.js, index.js
-- Delegation to core World Info UI buttons for rename/delete/duplicate actions → src/listPanel.js
+- Delegation to core World Info UI buttons for rename/delete/duplicate actions → src/listPanel.js, src/listPanel.coreBridge.js
 - Optional extension/plugin menu integration (Bulk Edit, External Editor, STLO) → src/listPanel.js, index.js
 
 ## Advanced tools (Order Helper)

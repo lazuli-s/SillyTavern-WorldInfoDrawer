@@ -9,6 +9,7 @@
 |-- src/
 |   |-- listPanel.js             # Left panel: books/folders/entries, selection, DnD, context menus
 |   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
+|   |-- listPanel.coreBridge.js  # Core WI DOM delegation helpers (wait/select/click wrappers)
 |   |-- editorPanel.js           # Entry editor panel integration with ST templates
 |   |-- worldEntry.js            # Entry row renderer + selection/toggle behaviors
 |   |-- orderHelper.js           # Order Helper orchestration
@@ -65,7 +66,7 @@
     - Drag moves
     - CTRL modifies copy / duplicate behavior
   - Per-book menu actions:
-    - Rename / delete (delegates to core WorldInfo UI)
+    - Rename / delete (delegates to core WorldInfo UI via `listPanel.coreBridge.js`)
     - Duplicate book
     - Export book
     - Fill empty titles from keywords
@@ -89,6 +90,13 @@
     - folder-collapse hydration/persistence
     - selection reset
     - cache/collapse capture clear helpers
+
+- `listPanel.coreBridge.js`
+  - Owns core WI DOM delegation utilities used by list panel menu actions:
+    - `waitForDom`
+    - `setSelectedBookInCoreUi`
+    - `clickCoreUiAction`
+  - Owns core WI action selector map for rename/duplicate/delete button targeting
 
 - `lorebookFolders.js`
   - Folder metadata and registry helpers
