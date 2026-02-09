@@ -18,7 +18,7 @@ Where each feature or behavior is implemented in the codebase.
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/listPanel.js
-- Top control row (new book, new folder, import book, import folder, refresh) → index.js, src/listPanel.js
+- Top control row (new book, new folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders) → index.js, src/listPanel.js
 - Book active toggle (global active status) → src/listPanel.js
 - Book collapse/expand and collapse-all behavior → src/listPanel.js, index.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.js
@@ -32,6 +32,7 @@ Where each feature or behavior is implemented in the codebase.
 - Folder registry persistence (`stwid--folder-registry`) → src/lorebookFolders.js
 - Folder DOM creation (header, count, active toggle, collapse toggle) → src/lorebookFolders.js
 - Folder collapse state persistence (`stwid--folder-collapse-states`) → src/listPanel.js
+- Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/listPanel.js, index.js
 - Folder context menu actions (rename, import into folder, export folder, delete folder) → src/lorebookFolders.js
 - Create new book directly inside a folder → src/lorebookFolders.js
 - Set active/inactive state for all books in a folder → src/lorebookFolders.js

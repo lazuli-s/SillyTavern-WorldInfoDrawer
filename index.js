@@ -54,6 +54,8 @@ const dom = {
     editor: undefined,
     /**@type {HTMLButtonElement} */
     collapseAllToggle: undefined,
+    /**@type {HTMLButtonElement} */
+    collapseAllFoldersToggle: undefined,
     /**@type {HTMLElement} */
     activationToggle: undefined,
     order: {
@@ -774,6 +776,22 @@ const addDrawer = ()=>{
                         });
                         controlsPrimary.append(collapseAllToggle);
                     }
+                    const collapseAllFoldersToggle = document.createElement('button'); {
+                        dom.collapseAllFoldersToggle = collapseAllFoldersToggle;
+                        collapseAllFoldersToggle.type = 'button';
+                        collapseAllFoldersToggle.classList.add('menu_button');
+                        collapseAllFoldersToggle.classList.add('stwid--collapseAllFoldersToggle');
+                        const icon = document.createElement('i'); {
+                            icon.classList.add('fa-solid', 'fa-fw');
+                            collapseAllFoldersToggle.append(icon);
+                        }
+                        collapseAllFoldersToggle.addEventListener('click', ()=>{
+                            const shouldCollapse = listPanelApi.hasExpandedFolders();
+                            listPanelApi.setAllFoldersCollapsed(shouldCollapse);
+                            listPanelApi.updateCollapseAllFoldersToggle();
+                        });
+                        controlsPrimary.append(collapseAllFoldersToggle);
+                    }
                     const controlsSecondary = document.createElement('div');
                     controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');
                     const sortSel = document.createElement('select'); {
@@ -948,6 +966,7 @@ const addDrawer = ()=>{
                     },
                 });
                 listPanelApi.updateCollapseAllToggle();
+                listPanelApi.updateCollapseAllFoldersToggle();
                 body.append(list);
             }
             const splitter = document.createElement('div'); {

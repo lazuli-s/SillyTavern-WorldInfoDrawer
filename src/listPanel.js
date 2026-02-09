@@ -52,6 +52,12 @@ const saveFolderCollapseStates = ()=>{
 };
 
 const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand = false } = {})=>{
+    if (transientExpand && !isCollapsed) {
+        // View-only expand: do not mutate persisted defaults.
+        setFolderCollapsed(folderDoms[folderName], false);
+        return;
+    }
+
     folderCollapseStates[folderName] = Boolean(isCollapsed);
 
     // "transientExpand" means: show expanded right now, but keep the stored default
@@ -157,6 +163,32 @@ const updateCollapseAllToggle = ()=>{
     btn.title = label;
     btn.setAttribute('aria-label', label);
     btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
+};
+
+const hasExpandedFolders = ()=>Object.values(folderDoms).some((folderDom)=>{
+    const books = folderDom?.books;
+    return books && !books.classList.contains('stwid--isCollapsed');
+});
+
+const updateCollapseAllFoldersToggle = ()=>{
+    const hasExpanded = hasExpandedFolders();
+    const btn = state.dom.collapseAllFoldersToggle;
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    icon?.classList.toggle('fa-folder-tree', hasExpanded);
+    icon?.classList.toggle('fa-folder-open', !hasExpanded);
+    const label = hasExpanded ? 'Collapse All Folders' : 'Expand All Folders';
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
+};
+
+const setAllFoldersCollapsed = (isCollapsed)=>{
+    const folderNames = Object.keys(folderDoms);
+    for (const folderName of folderNames) {
+        setFolderCollapsedAndPersist(folderName, isCollapsed, { transientExpand: !isCollapsed });
+    }
+    updateCollapseAllFoldersToggle();
 };
 
 const applyCollapseState = (name)=>{
@@ -881,6 +913,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     onToggle: ()=>{
                         const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
                         setFolderCollapsedAndPersist(folderName, isCollapsed);
+                        updateCollapseAllFoldersToggle();
                     },
                     onDragStateChange: (isOver)=>{
                         if (!dragBookName) return false;
@@ -922,6 +955,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 else state.dom.books.append(folderDoms[folderName].root);
                 const initialCollapsed = folderCollapseStates[folderName] ?? true;
                 setFolderCollapsed(folderDoms[folderName], initialCollapsed);
+                updateCollapseAllFoldersToggle();
             }
             targetParent = folderDoms[folderName].books;
         }
@@ -1463,6 +1497,7 @@ const loadList = async()=>{
             onToggle: ()=>{
                 const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
+                updateCollapseAllFoldersToggle();
             },
             onDragStateChange: (isOver)=>{
                 if (!dragBookName) return false;
@@ -1505,6 +1540,7 @@ const loadList = async()=>{
         }
     }
     state.applyActiveFilter?.();
+    updateCollapseAllFoldersToggle();
 };
 
 const refreshList = async()=>{
@@ -1984,6 +2020,7 @@ const initListPanel = (options)=>{
         getBookVisibilityScope,
         getSelectionState,
         hasExpandedBooks,
+        hasExpandedFolders,
         openFolderImportDialog,
         refreshList,
         renderBook,
@@ -1994,12 +2031,14 @@ const initListPanel = (options)=>{
         setBookFolder,
         setCacheMetadata,
         setCollapseState,
+        setAllFoldersCollapsed,
         setBookSortPreference,
         sortEntriesIfNeeded,
         updateAllBookSourceLinks,
         updateBookSourceLinks,
         updateFolderActiveToggles,
         updateCollapseAllToggle,
+        updateCollapseAllFoldersToggle,
     };
 };
 

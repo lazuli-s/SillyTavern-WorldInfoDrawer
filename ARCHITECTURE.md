@@ -53,7 +53,7 @@
 
 - `listPanel.js`
   - Renders the left panel (folders + books + entry lists)
-  - Control row: create book, create folder, import book, import folder, refresh
+  - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
   - Search matches books and optionally entries (title + keys)
   - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) with inline chips, a static `Book Visibility` trigger label, list-only helper tooltip, and per-option explanatory tooltips/checkbox indicators
   - Selection system:
@@ -72,6 +72,7 @@
     - Optional integration: Bulk Edit, External Editor, Configure STLO
   - Folder support:
     - Folder collapse state
+    - Folder collapse/expand-all toggle state sync
     - Folder active toggle (tri-state)
     - Folder context menu (export folder, import into folder, rename folder, delete folder)
 
