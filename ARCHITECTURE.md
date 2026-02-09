@@ -8,6 +8,7 @@
 |-- manifest.json                # SillyTavern extension manifest
 |-- src/
 |   |-- listPanel.js             # Left panel: books/folders/entries, selection, DnD, context menus
+|   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
 |   |-- editorPanel.js           # Entry editor panel integration with ST templates
 |   |-- worldEntry.js            # Entry row renderer + selection/toggle behaviors
 |   |-- orderHelper.js           # Order Helper orchestration
@@ -53,6 +54,7 @@
 
 - `listPanel.js`
   - Renders the left panel (folders + books + entry lists)
+  - Composes list rendering/interactions with state held in `listPanel.state.js`
   - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
   - Search matches books and optionally entries (title + keys)
   - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) with inline chips, a static `Book Visibility` trigger label, list-only helper tooltip, and per-option explanatory tooltips/checkbox indicators
@@ -75,6 +77,18 @@
     - Folder collapse/expand-all toggle state sync
     - Folder active toggle (tri-state)
     - Folder context menu (export folder, import into folder, rename folder, delete folder)
+
+- `listPanel.state.js`
+  - Owns list panel module-local mutable state:
+    - visibility/search refs and caches
+    - collapse/folder DOM maps
+    - selection + drag state
+  - Owns state lifecycle helpers:
+    - visibility reset
+    - entry-search cache clear
+    - folder-collapse hydration/persistence
+    - selection reset
+    - cache/collapse capture clear helpers
 
 - `lorebookFolders.js`
   - Folder metadata and registry helpers

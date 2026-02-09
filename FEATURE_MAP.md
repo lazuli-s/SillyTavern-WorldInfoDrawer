@@ -58,6 +58,7 @@ Where each feature or behavior is implemented in the codebase.
 ## Selection & interaction
 
 - Entry selection state model (source book, last clicked, selected uid list, toast) → src/listPanel.js
+- List panel state container for selection/drag/search/visibility/collapse locals + lifecycle resets/hydration → src/listPanel.state.js
 - Click select, toggle select, and Shift range select behavior → src/worldEntry.js
 - Selection visual state add/remove/clear helpers → src/listPanel.js
 - Delete selected entries (Del key) with save/update propagation → index.js

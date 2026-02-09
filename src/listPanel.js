@@ -10,6 +10,16 @@ import {
     setFolderCollapsed,
     setFolderInMetadata,
 } from './lorebookFolders.js';
+import {
+    captureBookCollapseStatesFromDom,
+    clearCacheBooks,
+    clearEntrySearchCache,
+    hydrateFolderCollapseStates,
+    listPanelState,
+    resetBookVisibilityState,
+    resetSelectionMemory,
+    setFolderCollapsedAndPersist,
+} from './listPanel.state.js';
 
 // Core SillyTavern DOM anchors used by this extension.
 // Keep these centralized so host selector drift is easier to audit.
@@ -37,130 +47,6 @@ const CORE_UI_ACTION_SELECTORS = Object.freeze({
 // Module-level runtime references and UI state.
 let state = {};
 
-// Filter/visibility controls (initialized during setup).
-let searchInput;
-let searchEntriesInput;
-let bookVisibilityMode = 'allBooks';
-let bookVisibilitySelections = new Set();
-let bookVisibilityMenu;
-let bookVisibilityChips;
-let loadListDebounced;
-let folderImportInput;
-const entrySearchCache = {};
-
-// Per-session collapse/folder DOM tracking.
-const collapseStates = {};
-const folderCollapseStates = {};
-const folderDoms = {};
-
-const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
-
-// Folder collapse persistence helpers.
-const loadFolderCollapseStates = ()=>{
-    if (typeof localStorage === 'undefined') return {};
-    try {
-        const raw = localStorage.getItem(FOLDER_COLLAPSE_STORAGE_KEY);
-        if (!raw) return {};
-        const parsed = JSON.parse(raw);
-        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-    } catch (error) {
-        console.warn('[STWID] Failed to load folder collapse states', error);
-        return {};
-    }
-};
-
-const saveFolderCollapseStates = ()=>{
-    if (typeof localStorage === 'undefined') return;
-    try {
-        localStorage.setItem(FOLDER_COLLAPSE_STORAGE_KEY, JSON.stringify(folderCollapseStates));
-    } catch (error) {
-        console.warn('[STWID] Failed to save folder collapse states', error);
-    }
-};
-
-const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand = false } = {})=>{
-    if (transientExpand && !isCollapsed) {
-        // View-only expand: do not mutate persisted defaults.
-        setFolderCollapsed(folderDoms[folderName], false);
-        return;
-    }
-
-    folderCollapseStates[folderName] = Boolean(isCollapsed);
-
-    // "transientExpand" means: show expanded right now, but keep the stored default
-    // unchanged (used for rename/new folder to keep UI friendly).
-    if (!transientExpand) {
-        saveFolderCollapseStates();
-    }
-
-    setFolderCollapsed(folderDoms[folderName], Boolean(isCollapsed));
-};
-
-// Entry multi-select state shared with worldEntry.js.
-/** Last clicked/selected DOM (WI entry) @type {HTMLElement} */
-let selectLast = null;
-/** Name of the book to select WI entries from @type {string} */
-let selectFrom = null;
-/**@type {'ctrl'|'shift'} */
-let selectMode = null;
-/** List of selected entries (WI uids) @type {string[]} */
-let selectList = null;
-/** toastr reference showing selection help @type {JQuery<HTMLElement>} */
-let selectToast = null;
-/** Name of the book being dragged @type {string|null} */
-let dragBookName = null;
-let folderMenuActions;
-
-// Shared helpers for module-level mutable state.
-const clearObjectKeys = (target)=>{
-    for (const key of Object.keys(target)) {
-        delete target[key];
-    }
-};
-
-// Lifecycle: visibility state is initialized when list panel boots.
-const resetBookVisibilityState = ()=>{
-    bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
-    bookVisibilitySelections = new Set();
-    bookVisibilityMenu = null;
-    bookVisibilityChips = null;
-};
-
-// Lifecycle: entry-search cache is per panel session and cleared on init.
-const clearEntrySearchCache = ()=>{
-    clearObjectKeys(entrySearchCache);
-};
-
-// Lifecycle: folder collapse defaults are loaded from localStorage on init.
-const hydrateFolderCollapseStates = ()=>{
-    Object.assign(folderCollapseStates, loadFolderCollapseStates());
-};
-
-// Lifecycle: selection memory resets when selection ends.
-const resetSelectionMemory = ()=>{
-    selectFrom = null;
-    selectMode = null;
-    selectList = null;
-    selectLast = null;
-    if (selectToast) {
-        toastr.clear(selectToast);
-    }
-};
-
-// Lifecycle: collapse state is captured from current DOM before cache rebuild.
-const captureBookCollapseStatesFromDom = ()=>{
-    for (const [bookName, bookData] of Object.entries(state.cache)) {
-        const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--isCollapsed');
-        if (isCollapsed !== undefined) setCollapseState(bookName, isCollapsed);
-    }
-};
-
-// Lifecycle: cache entries are removed before rebuilding list DOM.
-const clearCacheBooks = ()=>{
-    for (const bookName of Object.keys(state.cache)) {
-        delete state.cache[bookName];
-    }
-};
 
 // Source-link and book-visibility UI constants.
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
@@ -227,7 +113,7 @@ const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
 
 // Book/folder collapse helpers.
 const setCollapseState = (name, isCollapsed)=>{
-    collapseStates[name] = Boolean(isCollapsed);
+    listPanelState.collapseStates[name] = Boolean(isCollapsed);
 };
 
 const hasExpandedBooks = ()=>Object.values(state.cache).some((book)=>{
@@ -248,7 +134,7 @@ const updateCollapseAllToggle = ()=>{
     btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
 };
 
-const hasExpandedFolders = ()=>Object.values(folderDoms).some((folderDom)=>{
+const hasExpandedFolders = ()=>Object.values(listPanelState.folderDoms).some((folderDom)=>{
     const books = folderDom?.books;
     return books && !books.classList.contains('stwid--isCollapsed');
 });
@@ -267,7 +153,7 @@ const updateCollapseAllFoldersToggle = ()=>{
 };
 
 const setAllFoldersCollapsed = (isCollapsed)=>{
-    const folderNames = Object.keys(folderDoms);
+    const folderNames = Object.keys(listPanelState.folderDoms);
     for (const folderName of folderNames) {
         setFolderCollapsedAndPersist(folderName, isCollapsed, { transientExpand: !isCollapsed });
     }
@@ -275,7 +161,7 @@ const setAllFoldersCollapsed = (isCollapsed)=>{
 };
 
 const applyCollapseState = (name)=>{
-    const isCollapsed = collapseStates[name];
+    const isCollapsed = listPanelState.collapseStates[name];
     const world = state.cache[name];
     if (isCollapsed === undefined || !world?.dom?.entryList || !world?.dom?.collapseToggle) return;
     world.dom.entryList.classList.toggle('stwid--isCollapsed', isCollapsed);
@@ -346,9 +232,9 @@ const getBookVisibilityFlags = (name, selectedLookup = null)=>{
     };
 };
 
-const isAllBooksVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
+const isAllBooksVisibility = ()=>listPanelState.bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
 
-const isAllActiveVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+const isAllActiveVisibility = ()=>listPanelState.bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
 
 const getBookVisibilityScope = (selectedNames = null)=>{
     const cacheEntries = state.cache ? Object.keys(state.cache) : [];
@@ -362,7 +248,7 @@ const getBookVisibilityScope = (selectedNames = null)=>{
     return cacheEntries.filter((name)=>{
         const flags = getBookVisibilityFlags(name, selectedLookup);
         if (isAllActive) return flags.allActive;
-        return BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>bookVisibilitySelections.has(mode) && flags[mode]);
+        return BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>listPanelState.bookVisibilitySelections.has(mode) && flags[mode]);
     });
 };
 
@@ -522,7 +408,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             const registry = getFolderRegistry();
             const folderNames = Array.from(new Set([
                 ...registry,
-                ...Object.keys(folderDoms),
+                ...Object.keys(listPanelState.folderDoms),
             ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
 
             const modal = document.createElement('dialog');
@@ -789,19 +675,19 @@ const importFolderFile = async(file)=>{
 };
 
 const openFolderImportDialog = ()=>{
-    if (!folderImportInput) {
-        folderImportInput = document.createElement('input');
-        folderImportInput.type = 'file';
-        folderImportInput.accept = '.json,application/json';
-        folderImportInput.hidden = true;
-        folderImportInput.addEventListener('change', async()=>{
-            const [file] = folderImportInput.files ?? [];
-            folderImportInput.value = '';
+    if (!listPanelState.folderImportInput) {
+        listPanelState.folderImportInput = document.createElement('input');
+        listPanelState.folderImportInput.type = 'file';
+        listPanelState.folderImportInput.accept = '.json,application/json';
+        listPanelState.folderImportInput.hidden = true;
+        listPanelState.folderImportInput.addEventListener('change', async()=>{
+            const [file] = listPanelState.folderImportInput.files ?? [];
+            listPanelState.folderImportInput.value = '';
             await importFolderFile(file);
         });
-        document.body.append(folderImportInput);
+        document.body.append(listPanelState.folderImportInput);
     }
-    folderImportInput.click();
+    listPanelState.folderImportInput.click();
 };
 
 // Core WI UI delegation helpers (select + trigger vanilla actions).
@@ -952,7 +838,7 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
 
 // Entry selection UI helpers.
 const selectEnd = ()=>{
-    resetSelectionMemory();
+    resetSelectionMemory((toast)=>toastr.clear(toast));
     state.dom.books.classList.remove('stwid--isDragging');
     [...state.dom.books.querySelectorAll('.stwid--entry.stwid--isSelected')]
         .forEach(it=>{
@@ -1017,25 +903,25 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     if (!parent) {
         const folderName = getFolderFromMetadata(state.cache[name].metadata);
         if (folderName) {
-            if (!folderDoms[folderName]) {
-                folderDoms[folderName] = createFolderDom({
+            if (!listPanelState.folderDoms[folderName]) {
+                listPanelState.folderDoms[folderName] = createFolderDom({
                     folderName,
                     onToggle: ()=>{
-                        const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
+                        const isCollapsed = !listPanelState.folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
                         setFolderCollapsedAndPersist(folderName, isCollapsed);
                         updateCollapseAllFoldersToggle();
                     },
                     onDragStateChange: (isOver)=>{
-                        if (!dragBookName) return false;
+                        if (!listPanelState.dragBookName) return false;
                         return isOver;
                     },
                     onDrop: async(evt)=>{
-                        if (!dragBookName) return;
-                        const draggedName = dragBookName;
-                        dragBookName = null;
+                        if (!listPanelState.dragBookName) return;
+                        const draggedName = listPanelState.dragBookName;
+                        listPanelState.dragBookName = null;
                         await handleDraggedBookMoveOrCopy(draggedName, folderName, evt.ctrlKey);
                     },
-                    menuActions: folderMenuActions,
+                    menuActions: listPanelState.folderMenuActions,
                 });
                 let insertBefore = null;
                 const normalizedFolder = folderName.toLowerCase();
@@ -1053,63 +939,63 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                         break;
                     }
                 }
-                if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', folderDoms[folderName].root);
-                else state.dom.books.append(folderDoms[folderName].root);
-                const initialCollapsed = folderCollapseStates[folderName] ?? true;
-                setFolderCollapsed(folderDoms[folderName], initialCollapsed);
+                if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', listPanelState.folderDoms[folderName].root);
+                else state.dom.books.append(listPanelState.folderDoms[folderName].root);
+                const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
+                setFolderCollapsed(listPanelState.folderDoms[folderName], initialCollapsed);
                 updateCollapseAllFoldersToggle();
             }
-            targetParent = folderDoms[folderName].books;
+            targetParent = listPanelState.folderDoms[folderName].books;
         }
     }
     const book = document.createElement('div'); {
         world.dom.root = book;
         book.classList.add('stwid--book');
         book.addEventListener('dragover', (evt)=>{
-            if (dragBookName) {
+            if (listPanelState.dragBookName) {
                 evt.preventDefault();
                 book.classList.add('stwid--isTarget');
                 return;
             }
-            if (selectFrom === null) return;
+            if (listPanelState.selectFrom === null) return;
             evt.preventDefault();
             book.classList.add('stwid--isTarget');
         });
         book.addEventListener('dragleave', (evt)=>{
-            if (dragBookName) {
+            if (listPanelState.dragBookName) {
                 book.classList.remove('stwid--isTarget');
                 return;
             }
-            if (selectFrom === null) return;
+            if (listPanelState.selectFrom === null) return;
             book.classList.remove('stwid--isTarget');
         });
         book.addEventListener('drop', async(evt)=>{
-            if (dragBookName) {
+            if (listPanelState.dragBookName) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 book.classList.remove('stwid--isTarget');
-                const draggedName = dragBookName;
-                dragBookName = null;
+                const draggedName = listPanelState.dragBookName;
+                listPanelState.dragBookName = null;
                 const targetFolder = getFolderFromMetadata(state.cache[name]?.metadata);
                 await handleDraggedBookMoveOrCopy(draggedName, targetFolder, evt.ctrlKey);
                 return;
             }
-            if (selectFrom === null) return;
+            if (listPanelState.selectFrom === null) return;
             evt.preventDefault();
             const isCopy = evt.ctrlKey;
-            if (!selectList?.length) {
+            if (!listPanelState.selectList?.length) {
                 selectEnd();
                 return;
             }
-            if (selectFrom != name || isCopy) {
-                const srcBook = await state.loadWorldInfo(selectFrom);
+            if (listPanelState.selectFrom != name || isCopy) {
+                const srcBook = await state.loadWorldInfo(listPanelState.selectFrom);
                 const dstBook = await state.loadWorldInfo(name);
                 // F3: Batch move/copy saves.
                 // Build all destination entries in-memory first, then save once.
                 // If moving, delete from source and save once after all deletions.
                 let hasDstChanges = false;
                 let hasSrcChanges = false;
-                for (const uid of selectList) {
+                for (const uid of listPanelState.selectList) {
                     const srcEntry = srcBook.entries[uid];
                     if (!srcEntry) continue;
 
@@ -1136,9 +1022,9 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 }
 
                 // Persist source once (move only, and only when we actually deleted something).
-                if (!isCopy && selectFrom != name && hasSrcChanges) {
-                    await state.saveWorldInfo(selectFrom, srcBook, true);
-                    state.updateWIChange(selectFrom, srcBook);
+                if (!isCopy && listPanelState.selectFrom != name && hasSrcChanges) {
+                    await state.saveWorldInfo(listPanelState.selectFrom, srcBook, true);
+                    state.updateWIChange(listPanelState.selectFrom, srcBook);
                 }
             }
             selectEnd();
@@ -1153,15 +1039,15 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 title.title = 'Collapse/expand this book';
                 title.setAttribute('draggable', 'true');
                 title.addEventListener('dragstart', (evt)=>{
-                    dragBookName = name;
+                    listPanelState.dragBookName = name;
                     if (evt.dataTransfer) {
                         evt.dataTransfer.effectAllowed = 'copyMove';
                         evt.dataTransfer.setData('text/plain', name);
                     }
                 });
                 title.addEventListener('dragend', ()=>{
-                    dragBookName = null;
-                    for (const folderDom of Object.values(folderDoms)) {
+                    listPanelState.dragBookName = null;
+                    for (const folderDom of Object.values(listPanelState.folderDoms)) {
                         folderDom.root.classList.remove('stwid--isTarget');
                     }
                     for (const bookDom of Object.values(state.cache)) {
@@ -1516,7 +1402,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             for (const e of state.sortEntries(Object.values(world.entries), sort, direction)) {
                 await state.renderEntry(e, name);
             }
-            const initialCollapsed = collapseStates[name] ?? entryList.classList.contains('stwid--isCollapsed');
+            const initialCollapsed = listPanelState.collapseStates[name] ?? entryList.classList.contains('stwid--isCollapsed');
             setBookCollapsed(name, initialCollapsed);
             book.append(entryList);
         }
@@ -1541,11 +1427,11 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
 // Full list render/reload.
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
-    for (const folderDom of Object.values(folderDoms)) {
+    for (const folderDom of Object.values(listPanelState.folderDoms)) {
         folderDom.observer?.disconnect();
     }
-    for (const key of Object.keys(folderDoms)) {
-        delete folderDoms[key];
+    for (const key of Object.keys(listPanelState.folderDoms)) {
+        delete listPanelState.folderDoms[key];
     }
 
     // Yield to the UI thread periodically to avoid long main-thread stalls on very
@@ -1585,32 +1471,32 @@ const loadList = async()=>{
     }
     const sortedFolders = [...allFolderNames].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
     for (const folderName of sortedFolders) {
-        folderDoms[folderName] = createFolderDom({
+        listPanelState.folderDoms[folderName] = createFolderDom({
             folderName,
             onToggle: ()=>{
-                const isCollapsed = !folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
+                const isCollapsed = !listPanelState.folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
                 updateCollapseAllFoldersToggle();
             },
             onDragStateChange: (isOver)=>{
-                if (!dragBookName) return false;
+                if (!listPanelState.dragBookName) return false;
                 return isOver;
             },
             onDrop: async(evt)=>{
-                if (!dragBookName) return;
-                const draggedName = dragBookName;
-                dragBookName = null;
+                if (!listPanelState.dragBookName) return;
+                const draggedName = listPanelState.dragBookName;
+                listPanelState.dragBookName = null;
                 await handleDraggedBookMoveOrCopy(draggedName, folderName, evt.ctrlKey);
             },
-            menuActions: folderMenuActions,
+            menuActions: listPanelState.folderMenuActions,
         });
-        state.dom.books.append(folderDoms[folderName].root);
-        const initialCollapsed = folderCollapseStates[folderName] ?? true;
-        setFolderCollapsed(folderDoms[folderName], initialCollapsed);
+        state.dom.books.append(listPanelState.folderDoms[folderName].root);
+        const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
+        setFolderCollapsed(listPanelState.folderDoms[folderName], initialCollapsed);
         const folderBooks = folderGroups.get(folderName) ?? [];
         for (let i = 0; i < folderBooks.length; i++) {
             const book = folderBooks[i];
-            await renderBook(book.name, null, book.data, folderDoms[folderName].books);
+            await renderBook(book.name, null, book.data, listPanelState.folderDoms[folderName].books);
             if (i > 0 && i % 2 === 0) {
                 await yieldToUi();
             }
@@ -1631,11 +1517,11 @@ const loadList = async()=>{
 const refreshList = async()=>{
     state.dom.drawer.body.classList.add('stwid--isLoading');
     state.resetEditor?.();
-    captureBookCollapseStatesFromDom();
-    clearCacheBooks();
+    captureBookCollapseStatesFromDom(state.cache, setCollapseState);
+    clearCacheBooks(state.cache);
     try {
-        await loadListDebounced();
-        searchInput?.dispatchEvent(new Event('input'));
+        await listPanelState.loadListDebounced();
+        listPanelState.searchInput?.dispatchEvent(new Event('input'));
     } finally {
         state.dom.drawer.body.classList.remove('stwid--isLoading');
     }
@@ -1646,7 +1532,7 @@ const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--fil
 
 // Folder summary visibility/active-state refresh.
 const updateFolderVisibility = ()=>{
-    for (const folderDom of Object.values(folderDoms)) {
+    for (const folderDom of Object.values(listPanelState.folderDoms)) {
         const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
             if (!(child instanceof HTMLElement)) return false;
             if (!child.classList.contains('stwid--book')) return false;
@@ -1657,7 +1543,7 @@ const updateFolderVisibility = ()=>{
 };
 
 const updateFolderActiveToggles = ()=>{
-    for (const folderDom of Object.values(folderDoms)) {
+    for (const folderDom of Object.values(listPanelState.folderDoms)) {
         folderDom.updateActiveToggle?.();
     }
     updateFolderVisibility();
@@ -1692,11 +1578,11 @@ const setupFilter = (list)=>{
         const getEntrySearchText = (bookName, entry)=>{
             if (!entry?.uid) return '';
             const signature = buildEntrySearchSignature(entry);
-            entrySearchCache[bookName] ??= {};
-            const cached = entrySearchCache[bookName][entry.uid];
+            listPanelState.entrySearchCache[bookName] ??= {};
+            const cached = listPanelState.entrySearchCache[bookName][entry.uid];
             if (cached?.signature === signature) return cached.text;
             const text = signature.toLowerCase();
-            entrySearchCache[bookName][entry.uid] = { signature, text };
+            listPanelState.entrySearchCache[bookName][entry.uid] = { signature, text };
             return text;
         };
 
@@ -1708,12 +1594,12 @@ const setupFilter = (list)=>{
             search.placeholder = 'Search books';
             search.title = 'Search books by name';
             search.setAttribute('aria-label', 'Search books');
-            searchInput = search;
+            listPanelState.searchInput = search;
             const entryMatchesQuery = (bookName, entry, normalizedQuery)=>getEntrySearchText(bookName, entry).includes(normalizedQuery);
 
             const applySearchFilter = ()=>{
                 const query = search.value.toLowerCase();
-                const searchEntries = searchEntriesInput.checked;
+                const searchEntries = listPanelState.searchEntriesInput.checked;
                 const shouldScanEntries = searchEntries && query.length >= 2;
 
                 for (const b of Object.keys(state.cache)) {
@@ -1754,7 +1640,7 @@ const setupFilter = (list)=>{
             searchEntries.classList.add('stwid--searchEntries');
             searchEntries.title = 'Search through entries as well (Title/Memo/Keys)';
             const inp = document.createElement('input'); {
-                searchEntriesInput = inp;
+                listPanelState.searchEntriesInput = inp;
                 inp.type = 'checkbox';
                 inp.addEventListener('click', ()=>{
                     search.dispatchEvent(new Event('input'));
@@ -1768,29 +1654,29 @@ const setupFilter = (list)=>{
             BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
 
         const setAllBooksVisibility = ()=>{
-            bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
-            bookVisibilitySelections.clear();
+            listPanelState.bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
+            listPanelState.bookVisibilitySelections.clear();
         };
 
         const setAllActiveVisibility = ()=>{
-            bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
-            bookVisibilitySelections.clear();
+            listPanelState.bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+            listPanelState.bookVisibilitySelections.clear();
         };
 
         const toggleVisibilitySelection = (mode)=>{
             if (!BOOK_VISIBILITY_MULTISELECT_MODES.includes(mode)) return;
             if (isAllBooksVisibility() || isAllActiveVisibility()) {
-                bookVisibilityMode = BOOK_VISIBILITY_MODES.CUSTOM;
-                bookVisibilitySelections.clear();
-                bookVisibilitySelections.add(mode);
+                listPanelState.bookVisibilityMode = BOOK_VISIBILITY_MODES.CUSTOM;
+                listPanelState.bookVisibilitySelections.clear();
+                listPanelState.bookVisibilitySelections.add(mode);
                 return;
             }
-            if (bookVisibilitySelections.has(mode)) {
-                bookVisibilitySelections.delete(mode);
+            if (listPanelState.bookVisibilitySelections.has(mode)) {
+                listPanelState.bookVisibilitySelections.delete(mode);
             } else {
-                bookVisibilitySelections.add(mode);
+                listPanelState.bookVisibilitySelections.add(mode);
             }
-            if (bookVisibilitySelections.size === 0) {
+            if (listPanelState.bookVisibilitySelections.size === 0) {
                 setAllBooksVisibility();
             }
         };
@@ -1805,8 +1691,8 @@ const setupFilter = (list)=>{
         };
 
         const renderVisibilityChips = ()=>{
-            if (!bookVisibilityChips) return;
-            bookVisibilityChips.innerHTML = '';
+            if (!listPanelState.bookVisibilityChips) return;
+            listPanelState.bookVisibilityChips.innerHTML = '';
             if (isAllBooksVisibility()) {
                 const visibilityOption = getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_BOOKS);
                 const visibilityChip = document.createElement('span');
@@ -1817,7 +1703,7 @@ const setupFilter = (list)=>{
                 visibilityChip.append(visibilityLabel);
                 visibilityChip.title = `Active filter: ${visibilityOption.label}.`;
                 visibilityChip.setAttribute('aria-label', `Active filter: ${visibilityOption.label}.`);
-                bookVisibilityChips.append(visibilityChip);
+                listPanelState.bookVisibilityChips.append(visibilityChip);
             } else if (isAllActiveVisibility()) {
                 const visibilityOption = getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE);
                 const visibilityChip = document.createElement('span');
@@ -1828,10 +1714,10 @@ const setupFilter = (list)=>{
                 visibilityChip.append(visibilityLabel);
                 visibilityChip.title = `Active filter: ${visibilityOption.label}.`;
                 visibilityChip.setAttribute('aria-label', `Active filter: ${visibilityOption.label}.`);
-                bookVisibilityChips.append(visibilityChip);
+                listPanelState.bookVisibilityChips.append(visibilityChip);
             } else {
                 for (const mode of BOOK_VISIBILITY_MULTISELECT_MODES) {
-                    if (!bookVisibilitySelections.has(mode)) continue;
+                    if (!listPanelState.bookVisibilitySelections.has(mode)) continue;
                     const option = getBookVisibilityOption(mode);
                     const chip = document.createElement('span');
                     chip.classList.add('stwid--visibilityChip');
@@ -1841,15 +1727,15 @@ const setupFilter = (list)=>{
                     chip.append(chipLabel);
                     chip.title = `Active filter: ${option.label}.`;
                     chip.setAttribute('aria-label', `Active filter: ${option.label}.`);
-                    bookVisibilityChips.append(chip);
+                    listPanelState.bookVisibilityChips.append(chip);
                 }
             }
         };
 
         const closeBookVisibilityMenu = ()=>{
-            if (!bookVisibilityMenu) return;
-            bookVisibilityMenu.classList.remove('stwid--active');
-            const trigger = bookVisibilityMenu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
+            if (!listPanelState.bookVisibilityMenu) return;
+            listPanelState.bookVisibilityMenu.classList.remove('stwid--active');
+            const trigger = listPanelState.bookVisibilityMenu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
             trigger?.setAttribute('aria-expanded', 'false');
         };
 
@@ -1863,8 +1749,8 @@ const setupFilter = (list)=>{
                 const hideByVisibilityFilter = !visibleBookLookup.has(b);
                 state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
             }
-            if (bookVisibilityMenu) {
-                for (const option of bookVisibilityMenu.querySelectorAll('.stwid--multiselectDropdownOption')) {
+            if (listPanelState.bookVisibilityMenu) {
+                for (const option of listPanelState.bookVisibilityMenu.querySelectorAll('.stwid--multiselectDropdownOption')) {
                     const optionMode = option.getAttribute('data-mode');
                     let isActive = false;
                     if (optionMode === BOOK_VISIBILITY_MODES.ALL_BOOKS) {
@@ -1872,7 +1758,7 @@ const setupFilter = (list)=>{
                     } else if (optionMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
                         isActive = isAllActive;
                     } else {
-                        isActive = bookVisibilitySelections.has(optionMode);
+                        isActive = listPanelState.bookVisibilitySelections.has(optionMode);
                     }
                     option.classList.toggle('stwid--active', isActive);
                     option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -1917,7 +1803,7 @@ const setupFilter = (list)=>{
 
             const menu = document.createElement('div');
             menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu');
-            bookVisibilityMenu = menu;
+            listPanelState.bookVisibilityMenu = menu;
 
             for (const option of BOOK_VISIBILITY_OPTIONS) {
                 const optionTooltip = BOOK_VISIBILITY_OPTION_TOOLTIPS[option.mode] ?? option.label;
@@ -1973,7 +1859,7 @@ const setupFilter = (list)=>{
 
             const chips = document.createElement('div');
             chips.classList.add('stwid--visibilityChips');
-            bookVisibilityChips = chips;
+            listPanelState.bookVisibilityChips = chips;
             bookVisibility.append(menuWrap);
             bookVisibility.append(chips);
 
@@ -1996,16 +1882,16 @@ const setupBooks = (list)=>{
         state.dom.books = books;
         books.classList.add('stwid--books');
         books.addEventListener('dragover', (evt)=>{
-            if (!dragBookName) return;
+            if (!listPanelState.dragBookName) return;
             if (evt.target.closest('.stwid--folderHeader')) return;
             evt.preventDefault();
         });
         books.addEventListener('drop', async(evt)=>{
-            if (!dragBookName) return;
+            if (!listPanelState.dragBookName) return;
             if (evt.target.closest('.stwid--folderHeader')) return;
             evt.preventDefault();
-            const draggedName = dragBookName;
-            dragBookName = null;
+            const draggedName = listPanelState.dragBookName;
+            listPanelState.dragBookName = null;
             await handleDraggedBookMoveOrCopy(draggedName, null, evt.ctrlKey, { skipIfSameFolder: false });
         });
         list.append(books);
@@ -2020,47 +1906,47 @@ const setupListPanel = (list)=>{
 
 const getSelectionState = ()=>({
     get selectFrom() {
-        return selectFrom;
+        return listPanelState.selectFrom;
     },
     set selectFrom(value) {
-        selectFrom = value;
+        listPanelState.selectFrom = value;
     },
     get selectLast() {
-        return selectLast;
+        return listPanelState.selectLast;
     },
     set selectLast(value) {
-        selectLast = value;
+        listPanelState.selectLast = value;
     },
     get selectList() {
-        return selectList;
+        return listPanelState.selectList;
     },
     set selectList(value) {
-        selectList = value;
+        listPanelState.selectList = value;
     },
     get selectMode() {
-        return selectMode;
+        return listPanelState.selectMode;
     },
     set selectMode(value) {
-        selectMode = value;
+        listPanelState.selectMode = value;
     },
     get selectToast() {
-        return selectToast;
+        return listPanelState.selectToast;
     },
     set selectToast(value) {
-        selectToast = value;
+        listPanelState.selectToast = value;
     },
 });
 
 // Public module initialization + returned API surface.
 const initListPanel = (options)=>{
     state = options;
-    resetBookVisibilityState();
+    resetBookVisibilityState(BOOK_VISIBILITY_MODES);
     clearEntrySearchCache();
     hydrateFolderCollapseStates();
-    loadListDebounced = state.debounceAsync(()=>loadList());
+    listPanelState.loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
 
-    folderMenuActions = {
+    listPanelState.folderMenuActions = {
         Popup: state.Popup,
         buildSavePayload: state.buildSavePayload,
         cache: state.cache,
@@ -2119,3 +2005,4 @@ const initListPanel = (options)=>{
 };
 
 export { initListPanel, refreshList };
+
