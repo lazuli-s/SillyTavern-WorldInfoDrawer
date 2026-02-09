@@ -330,9 +330,7 @@ const setupListPanel = (list)=>{
     setupBooks(list);
 };
 
-// Public module initialization + returned API surface.
-const initListPanel = (options)=>{
-    state = options;
+const wireSlices = ()=>{
     filterBarSlice = createFilterBarSlice({
         listPanelState,
         runtime: state,
@@ -342,9 +340,6 @@ const initListPanel = (options)=>{
         },
         updateFolderActiveToggles,
     });
-    resetBookVisibilityState(BOOK_VISIBILITY_MODES);
-    clearEntrySearchCache();
-    hydrateFolderCollapseStates();
     selectionDnDSlice = createSelectionDnDSlice({
         listPanelState,
         runtime: state,
@@ -390,6 +385,42 @@ const initListPanel = (options)=>{
         updateBookSourceLinks,
         updateCollapseAllToggle,
     });
+};
+
+const getListPanelApi = ()=>({
+    applyActiveFilter: state.applyActiveFilter,
+    clearBookSortPreferences,
+    getBookVisibilityScope,
+    getSelectionState: selectionDnDSlice.getSelectionState,
+    hasExpandedBooks,
+    hasExpandedFolders,
+    openFolderImportDialog: ()=>bookMenuSlice?.openFolderImportDialog(),
+    refreshList,
+    renderBook,
+    selectAdd: selectionDnDSlice.selectAdd,
+    selectEnd: selectionDnDSlice.selectEnd,
+    selectRemove: selectionDnDSlice.selectRemove,
+    setBookCollapsed,
+    setBookFolder,
+    setCacheMetadata,
+    setCollapseState,
+    setAllFoldersCollapsed,
+    setBookSortPreference,
+    sortEntriesIfNeeded,
+    updateAllBookSourceLinks,
+    updateBookSourceLinks,
+    updateFolderActiveToggles,
+    updateCollapseAllToggle,
+    updateCollapseAllFoldersToggle,
+});
+
+// Public module initialization + returned API surface.
+const initListPanel = (options)=>{
+    state = options;
+    wireSlices();
+    resetBookVisibilityState(BOOK_VISIBILITY_MODES);
+    clearEntrySearchCache();
+    hydrateFolderCollapseStates();
     listPanelState.loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
 
@@ -423,32 +454,7 @@ const initListPanel = (options)=>{
         waitForWorldInfoUpdate: state.waitForWorldInfoUpdate,
     };
     setupListPanel(state.list);
-    return {
-        applyActiveFilter: state.applyActiveFilter,
-        clearBookSortPreferences,
-        getBookVisibilityScope,
-        getSelectionState: selectionDnDSlice.getSelectionState,
-        hasExpandedBooks,
-        hasExpandedFolders,
-        openFolderImportDialog: ()=>bookMenuSlice?.openFolderImportDialog(),
-        refreshList,
-        renderBook,
-        selectAdd: selectionDnDSlice.selectAdd,
-        selectEnd: selectionDnDSlice.selectEnd,
-        selectRemove: selectionDnDSlice.selectRemove,
-        setBookCollapsed,
-        setBookFolder,
-        setCacheMetadata,
-        setCollapseState,
-        setAllFoldersCollapsed,
-        setBookSortPreference,
-        sortEntriesIfNeeded,
-        updateAllBookSourceLinks,
-        updateBookSourceLinks,
-        updateFolderActiveToggles,
-        updateCollapseAllToggle,
-        updateCollapseAllFoldersToggle,
-    };
+    return getListPanelApi();
 };
 
 export { initListPanel, refreshList };
