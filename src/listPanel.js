@@ -11,6 +11,29 @@ import {
     setFolderInMetadata,
 } from './lorebookFolders.js';
 
+// Core SillyTavern DOM anchors used by this extension.
+// Keep these centralized so host selector drift is easier to audit.
+const CORE_UI_SELECTORS = Object.freeze({
+    importFileInput: '#world_import_file',
+    worldEditorSelect: '#world_editor_select',
+    worldInfoSelect: '#world_info',
+});
+
+// Core action selectors may need fallbacks across ST versions.
+const CORE_UI_ACTION_SELECTORS = Object.freeze({
+    duplicateBook: Object.freeze([
+        '#world_duplicate',
+        '[id="world_duplicate"]',
+    ]),
+    deleteBook: Object.freeze([
+        '#world_popup_delete',
+        '[id="world_popup_delete"]',
+    ]),
+    renameBook: Object.freeze([
+        '#world_popup_name_button',
+    ]),
+});
+
 // Module-level runtime references and UI state.
 let state = {};
 
@@ -470,6 +493,10 @@ const applyBookFolderChange = async(name, folderName, { centerAfterRefresh = fal
 };
 
 const handleDraggedBookMoveOrCopy = async(draggedName, targetFolder, isCopy, { skipIfSameFolder = true } = {})=>{
+    // Manual verification note:
+    // - Move root->folder, folder->root, and folder->folder
+    // - Ctrl-copy in each direction
+    // - Same-folder drop should remain a no-op when skipIfSameFolder is true
     if (!isCopy) {
         if (skipIfSameFolder) {
             const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
@@ -655,7 +682,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
 
 // Import helpers (core WI import input + extension folder import file).
 const openImportDialog = ()=>{
-    const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
+    const input = /**@type {HTMLInputElement}*/(document.querySelector(CORE_UI_SELECTORS.importFileInput));
     if (!input) return null;
 
     // Allow callers (folder import into folder) to attribute imported
@@ -707,6 +734,10 @@ const openImportDialog = ()=>{
 };
 
 const importFolderFile = async(file)=>{
+    // Manual verification note:
+    // - Valid folder JSON imports expected books
+    // - Invalid JSON shows an error toast
+    // - Name collision suffixing remains stable
     if (!file) return false;
     let payload;
     try {
@@ -799,7 +830,9 @@ const waitForDom = (condition, { timeoutMs = 5000, root = document } = {})=>new 
     const observer = new MutationObserver(()=>{
         if (condition()) finish(true);
     });
-    // Observe broadly: ST may render buttons/options dynamically.
+    // Assumption guardrail:
+    // Core WI controls may appear asynchronously after state/selection changes.
+    // Observe broadly so we respond to host DOM timing without brittle fixed delays.
     observer.observe(root === document ? document.documentElement : /**@type {Node}*/(root), {
         childList: true,
         subtree: true,
@@ -810,7 +843,7 @@ const waitForDom = (condition, { timeoutMs = 5000, root = document } = {})=>new 
 });
 
 const setSelectedBookInCoreUi = async(bookName)=>{
-    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_editor_select'));
+    const select = /**@type {HTMLSelectElement}*/(document.querySelector(CORE_UI_SELECTORS.worldEditorSelect));
     if (!select) return false;
     const option = /**@type {HTMLOptionElement[]}*/([...select.children]).find((item)=>item.textContent == bookName);
     if (!option) return false;
@@ -827,9 +860,10 @@ const setSelectedBookInCoreUi = async(bookName)=>{
     // If selection did not actually change (same value), still allow continuing.
     if (previousValue === option.value) return true;
 
-    // Prefer waiting for a worldinfo update cycle if available.
+    // Assumption guardrail:
+    // Some host states do not emit WORLDINFO_UPDATED for selection switches.
+    // Race event waiting with a short delay fallback to keep behavior stable.
     if (state.waitForWorldInfoUpdate) {
-        // Race a short timeout: selection changes sometimes do not emit WORLDINFO_UPDATED.
         await Promise.race([
             state.waitForWorldInfoUpdate(),
             state.delay(800),
@@ -863,10 +897,7 @@ const duplicateBook = async(name)=>{
 
     // Click the duplicate action once it exists.
     // Keep selector list flexible to tolerate minor ST UI changes.
-    const clicked = await clickCoreUiAction([
-        '#world_duplicate',
-        '[id="world_duplicate"]',
-    ]);
+    const clicked = await clickCoreUiAction(CORE_UI_ACTION_SELECTORS.duplicateBook);
     if (!clicked) return null;
 
     // Wait for either:
@@ -897,6 +928,10 @@ const duplicateBook = async(name)=>{
 };
 
 const duplicateBookIntoFolder = async(name, folderName)=>{
+    // Manual verification note:
+    // - Duplicate to root and folder
+    // - Duplicate while target folder is collapsed
+    // - Confirm list refresh reflects the new book location
     const duplicatedName = await duplicateBook(name);
     if (!duplicatedName) return false;
     await setBookFolder(duplicatedName, folderName);
@@ -912,10 +947,7 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
     const selected = await setSelectedBookInCoreUi(name);
     if (!selected) return;
 
-    await clickCoreUiAction([
-        '#world_popup_delete',
-        '[id="world_popup_delete"]',
-    ]);
+    await clickCoreUiAction(CORE_UI_ACTION_SELECTORS.deleteBook);
 };
 
 // Entry selection UI helpers.
@@ -1158,7 +1190,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     active.checked = selected.includes(name);
                     active.addEventListener('click', async()=>{
                         active.disabled = true;
-                        const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_info'));
+                        const select = /**@type {HTMLSelectElement}*/(document.querySelector(CORE_UI_SELECTORS.worldInfoSelect));
                         const option = select ? [...select.options].find((opt)=>opt.textContent === name) : null;
                         if (option && select) {
                             option.selected = active.checked;
@@ -1220,9 +1252,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     rename.addEventListener('click', async(evt)=>{
                                         const selected = await setSelectedBookInCoreUi(name);
                                         if (!selected) return;
-                                        await clickCoreUiAction([
-                                            '#world_popup_name_button',
-                                        ]);
+                                        await clickCoreUiAction(CORE_UI_ACTION_SELECTORS.renameBook);
                                     });
                                     const i = document.createElement('i'); {
                                         i.classList.add('stwid--icon');
