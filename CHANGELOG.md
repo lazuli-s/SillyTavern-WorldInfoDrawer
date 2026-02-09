@@ -6,11 +6,13 @@
 
 - Added standardized dropdown families across the drawer UI: `stwid--multiselectDropdown*` for selectable menus and `stwid--listDropdown*` for action menus, including square/check-square indicators for multiselect options.
 - Added Book Visibility scope sharing with Order Helper, so toolbar and folder launches can use current Book Visibility scope and open non-single-book sessions can refresh to scope changes.
+- Added a top-row list-panel toggle to collapse/expand all folders in one click.
 
 ### Changed
 
 - Changed list filtering so Book Visibility is now the single source of truth for visible books, removing the separate `Active` filter control from the list panel.
 - Changed dropdown styling and behavior to be consistent across list panel and Order Helper menus (rounding, spacing, and open/close interaction consistency).
+- Changed folder expand-all handling to be view-only, so expanding all folders does not overwrite saved default folder-collapse preferences.
 
 ### Fixed
 
@@ -20,6 +22,7 @@
 ### Internal / Maintenance
 
 - Documented the dropdown family contract and visibility chip usage in `STYLE_GUIDE.md`, and updated architecture/feature mapping docs to reflect the current Book Visibility and Order Helper scope model.
+- Updated architecture and feature-map documentation for the new list-panel folder collapse/expand-all toggle ownership and behavior.
 
 
 ## [2.3.0] - 2026-02-08

@@ -1465,7 +1465,7 @@ const createOrderHelperRenderer = ({
                                         );
                                         const dragHandle = document.createElement('div'); {
                                             dragHandle.classList.add('stwid--sortableHandle');
-                                            dragHandle.textContent = 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°';
+                                            dragHandle.textContent = '|||';
                                             setTooltip(dragHandle, 'Drag to reorder rows');
                                             controls.append(upButton, dragHandle, downButton);
                                         }
