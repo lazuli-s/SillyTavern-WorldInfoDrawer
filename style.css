@@ -379,10 +379,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   line-height: 1.2;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle {
-  opacity: 0.75;
-}
-
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions {
   display: flex;
   gap: 0.25em;
@@ -417,16 +413,18 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 }
 
 /* Folder header buttons */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu {
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
   cursor: pointer;
-  opacity: 0.75;
+  opacity: 0.5;
   transition: 200ms;
-  border-radius: 6px;
   padding: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder :is(.stwid--folderToggle, .stwid--folderActiveToggle, .stwid--folderAction, .stwid--folderMenu):focus-visible {
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover {
+  opacity: 1;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;

@@ -287,7 +287,9 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                     actions.append(activeToggle);
                 }
                 const addButton = document.createElement('div'); {
+                    addButton.classList.add('stwid--action');
                     addButton.classList.add('stwid--folderAction');
+                    addButton.classList.add('stwid--add');
                     addButton.classList.add('stwid--folderAdd');
                     addButton.classList.add('fa-solid', 'fa-fw', 'fa-plus');
                     addButton.title = 'New Book in Folder';
@@ -307,6 +309,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                 }
                 if (menuActions) {
                     const menuTrigger = document.createElement('div'); {
+                        menuTrigger.classList.add('stwid--action');
                         menuTrigger.classList.add('stwid--folderMenu');
                         menuTrigger.classList.add('stwid--listDropdownTrigger');
                         menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
@@ -610,7 +613,9 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                     }
                 }
                 const toggle = document.createElement('i'); {
+                    toggle.classList.add('stwid--action');
                     toggle.classList.add('stwid--folderToggle');
+                    toggle.classList.add('stwid--collapseToggle');
                     toggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
                     toggle.title = 'Collapse/expand this folder';
                     toggle.setAttribute('aria-label', 'Collapse or expand this folder');
