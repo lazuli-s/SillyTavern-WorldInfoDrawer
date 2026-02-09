@@ -11,8 +11,10 @@ import {
     setFolderInMetadata,
 } from './lorebookFolders.js';
 
+// Module-level runtime references and UI state.
 let state = {};
 
+// Filter/visibility controls (initialized during setup).
 let searchInput;
 let searchEntriesInput;
 let bookVisibilityMode = 'allBooks';
@@ -23,12 +25,14 @@ let loadListDebounced;
 let folderImportInput;
 const entrySearchCache = {};
 
+// Per-session collapse/folder DOM tracking.
 const collapseStates = {};
 const folderCollapseStates = {};
 const folderDoms = {};
 
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
 
+// Folder collapse persistence helpers.
 const loadFolderCollapseStates = ()=>{
     if (typeof localStorage === 'undefined') return {};
     try {
@@ -69,6 +73,7 @@ const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand
     setFolderCollapsed(folderDoms[folderName], Boolean(isCollapsed));
 };
 
+// Entry multi-select state shared with worldEntry.js.
 /** Last clicked/selected DOM (WI entry) @type {HTMLElement} */
 let selectLast = null;
 /** Name of the book to select WI entries from @type {string} */
@@ -82,6 +87,8 @@ let selectToast = null;
 /** Name of the book being dragged @type {string|null} */
 let dragBookName = null;
 let folderMenuActions;
+
+// Source-link and book-visibility UI constants.
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
     { key:'character', icon:'fa-user', label:'Character' },
     { key:'chat', icon:'fa-comments', label:'Chat' },
@@ -123,6 +130,7 @@ const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
 ]);
 const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 
+// Generic multiselect dropdown helpers.
 const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked)=>{
     if (!checkbox) return;
     checkbox.classList.toggle('fa-square-check', Boolean(isChecked));
@@ -143,6 +151,7 @@ const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
     }
 };
 
+// Book/folder collapse helpers.
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
 };
@@ -211,6 +220,7 @@ const setBookCollapsed = (name, isCollapsed)=>{
     updateCollapseAllToggle();
 };
 
+// Book sort and source-link helpers.
 const getBookSortChoice = (name)=>{
     const bookSort = state.Settings.instance.useBookSorts ? state.cache[name]?.sort : null;
     return {
@@ -312,6 +322,7 @@ const updateAllBookSourceLinks = (linksByBook = null)=>{
     }
 };
 
+// Book metadata + sort preference helpers.
 const sortEntriesIfNeeded = (name)=>{
     const { sort, direction } = getBookSortChoice(name);
     const sorted = state.sortEntries(Object.values(state.cache[name].entries), sort, direction);
@@ -366,6 +377,7 @@ const clearBookSortPreferences = async()=>{
     }
 };
 
+// Folder assignment helper (persists through WI APIs).
 const setBookFolder = async(name, folderName)=>{
     const latest = await state.loadWorldInfo(name);
     if (!latest || typeof latest !== 'object') return false;
@@ -388,6 +400,7 @@ const setBookFolder = async(name, folderName)=>{
     return true;
 };
 
+// Book menu: move-to-folder modal UI/action.
 const buildMoveBookMenuItem = (name, closeMenu)=>{
     const item = document.createElement('div'); {
         item.classList.add('stwid--listDropdownItem');
@@ -574,6 +587,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
     return item;
 };
 
+// Import helpers (core WI import input + extension folder import file).
 const openImportDialog = ()=>{
     const input = /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file'));
     if (!input) return null;
@@ -693,6 +707,7 @@ const openFolderImportDialog = ()=>{
     folderImportInput.click();
 };
 
+// Core WI UI delegation helpers (select + trigger vanilla actions).
 /**
  * Waits for a DOM condition to become true.
  * Uses a MutationObserver where possible to avoid fixed delays.
@@ -772,6 +787,7 @@ const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
     return true;
 };
 
+// Book duplicate/delete actions delegated to core WI behavior.
 const duplicateBook = async(name)=>{
     const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
     const initialNames = [...(getNames() ?? [])];
@@ -836,6 +852,7 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
     ]);
 };
 
+// Entry selection UI helpers.
 const selectEnd = ()=>{
     selectFrom = null;
     selectMode = null;
@@ -881,6 +898,7 @@ const selectRemove = (entry)=>{
     icon.classList.remove('fa-square-check');
 };
 
+// Book rendering + book-level interaction wiring.
 const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     const data = bookData ?? await state.loadWorldInfo(name);
     const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:state.getSortFromMetadata(data.metadata) };
@@ -1446,6 +1464,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     return book;
 };
 
+// Full list render/reload.
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
     for (const folderDom of Object.values(folderDoms)) {
@@ -1562,6 +1581,7 @@ const refreshList = async()=>{
 const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--filter-query')
     || bookRoot.classList.contains('stwid--filter-visibility');
 
+// Folder summary visibility/active-state refresh.
 const updateFolderVisibility = ()=>{
     for (const folderDom of Object.values(folderDoms)) {
         const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
@@ -1580,6 +1600,7 @@ const updateFolderActiveToggles = ()=>{
     updateFolderVisibility();
 };
 
+// Filter UI (search + visibility menu/chips).
 const setupFilter = (list)=>{
     const filter = document.createElement('div'); {
         const searchRow = document.createElement('div');
@@ -1906,6 +1927,7 @@ const setupFilter = (list)=>{
     }
 };
 
+// Books container setup.
 const setupBooks = (list)=>{
     const books = document.createElement('div'); {
         state.dom.books = books;
@@ -1933,6 +1955,7 @@ const setupBooks = (list)=>{
     }
 };
 
+// Panel bootstrap helpers.
 const setupListPanel = (list)=>{
     setupFilter(list);
     setupBooks(list);
@@ -1971,6 +1994,7 @@ const getSelectionState = ()=>({
     },
 });
 
+// Public module initialization + returned API surface.
 const initListPanel = (options)=>{
     state = options;
     bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
