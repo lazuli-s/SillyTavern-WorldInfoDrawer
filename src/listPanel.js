@@ -88,6 +88,57 @@ let selectToast = null;
 let dragBookName = null;
 let folderMenuActions;
 
+// Shared helpers for module-level mutable state.
+const clearObjectKeys = (target)=>{
+    for (const key of Object.keys(target)) {
+        delete target[key];
+    }
+};
+
+// Lifecycle: visibility state is initialized when list panel boots.
+const resetBookVisibilityState = ()=>{
+    bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
+    bookVisibilitySelections = new Set();
+    bookVisibilityMenu = null;
+    bookVisibilityChips = null;
+};
+
+// Lifecycle: entry-search cache is per panel session and cleared on init.
+const clearEntrySearchCache = ()=>{
+    clearObjectKeys(entrySearchCache);
+};
+
+// Lifecycle: folder collapse defaults are loaded from localStorage on init.
+const hydrateFolderCollapseStates = ()=>{
+    Object.assign(folderCollapseStates, loadFolderCollapseStates());
+};
+
+// Lifecycle: selection memory resets when selection ends.
+const resetSelectionMemory = ()=>{
+    selectFrom = null;
+    selectMode = null;
+    selectList = null;
+    selectLast = null;
+    if (selectToast) {
+        toastr.clear(selectToast);
+    }
+};
+
+// Lifecycle: collapse state is captured from current DOM before cache rebuild.
+const captureBookCollapseStatesFromDom = ()=>{
+    for (const [bookName, bookData] of Object.entries(state.cache)) {
+        const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--isCollapsed');
+        if (isCollapsed !== undefined) setCollapseState(bookName, isCollapsed);
+    }
+};
+
+// Lifecycle: cache entries are removed before rebuilding list DOM.
+const clearCacheBooks = ()=>{
+    for (const bookName of Object.keys(state.cache)) {
+        delete state.cache[bookName];
+    }
+};
+
 // Source-link and book-visibility UI constants.
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
     { key:'character', icon:'fa-user', label:'Character' },
@@ -854,13 +905,7 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
 
 // Entry selection UI helpers.
 const selectEnd = ()=>{
-    selectFrom = null;
-    selectMode = null;
-    selectList = null;
-    selectLast = null;
-    if (selectToast) {
-        toastr.clear(selectToast);
-    }
+    resetSelectionMemory();
     state.dom.books.classList.remove('stwid--isDragging');
     [...state.dom.books.querySelectorAll('.stwid--entry.stwid--isSelected')]
         .forEach(it=>{
@@ -1565,11 +1610,8 @@ const loadList = async()=>{
 const refreshList = async()=>{
     state.dom.drawer.body.classList.add('stwid--isLoading');
     state.resetEditor?.();
-    for (const [bookName, bookData] of Object.entries(state.cache)) {
-        const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--isCollapsed');
-        if (isCollapsed !== undefined) setCollapseState(bookName, isCollapsed);
-        delete state.cache[bookName];
-    }
+    captureBookCollapseStatesFromDom();
+    clearCacheBooks();
     try {
         await loadListDebounced();
         searchInput?.dispatchEvent(new Event('input'));
@@ -1997,14 +2039,9 @@ const getSelectionState = ()=>({
 // Public module initialization + returned API surface.
 const initListPanel = (options)=>{
     state = options;
-    bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
-    bookVisibilitySelections = new Set();
-    bookVisibilityMenu = null;
-    bookVisibilityChips = null;
-    for (const key of Object.keys(entrySearchCache)) {
-        delete entrySearchCache[key];
-    }
-    Object.assign(folderCollapseStates, loadFolderCollapseStates());
+    resetBookVisibilityState();
+    clearEntrySearchCache();
+    hydrateFolderCollapseStates();
     loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
 
