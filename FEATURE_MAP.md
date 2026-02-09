@@ -5,6 +5,7 @@ Where each feature or behavior is implemented in the codebase.
 ## Bootstrap & runtime sync
 
 - Extension startup, drawer DOM bootstrap, and panel wiring → index.js
+- List-panel slice composition/dependency wiring and exported list-panel API surface → src/listPanel.js
 - Dev CSS watch/reload via FilesPluginApi (when available) → index.js
 - Incremental cache updates after World Info changes (books and entries) → index.js
 - World Info update waiting/token coordination for async UI actions → index.js, src/utils.js
@@ -33,6 +34,8 @@ Where each feature or behavior is implemented in the codebase.
 - Folder DOM creation (header, count, active toggle, collapse toggle) → src/lorebookFolders.js
 - Folder collapse state persistence (`stwid--folder-collapse-states`) → src/listPanel.state.js
 - Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/listPanel.foldersView.js, src/listPanel.js, index.js
+- Folder visibility refresh while search/visibility filters are active → src/listPanel.foldersView.js
+- Folder active-toggle tri-state refresh based on currently visible books → src/listPanel.foldersView.js
 - Folder context menu actions (rename, import into folder, export folder, delete folder) → src/lorebookFolders.js
 - Create new book directly inside a folder → src/lorebookFolders.js
 - Set active/inactive state for all books in a folder → src/lorebookFolders.js
@@ -90,6 +93,7 @@ Where each feature or behavior is implemented in the codebase.
 - Event bus subscriptions (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`, context events) → index.js
 - Core template usage (`renderTemplateAsync`, `getWorldEntry`) → src/editorPanel.js, index.js
 - Delegation to core World Info UI buttons for rename/delete/duplicate actions → src/listPanel.bookMenu.js, src/listPanel.coreBridge.js
+- Core WI DOM delegation helpers (`waitForDom`, `setSelectedBookInCoreUi`, `clickCoreUiAction`) and selector map ownership → src/listPanel.coreBridge.js
 - Optional extension/plugin menu integration (Bulk Edit, External Editor, STLO) → src/listPanel.bookMenu.js, index.js
 
 ## Advanced tools (Order Helper)

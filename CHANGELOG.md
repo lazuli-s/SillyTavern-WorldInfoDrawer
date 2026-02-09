@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.3.2] - 2026-02-09
+
+### Internal / Maintenance
+
+- Refactored `src/listPanel.js` initialization by extracting slice wiring and API-surface assembly into helper functions (`wireSlices`, `getListPanelApi`) without changing behavior.
+
 ## [2.3.1] - 2026-02-09
 
 ### Added

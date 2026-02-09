@@ -60,6 +60,7 @@
 
 - `listPanel.js`
   - Composes list panel slices and shared orchestration actions
+  - Wires slice dependency injection (`filterBar`, `selectionDnD`, `bookMenu`, `foldersView`, `booksView`) and returns the consolidated list-panel API surface used by `index.js`
   - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
   - Owns source-link icon rendering helpers and sort/metadata orchestration helpers shared by slices
 
@@ -370,7 +371,7 @@ Repository URL: `https://github.com/lazuli-s/SillyTavern-WorldInfoDrawer`
 
 Primary Contact/Team: Lazuli
 
-Date of Last Update: 2026-02-08
+Date of Last Update: 2026-02-09
 
 ## 11. Glossary / Acronyms
 
