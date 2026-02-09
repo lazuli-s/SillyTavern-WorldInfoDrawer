@@ -451,6 +451,37 @@ const setBookFolder = async(name, folderName)=>{
     return true;
 };
 
+// Shared book action helpers (used by menu flows and drag/drop flows).
+const refreshAndCenterBook = async(name)=>{
+    await refreshList();
+    const target = state.cache[name]?.dom?.root;
+    target?.scrollIntoView({ block: 'center' });
+};
+
+const applyBookFolderChange = async(name, folderName, { centerAfterRefresh = false } = {})=>{
+    const updated = await setBookFolder(name, folderName);
+    if (!updated) return false;
+    if (centerAfterRefresh) {
+        await refreshAndCenterBook(name);
+    } else {
+        await refreshList();
+    }
+    return true;
+};
+
+const handleDraggedBookMoveOrCopy = async(draggedName, targetFolder, isCopy, { skipIfSameFolder = true } = {})=>{
+    if (!isCopy) {
+        if (skipIfSameFolder) {
+            const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
+            if (currentFolder === targetFolder) return false;
+        }
+        await applyBookFolderChange(draggedName, targetFolder);
+        return true;
+    }
+    await duplicateBookIntoFolder(draggedName, targetFolder);
+    return true;
+};
+
 // Book menu: move-to-folder modal UI/action.
 const buildMoveBookMenuItem = (name, closeMenu)=>{
     const item = document.createElement('div'); {
@@ -538,13 +569,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                 }
 
                 // Requirement: immediately add the book to the new folder.
-                const updated = await setBookFolder(name, reg.folder);
-                if (updated) {
-                    await refreshList();
-                    // Jump to location: scroll the destination folder/book into view.
-                    const target = state.cache[name]?.dom?.root;
-                    target?.scrollIntoView({ block: 'center' });
-                }
+                await applyBookFolderChange(name, reg.folder, { centerAfterRefresh: true });
                 modal.close();
             });
             buttonRowA.append(createBtn);
@@ -563,12 +588,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                     toastr.info('Book is already not in a folder.');
                     return;
                 }
-                const updated = await setBookFolder(name, null);
-                if (updated) {
-                    await refreshList();
-                    const target = state.cache[name]?.dom?.root;
-                    target?.scrollIntoView({ block: 'center' });
-                }
+                await applyBookFolderChange(name, null, { centerAfterRefresh: true });
                 modal.close();
             });
             buttonRowA.append(noFolderBtn);
@@ -596,12 +616,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
                     return;
                 }
 
-                const updated = await setBookFolder(name, selectedFolder);
-                if (updated) {
-                    await refreshList();
-                    const target = state.cache[name]?.dom?.root;
-                    target?.scrollIntoView({ block: 'center' });
-                }
+                await applyBookFolderChange(name, selectedFolder, { centerAfterRefresh: true });
                 modal.close();
             });
             buttonRowB.append(moveBtn);
@@ -986,15 +1001,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                         if (!dragBookName) return;
                         const draggedName = dragBookName;
                         dragBookName = null;
-                        const isCopy = evt.ctrlKey;
-                        const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
-                        if (!isCopy) {
-                            if (currentFolder === folderName) return;
-                            const updated = await setBookFolder(draggedName, folderName);
-                            if (updated) await refreshList();
-                            return;
-                        }
-                        await duplicateBookIntoFolder(draggedName, folderName);
+                        await handleDraggedBookMoveOrCopy(draggedName, folderName, evt.ctrlKey);
                     },
                     menuActions: folderMenuActions,
                 });
@@ -1052,15 +1059,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 const draggedName = dragBookName;
                 dragBookName = null;
                 const targetFolder = getFolderFromMetadata(state.cache[name]?.metadata);
-                const isCopy = evt.ctrlKey;
-                if (!isCopy) {
-                    const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
-                    if (currentFolder === targetFolder) return;
-                    const updated = await setBookFolder(draggedName, targetFolder);
-                    if (updated) await refreshList();
-                    return;
-                }
-                await duplicateBookIntoFolder(draggedName, targetFolder);
+                await handleDraggedBookMoveOrCopy(draggedName, targetFolder, evt.ctrlKey);
                 return;
             }
             if (selectFrom === null) return;
@@ -1571,15 +1570,7 @@ const loadList = async()=>{
                 if (!dragBookName) return;
                 const draggedName = dragBookName;
                 dragBookName = null;
-                const isCopy = evt.ctrlKey;
-                const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
-                if (!isCopy) {
-                    if (currentFolder === folderName) return;
-                    const updated = await setBookFolder(draggedName, folderName);
-                    if (updated) await refreshList();
-                    return;
-                }
-                await duplicateBookIntoFolder(draggedName, folderName);
+                await handleDraggedBookMoveOrCopy(draggedName, folderName, evt.ctrlKey);
             },
             menuActions: folderMenuActions,
         });
@@ -1985,13 +1976,7 @@ const setupBooks = (list)=>{
             evt.preventDefault();
             const draggedName = dragBookName;
             dragBookName = null;
-            const isCopy = evt.ctrlKey;
-            if (!isCopy) {
-                const updated = await setBookFolder(draggedName, null);
-                if (updated) await refreshList();
-                return;
-            }
-            await duplicateBookIntoFolder(draggedName, null);
+            await handleDraggedBookMoveOrCopy(draggedName, null, evt.ctrlKey, { skipIfSameFolder: false });
         });
         list.append(books);
     }
