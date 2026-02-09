@@ -387,10 +387,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderAction,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderMenu {
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle {
   display: inline-flex;
   align-items: center;
   line-height: 1;
