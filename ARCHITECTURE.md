@@ -9,6 +9,7 @@
 |-- src/
 |   |-- listPanel.js             # Left panel: books/folders/entries, selection, DnD, context menus
 |   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
+|   |-- listPanel.filterBar.js   # Filter/search/visibility slice for list panel
 |   |-- listPanel.coreBridge.js  # Core WI DOM delegation helpers (wait/select/click wrappers)
 |   |-- editorPanel.js           # Entry editor panel integration with ST templates
 |   |-- worldEntry.js            # Entry row renderer + selection/toggle behaviors
@@ -57,8 +58,6 @@
   - Renders the left panel (folders + books + entry lists)
   - Composes list rendering/interactions with state held in `listPanel.state.js`
   - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
-  - Search matches books and optionally entries (title + keys)
-  - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) with inline chips, a static `Book Visibility` trigger label, list-only helper tooltip, and per-option explanatory tooltips/checkbox indicators
   - Selection system:
     - Click selects
     - SHIFT selects range
@@ -78,6 +77,12 @@
     - Folder collapse/expand-all toggle state sync
     - Folder active toggle (tri-state)
     - Folder context menu (export folder, import into folder, rename folder, delete folder)
+
+- `listPanel.filterBar.js`
+  - Owns list search bar and entry-text search toggle behavior
+  - Owns Book Visibility constants/options/menu/chip rendering
+  - Owns visibility scope computation and active-filter application wiring
+  - Calls back into composition for folder toggle refresh and scope-change notifications
 
 - `listPanel.state.js`
   - Owns list panel module-local mutable state:
