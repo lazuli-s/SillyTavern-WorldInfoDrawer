@@ -116,6 +116,27 @@ const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
     BOOK_VISIBILITY_MODES.PERSONA,
     BOOK_VISIBILITY_MODES.CHARACTER,
 ]);
+const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
+
+const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked)=>{
+    if (!checkbox) return;
+    checkbox.classList.toggle('fa-square-check', Boolean(isChecked));
+    checkbox.classList.toggle('fa-square', !isChecked);
+};
+
+const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
+    for (const menu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--active')) {
+        if (menu === excludeMenu) continue;
+        const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
+        if (typeof closeMenu === 'function') {
+            closeMenu();
+            continue;
+        }
+        menu.classList.remove('stwid--active');
+        const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
+        trigger?.setAttribute('aria-expanded', 'false');
+    }
+};
 
 const setCollapseState = (name, isCollapsed)=>{
     collapseStates[name] = Boolean(isCollapsed);
@@ -318,7 +339,7 @@ const setBookFolder = async(name, folderName)=>{
 
 const buildMoveBookMenuItem = (name, closeMenu)=>{
     const item = document.createElement('div'); {
-        item.classList.add('stwid--item');
+        item.classList.add('stwid--listDropdownItem');
         item.classList.add('stwid--moveToFolder');
         item.addEventListener('click', async(evt)=>{
             evt.stopPropagation();
@@ -354,7 +375,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             popupContent.append(title);
 
             const row = document.createElement('div');
-            row.classList.add('stwid--item');
+            row.classList.add('stwid--listDropdownItem');
             row.classList.add('stwid--moveBookRow');
             const select = document.createElement('select');
             select.classList.add('text_pole');
@@ -1050,7 +1071,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 }
                 const menuTrigger = document.createElement('div'); {
                     menuTrigger.classList.add('stwid--action');
-                    menuTrigger.classList.add('stwid--menuTrigger');
+                    menuTrigger.classList.add('stwid--listDropdownTrigger');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
                     menuTrigger.title = 'Book menu';
                     menuTrigger.setAttribute('aria-label', 'Book menu');
@@ -1073,13 +1094,13 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                 menuTrigger.style.anchorName = '';
                             });
                             const menu = document.createElement('div'); {
-                                menu.classList.add('stwid--menu');
+                                menu.classList.add('stwid--listDropdownMenu');
                                 const closeMenu = ()=>{
                                     blocker.remove();
                                     menuTrigger.style.anchorName = '';
                                 };
                                 const rename = document.createElement('div'); {
-                                    rename.classList.add('stwid--item');
+                                    rename.classList.add('stwid--listDropdownItem');
                                     rename.classList.add('stwid--rename');
                                     rename.addEventListener('click', async(evt)=>{
                                         const selected = await setSelectedBookInCoreUi(name);
@@ -1103,7 +1124,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                 menu.append(buildMoveBookMenuItem(name, closeMenu));
                                 if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
                                     const bulk = document.createElement('div'); {
-                                        bulk.classList.add('stwid--item');
+                                        bulk.classList.add('stwid--listDropdownItem');
                                         bulk.classList.add('stwid--bulkEdit');
                                         bulk.addEventListener('click', async(evt)=>{
                                             const selected = await setSelectedBookInCoreUi(name);
@@ -1127,7 +1148,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                 }
                                 if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoExternalEditor')) {
                                     const editor = document.createElement('div'); {
-                                        editor.classList.add('stwid--item');
+                                        editor.classList.add('stwid--listDropdownItem');
                                         editor.classList.add('stwid--externalEditor');
                                         editor.addEventListener('click', async(evt)=>{
                                             fetch('/api/plugins/wiee/editor', {
@@ -1154,7 +1175,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     }
                                 }
                                 const fillTitles = document.createElement('div'); {
-                                    fillTitles.classList.add('stwid--item');
+                                    fillTitles.classList.add('stwid--listDropdownItem');
                                     fillTitles.classList.add('stwid--fillTitles');
                                     fillTitles.addEventListener('click', async()=>{
                                         await state.fillEmptyTitlesWithKeywords(name);
@@ -1172,7 +1193,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     menu.append(fillTitles);
                                 }
                                 const bookSort = document.createElement('div'); {
-                                    bookSort.classList.add('stwid--item');
+                                    bookSort.classList.add('stwid--listDropdownItem');
                                     bookSort.classList.add('stwid--bookSort');
                                     bookSort.addEventListener('click', (evt)=>evt.stopPropagation());
                                     const i = document.createElement('i'); {
@@ -1212,7 +1233,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     menu.append(bookSort);
                                 }
                                 const orderHelper = document.createElement('div'); {
-                                    orderHelper.classList.add('stwid--item');
+                                    orderHelper.classList.add('stwid--listDropdownItem');
                                     orderHelper.classList.add('stwid--orderHelper');
                                     orderHelper.addEventListener('click', ()=>{
                                         state.openOrderHelper(name);
@@ -1231,7 +1252,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                 }
                                 const stloButton = document.createElement('div'); {
                                     stloButton.id = 'lorebook_ordering_button';
-                                    stloButton.classList.add('stwid--item');
+                                    stloButton.classList.add('stwid--listDropdownItem');
                                     stloButton.classList.add('stwid--stlo');
                                     stloButton.dataset.i18n = '[title]stlo.button.configure; [aria-label]stlo.button.configure';
                                     stloButton.title = 'Configure STLO Priority & Budget';
@@ -1264,7 +1285,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     menu.append(stloButton);
                                 }
                                 const exp = document.createElement('div'); {
-                                    exp.classList.add('stwid--item');
+                                    exp.classList.add('stwid--listDropdownItem');
                                     exp.classList.add('stwid--export');
                                     exp.addEventListener('click', async(evt)=>{
                                         state.download(JSON.stringify({ entries:state.cache[name].entries }), name, 'application/json');
@@ -1282,7 +1303,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     menu.append(exp);
                                 }
                                 const dup = document.createElement('div'); {
-                                    dup.classList.add('stwid--item');
+                                    dup.classList.add('stwid--listDropdownItem');
                                     dup.classList.add('stwid--duplicate');
                                     dup.addEventListener('click', async(evt)=>{
                                         await duplicateBook(name);
@@ -1300,7 +1321,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                                     menu.append(dup);
                                 }
                                 const del = document.createElement('div'); {
-                                    del.classList.add('stwid--item');
+                                    del.classList.add('stwid--listDropdownItem');
                                     del.classList.add('stwid--delete');
                                     del.addEventListener('click', async(evt)=>{
                                         await deleteBook(name);
@@ -1706,7 +1727,8 @@ const setupFilter = (list)=>{
         const closeBookVisibilityMenu = ()=>{
             if (!bookVisibilityMenu) return;
             bookVisibilityMenu.classList.remove('stwid--active');
-            bookVisibilityMenu.previousElementSibling?.setAttribute('aria-expanded', 'false');
+            const trigger = bookVisibilityMenu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
+            trigger?.setAttribute('aria-expanded', 'false');
         };
 
         const applyActiveFilter = ()=>{
@@ -1728,7 +1750,7 @@ const setupFilter = (list)=>{
                 state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
             }
             if (bookVisibilityMenu) {
-                for (const option of bookVisibilityMenu.querySelectorAll('.stwid--columnOption')) {
+                for (const option of bookVisibilityMenu.querySelectorAll('.stwid--multiselectDropdownOption')) {
                     const optionMode = option.getAttribute('data-mode');
                     let isActive = false;
                     if (optionMode === BOOK_VISIBILITY_MODES.ALL_BOOKS) {
@@ -1740,9 +1762,9 @@ const setupFilter = (list)=>{
                     }
                     option.classList.toggle('stwid--active', isActive);
                     option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                    const optionCheckbox = option.querySelector('.stwid--columnOptionCheckbox');
+                    const optionCheckbox = option.querySelector('.stwid--multiselectDropdownOptionCheckbox');
                     if (optionCheckbox) {
-                        optionCheckbox.checked = isActive;
+                        setMultiselectDropdownOptionCheckboxState(optionCheckbox, isActive);
                     }
                 }
             }
@@ -1754,11 +1776,11 @@ const setupFilter = (list)=>{
             bookVisibility.classList.add('stwid--bookVisibility');
 
             const menuWrap = document.createElement('div');
-            menuWrap.classList.add('stwid--columnMenuWrap');
+            menuWrap.classList.add('stwid--multiselectDropdownWrap');
 
             const trigger = document.createElement('button');
             trigger.type = 'button';
-            trigger.classList.add('menu_button', 'stwid--columnMenuButton');
+            trigger.classList.add('menu_button', 'stwid--multiselectDropdownButton');
             trigger.title = 'Select which book sources are visible in the list.';
             trigger.setAttribute('aria-label', 'Book visibility mode');
             trigger.setAttribute('aria-expanded', 'false');
@@ -1779,27 +1801,30 @@ const setupFilter = (list)=>{
             menuWrap.append(helper);
 
             const menu = document.createElement('div');
-            menu.classList.add('stwid--columnMenu', 'stwid--bookVisibilityMenu');
+            menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu');
             bookVisibilityMenu = menu;
 
             for (const option of BOOK_VISIBILITY_OPTIONS) {
                 const optionTooltip = BOOK_VISIBILITY_OPTION_TOOLTIPS[option.mode] ?? option.label;
                 const optionButton = document.createElement('button');
                 optionButton.type = 'button';
-                optionButton.classList.add('stwid--columnOption');
+                optionButton.classList.add('stwid--multiselectDropdownOption');
                 optionButton.setAttribute('data-mode', option.mode);
                 optionButton.setAttribute('aria-pressed', 'false');
                 optionButton.title = optionTooltip;
                 optionButton.setAttribute('aria-label', optionTooltip);
                 if (option.mode !== BOOK_VISIBILITY_MODES.ALL_BOOKS && option.mode !== BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
-                    const optionCheckbox = document.createElement('input');
-                    optionCheckbox.type = 'checkbox';
-                    optionCheckbox.classList.add('checkbox', 'stwid--columnOptionCheckbox');
-                    optionCheckbox.tabIndex = -1;
-                    optionCheckbox.title = optionTooltip;
+                    const optionCheckbox = document.createElement('i');
+                    optionCheckbox.classList.add(
+                        'fa-solid',
+                        'fa-fw',
+                        'stwid--multiselectDropdownOptionCheckbox',
+                    );
+                    optionCheckbox.setAttribute('aria-hidden', 'true');
+                    setMultiselectDropdownOptionCheckboxState(optionCheckbox, false);
                     optionButton.append(optionCheckbox);
                 }
-                optionButton.append(createBookVisibilityIcon(option, 'stwid--columnOptionIcon'));
+                optionButton.append(createBookVisibilityIcon(option, 'stwid--multiselectDropdownOptionIcon'));
                 const optionLabel = document.createElement('span');
                 optionLabel.textContent = option.label;
                 optionButton.append(optionLabel);
@@ -1815,6 +1840,7 @@ const setupFilter = (list)=>{
                 });
                 menu.append(optionButton);
             }
+            menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeBookVisibilityMenu;
             menuWrap.append(menu);
 
             trigger.addEventListener('click', (evt)=>{
@@ -1823,6 +1849,7 @@ const setupFilter = (list)=>{
                 const shouldOpen = !menu.classList.contains('stwid--active');
                 closeBookVisibilityMenu();
                 if (shouldOpen) {
+                    closeOpenMultiselectDropdownMenus(menu);
                     menu.classList.add('stwid--active');
                     trigger.setAttribute('aria-expanded', 'true');
                 }

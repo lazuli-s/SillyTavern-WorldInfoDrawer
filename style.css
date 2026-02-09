@@ -190,7 +190,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
   flex: 1 1 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuWrap {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownWrap {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -198,14 +198,14 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   flex: 0 0 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenuButton {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
   padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenu {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -220,7 +220,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   min-width: max-content;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnMenu.stwid--active {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownMenu.stwid--active {
   display: flex;
   opacity: 1 !important;
   background-color: var(--SmartThemeBlurTintColor) !important;
@@ -230,7 +230,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption {
   display: flex;
   align-items: center;
   gap: 0.35em;
@@ -243,27 +243,36 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   text-align: left;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption:hover {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption:hover {
   color: var(--customThemeColor) !important;
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption.stwid--active {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption.stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption:focus-visible {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: 1px;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionIcon {
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
   color: var(--customThemeColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--columnOption .stwid--columnOptionCheckbox {
-  width: 0.85em;
-  height: 0.85em;
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+  width: 1em;
+  text-align: center;
+  color: var(--SmartThemeEmColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption.stwid--active .stwid--multiselectDropdownOptionCheckbox {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
+  color: var(--SmartThemeQuoteColor);
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--bookVisibilityHelp {
@@ -837,11 +846,11 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
 /* Shared menu/item patterns (Phase 4)
    Keep selectors local to this extension and avoid changing layout/positioning.
 */
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--columnMenuButton, .stwid--orderFilterButton) {
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--listDropdownTrigger, .stwid--multiselectDropdownButton, .stwid--orderFilterButton) {
   border-radius: var(--stwid-radius-m);
 }
 
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--columnMenuButton, .stwid--orderFilterButton):focus-visible {
+body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--listDropdownTrigger, .stwid--multiselectDropdownButton, .stwid--orderFilterButton):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
@@ -887,7 +896,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 }
 
 /* Context menu container */
-.stwid--blocker .stwid--menu {
+.stwid--blocker .stwid--listDropdownMenu {
   --stwid-menu-item-height: 2.05em;
 
   position: fixed;
@@ -907,7 +916,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   padding: 0.5em;
 }
 
-.stwid--blocker .stwid--menu .stwid--item {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
   opacity: 1;
@@ -924,39 +933,39 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   border-radius: var(--stwid-radius-m);
 }
 
-.stwid--blocker .stwid--menu .stwid--item:hover {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem:hover {
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 
-.stwid--blocker .stwid--menu .stwid--item:focus-visible {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
 
-.stwid--blocker .stwid--menu .stwid--item .stwid--icon {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
 }
 
-.stwid--blocker .stwid--menu .stwid--item .stwid--label {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
   flex: 1 1 auto;
   min-width: fit-content;
 }
 
-.stwid--blocker .stwid--menu .stwid--item #lorebook_ordering_button {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem #lorebook_ordering_button {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.35em;
 }
 
-.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem.stwid--bookSort {
   opacity: 1;
   cursor: default;
 }
 
-.stwid--blocker .stwid--menu .stwid--item.stwid--bookSort select {
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem.stwid--bookSort select {
   width: fit-content;
   color: inherit;
   background-color: rgba(255, 255, 255, 0.05);
@@ -1104,19 +1113,19 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   margin-right: 0.5em;
 }
 
-.stwid--orderHelper .stwid--columnMenuWrap {
+.stwid--orderHelper .stwid--multiselectDropdownWrap {
   position: relative;
   display: inline-flex;
 }
 
-.stwid--orderHelper .stwid--columnMenuButton {
+.stwid--orderHelper .stwid--multiselectDropdownButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
   padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
 }
 
-.stwid--orderHelper .stwid--columnMenu {
+.stwid--orderHelper .stwid--multiselectDropdownMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -1130,7 +1139,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   z-index: 3;
 }
 
-.stwid--orderHelper .stwid--columnMenu.stwid--active {
+.stwid--orderHelper .stwid--multiselectDropdownMenu.stwid--active {
   display: flex;
   width: max-content;
   opacity: 1 !important;
@@ -1141,17 +1150,17 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-.stwid--orderHelper .stwid--columnMenu :is(.stwid--columnOption, .stwid--columnVisibilityLabel) {
+.stwid--orderHelper .stwid--multiselectDropdownMenu :is(.stwid--multiselectDropdownOption, .stwid--columnVisibilityLabel) {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);
 }
 
-.stwid--orderHelper .stwid--columnMenu .stwid--columnOption:focus-visible {
+.stwid--orderHelper .stwid--multiselectDropdownMenu .stwid--multiselectDropdownOption:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: 1px;
 }
 
-.stwid--orderHelper .stwid--columnOption {
+.stwid--orderHelper .stwid--multiselectDropdownOption {
   display: flex;
   align-items: center;
   gap: 0.3em;
@@ -1160,11 +1169,11 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   transition: color 150ms ease;
 }
 
-.stwid--orderHelper .stwid--columnOption:hover {
+.stwid--orderHelper .stwid--multiselectDropdownOption:hover {
   color: var(--customThemeColor) !important;
 }
 
-.stwid--orderHelper .stwid--columnOption .stwid--columnOptionIcon {
+.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
   color: var(--customThemeColor);
   display: inline-flex;
   align-items: center;
@@ -1173,9 +1182,19 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   width: 1em;
 }
 
-.stwid--orderHelper .stwid--columnOption input[type='checkbox'] {
-  width: 0.85em;
-  height: 0.85em;
+.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+  width: 1em;
+  text-align: center;
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--orderHelper .stwid--multiselectDropdownOptionInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Filters */
@@ -1294,7 +1313,6 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 /* Table wrapper */
 .stwid--orderTableWrap {
   flex: 1 1 auto;
-  min-height: 0;
   min-height: 0;
   overflow: auto;
 }

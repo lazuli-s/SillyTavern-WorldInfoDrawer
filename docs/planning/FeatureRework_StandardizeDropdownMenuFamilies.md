@@ -91,12 +91,61 @@ Standardize all extension dropdowns into two explicit UI families (multiselect d
 
 ## TASK CHECKLIST
   Smallest Change Set Checklist:
-- [ ] In `src/listPanel.js`, rename Book Visibility dropdown classes from `stwid--columnMenu*` to `stwid--multiselectDropdown*` in both DOM creation and `querySelectorAll('.stwid--columnOption')` update paths.
-- [ ] In `src/listPanel.js`, keep `All Books`/`All Active` as preset rows and render Font Awesome square/check-square indicators only for `BOOK_VISIBILITY_MULTISELECT_MODES`.
-- [ ] In `src/orderHelperRender.js`, rename actions-row Column Visibility dropdown classes (`Wrap`, `Button`, `Menu`) and corresponding option classes.
-- [ ] In `src/orderHelperRender.js`, rename all table-header filter dropdown classes (`strategy`, `position`, `recursion`, `outlet`, `group`, `automationId`) from `columnMenu` naming to `multiselectDropdown` naming.
-- [ ] In `src/orderHelperRender.js`, add a shared close-other-open-multiselect call inside each existing `openMenu()` path to enforce single-open behavior.
-- [ ] In `src/listPanel.js`, rename book action menu classes from `stwid--menuTrigger`/`stwid--menu`/`stwid--item` to `stwid--listDropdownTrigger`/`stwid--listDropdownMenu`/`stwid--listDropdownItem`.
-- [ ] In `src/lorebookFolders.js`, rename folder action menu classes from `stwid--menuTrigger`/`stwid--menu`/`stwid--item` to `stwid--listDropdownTrigger`/`stwid--listDropdownMenu`/`stwid--listDropdownItem`.
-- [ ] In `style.css`, migrate all selectors referencing `stwid--columnMenu*` and `stwid--menu*` to the new family names, including shared focus selectors and `.stwid--blocker` menu rules.
-- [ ] In `STYLE_GUIDE.md`, document when to use `stwid--multiselectDropdown*` vs `stwid--listDropdown*` and include default `stwid--visibilityChips` behavior/placement guidance.
+- [x] In `src/listPanel.js`, rename Book Visibility dropdown classes from `stwid--columnMenu*` to `stwid--multiselectDropdown*` in both DOM creation and `querySelectorAll('.stwid--columnOption')` update paths.
+- [x] In `src/listPanel.js`, keep `All Books`/`All Active` as preset rows and render Font Awesome square/check-square indicators only for `BOOK_VISIBILITY_MULTISELECT_MODES`.
+- [x] In `src/orderHelperRender.js`, rename actions-row Column Visibility dropdown classes (`Wrap`, `Button`, `Menu`) and corresponding option classes.
+- [x] In `src/orderHelperRender.js`, rename all table-header filter dropdown classes (`strategy`, `position`, `recursion`, `outlet`, `group`, `automationId`) from `columnMenu` naming to `multiselectDropdown` naming.
+- [x] In `src/orderHelperRender.js`, add a shared close-other-open-multiselect call inside each existing `openMenu()` path to enforce single-open behavior.
+- [x] In `src/listPanel.js`, rename book action menu classes from `stwid--menuTrigger`/`stwid--menu`/`stwid--item` to `stwid--listDropdownTrigger`/`stwid--listDropdownMenu`/`stwid--listDropdownItem`.
+- [x] In `src/lorebookFolders.js`, rename folder action menu classes from `stwid--menuTrigger`/`stwid--menu`/`stwid--item` to `stwid--listDropdownTrigger`/`stwid--listDropdownMenu`/`stwid--listDropdownItem`.
+- [x] In `style.css`, migrate all selectors referencing `stwid--columnMenu*` and `stwid--menu*` to the new family names, including shared focus selectors and `.stwid--blocker` menu rules.
+- [x] In `STYLE_GUIDE.md`, document when to use `stwid--multiselectDropdown*` vs `stwid--listDropdown*` and include default `stwid--visibilityChips` behavior/placement guidance.
+
+## AFTER IMPLEMENTATION
+
+### What changed
+
+`src/listPanel.js`
+- Renamed Book Visibility dropdown classes to `stwid--multiselectDropdown*`.
+- Switched multiselect rows to Font Awesome `fa-square` / `fa-square-check` indicators.
+- Added shared close-handler registration so opening one multiselect dropdown closes others.
+
+`src/orderHelperRender.js`
+- Renamed all Column Visibility/filter dropdown classes to `stwid--multiselectDropdown*`.
+- Updated each multiselect option row to render Font Awesome square checkbox icons.
+- Added shared close-other-open logic to every Order Helper multiselect dropdown `openMenu()`.
+
+`src/lorebookFolders.js`
+- Renamed folder action menu classes to `stwid--listDropdown*`.
+
+`style.css`
+- Migrated `stwid--columnMenu*` and `stwid--menu*` selectors to `stwid--multiselectDropdown*` and `stwid--listDropdown*`.
+- Added checkbox-icon styling for multiselect dropdown rows and hidden input helper class for Order Helper rows.
+
+`STYLE_GUIDE.md`
+- Added explicit usage contract for `stwid--multiselectDropdown*` vs `stwid--listDropdown*`.
+- Documented preset-vs-multiselect semantics and default `stwid--visibilityChips` behavior.
+
+### Risks/What might break
+
+- Multiselect close-handler wiring:
+  - If a dropdown misses handler registration, it may stay open when another menu opens.
+  - If a future dropdown reuses the class family without close logic, outside-click cleanup can feel inconsistent.
+- Option checkbox icon changes:
+  - If state syncing misses a path, icon state can appear stale while filter state is actually correct.
+  - Hidden checkbox inputs in Order Helper could affect focus behavior if keyboard interaction is changed later.
+- Action-list family rename:
+  - Any custom CSS/user snippets still targeting `stwid--menu*` or `stwid--item` will no longer apply.
+
+### Manual checks
+
+- Open Book Visibility, then open an Order Helper filter dropdown.
+  - Success: only one multiselect dropdown remains open.
+- In Book Visibility, toggle `Global`, `Chat`, `Persona`, `Character`.
+  - Success: square/check-square icons update immediately and chips match selected modes.
+- Click `All Books` then `All Active` in Book Visibility.
+  - Success: presets behave as one-click modes and multiselect rows are not treated as preset toggles.
+- Open a book menu and a folder menu.
+  - Success: list dropdown actions still show and run normally (rename/export/delete/order helper).
+- Click outside any open dropdown (Book Visibility and Order Helper).
+  - Success: menu closes reliably on outside click.

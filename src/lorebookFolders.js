@@ -307,7 +307,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             if (menuActions) {
                 const menuTrigger = document.createElement('div'); {
                     menuTrigger.classList.add('stwid--folderMenu');
-                    menuTrigger.classList.add('stwid--menuTrigger');
+                    menuTrigger.classList.add('stwid--listDropdownTrigger');
                     menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
                     menuTrigger.title = 'Folder menu';
                     menuTrigger.setAttribute('aria-label', 'Folder menu');
@@ -332,9 +332,9 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                 menuTrigger.style.anchorName = '';
                             });
                             const menu = document.createElement('div'); {
-                                menu.classList.add('stwid--menu');
+                                menu.classList.add('stwid--listDropdownMenu');
                                 const rename = document.createElement('div'); {
-                                    rename.classList.add('stwid--item');
+                                    rename.classList.add('stwid--listDropdownItem');
                                     rename.classList.add('stwid--rename');
                                     rename.addEventListener('click', async()=>{
                                         blocker.remove();
@@ -394,7 +394,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(rename);
                                 }
                                 const imp = document.createElement('div'); {
-                                    imp.classList.add('stwid--item');
+                                    imp.classList.add('stwid--listDropdownItem');
                                     imp.classList.add('stwid--import');
                                     imp.addEventListener('click', async()=>{
                                         blocker.remove();
@@ -488,7 +488,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(imp);
                                 }
                                 const exp = document.createElement('div'); {
-                                    exp.classList.add('stwid--item');
+                                    exp.classList.add('stwid--listDropdownItem');
                                     exp.classList.add('stwid--export');
                                     exp.addEventListener('click', async()=>{
                                         blocker.remove();
@@ -514,7 +514,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(exp);
                                 }
                                 const orderHelper = document.createElement('div'); {
-                                    orderHelper.classList.add('stwid--item');
+                                    orderHelper.classList.add('stwid--listDropdownItem');
                                     orderHelper.classList.add('stwid--orderHelper');
                                     orderHelper.addEventListener('click', ()=>{
                                         blocker.remove();
@@ -537,7 +537,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(orderHelper);
                                 }
                                 const del = document.createElement('div'); {
-                                    del.classList.add('stwid--item');
+                                    del.classList.add('stwid--listDropdownItem');
                                     del.classList.add('stwid--delete');
                                     del.addEventListener('click', async()=>{
                                         blocker.remove();

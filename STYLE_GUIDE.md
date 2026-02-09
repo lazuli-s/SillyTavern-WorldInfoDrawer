@@ -67,3 +67,41 @@ Only add a new class if **all** are true:
 3. The new style is **small, targeted, and local** to the extension.
 
 If you add a new class, document **why** it was necessary.
+
+## Dropdown Families (Extension Contract)
+
+Use exactly one of the two dropdown families below.
+
+### 1) Multiselect Dropdown (`stwid--multiselectDropdown*`)
+
+Use for selectable/toggleable option lists (including filter menus and column visibility menus).
+
+- Family classes:
+  - `stwid--multiselectDropdownWrap`
+  - `stwid--multiselectDropdownButton`
+  - `stwid--multiselectDropdownMenu`
+  - `stwid--multiselectDropdownOption`
+  - `stwid--multiselectDropdownOptionIcon`
+  - `stwid--multiselectDropdownOptionCheckbox`
+- For Book Visibility:
+  - Keep preset actions (`All Books`, `All Active`) at the top.
+  - Presets are independent actions, not multiselect rows.
+  - Multiselect rows (`Global`, `Chat`, `Persona`, `Character`) use Font Awesome square checkbox icons (`fa-square` / `fa-square-check`).
+
+### 2) Action List Dropdown (`stwid--listDropdown*`)
+
+Use for action menus (book/folder context actions and future single-action lists).
+
+- Family classes:
+  - `stwid--listDropdownTrigger`
+  - `stwid--listDropdownMenu`
+  - `stwid--listDropdownItem`
+- These menus are action lists only (no select/multiselect behavior).
+
+## Visibility Chips (`stwid--visibilityChips`)
+
+Keep the default chip contract:
+
+- `stwid--visibilityChips` sits beside any visibility trigger/help controls.
+- Chips summarize currently active visibility selections/mode.
+- Chips are status indicators only; they are not interactive controls.
