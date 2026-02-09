@@ -114,7 +114,6 @@ const getVisibleFolderBookNames = (cache, folderName)=>getFolderBookNames(cache,
     const bookRoot = cache?.[name]?.dom?.root;
     if (!bookRoot) return false;
     const isFilteredOut = bookRoot.classList.contains('stwid--filter-query')
-        || bookRoot.classList.contains('stwid--filter-active')
         || bookRoot.classList.contains('stwid--filter-visibility');
     return !isFilteredOut;
 });
@@ -519,9 +518,12 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     orderHelper.addEventListener('click', ()=>{
                                         blocker.remove();
                                         menuTrigger.style.anchorName = '';
-                                        const activeNames = menuActions.getSelectedWorldInfo?.() ?? [];
+                                        const visibleScope = menuActions.getBookVisibilityScope?.()
+                                            ?? menuActions.getSelectedWorldInfo?.()
+                                            ?? [];
+                                        const visibleLookup = new Set(visibleScope);
                                         const bookNames = getFolderBookNames(menuActions.cache, folderName)
-                                            .filter((name)=>activeNames.includes(name));
+                                            .filter((name)=>visibleLookup.has(name));
                                         menuActions.openOrderHelper?.(null, bookNames);
                                     });
                                     const i = document.createElement('i'); {

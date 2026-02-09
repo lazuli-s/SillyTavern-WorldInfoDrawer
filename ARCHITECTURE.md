@@ -56,7 +56,6 @@
   - Control row: create book, create folder, import book, import folder, refresh
   - Search matches books and optionally entries (title + keys)
   - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) with inline chips, a static `Book Visibility` trigger label, list-only helper tooltip, and per-option explanatory tooltips/checkbox indicators
-  - Legacy global `Active` filter retained as additive (AND) behavior
   - Selection system:
     - Click selects
     - SHIFT selects range
@@ -99,7 +98,7 @@
 - `orderHelper.js`
   - Order Helper orchestration glue:
     - Creates state
-    - Gathers entries from active books, a single book, or a custom scope (e.g., folder)
+    - Gathers entries from Book Visibility scope, a single book override, or a custom scoped subset (e.g., folder intersection)
     - Computes derived filter option lists (strategy/position/outlet/automationId/group)
 
 - `orderHelperState.js`

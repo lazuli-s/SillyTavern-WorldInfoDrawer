@@ -38,6 +38,13 @@ export const initOrderHelper = ({
     const AUTOMATION_ID_NONE_VALUE = '';
     const GROUP_NONE_VALUE = '';
     let scopedBookNames = null;
+    const normalizeScope = (scope)=>Array.isArray(scope) ? scope : null;
+    const isSameScope = (a, b)=>{
+        if (a === b) return true;
+        if (!Array.isArray(a) || !Array.isArray(b)) return false;
+        if (a.length !== b.length) return false;
+        return a.every((name, index)=>name === b[index]);
+    };
 
     const getEntryDisplayIndex = (entry)=>{
         const displayIndex = Number(entry?.extensions?.display_index);
@@ -375,10 +382,19 @@ export const initOrderHelper = ({
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
 
-        scopedBookNames = Array.isArray(scope) ? scope : null;
+        scopedBookNames = normalizeScope(scope);
         dom.order.toggle.classList.add('stwid--active');
         renderOrderHelper(book);
     };
 
-    return { openOrderHelper };
+    const refreshOrderHelperScope = (scope = null)=>{
+        if (!dom.order.toggle?.classList.contains('stwid--active')) return;
+        if (orderHelperState.book) return;
+        const nextScope = normalizeScope(scope);
+        if (isSameScope(scopedBookNames, nextScope)) return;
+        scopedBookNames = nextScope;
+        renderOrderHelper(null);
+    };
+
+    return { openOrderHelper, refreshOrderHelperScope };
 };

@@ -15,7 +15,6 @@ let state = {};
 
 let searchInput;
 let searchEntriesInput;
-let filterActiveInput;
 let bookVisibilityMode = 'allBooks';
 let bookVisibilitySelections = new Set();
 let bookVisibilityMenu;
@@ -229,6 +228,26 @@ const getBookVisibilityFlags = (name, selectedLookup = null)=>{
         character: links.character,
         allActive: global || links.chat || links.persona || links.character,
     };
+};
+
+const isAllBooksVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
+
+const isAllActiveVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
+
+const getBookVisibilityScope = (selectedNames = null)=>{
+    const cacheEntries = state.cache ? Object.keys(state.cache) : [];
+    if (!cacheEntries.length) return [];
+    if (isAllBooksVisibility()) return cacheEntries;
+    const selected = Array.isArray(selectedNames)
+        ? selectedNames
+        : (state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info);
+    const selectedLookup = new Set(selected ?? []);
+    const isAllActive = isAllActiveVisibility();
+    return cacheEntries.filter((name)=>{
+        const flags = getBookVisibilityFlags(name, selectedLookup);
+        if (isAllActive) return flags.allActive;
+        return BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>bookVisibilitySelections.has(mode) && flags[mode]);
+    });
 };
 
 const renderBookSourceLinks = (sourceLinksContainer, links = null)=>{
@@ -1505,7 +1524,6 @@ const refreshList = async()=>{
 };
 
 const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--filter-query')
-    || bookRoot.classList.contains('stwid--filter-active')
     || bookRoot.classList.contains('stwid--filter-visibility');
 
 const updateFolderVisibility = ()=>{
@@ -1629,10 +1647,6 @@ const setupFilter = (list)=>{
         const getBookVisibilityOption = (mode)=>
             BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
 
-        const isAllBooksVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
-
-        const isAllActiveVisibility = ()=>bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
-
         const setAllBooksVisibility = ()=>{
             bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
             bookVisibilitySelections.clear();
@@ -1710,18 +1724,6 @@ const setupFilter = (list)=>{
                     bookVisibilityChips.append(chip);
                 }
             }
-
-            if (filterActiveInput?.checked) {
-                const activeChip = document.createElement('span');
-                activeChip.classList.add('stwid--visibilityChip');
-                const activeIcon = document.createElement('i');
-                activeIcon.classList.add('fa-solid', 'fa-fw', 'fa-toggle-on', 'stwid--icon');
-                activeChip.append(activeIcon);
-                const activeLabel = document.createElement('span');
-                activeLabel.textContent = 'Active';
-                activeChip.append(activeLabel);
-                bookVisibilityChips.append(activeChip);
-            }
         };
 
         const closeBookVisibilityMenu = ()=>{
@@ -1733,20 +1735,12 @@ const setupFilter = (list)=>{
 
         const applyActiveFilter = ()=>{
             const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
-            const selectedLookup = new Set(selected ?? []);
-            const isLegacyGlobalFilter = Boolean(filterActiveInput?.checked);
+            const visibleBookNames = getBookVisibilityScope(selected);
+            const visibleBookLookup = new Set(visibleBookNames);
             const isAllBooks = isAllBooksVisibility();
             const isAllActive = isAllActiveVisibility();
             for (const b of Object.keys(state.cache)) {
-                const flags = getBookVisibilityFlags(b, selectedLookup);
-                const hideByGlobalFilter = isLegacyGlobalFilter && !flags.global;
-                const visibilityMatch = isAllBooks
-                    ? true
-                    : isAllActive
-                        ? flags.allActive
-                        : BOOK_VISIBILITY_MULTISELECT_MODES.some((mode)=>bookVisibilitySelections.has(mode) && flags[mode]);
-                const hideByVisibilityFilter = !visibilityMatch;
-                state.cache[b].dom.root.classList.toggle('stwid--filter-active', hideByGlobalFilter);
+                const hideByVisibilityFilter = !visibleBookLookup.has(b);
                 state.cache[b].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
             }
             if (bookVisibilityMenu) {
@@ -1769,6 +1763,7 @@ const setupFilter = (list)=>{
                 }
             }
             renderVisibilityChips();
+            state.onBookVisibilityScopeChange?.(visibleBookNames);
             updateFolderActiveToggles();
         };
         state.applyActiveFilter = applyActiveFilter;
@@ -1869,20 +1864,6 @@ const setupFilter = (list)=>{
                 closeBookVisibilityMenu();
             });
         }
-        const filterActive = document.createElement('label'); {
-            filterActive.classList.add('stwid--filterActive');
-            filterActive.title = 'Also require global activation (applies on top of Book Visibility).';
-            const inp = document.createElement('input'); {
-                inp.type = 'checkbox';
-                filterActiveInput = inp;
-                inp.addEventListener('click', ()=>{
-                    applyActiveFilter();
-                });
-                filterActive.append(inp);
-            }
-            filterActive.append('Active');
-            searchRow.append(filterActive);
-        }
         filter.append(searchRow, visibilityRow);
         applyActiveFilter();
         list.append(filter);
@@ -1982,6 +1963,7 @@ const initListPanel = (options)=>{
         }),
         deleteBook,
         download: state.download,
+        getBookVisibilityScope: () => getBookVisibilityScope(),
         getWorldNames: () => state.getWorldNames ? state.getWorldNames() : state.world_names,
         getSelectedWorldInfo: () => state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info,
         isFolderImporting: ()=>folderImportInProgress,
@@ -1999,6 +1981,7 @@ const initListPanel = (options)=>{
     return {
         applyActiveFilter: state.applyActiveFilter,
         clearBookSortPreferences,
+        getBookVisibilityScope,
         getSelectionState,
         hasExpandedBooks,
         openFolderImportDialog,

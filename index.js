@@ -573,7 +573,7 @@ export const jumpToEntry = async(name, uid)=>{
 
 
 const addDrawer = ()=>{
-    const { openOrderHelper } = initOrderHelper({
+    const { openOrderHelper, refreshOrderHelperScope } = initOrderHelper({
         dom,
         cache,
         SORT,
@@ -742,8 +742,8 @@ const addDrawer = ()=>{
                         dom.order.toggle = order;
                         order.classList.add('menu_button');
                         order.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
-                        order.title = 'Open Order Helper (active books)';
-                        order.setAttribute('aria-label', 'Open Order Helper for active books');
+                        order.title = 'Open Order Helper (Book Visibility scope)';
+                        order.setAttribute('aria-label', 'Open Order Helper for current Book Visibility scope');
                         order.addEventListener('click', ()=>{
                             const isActive = order.classList.contains('stwid--active');
                             if (isActive) {
@@ -751,7 +751,8 @@ const addDrawer = ()=>{
                                 editorPanelApi.clearEditor();
                                 return;
                             }
-                            openOrderHelper();
+                            const visibilityScope = listPanelApi?.getBookVisibilityScope?.();
+                            openOrderHelper(null, visibilityScope);
                         });
                         controlsPrimary.append(order);
                     }
@@ -882,6 +883,7 @@ const addDrawer = ()=>{
                     list,
                     loadWorldInfo,
                     onWorldInfoChange,
+                    onBookVisibilityScopeChange: (scope)=>refreshOrderHelperScope(scope),
                     openOrderHelper,
                     Popup,
                     renderEntry,

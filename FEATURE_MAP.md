@@ -61,7 +61,7 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/listPanel.js
 - Delete selected entries (Del key) with save/update propagation → index.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.js
-- Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) + legacy global `Active` additive filter, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.js
+- Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.js
 - Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
 
 ## Sorting & ordering
@@ -92,7 +92,7 @@ Where each feature or behavior is implemented in the codebase.
 
 ## Advanced tools (Order Helper)
 
-- Order Helper open/close orchestration and scope selection (active books, single book, folder scope) → index.js, src/orderHelper.js, src/listPanel.js, src/lorebookFolders.js
+- Order Helper open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → index.js, src/orderHelper.js, src/listPanel.js, src/lorebookFolders.js
 - Order Helper state creation (defaults + restored localStorage state) → src/orderHelperState.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/orderHelper.js
 - Table renderer and control bar (sort, select-all, filter toggle, apply order) → src/orderHelperRender.js
