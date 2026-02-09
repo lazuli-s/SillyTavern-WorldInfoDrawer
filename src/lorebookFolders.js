@@ -259,139 +259,141 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                 count.classList.add('stwid--folderCount');
                 header.append(count);
             }
-            const activeToggle = document.createElement('input'); {
-                activeToggle.classList.add('stwid--folderActiveToggle');
-                activeToggle.type = 'checkbox';
-                activeToggle.title = 'Toggle global active status for visible books in this folder';
-                activeToggle.setAttribute('aria-label', 'Toggle global active status for visible books in this folder');
-                activeToggle.addEventListener('click', (evt)=>{
-                    evt.stopPropagation();
-                });
-                activeToggle.addEventListener('change', async()=>{
-                    if (!menuActions?.setBooksActive) return;
-                    const bookNames = getVisibleFolderBookNames(menuActions.cache, folderName);
-                    if (!bookNames.length) {
-                        activeToggle.checked = false;
-                        activeToggle.indeterminate = false;
-                        return;
-                    }
-                    activeToggle.disabled = true;
-                    try {
-                        await menuActions.setBooksActive(bookNames, activeToggle.checked);
-                    } finally {
-                        activeToggle.disabled = false;
-                    }
-                });
-                header.append(activeToggle);
-            }
-            const addButton = document.createElement('div'); {
-                addButton.classList.add('stwid--folderAction');
-                addButton.classList.add('stwid--folderAdd');
-                addButton.classList.add('fa-solid', 'fa-fw', 'fa-plus');
-                addButton.title = 'New Book in Folder';
-                addButton.setAttribute('aria-label', 'New Book in Folder');
-                addButton.addEventListener('click', async(evt)=>{
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    if (!menuActions?.createBookInFolder) return;
-                    addButton.setAttribute('aria-busy', 'true');
-                    try {
-                        await menuActions.createBookInFolder(folderName);
-                    } finally {
-                        addButton.removeAttribute('aria-busy');
-                    }
-                });
-                header.append(addButton);
-            }
-            if (menuActions) {
-                const menuTrigger = document.createElement('div'); {
-                    menuTrigger.classList.add('stwid--folderMenu');
-                    menuTrigger.classList.add('stwid--listDropdownTrigger');
-                    menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
-                    menuTrigger.title = 'Folder menu';
-                    menuTrigger.setAttribute('aria-label', 'Folder menu');
-                    menuTrigger.addEventListener('click', (evt)=>{
+            const actions = document.createElement('div'); {
+                actions.classList.add('stwid--actions');
+                const activeToggle = document.createElement('input'); {
+                    activeToggle.classList.add('stwid--folderActiveToggle');
+                    activeToggle.type = 'checkbox';
+                    activeToggle.title = 'Toggle global active status for visible books in this folder';
+                    activeToggle.setAttribute('aria-label', 'Toggle global active status for visible books in this folder');
+                    activeToggle.addEventListener('click', (evt)=>{
+                        evt.stopPropagation();
+                    });
+                    activeToggle.addEventListener('change', async()=>{
+                        if (!menuActions?.setBooksActive) return;
+                        const bookNames = getVisibleFolderBookNames(menuActions.cache, folderName);
+                        if (!bookNames.length) {
+                            activeToggle.checked = false;
+                            activeToggle.indeterminate = false;
+                            return;
+                        }
+                        activeToggle.disabled = true;
+                        try {
+                            await menuActions.setBooksActive(bookNames, activeToggle.checked);
+                        } finally {
+                            activeToggle.disabled = false;
+                        }
+                    });
+                    actions.append(activeToggle);
+                }
+                const addButton = document.createElement('div'); {
+                    addButton.classList.add('stwid--folderAction');
+                    addButton.classList.add('stwid--folderAdd');
+                    addButton.classList.add('fa-solid', 'fa-fw', 'fa-plus');
+                    addButton.title = 'New Book in Folder';
+                    addButton.setAttribute('aria-label', 'New Book in Folder');
+                    addButton.addEventListener('click', async(evt)=>{
                         evt.preventDefault();
                         evt.stopPropagation();
-                        menuTrigger.style.anchorName = '--stwid--ctxAnchor';
-                        const blocker = document.createElement('div'); {
-                            blocker.classList.add('stwid--blocker');
-                            blocker.addEventListener('mousedown', (evt)=>{
-                                evt.stopPropagation();
-                            });
-                            blocker.addEventListener('pointerdown', (evt)=>{
-                                evt.stopPropagation();
-                            });
-                            blocker.addEventListener('touchstart', (evt)=>{
-                                evt.stopPropagation();
-                            });
-                            blocker.addEventListener('click', (evt)=>{
-                                evt.stopPropagation();
-                                blocker.remove();
-                                menuTrigger.style.anchorName = '';
-                            });
-                            const menu = document.createElement('div'); {
-                                menu.classList.add('stwid--listDropdownMenu');
-                                const rename = document.createElement('div'); {
-                                    rename.classList.add('stwid--listDropdownItem');
-                                    rename.classList.add('stwid--rename');
-                                    rename.addEventListener('click', async()=>{
-                                        blocker.remove();
-                                        menuTrigger.style.anchorName = '';
-                                        const Popup = menuActions.Popup;
-                                        if (!Popup) return;
-                                        const nextName = await Popup.show.input('Rename folder', 'Enter a new folder name:', folderName);
-                                        if (!nextName) return;
-                                        const { normalized, isValid } = validateFolderName(nextName);
-                                        if (!normalized) {
-                                            toastr.warning('Folder name cannot be empty.');
-                                            return;
-                                        }
-                                        if (!isValid) {
-                                            toastr.error('Folder names cannot include "/".');
-                                            return;
-                                        }
-                                        if (normalized === folderName) return;
-                                        const targetFolderExisted = getFolderRegistry().includes(normalized);
-                                        registerFolderName(normalized);
-                                        const bookNames = getFolderBookNames(menuActions.cache, folderName);
-                                        const failedBookNames = [];
-                                        for (const bookName of bookNames) {
-                                            try {
-                                                const updated = await menuActions.setBookFolder(bookName, normalized);
-                                                if (!updated) {
+                        if (!menuActions?.createBookInFolder) return;
+                        addButton.setAttribute('aria-busy', 'true');
+                        try {
+                            await menuActions.createBookInFolder(folderName);
+                        } finally {
+                            addButton.removeAttribute('aria-busy');
+                        }
+                    });
+                    actions.append(addButton);
+                }
+                if (menuActions) {
+                    const menuTrigger = document.createElement('div'); {
+                        menuTrigger.classList.add('stwid--folderMenu');
+                        menuTrigger.classList.add('stwid--listDropdownTrigger');
+                        menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+                        menuTrigger.title = 'Folder menu';
+                        menuTrigger.setAttribute('aria-label', 'Folder menu');
+                        menuTrigger.addEventListener('click', (evt)=>{
+                            evt.preventDefault();
+                            evt.stopPropagation();
+                            menuTrigger.style.anchorName = '--stwid--ctxAnchor';
+                            const blocker = document.createElement('div'); {
+                                blocker.classList.add('stwid--blocker');
+                                blocker.addEventListener('mousedown', (evt)=>{
+                                    evt.stopPropagation();
+                                });
+                                blocker.addEventListener('pointerdown', (evt)=>{
+                                    evt.stopPropagation();
+                                });
+                                blocker.addEventListener('touchstart', (evt)=>{
+                                    evt.stopPropagation();
+                                });
+                                blocker.addEventListener('click', (evt)=>{
+                                    evt.stopPropagation();
+                                    blocker.remove();
+                                    menuTrigger.style.anchorName = '';
+                                });
+                                const menu = document.createElement('div'); {
+                                    menu.classList.add('stwid--listDropdownMenu');
+                                    const rename = document.createElement('div'); {
+                                        rename.classList.add('stwid--listDropdownItem');
+                                        rename.classList.add('stwid--rename');
+                                        rename.addEventListener('click', async()=>{
+                                            blocker.remove();
+                                            menuTrigger.style.anchorName = '';
+                                            const Popup = menuActions.Popup;
+                                            if (!Popup) return;
+                                            const nextName = await Popup.show.input('Rename folder', 'Enter a new folder name:', folderName);
+                                            if (!nextName) return;
+                                            const { normalized, isValid } = validateFolderName(nextName);
+                                            if (!normalized) {
+                                                toastr.warning('Folder name cannot be empty.');
+                                                return;
+                                            }
+                                            if (!isValid) {
+                                                toastr.error('Folder names cannot include "/".');
+                                                return;
+                                            }
+                                            if (normalized === folderName) return;
+                                            const targetFolderExisted = getFolderRegistry().includes(normalized);
+                                            registerFolderName(normalized);
+                                            const bookNames = getFolderBookNames(menuActions.cache, folderName);
+                                            const failedBookNames = [];
+                                            for (const bookName of bookNames) {
+                                                try {
+                                                    const updated = await menuActions.setBookFolder(bookName, normalized);
+                                                    if (!updated) {
+                                                        failedBookNames.push(bookName);
+                                                    }
+                                                } catch (error) {
+                                                    console.warn(`[STWID] Failed to move "${bookName}" while renaming folder "${folderName}"`, error);
                                                     failedBookNames.push(bookName);
                                                 }
-                                            } catch (error) {
-                                                console.warn(`[STWID] Failed to move "${bookName}" while renaming folder "${folderName}"`, error);
-                                                failedBookNames.push(bookName);
                                             }
-                                        }
-                                        if (!failedBookNames.length) {
-                                            removeFolderName(folderName);
-                                        } else {
-                                            const movedCount = Math.max(bookNames.length - failedBookNames.length, 0);
-                                            if (movedCount === 0 && !targetFolderExisted) {
-                                                removeFolderName(normalized);
+                                            if (!failedBookNames.length) {
+                                                removeFolderName(folderName);
+                                            } else {
+                                                const movedCount = Math.max(bookNames.length - failedBookNames.length, 0);
+                                                if (movedCount === 0 && !targetFolderExisted) {
+                                                    removeFolderName(normalized);
+                                                }
+                                                toastr.warning(
+                                                    `Folder rename partially completed (${movedCount}/${bookNames.length} books moved). Failed: ${summarizeBookNames(failedBookNames)}.`
+                                                );
                                             }
-                                            toastr.warning(
-                                                `Folder rename partially completed (${movedCount}/${bookNames.length} books moved). Failed: ${summarizeBookNames(failedBookNames)}.`
-                                            );
+                                            await menuActions.refreshList?.();
+                                        });
+                                        const i = document.createElement('i'); {
+                                            i.classList.add('stwid--icon');
+                                            i.classList.add('fa-solid', 'fa-fw', 'fa-pencil');
+                                            rename.append(i);
                                         }
-                                        await menuActions.refreshList?.();
-                                    });
-                                    const i = document.createElement('i'); {
-                                        i.classList.add('stwid--icon');
-                                        i.classList.add('fa-solid', 'fa-fw', 'fa-pencil');
-                                        rename.append(i);
+                                        const txt = document.createElement('span'); {
+                                            txt.classList.add('stwid--label');
+                                            txt.textContent = 'Rename Folder';
+                                            rename.append(txt);
+                                        }
+                                        menu.append(rename);
                                     }
-                                    const txt = document.createElement('span'); {
-                                        txt.classList.add('stwid--label');
-                                        txt.textContent = 'Rename Folder';
-                                        rename.append(txt);
-                                    }
-                                    menu.append(rename);
-                                }
                                 const imp = document.createElement('div'); {
                                     imp.classList.add('stwid--listDropdownItem');
                                     imp.classList.add('stwid--import');
@@ -601,18 +603,20 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                 }
                                 blocker.append(menu);
                             }
-                            document.body.append(blocker);
-                        }
-                    });
-                    header.append(menuTrigger);
+                                document.body.append(blocker);
+                            }
+                        });
+                        actions.append(menuTrigger);
+                    }
                 }
-            }
-            const toggle = document.createElement('i'); {
-                toggle.classList.add('stwid--folderToggle');
-                toggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
-                toggle.title = 'Collapse/expand this folder';
-                toggle.setAttribute('aria-label', 'Collapse or expand this folder');
-                header.append(toggle);
+                const toggle = document.createElement('i'); {
+                    toggle.classList.add('stwid--folderToggle');
+                    toggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
+                    toggle.title = 'Collapse/expand this folder';
+                    toggle.setAttribute('aria-label', 'Collapse or expand this folder');
+                    actions.append(toggle);
+                }
+                header.append(actions);
             }
             root.append(header);
         }

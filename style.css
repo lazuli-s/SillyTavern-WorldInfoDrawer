@@ -380,8 +380,14 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderToggle {
-  margin-left: auto;
   opacity: 0.75;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions {
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
+  margin-left: auto;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon,
@@ -424,22 +430,6 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder :is(.stwid--fo
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;
-}
-
-/* Folder header layout tweaks when menu exists */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderMenu,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader.stwid--hasMenu .stwid--folderToggle {
-  margin-left: 0;
-}
-
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--folder
-  .stwid--folderHeader.stwid--hasMenu
-  .stwid--folderActiveToggle {
-  margin-left: auto;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderBooks.stwid--isCollapsed {
