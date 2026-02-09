@@ -7,9 +7,10 @@
 |-- style.css                    # Extension styles
 |-- manifest.json                # SillyTavern extension manifest
 |-- src/
-|   |-- listPanel.js             # Left panel: books/folders/entries, selection, DnD, context menus
+|   |-- listPanel.js             # Left panel composition: books/folders/entries and menu orchestration
 |   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
 |   |-- listPanel.filterBar.js   # Filter/search/visibility slice for list panel
+|   |-- listPanel.selectionDnD.js # Entry selection model + entry/book drag/drop target handlers
 |   |-- listPanel.coreBridge.js  # Core WI DOM delegation helpers (wait/select/click wrappers)
 |   |-- editorPanel.js           # Entry editor panel integration with ST templates
 |   |-- worldEntry.js            # Entry row renderer + selection/toggle behaviors
@@ -58,12 +59,6 @@
   - Renders the left panel (folders + books + entry lists)
   - Composes list rendering/interactions with state held in `listPanel.state.js`
   - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
-  - Selection system:
-    - Click selects
-    - SHIFT selects range
-    - DEL deletes selected
-    - Drag moves
-    - CTRL modifies copy / duplicate behavior
   - Per-book menu actions:
     - Rename / delete (delegates to core WorldInfo UI via `listPanel.coreBridge.js`)
     - Duplicate book
@@ -95,6 +90,12 @@
     - folder-collapse hydration/persistence
     - selection reset
     - cache/collapse capture clear helpers
+
+- `listPanel.selectionDnD.js`
+  - Owns entry selection UI helpers (`selectAdd`, `selectRemove`, `selectEnd`)
+  - Owns selection state API (`getSelectionState`) used by `worldEntry.js` and `index.js`
+  - Owns entry drag/drop move-copy persistence flow between books
+  - Owns reusable drag/drop handlers for book, folder, and root drop targets
 
 - `listPanel.coreBridge.js`
   - Owns core WI DOM delegation utilities used by list panel menu actions:

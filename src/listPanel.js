@@ -17,7 +17,6 @@ import {
     hydrateFolderCollapseStates,
     listPanelState,
     resetBookVisibilityState,
-    resetSelectionMemory,
     setFolderCollapsedAndPersist,
 } from './listPanel.state.js';
 import {
@@ -29,6 +28,7 @@ import {
     BOOK_VISIBILITY_MODES,
     createFilterBarSlice,
 } from './listPanel.filterBar.js';
+import { createSelectionDnDSlice } from './listPanel.selectionDnD.js';
 
 // Core SillyTavern DOM anchors used by this extension.
 // Keep these centralized so host selector drift is easier to audit.
@@ -41,6 +41,7 @@ const CORE_UI_SELECTORS = Object.freeze({
 let state = {};
 
 let filterBarSlice = null;
+let selectionDnDSlice = null;
 
 // Source-link UI constants.
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
@@ -666,46 +667,6 @@ const deleteBook = async(name, { skipConfirm = false } = {})=>{
     await clickCoreUiAction(CORE_UI_ACTION_SELECTORS.deleteBook);
 };
 
-// Entry selection UI helpers.
-const selectEnd = ()=>{
-    resetSelectionMemory((toast)=>toastr.clear(toast));
-    state.dom.books.classList.remove('stwid--isDragging');
-    [...state.dom.books.querySelectorAll('.stwid--entry.stwid--isSelected')]
-        .forEach(it=>{
-            it.classList.remove('stwid--isSelected');
-            it.removeAttribute('draggable');
-            const icon = it.querySelector('.stwid--selector > .stwid--icon');
-            icon.classList.add('fa-square');
-            icon.classList.remove('fa-square-check');
-        })
-    ;
-    [...state.dom.books.querySelectorAll('.stwid--book.stwid--isTarget')]
-        .forEach(it=>{
-            it.classList.remove('stwid--isTarget');
-        })
-    ;
-};
-
-/**
- *
- * @param {HTMLElement} entry
- */
-const selectAdd = (entry)=>{
-    entry.classList.add('stwid--isSelected');
-    entry.setAttribute('draggable', 'true');
-    const icon = entry.querySelector('.stwid--selector > .stwid--icon');
-    icon.classList.remove('fa-square');
-    icon.classList.add('fa-square-check');
-};
-
-const selectRemove = (entry)=>{
-    entry.classList.remove('stwid--isSelected');
-    entry.setAttribute('draggable', 'false');
-    const icon = entry.querySelector('.stwid--selector > .stwid--icon');
-    icon.classList.add('fa-square');
-    icon.classList.remove('fa-square-check');
-};
-
 // Book rendering + book-level interaction wiring.
 const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     const data = bookData ?? await state.loadWorldInfo(name);
@@ -742,16 +703,8 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                         setFolderCollapsedAndPersist(folderName, isCollapsed);
                         updateCollapseAllFoldersToggle();
                     },
-                    onDragStateChange: (isOver)=>{
-                        if (!listPanelState.dragBookName) return false;
-                        return isOver;
-                    },
-                    onDrop: async(evt)=>{
-                        if (!listPanelState.dragBookName) return;
-                        const draggedName = listPanelState.dragBookName;
-                        listPanelState.dragBookName = null;
-                        await handleDraggedBookMoveOrCopy(draggedName, folderName, evt.ctrlKey);
-                    },
+                    onDragStateChange: (isOver)=>selectionDnDSlice.onFolderDropTargetDragStateChange(isOver),
+                    onDrop: async(evt)=>selectionDnDSlice.onFolderDropTargetDrop(evt, folderName),
                     menuActions: listPanelState.folderMenuActions,
                 });
                 listPanelState.setFolderDom(folderName, folderDom);
@@ -783,84 +736,14 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     const book = document.createElement('div'); {
         world.dom.root = book;
         book.classList.add('stwid--book');
-        book.addEventListener('dragover', (evt)=>{
-            if (listPanelState.dragBookName) {
-                evt.preventDefault();
-                book.classList.add('stwid--isTarget');
-                return;
-            }
-            if (listPanelState.selectFrom === null) return;
-            evt.preventDefault();
-            book.classList.add('stwid--isTarget');
-        });
-        book.addEventListener('dragleave', (evt)=>{
-            if (listPanelState.dragBookName) {
-                book.classList.remove('stwid--isTarget');
-                return;
-            }
-            if (listPanelState.selectFrom === null) return;
-            book.classList.remove('stwid--isTarget');
-        });
-        book.addEventListener('drop', async(evt)=>{
-            if (listPanelState.dragBookName) {
-                evt.preventDefault();
-                evt.stopPropagation();
-                book.classList.remove('stwid--isTarget');
-                const draggedName = listPanelState.dragBookName;
-                listPanelState.dragBookName = null;
-                const targetFolder = getFolderFromMetadata(state.cache[name]?.metadata);
-                await handleDraggedBookMoveOrCopy(draggedName, targetFolder, evt.ctrlKey);
-                return;
-            }
-            if (listPanelState.selectFrom === null) return;
-            evt.preventDefault();
-            const isCopy = evt.ctrlKey;
-            if (!listPanelState.selectList?.length) {
-                selectEnd();
-                return;
-            }
-            if (listPanelState.selectFrom != name || isCopy) {
-                const srcBook = await state.loadWorldInfo(listPanelState.selectFrom);
-                const dstBook = await state.loadWorldInfo(name);
-                // F3: Batch move/copy saves.
-                // Build all destination entries in-memory first, then save once.
-                // If moving, delete from source and save once after all deletions.
-                let hasDstChanges = false;
-                let hasSrcChanges = false;
-                for (const uid of listPanelState.selectList) {
-                    const srcEntry = srcBook.entries[uid];
-                    if (!srcEntry) continue;
-
-                    const oData = Object.assign({}, srcEntry);
-                    delete oData.uid;
-
-                    const dstEntry = state.createWorldInfoEntry(null, dstBook);
-                    Object.assign(dstEntry, oData);
-                    hasDstChanges = true;
-
-                    if (!isCopy) {
-                        const deleted = await state.deleteWorldInfoEntry(srcBook, uid, { silent:true });
-                        if (deleted) {
-                            state.deleteWIOriginalDataValue(srcBook, uid);
-                            hasSrcChanges = true;
-                        }
-                    }
-                }
-
-                // Persist destination once.
-                if (hasDstChanges) {
-                    await state.saveWorldInfo(name, dstBook, true);
-                    state.updateWIChange(name, dstBook);
-                }
-
-                // Persist source once (move only, and only when we actually deleted something).
-                if (!isCopy && listPanelState.selectFrom != name && hasSrcChanges) {
-                    await state.saveWorldInfo(listPanelState.selectFrom, srcBook, true);
-                    state.updateWIChange(listPanelState.selectFrom, srcBook);
-                }
-            }
-            selectEnd();
-        });
+        book.addEventListener('dragover', (evt)=>selectionDnDSlice.onBookDropTargetDragOver(evt, book));
+        book.addEventListener('dragleave', (evt)=>selectionDnDSlice.onBookDropTargetDragLeave(evt, book));
+        book.addEventListener('drop', async(evt)=>selectionDnDSlice.onBookDropTargetDrop(
+            evt,
+            name,
+            book,
+            ()=>getFolderFromMetadata(state.cache[name]?.metadata),
+        ));
         const head = document.createElement('div'); {
             head.classList.add('stwid--head');
             let collapseToggle;
@@ -1308,16 +1191,8 @@ const loadList = async()=>{
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
                 updateCollapseAllFoldersToggle();
             },
-            onDragStateChange: (isOver)=>{
-                if (!listPanelState.dragBookName) return false;
-                return isOver;
-            },
-            onDrop: async(evt)=>{
-                if (!listPanelState.dragBookName) return;
-                const draggedName = listPanelState.dragBookName;
-                listPanelState.dragBookName = null;
-                await handleDraggedBookMoveOrCopy(draggedName, folderName, evt.ctrlKey);
-            },
+            onDragStateChange: (isOver)=>selectionDnDSlice.onFolderDropTargetDragStateChange(isOver),
+            onDrop: async(evt)=>selectionDnDSlice.onFolderDropTargetDrop(evt, folderName),
             menuActions: listPanelState.folderMenuActions,
         });
         listPanelState.setFolderDom(folderName, folderDom);
@@ -1385,19 +1260,8 @@ const setupBooks = (list)=>{
     const books = document.createElement('div'); {
         state.dom.books = books;
         books.classList.add('stwid--books');
-        books.addEventListener('dragover', (evt)=>{
-            if (!listPanelState.dragBookName) return;
-            if (evt.target.closest('.stwid--folderHeader')) return;
-            evt.preventDefault();
-        });
-        books.addEventListener('drop', async(evt)=>{
-            if (!listPanelState.dragBookName) return;
-            if (evt.target.closest('.stwid--folderHeader')) return;
-            evt.preventDefault();
-            const draggedName = listPanelState.dragBookName;
-            listPanelState.dragBookName = null;
-            await handleDraggedBookMoveOrCopy(draggedName, null, evt.ctrlKey, { skipIfSameFolder: false });
-        });
+        books.addEventListener('dragover', (evt)=>selectionDnDSlice.onRootDropTargetDragOver(evt));
+        books.addEventListener('drop', async(evt)=>selectionDnDSlice.onRootDropTargetDrop(evt));
         list.append(books);
     }
 };
@@ -1407,39 +1271,6 @@ const setupListPanel = (list)=>{
     filterBarSlice?.setupFilter(list);
     setupBooks(list);
 };
-
-const getSelectionState = ()=>({
-    get selectFrom() {
-        return listPanelState.selectFrom;
-    },
-    set selectFrom(value) {
-        listPanelState.selectFrom = value;
-    },
-    get selectLast() {
-        return listPanelState.selectLast;
-    },
-    set selectLast(value) {
-        listPanelState.selectLast = value;
-    },
-    get selectList() {
-        return listPanelState.selectList;
-    },
-    set selectList(value) {
-        listPanelState.selectList = value;
-    },
-    get selectMode() {
-        return listPanelState.selectMode;
-    },
-    set selectMode(value) {
-        listPanelState.selectMode = value;
-    },
-    get selectToast() {
-        return listPanelState.selectToast;
-    },
-    set selectToast(value) {
-        listPanelState.selectToast = value;
-    },
-});
 
 // Public module initialization + returned API surface.
 const initListPanel = (options)=>{
@@ -1457,6 +1288,11 @@ const initListPanel = (options)=>{
     clearEntrySearchCache();
     hydrateFolderCollapseStates();
     listPanelState.loadListDebounced = state.debounceAsync(()=>loadList());
+    selectionDnDSlice = createSelectionDnDSlice({
+        listPanelState,
+        runtime: state,
+        handleDraggedBookMoveOrCopy,
+    });
     let folderImportInProgress = false;
 
     listPanelState.folderMenuActions = {
@@ -1493,15 +1329,15 @@ const initListPanel = (options)=>{
         applyActiveFilter: state.applyActiveFilter,
         clearBookSortPreferences,
         getBookVisibilityScope,
-        getSelectionState,
+        getSelectionState: selectionDnDSlice.getSelectionState,
         hasExpandedBooks,
         hasExpandedFolders,
         openFolderImportDialog,
         refreshList,
         renderBook,
-        selectAdd,
-        selectEnd,
-        selectRemove,
+        selectAdd: selectionDnDSlice.selectAdd,
+        selectEnd: selectionDnDSlice.selectEnd,
+        selectRemove: selectionDnDSlice.selectRemove,
         setBookCollapsed,
         setBookFolder,
         setCacheMetadata,

@@ -43,7 +43,7 @@ Where each feature or behavior is implemented in the codebase.
 - Entry enable/disable toggle and strategy selector on row → src/worldEntry.js
 - Entry click-to-open editor flow → src/worldEntry.js, src/editorPanel.js
 - Entry creation inside a selected book → src/listPanel.js
-- Entry move/copy/duplicate across books with selection + drag/drop → src/listPanel.js, src/worldEntry.js
+- Entry move/copy/duplicate across books with selection + drag/drop → src/listPanel.selectionDnD.js, src/worldEntry.js
 - Entry state mapping (`normal`/`constant`/`vectorized`) → src/worldEntry.js
 
 ## Editor behavior
@@ -57,10 +57,10 @@ Where each feature or behavior is implemented in the codebase.
 
 ## Selection & interaction
 
-- Entry selection state model (source book, last clicked, selected uid list, toast) → src/listPanel.js
+- Entry selection state model (source book, last clicked, selected uid list, toast) → src/listPanel.selectionDnD.js
 - List panel state container for selection/drag/search/visibility/collapse locals + lifecycle resets/hydration → src/listPanel.state.js
 - Click select, toggle select, and Shift range select behavior → src/worldEntry.js
-- Selection visual state add/remove/clear helpers → src/listPanel.js
+- Selection visual state add/remove/clear helpers → src/listPanel.selectionDnD.js
 - Delete selected entries (Del key) with save/update propagation → index.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
