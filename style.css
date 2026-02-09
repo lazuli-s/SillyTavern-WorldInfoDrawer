@@ -190,22 +190,21 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
   flex: 1 1 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownWrap {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownWrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
-  flex: 0 0 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownButton {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
   padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownMenu {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -220,8 +219,9 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   min-width: max-content;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownMenu.stwid--active {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownMenu.stwid--active {
   display: flex;
+  width: max-content;
   opacity: 1 !important;
   background-color: var(--SmartThemeBlurTintColor) !important;
   backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
@@ -230,10 +230,12 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption {
   display: flex;
   align-items: center;
   gap: 0.35em;
+  font-size: 1em;
+  transition: color 150ms ease, background-color 150ms ease;
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);
   border: 0;
@@ -243,36 +245,54 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwi
   text-align: left;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption:hover {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:hover {
   color: var(--customThemeColor) !important;
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption.stwid--active {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption.stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption:focus-visible {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: 1px;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
   color: var(--customThemeColor);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  width: 1em;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
   width: 1em;
   text-align: center;
   color: var(--SmartThemeEmColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownOption.stwid--active .stwid--multiselectDropdownOptionCheckbox {
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOption.stwid--active .stwid--multiselectDropdownOptionCheckbox {
   color: var(--SmartThemeQuoteColor);
 }
 
 .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
   color: var(--SmartThemeQuoteColor);
+}
+
+body.stwid-- #WorldInfo .stwid--multiselectDropdownOptionInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--multiselectDropdownWrap {
+  flex: 0 0 auto;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--bookVisibilityHelp {
@@ -1113,88 +1133,9 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   margin-right: 0.5em;
 }
 
-.stwid--orderHelper .stwid--multiselectDropdownWrap {
-  position: relative;
-  display: inline-flex;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownMenu {
-  position: absolute;
-  top: calc(100% + 0.35em);
-  left: 0;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: var(--stwid-radius-m);
-  padding: 0.7em;
-  display: none;
-  flex-direction: column;
-  gap: 0.6em;
-  z-index: 3;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownMenu.stwid--active {
-  display: flex;
-  width: max-content;
-  opacity: 1 !important;
-  background-color: var(--SmartThemeBlurTintColor) !important;
-  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
-  box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
-  border: 1px solid var(--SmartThemeBorderColor);
-  text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
-}
-
 .stwid--orderHelper .stwid--multiselectDropdownMenu :is(.stwid--multiselectDropdownOption, .stwid--columnVisibilityLabel) {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownMenu .stwid--multiselectDropdownOption:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: 1px;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOption {
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-  font-size: 1em;
-  cursor: pointer;
-  transition: color 150ms ease;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOption:hover {
-  color: var(--customThemeColor) !important;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
-  color: var(--customThemeColor);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  width: 1em;
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
-  width: 1em;
-  text-align: center;
-  color: var(--SmartThemeEmColor);
-}
-
-.stwid--orderHelper .stwid--multiselectDropdownOptionInput {
-  position: absolute;
-  width: 0;
-  height: 0;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* Filters */
