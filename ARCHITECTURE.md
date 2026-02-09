@@ -10,6 +10,7 @@
 |   |-- listPanel.js             # Left panel composition: books/folders/entries and menu orchestration
 |   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
 |   |-- listPanel.filterBar.js   # Filter/search/visibility slice for list panel
+|   |-- listPanel.bookMenu.js    # Book dropdown menu items/actions + import dialog helpers
 |   |-- listPanel.selectionDnD.js # Entry selection model + entry/book drag/drop target handlers
 |   |-- listPanel.coreBridge.js  # Core WI DOM delegation helpers (wait/select/click wrappers)
 |   |-- editorPanel.js           # Entry editor panel integration with ST templates
@@ -59,6 +60,15 @@
   - Renders the left panel (folders + books + entry lists)
   - Composes list rendering/interactions with state held in `listPanel.state.js`
   - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
+  - Wires per-book menu trigger creation through `listPanel.bookMenu.js`
+  - Folder support:
+    - Folder collapse state
+    - Folder collapse/expand-all toggle state sync
+    - Folder active toggle (tri-state)
+    - Folder context menu (export folder, import into folder, rename folder, delete folder)
+
+- `listPanel.bookMenu.js`
+  - Builds per-book dropdown menu trigger and menu contents
   - Per-book menu actions:
     - Rename / delete (delegates to core WorldInfo UI via `listPanel.coreBridge.js`)
     - Duplicate book
@@ -67,11 +77,7 @@
     - Book sort preference
     - Order Helper shortcut
     - Optional integration: Bulk Edit, External Editor, Configure STLO
-  - Folder support:
-    - Folder collapse state
-    - Folder collapse/expand-all toggle state sync
-    - Folder active toggle (tri-state)
-    - Folder context menu (export folder, import into folder, rename folder, delete folder)
+  - Owns book/folder import dialog helper paths used by folder actions
 
 - `listPanel.filterBar.js`
   - Owns list search bar and entry-text search toggle behavior
