@@ -1464,8 +1464,7 @@ const createOrderHelperRenderer = ({
                                             'the bottom of the filtered list',
                                         );
                                         const dragHandle = document.createElement('div'); {
-                                            dragHandle.classList.add('stwid--sortableHandle');
-                                            dragHandle.textContent = '|||';
+                                            dragHandle.classList.add('stwid--sortableHandle', 'fa-solid', 'fa-fw', 'fa-grip-lines');
                                             setTooltip(dragHandle, 'Drag to reorder rows');
                                             controls.append(upButton, dragHandle, downButton);
                                         }
