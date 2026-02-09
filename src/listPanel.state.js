@@ -79,11 +79,47 @@ export const listPanelState = {
     get collapseStates() {
         return state.collapseStates;
     },
+    getCollapseState(name) {
+        return state.collapseStates[name];
+    },
+    setCollapseState(name, isCollapsed) {
+        state.collapseStates[name] = Boolean(isCollapsed);
+    },
     get folderCollapseStates() {
         return state.folderCollapseStates;
     },
     get folderDoms() {
         return state.folderDoms;
+    },
+    getFolderDom(name) {
+        return state.folderDoms[name] ?? null;
+    },
+    setFolderDom(name, value) {
+        if (typeof name !== 'string' || !name) return;
+        state.folderDoms[name] = value;
+    },
+    deleteFolderDom(name) {
+        delete state.folderDoms[name];
+    },
+    clearFolderDoms() {
+        clearObjectKeys(state.folderDoms);
+    },
+    getFolderDomNames() {
+        return Object.keys(state.folderDoms);
+    },
+    getFolderDomValues() {
+        return Object.values(state.folderDoms);
+    },
+    ensureEntrySearchCacheBook(bookName) {
+        state.entrySearchCache[bookName] ??= {};
+        return state.entrySearchCache[bookName];
+    },
+    getEntrySearchCacheValue(bookName, uid) {
+        return state.entrySearchCache[bookName]?.[uid];
+    },
+    setEntrySearchCacheValue(bookName, uid, value) {
+        state.entrySearchCache[bookName] ??= {};
+        state.entrySearchCache[bookName][uid] = value;
     },
     get selectLast() {
         return state.selectLast;
@@ -158,7 +194,7 @@ const saveFolderCollapseStates = ()=>{
 };
 
 export const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand = false } = {})=>{
-    const folderDom = listPanelState.folderDoms[folderName];
+    const folderDom = listPanelState.getFolderDom(folderName);
     if (transientExpand && !isCollapsed) {
         // View-only expand: do not mutate persisted defaults.
         setFolderCollapsed(folderDom, false);

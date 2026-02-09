@@ -113,7 +113,7 @@ const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
 
 // Book/folder collapse helpers.
 const setCollapseState = (name, isCollapsed)=>{
-    listPanelState.collapseStates[name] = Boolean(isCollapsed);
+    listPanelState.setCollapseState(name, isCollapsed);
 };
 
 const hasExpandedBooks = ()=>Object.values(state.cache).some((book)=>{
@@ -134,7 +134,7 @@ const updateCollapseAllToggle = ()=>{
     btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
 };
 
-const hasExpandedFolders = ()=>Object.values(listPanelState.folderDoms).some((folderDom)=>{
+const hasExpandedFolders = ()=>listPanelState.getFolderDomValues().some((folderDom)=>{
     const books = folderDom?.books;
     return books && !books.classList.contains('stwid--isCollapsed');
 });
@@ -153,7 +153,7 @@ const updateCollapseAllFoldersToggle = ()=>{
 };
 
 const setAllFoldersCollapsed = (isCollapsed)=>{
-    const folderNames = Object.keys(listPanelState.folderDoms);
+    const folderNames = listPanelState.getFolderDomNames();
     for (const folderName of folderNames) {
         setFolderCollapsedAndPersist(folderName, isCollapsed, { transientExpand: !isCollapsed });
     }
@@ -161,7 +161,7 @@ const setAllFoldersCollapsed = (isCollapsed)=>{
 };
 
 const applyCollapseState = (name)=>{
-    const isCollapsed = listPanelState.collapseStates[name];
+    const isCollapsed = listPanelState.getCollapseState(name);
     const world = state.cache[name];
     if (isCollapsed === undefined || !world?.dom?.entryList || !world?.dom?.collapseToggle) return;
     world.dom.entryList.classList.toggle('stwid--isCollapsed', isCollapsed);
@@ -175,7 +175,7 @@ const applyCollapseState = (name)=>{
 };
 
 const setBookCollapsed = (name, isCollapsed)=>{
-    setCollapseState(name, isCollapsed);
+    listPanelState.setCollapseState(name, isCollapsed);
     applyCollapseState(name);
     updateCollapseAllToggle();
 };
@@ -408,7 +408,7 @@ const buildMoveBookMenuItem = (name, closeMenu)=>{
             const registry = getFolderRegistry();
             const folderNames = Array.from(new Set([
                 ...registry,
-                ...Object.keys(listPanelState.folderDoms),
+                ...listPanelState.getFolderDomNames(),
             ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
 
             const modal = document.createElement('dialog');
@@ -903,11 +903,12 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
     if (!parent) {
         const folderName = getFolderFromMetadata(state.cache[name].metadata);
         if (folderName) {
-            if (!listPanelState.folderDoms[folderName]) {
-                listPanelState.folderDoms[folderName] = createFolderDom({
+            let folderDom = listPanelState.getFolderDom(folderName);
+            if (!folderDom) {
+                folderDom = createFolderDom({
                     folderName,
                     onToggle: ()=>{
-                        const isCollapsed = !listPanelState.folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
+                        const isCollapsed = !listPanelState.getFolderDom(folderName)?.books.classList.contains('stwid--isCollapsed');
                         setFolderCollapsedAndPersist(folderName, isCollapsed);
                         updateCollapseAllFoldersToggle();
                     },
@@ -923,6 +924,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                     },
                     menuActions: listPanelState.folderMenuActions,
                 });
+                listPanelState.setFolderDom(folderName, folderDom);
                 let insertBefore = null;
                 const normalizedFolder = folderName.toLowerCase();
                 for (const child of state.dom.books.children) {
@@ -939,13 +941,13 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                         break;
                     }
                 }
-                if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', listPanelState.folderDoms[folderName].root);
-                else state.dom.books.append(listPanelState.folderDoms[folderName].root);
+                if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', folderDom.root);
+                else state.dom.books.append(folderDom.root);
                 const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
-                setFolderCollapsed(listPanelState.folderDoms[folderName], initialCollapsed);
+                setFolderCollapsed(folderDom, initialCollapsed);
                 updateCollapseAllFoldersToggle();
             }
-            targetParent = listPanelState.folderDoms[folderName].books;
+            targetParent = folderDom?.books ?? targetParent;
         }
     }
     const book = document.createElement('div'); {
@@ -1047,7 +1049,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
                 });
                 title.addEventListener('dragend', ()=>{
                     listPanelState.dragBookName = null;
-                    for (const folderDom of Object.values(listPanelState.folderDoms)) {
+                    for (const folderDom of listPanelState.getFolderDomValues()) {
                         folderDom.root.classList.remove('stwid--isTarget');
                     }
                     for (const bookDom of Object.values(state.cache)) {
@@ -1402,7 +1404,7 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
             for (const e of state.sortEntries(Object.values(world.entries), sort, direction)) {
                 await state.renderEntry(e, name);
             }
-            const initialCollapsed = listPanelState.collapseStates[name] ?? entryList.classList.contains('stwid--isCollapsed');
+            const initialCollapsed = listPanelState.getCollapseState(name) ?? entryList.classList.contains('stwid--isCollapsed');
             setBookCollapsed(name, initialCollapsed);
             book.append(entryList);
         }
@@ -1427,12 +1429,10 @@ const renderBook = async(name, before = null, bookData = null, parent = null)=>{
 // Full list render/reload.
 const loadList = async()=>{
     state.dom.books.innerHTML = '';
-    for (const folderDom of Object.values(listPanelState.folderDoms)) {
+    for (const folderDom of listPanelState.getFolderDomValues()) {
         folderDom.observer?.disconnect();
     }
-    for (const key of Object.keys(listPanelState.folderDoms)) {
-        delete listPanelState.folderDoms[key];
-    }
+    listPanelState.clearFolderDoms();
 
     // Yield to the UI thread periodically to avoid long main-thread stalls on very
     // large lore collections.
@@ -1471,10 +1471,10 @@ const loadList = async()=>{
     }
     const sortedFolders = [...allFolderNames].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
     for (const folderName of sortedFolders) {
-        listPanelState.folderDoms[folderName] = createFolderDom({
+        const folderDom = createFolderDom({
             folderName,
             onToggle: ()=>{
-                const isCollapsed = !listPanelState.folderDoms[folderName].books.classList.contains('stwid--isCollapsed');
+                const isCollapsed = !listPanelState.getFolderDom(folderName)?.books.classList.contains('stwid--isCollapsed');
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
                 updateCollapseAllFoldersToggle();
             },
@@ -1490,13 +1490,14 @@ const loadList = async()=>{
             },
             menuActions: listPanelState.folderMenuActions,
         });
-        state.dom.books.append(listPanelState.folderDoms[folderName].root);
+        listPanelState.setFolderDom(folderName, folderDom);
+        state.dom.books.append(folderDom.root);
         const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
-        setFolderCollapsed(listPanelState.folderDoms[folderName], initialCollapsed);
+        setFolderCollapsed(folderDom, initialCollapsed);
         const folderBooks = folderGroups.get(folderName) ?? [];
         for (let i = 0; i < folderBooks.length; i++) {
             const book = folderBooks[i];
-            await renderBook(book.name, null, book.data, listPanelState.folderDoms[folderName].books);
+            await renderBook(book.name, null, book.data, folderDom.books);
             if (i > 0 && i % 2 === 0) {
                 await yieldToUi();
             }
@@ -1517,7 +1518,7 @@ const loadList = async()=>{
 const refreshList = async()=>{
     state.dom.drawer.body.classList.add('stwid--isLoading');
     state.resetEditor?.();
-    captureBookCollapseStatesFromDom(state.cache, setCollapseState);
+    captureBookCollapseStatesFromDom(state.cache, listPanelState.setCollapseState);
     clearCacheBooks(state.cache);
     try {
         await listPanelState.loadListDebounced();
@@ -1532,7 +1533,7 @@ const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--fil
 
 // Folder summary visibility/active-state refresh.
 const updateFolderVisibility = ()=>{
-    for (const folderDom of Object.values(listPanelState.folderDoms)) {
+    for (const folderDom of listPanelState.getFolderDomValues()) {
         const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
             if (!(child instanceof HTMLElement)) return false;
             if (!child.classList.contains('stwid--book')) return false;
@@ -1543,7 +1544,7 @@ const updateFolderVisibility = ()=>{
 };
 
 const updateFolderActiveToggles = ()=>{
-    for (const folderDom of Object.values(listPanelState.folderDoms)) {
+    for (const folderDom of listPanelState.getFolderDomValues()) {
         folderDom.updateActiveToggle?.();
     }
     updateFolderVisibility();
@@ -1578,11 +1579,11 @@ const setupFilter = (list)=>{
         const getEntrySearchText = (bookName, entry)=>{
             if (!entry?.uid) return '';
             const signature = buildEntrySearchSignature(entry);
-            listPanelState.entrySearchCache[bookName] ??= {};
-            const cached = listPanelState.entrySearchCache[bookName][entry.uid];
+            listPanelState.ensureEntrySearchCacheBook(bookName);
+            const cached = listPanelState.getEntrySearchCacheValue(bookName, entry.uid);
             if (cached?.signature === signature) return cached.text;
             const text = signature.toLowerCase();
-            listPanelState.entrySearchCache[bookName][entry.uid] = { signature, text };
+            listPanelState.setEntrySearchCacheValue(bookName, entry.uid, { signature, text });
             return text;
         };
 
