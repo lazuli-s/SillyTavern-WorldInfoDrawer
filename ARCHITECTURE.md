@@ -10,6 +10,8 @@
 |   |-- listPanel.js             # Left panel composition: books/folders/entries and menu orchestration
 |   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
 |   |-- listPanel.filterBar.js   # Filter/search/visibility slice for list panel
+|   |-- listPanel.foldersView.js # Folder view slice (folder DOM map wiring + collapse/visibility toggles)
+|   |-- listPanel.booksView.js   # Book view slice (`renderBook`/`loadList` + book row wiring)
 |   |-- listPanel.bookMenu.js    # Book dropdown menu items/actions + import dialog helpers
 |   |-- listPanel.selectionDnD.js # Entry selection model + entry/book drag/drop target handlers
 |   |-- listPanel.coreBridge.js  # Core WI DOM delegation helpers (wait/select/click wrappers)
@@ -57,15 +59,26 @@
 #### Core modules (`/src`)
 
 - `listPanel.js`
-  - Renders the left panel (folders + books + entry lists)
-  - Composes list rendering/interactions with state held in `listPanel.state.js`
+  - Composes list panel slices and shared orchestration actions
   - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
-  - Wires per-book menu trigger creation through `listPanel.bookMenu.js`
-  - Folder support:
-    - Folder collapse state
-    - Folder collapse/expand-all toggle state sync
-    - Folder active toggle (tri-state)
-    - Folder context menu (export folder, import into folder, rename folder, delete folder)
+  - Owns source-link icon rendering helpers and sort/metadata orchestration helpers shared by slices
+
+- `listPanel.booksView.js`
+  - Owns book row render shell (`renderBook`) and full list load pipeline (`loadList`)
+  - Wires per-book interactions:
+    - Active toggle
+    - Add-entry action
+    - Collapse toggle/title click behavior
+    - Book drop-target handlers
+  - Applies folder/root insertion ordering for rendered books
+
+- `listPanel.foldersView.js`
+  - Owns folder view wiring:
+    - Folder DOM creation/ensure flow for list rendering
+    - Folder collapse-all toggle state sync
+    - Folder visibility refresh based on active filters
+    - Folder active-toggle refresh (tri-state)
+  - Owns folder DOM map reset/disconnect lifecycle hooks used during list reload
 
 - `listPanel.bookMenu.js`
   - Builds per-book dropdown menu trigger and menu contents

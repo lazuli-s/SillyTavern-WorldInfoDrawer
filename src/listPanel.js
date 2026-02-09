@@ -1,13 +1,11 @@
 import { cloneMetadata } from './sortHelpers.js';
 import {
-    createFolderDom,
     createBookInFolder,
     getFolderFromMetadata,
     getFolderRegistry,
     registerFolderName,
     setFolderBooksActive,
     sanitizeFolderMetadata,
-    setFolderCollapsed,
     setFolderInMetadata,
 } from './lorebookFolders.js';
 import {
@@ -17,7 +15,6 @@ import {
     hydrateFolderCollapseStates,
     listPanelState,
     resetBookVisibilityState,
-    setFolderCollapsedAndPersist,
 } from './listPanel.state.js';
 import {
     CORE_UI_ACTION_SELECTORS,
@@ -30,6 +27,8 @@ import {
 } from './listPanel.filterBar.js';
 import { createSelectionDnDSlice } from './listPanel.selectionDnD.js';
 import { createBookMenuSlice } from './listPanel.bookMenu.js';
+import { createFoldersViewSlice } from './listPanel.foldersView.js';
+import { createBooksViewSlice } from './listPanel.booksView.js';
 
 // Core SillyTavern DOM anchors used by this extension.
 // Keep these centralized so host selector drift is easier to audit.
@@ -44,6 +43,8 @@ let state = {};
 let filterBarSlice = null;
 let selectionDnDSlice = null;
 let bookMenuSlice = null;
+let foldersViewSlice = null;
+let booksViewSlice = null;
 
 // Source-link UI constants.
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
@@ -75,31 +76,9 @@ const updateCollapseAllToggle = ()=>{
     btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
 };
 
-const hasExpandedFolders = ()=>listPanelState.getFolderDomValues().some((folderDom)=>{
-    const books = folderDom?.books;
-    return books && !books.classList.contains('stwid--isCollapsed');
-});
-
-const updateCollapseAllFoldersToggle = ()=>{
-    const hasExpanded = hasExpandedFolders();
-    const btn = state.dom.collapseAllFoldersToggle;
-    if (!btn) return;
-    const icon = btn.querySelector('i');
-    icon?.classList.toggle('fa-folder-tree', hasExpanded);
-    icon?.classList.toggle('fa-folder-open', !hasExpanded);
-    const label = hasExpanded ? 'Collapse All Folders' : 'Expand All Folders';
-    btn.title = label;
-    btn.setAttribute('aria-label', label);
-    btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
-};
-
-const setAllFoldersCollapsed = (isCollapsed)=>{
-    const folderNames = listPanelState.getFolderDomNames();
-    for (const folderName of folderNames) {
-        setFolderCollapsedAndPersist(folderName, isCollapsed, { transientExpand: !isCollapsed });
-    }
-    updateCollapseAllFoldersToggle();
-};
+const hasExpandedFolders = ()=>foldersViewSlice?.hasExpandedFolders() ?? false;
+const updateCollapseAllFoldersToggle = ()=>foldersViewSlice?.updateCollapseAllFoldersToggle();
+const setAllFoldersCollapsed = (isCollapsed)=>foldersViewSlice?.setAllFoldersCollapsed(isCollapsed);
 
 const applyCollapseState = (name)=>{
     const isCollapsed = listPanelState.getCollapseState(name);
@@ -311,288 +290,9 @@ const setSelectedBookInCoreUi = (bookName)=>setSelectedBookInCoreUiBridge(bookNa
 
 const clickCoreUiAction = (possibleSelectors, options = {})=>clickCoreUiActionBridge(possibleSelectors, options);
 
-// Book rendering + book-level interaction wiring.
-const renderBook = async(name, before = null, bookData = null, parent = null)=>{
-    const data = bookData ?? await state.loadWorldInfo(name);
-    const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:state.getSortFromMetadata(data.metadata) };
-    for (const [k,v] of Object.entries(data.entries)) {
-        world.entries[k] = structuredClone(v);
-    }
-    world.dom = {
-        /**@type {HTMLElement} */
-        root: undefined,
-        /**@type {HTMLElement} */
-        name: undefined,
-        /**@type {HTMLElement} */
-        sourceLinks: undefined,
-        /**@type {HTMLElement} */
-        active: undefined,
-        /**@type {HTMLElement} */
-        entryList: undefined,
-        /**@type {{ [uid:string]:{root:HTMLElement, comment:HTMLElement, key:HTMLElement}}} */
-        entry: {},
-    };
-    state.cache[name] = world;
-    setCacheMetadata(name, data.metadata);
-    let targetParent = parent ?? state.dom.books;
-    if (!parent) {
-        const folderName = getFolderFromMetadata(state.cache[name].metadata);
-        if (folderName) {
-            let folderDom = listPanelState.getFolderDom(folderName);
-            if (!folderDom) {
-                folderDom = createFolderDom({
-                    folderName,
-                    onToggle: ()=>{
-                        const isCollapsed = !listPanelState.getFolderDom(folderName)?.books.classList.contains('stwid--isCollapsed');
-                        setFolderCollapsedAndPersist(folderName, isCollapsed);
-                        updateCollapseAllFoldersToggle();
-                    },
-                    onDragStateChange: (isOver)=>selectionDnDSlice.onFolderDropTargetDragStateChange(isOver),
-                    onDrop: async(evt)=>selectionDnDSlice.onFolderDropTargetDrop(evt, folderName),
-                    menuActions: listPanelState.folderMenuActions,
-                });
-                listPanelState.setFolderDom(folderName, folderDom);
-                let insertBefore = null;
-                const normalizedFolder = folderName.toLowerCase();
-                for (const child of state.dom.books.children) {
-                    if (child.classList.contains('stwid--folder')) {
-                        const childName = child.dataset.folder?.toLowerCase() ?? '';
-                        if (childName.localeCompare(normalizedFolder) > 0) {
-                            insertBefore = child;
-                            break;
-                        }
-                        continue;
-                    }
-                    if (child.classList.contains('stwid--book')) {
-                        insertBefore = child;
-                        break;
-                    }
-                }
-                if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', folderDom.root);
-                else state.dom.books.append(folderDom.root);
-                const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
-                setFolderCollapsed(folderDom, initialCollapsed);
-                updateCollapseAllFoldersToggle();
-            }
-            targetParent = folderDom?.books ?? targetParent;
-        }
-    }
-    const book = document.createElement('div'); {
-        world.dom.root = book;
-        book.classList.add('stwid--book');
-        book.addEventListener('dragover', (evt)=>selectionDnDSlice.onBookDropTargetDragOver(evt, book));
-        book.addEventListener('dragleave', (evt)=>selectionDnDSlice.onBookDropTargetDragLeave(evt, book));
-        book.addEventListener('drop', async(evt)=>selectionDnDSlice.onBookDropTargetDrop(
-            evt,
-            name,
-            book,
-            ()=>getFolderFromMetadata(state.cache[name]?.metadata),
-        ));
-        const head = document.createElement('div'); {
-            head.classList.add('stwid--head');
-            let collapseToggle;
-            const title = document.createElement('div'); {
-                world.dom.name = title;
-                title.classList.add('stwid--title');
-                title.textContent = name;
-                title.title = 'Collapse/expand this book';
-                title.setAttribute('draggable', 'true');
-                title.addEventListener('dragstart', (evt)=>{
-                    listPanelState.dragBookName = name;
-                    if (evt.dataTransfer) {
-                        evt.dataTransfer.effectAllowed = 'copyMove';
-                        evt.dataTransfer.setData('text/plain', name);
-                    }
-                });
-                title.addEventListener('dragend', ()=>{
-                    listPanelState.dragBookName = null;
-                    for (const folderDom of listPanelState.getFolderDomValues()) {
-                        folderDom.root.classList.remove('stwid--isTarget');
-                    }
-                    for (const bookDom of Object.values(state.cache)) {
-                        bookDom.dom.root.classList.remove('stwid--isTarget');
-                    }
-                });
-                title.addEventListener('click', ()=>{
-                    const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
-                    setBookCollapsed(name, isCollapsed);
-                });
-                head.append(title);
-            }
-            const actions = document.createElement('div'); {
-                actions.classList.add('stwid--actions');
-                const sourceLinks = document.createElement('div'); {
-                    world.dom.sourceLinks = sourceLinks;
-                    sourceLinks.classList.add('stwid--sourceLinks', 'stwid--isEmpty');
-                    actions.append(sourceLinks);
-                }
-                const active = document.createElement('input'); {
-                    world.dom.active = active;
-                    active.title = 'Toggle global active status for this book';
-                    active.setAttribute('aria-label', 'Toggle global active status for this book');
-                    active.type = 'checkbox';
-                    const selected = state.getSelectedWorldInfo ? state.getSelectedWorldInfo() : state.selected_world_info;
-                    active.checked = selected.includes(name);
-                    active.addEventListener('click', async()=>{
-                        active.disabled = true;
-                        const select = /**@type {HTMLSelectElement}*/(document.querySelector(CORE_UI_SELECTORS.worldInfoSelect));
-                        const option = select ? [...select.options].find((opt)=>opt.textContent === name) : null;
-                        if (option && select) {
-                            option.selected = active.checked;
-                            state.onWorldInfoChange('__notSlashCommand__');
-                        }
-                        active.disabled = false;
-                    });
-                    actions.append(active);
-                }
-                const add = document.createElement('div'); {
-                    add.classList.add('stwid--action');
-                    add.classList.add('stwid--add');
-                    add.classList.add('fa-solid', 'fa-fw', 'fa-plus');
-                    add.title = 'Create new entry in this book';
-                    add.setAttribute('aria-label', 'Create new entry in this book');
-                    add.addEventListener('click', async()=>{
-                        const data = state.buildSavePayload(name);
-                        const newEntry = state.createWorldInfoEntry(name, data);
-                        state.cache[name].entries[newEntry.uid] = structuredClone(newEntry);
-                        await state.renderEntry(newEntry, name);
-                        state.cache[name].dom.entry[newEntry.uid].root.click();
-                        await state.saveWorldInfo(name, data, true);
-                    });
-                    actions.append(add);
-                }
-                const menuTrigger = bookMenuSlice?.buildBookMenuTrigger(name);
-                if (menuTrigger) {
-                    actions.append(menuTrigger);
-                }
-                collapseToggle = document.createElement('div'); {
-                    state.cache[name].dom.collapseToggle = collapseToggle;
-                    collapseToggle.classList.add('stwid--action');
-                    collapseToggle.classList.add('stwid--collapseToggle');
-                    collapseToggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
-                    collapseToggle.title = 'Collapse/expand this book';
-                    collapseToggle.setAttribute('aria-label', 'Collapse or expand this book');
-                    collapseToggle.addEventListener('click', ()=>{
-                        const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
-                        setBookCollapsed(name, isCollapsed);
-                    });
-                    actions.append(collapseToggle);
-                }
-                updateBookSourceLinks(name);
-                head.append(actions);
-            }
-            book.append(head);
-        }
-        const entryList = document.createElement('div'); {
-            world.dom.entryList = entryList;
-            entryList.classList.add('stwid--entryList');
-            entryList.classList.add('stwid--isCollapsed');
-            const { sort, direction } = getBookSortChoice(name);
-            for (const e of state.sortEntries(Object.values(world.entries), sort, direction)) {
-                await state.renderEntry(e, name);
-            }
-            const initialCollapsed = listPanelState.getCollapseState(name) ?? entryList.classList.contains('stwid--isCollapsed');
-            setBookCollapsed(name, initialCollapsed);
-            book.append(entryList);
-        }
-        let insertBefore = before && before.parentElement === targetParent ? before : null;
-        if (!insertBefore) {
-            const normalizedName = name.toLowerCase();
-            for (const child of targetParent.children) {
-                if (!child.classList.contains('stwid--book')) continue;
-                const childName = child.querySelector('.stwid--title')?.textContent?.toLowerCase() ?? '';
-                if (childName.localeCompare(normalizedName) > 0) {
-                    insertBefore = child;
-                    break;
-                }
-            }
-        }
-        if (insertBefore) insertBefore.insertAdjacentElement('beforebegin', book);
-        else targetParent.append(book);
-    }
-    return book;
-};
-
-// Full list render/reload.
-const loadList = async()=>{
-    state.dom.books.innerHTML = '';
-    for (const folderDom of listPanelState.getFolderDomValues()) {
-        folderDom.observer?.disconnect();
-    }
-    listPanelState.clearFolderDoms();
-
-    // Yield to the UI thread periodically to avoid long main-thread stalls on very
-    // large lore collections.
-    const yieldToUi = ()=>new Promise((resolve)=>setTimeout(resolve, 0));
-
-    const worldNames = state.getWorldNames ? state.getWorldNames() : state.world_names;
-    const sortedNames = state.safeToSorted(worldNames ?? [], (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
-
-    // Load sequentially with occasional yields. This is slower than Promise.all,
-    // but keeps the UI responsive for large datasets.
-    const books = [];
-    for (let i = 0; i < sortedNames.length; i++) {
-        const name = sortedNames[i];
-        books.push({ name, data: await state.loadWorldInfo(name) });
-        if (i > 0 && i % 5 === 0) {
-            await yieldToUi();
-        }
-    }
-
-    const folderGroups = new Map();
-    const rootBooks = [];
-    for (const book of books) {
-        const folderName = getFolderFromMetadata(book.data?.metadata);
-        if (folderName) {
-            registerFolderName(folderName);
-            if (!folderGroups.has(folderName)) folderGroups.set(folderName, []);
-            folderGroups.get(folderName).push(book);
-        } else {
-            rootBooks.push(book);
-        }
-    }
-    const folderRegistry = getFolderRegistry();
-    const allFolderNames = new Set(folderRegistry);
-    for (const folderName of folderGroups.keys()) {
-        allFolderNames.add(folderName);
-    }
-    const sortedFolders = [...allFolderNames].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
-    for (const folderName of sortedFolders) {
-        const folderDom = createFolderDom({
-            folderName,
-            onToggle: ()=>{
-                const isCollapsed = !listPanelState.getFolderDom(folderName)?.books.classList.contains('stwid--isCollapsed');
-                setFolderCollapsedAndPersist(folderName, isCollapsed);
-                updateCollapseAllFoldersToggle();
-            },
-            onDragStateChange: (isOver)=>selectionDnDSlice.onFolderDropTargetDragStateChange(isOver),
-            onDrop: async(evt)=>selectionDnDSlice.onFolderDropTargetDrop(evt, folderName),
-            menuActions: listPanelState.folderMenuActions,
-        });
-        listPanelState.setFolderDom(folderName, folderDom);
-        state.dom.books.append(folderDom.root);
-        const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
-        setFolderCollapsed(folderDom, initialCollapsed);
-        const folderBooks = folderGroups.get(folderName) ?? [];
-        for (let i = 0; i < folderBooks.length; i++) {
-            const book = folderBooks[i];
-            await renderBook(book.name, null, book.data, folderDom.books);
-            if (i > 0 && i % 2 === 0) {
-                await yieldToUi();
-            }
-        }
-        await yieldToUi();
-    }
-    for (let i = 0; i < rootBooks.length; i++) {
-        const book = rootBooks[i];
-        await renderBook(book.name, null, book.data, state.dom.books);
-        if (i > 0 && i % 2 === 0) {
-            await yieldToUi();
-        }
-    }
-    state.applyActiveFilter?.();
-    updateCollapseAllFoldersToggle();
-};
+// Book and folder view rendering are owned by dedicated slices.
+const renderBook = async(...args)=>booksViewSlice?.renderBook(...args);
+const loadList = async()=>booksViewSlice?.loadList();
 
 const refreshList = async()=>{
     state.dom.drawer.body.classList.add('stwid--isLoading');
@@ -611,23 +311,7 @@ const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--fil
     || bookRoot.classList.contains('stwid--filter-visibility');
 
 // Folder summary visibility/active-state refresh.
-const updateFolderVisibility = ()=>{
-    for (const folderDom of listPanelState.getFolderDomValues()) {
-        const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
-            if (!(child instanceof HTMLElement)) return false;
-            if (!child.classList.contains('stwid--book')) return false;
-            return !isBookDomFilteredOut(child);
-        });
-        folderDom.root.hidden = !hasVisibleBooks;
-    }
-};
-
-const updateFolderActiveToggles = ()=>{
-    for (const folderDom of listPanelState.getFolderDomValues()) {
-        folderDom.updateActiveToggle?.();
-    }
-    updateFolderVisibility();
-};
+const updateFolderActiveToggles = ()=>foldersViewSlice?.updateFolderActiveToggles({ isBookDomFilteredOut });
 
 // Books container setup.
 const setupBooks = (list)=>{
@@ -661,7 +345,6 @@ const initListPanel = (options)=>{
     resetBookVisibilityState(BOOK_VISIBILITY_MODES);
     clearEntrySearchCache();
     hydrateFolderCollapseStates();
-    listPanelState.loadListDebounced = state.debounceAsync(()=>loadList());
     selectionDnDSlice = createSelectionDnDSlice({
         listPanelState,
         runtime: state,
@@ -686,6 +369,28 @@ const initListPanel = (options)=>{
         setBookSortPreference,
         applyBookFolderChange,
     });
+    foldersViewSlice = createFoldersViewSlice({
+        listPanelState,
+        runtime: state,
+        selectionDnDSlice: ()=>selectionDnDSlice,
+    });
+    booksViewSlice = createBooksViewSlice({
+        listPanelState,
+        runtime: state,
+        coreUiSelectors: CORE_UI_SELECTORS,
+        foldersViewSlice,
+        selectionDnDSlice: ()=>selectionDnDSlice,
+        bookMenuSlice: ()=>bookMenuSlice,
+        getFolderFromMetadata,
+        getFolderRegistry,
+        registerFolderName,
+        getBookSortChoice,
+        setBookCollapsed,
+        setCacheMetadata,
+        updateBookSourceLinks,
+        updateCollapseAllToggle,
+    });
+    listPanelState.loadListDebounced = state.debounceAsync(()=>loadList());
     let folderImportInProgress = false;
 
     listPanelState.folderMenuActions = {

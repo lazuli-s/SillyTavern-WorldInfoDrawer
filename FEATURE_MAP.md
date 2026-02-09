@@ -17,11 +17,11 @@ Where each feature or behavior is implemented in the codebase.
 
 ## Book-level behavior
 
-- Book list rendering and insertion order → src/listPanel.js
+- Book list rendering and insertion order → src/listPanel.booksView.js
 - Top control row (new book, new folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders) → index.js, src/listPanel.js
-- Book active toggle (global active status) → src/listPanel.js
-- Book collapse/expand and collapse-all behavior → src/listPanel.js, index.js
-- Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.js
+- Book active toggle (global active status) → src/listPanel.booksView.js
+- Book collapse/expand and collapse-all behavior → src/listPanel.booksView.js, src/listPanel.js, index.js
+- Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.booksView.js, src/listPanel.selectionDnD.js, src/listPanel.js
 - Book context menu actions (rename, move folder, duplicate, export, delete) → src/listPanel.bookMenu.js
 - Fill empty entry titles from keywords (book action) → index.js, src/listPanel.bookMenu.js
 - Per-book sort preference menu + clear all preferences → src/listPanel.bookMenu.js, src/listPanel.js, src/sortHelpers.js
@@ -31,8 +31,8 @@ Where each feature or behavior is implemented in the codebase.
 - Folder metadata key handling on lorebook metadata (`folder`) → src/lorebookFolders.js
 - Folder registry persistence (`stwid--folder-registry`) → src/lorebookFolders.js
 - Folder DOM creation (header, count, active toggle, collapse toggle) → src/lorebookFolders.js
-- Folder collapse state persistence (`stwid--folder-collapse-states`) → src/listPanel.js
-- Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/listPanel.js, index.js
+- Folder collapse state persistence (`stwid--folder-collapse-states`) → src/listPanel.state.js
+- Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/listPanel.foldersView.js, src/listPanel.js, index.js
 - Folder context menu actions (rename, import into folder, export folder, delete folder) → src/lorebookFolders.js
 - Create new book directly inside a folder → src/lorebookFolders.js
 - Set active/inactive state for all books in a folder → src/lorebookFolders.js
@@ -42,7 +42,7 @@ Where each feature or behavior is implemented in the codebase.
 - Entry row rendering (title/comment, keys, status/actions area) → src/worldEntry.js
 - Entry enable/disable toggle and strategy selector on row → src/worldEntry.js
 - Entry click-to-open editor flow → src/worldEntry.js, src/editorPanel.js
-- Entry creation inside a selected book → src/listPanel.js
+- Entry creation inside a selected book → src/listPanel.booksView.js
 - Entry move/copy/duplicate across books with selection + drag/drop → src/listPanel.selectionDnD.js, src/worldEntry.js
 - Entry state mapping (`normal`/`constant`/`vectorized`) → src/worldEntry.js
 
@@ -72,14 +72,14 @@ Where each feature or behavior is implemented in the codebase.
 - Global sort settings and persistence bridge (`extension_settings.worldInfoDrawer`) → src/Settings.js
 - Entry sort implementations (title, trigger, prompt, position, depth, order, uid, length, custom) → src/sortHelpers.js
 - Sort option labels/options for dropdowns → src/utils.js
-- Book-level sort choice resolution and DOM reorder application → src/listPanel.js
+- Book-level sort choice resolution and DOM reorder application → src/listPanel.js, src/listPanel.booksView.js
 - Per-book metadata sort read/write (`stwid.sort`) → src/sortHelpers.js, src/listPanel.js
 
 ## Persistence & settings
 
 - Extension settings object serialization/save (`sortLogic`, `sortDirection`, `useBookSorts`) → src/Settings.js
 - Folder registry storage and normalization → src/lorebookFolders.js
-- Folder collapse state storage → src/listPanel.js
+- Folder collapse state storage → src/listPanel.state.js
 - Order Helper persisted state keys (`sort`, `hide-keys`, `columns`) → src/orderHelperState.js
 - Order Helper local state keys (`start`, `step`, `direction`, `filter`) → src/orderHelperRender.js
 - List panel width persistence (`stwid--list-width`) → index.js
