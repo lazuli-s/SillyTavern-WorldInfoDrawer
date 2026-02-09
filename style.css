@@ -336,16 +336,18 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books {
 
 /* Folders */
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder {
-  border-bottom: 2px solid var(--SmartThemeBorderColor);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-bottom-width: 2px;
   border-radius: 8px;
-  margin: 0.35em 0;
+  margin: 0.45em 0;
+  overflow: clip;
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader {
   display: flex;
   align-items: center;
   gap: 0.5em;
-  padding: 0.35em 0;
+  padding: 0.45em 0.35em;
   cursor: pointer;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
   transition: background-color 150ms ease, box-shadow 150ms ease;
@@ -364,6 +366,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderLabel {
   font-weight: bold;
+  font-size: 1.05em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
