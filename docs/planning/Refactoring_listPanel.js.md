@@ -1,133 +1,245 @@
-# Refactoring Plan: listPanel.js
+# Refactoring Plan: listPanel.js (Feature Slice Split, UI-First)
 
-## 1. Mental Model of the Current File
-- This file builds and controls the entire left side of the drawer: folders, books, and entry rows.
-- It also handles many user actions directly: search, visibility filtering, folder/book collapse, drag and drop, selection, book menu actions, folder import, and parts of sorting behavior.
-- It receives a large `state` object from `index.js` and then reads and writes through that object for almost everything (data loading, saving, UI updates, and external actions).
-- Data mostly flows like this:
-1. `index.js` passes API functions and shared objects into `initListPanel`.
-2. `listPanel.js` loads books, builds DOM nodes, and stores DOM references inside `state.cache`.
-3. User clicks and drags trigger local handlers that edit cache data, call SillyTavern APIs, and refresh the list.
-4. Other modules (`index.js`, `worldEntry.js`, `lorebookFolders.js`) call back into returned list panel methods.
-- Main sources of truth (important):
-1. SillyTavern-owned truth for lorebooks (`world_names`, `selected_world_info`, and `loadWorldInfo`/`saveWorldInfo` data).
-2. Extension runtime cache (`state.cache`) used to render and mutate rows quickly.
-3. Local module memory (many top-level variables like selection state, collapse state, folder DOM maps, visibility mode, search cache).
-4. Browser storage for folder collapse defaults (`stwid--folder-collapse-states`).
+## Goal
+Split `src/listPanel.js` into UI-first feature slices while preserving behavior, integration points, selectors, and exported API.
 
-## 2. Why This File Is Hard to Change
-- Complexity hotspot: one file (1,900+ lines) mixes rendering, event wiring, persistence calls, filtering rules, selection rules, and integration logic.
-- Mixed responsibilities: �what to show� logic and �what to save� logic live side-by-side in the same handlers.
-- Hidden state: important behavior depends on top-level mutable variables (`selectFrom`, `bookVisibilityMode`, `dragBookName`, `folderDoms`, and others) that are changed from many places.
-- Tight coupling to DOM structure and IDs:
-1. Core selectors like `#world_import_file`, `#world_editor_select`, `#world_info`, `#world_popup_delete`, `#world_popup_name_button`.
-2. Many CSS class checks/toggles that act as behavior flags.
-- Tight coupling to adjacent modules:
-1. `index.js` injects a large dependency surface and expects many return methods.
-2. `worldEntry.js` relies on selection getters/setters returned from this file.
-3. `lorebookFolders.js` relies on `folderMenuActions` contract.
-- Implicit timing risk: several actions depend on async UI timing (`waitForDom`, `waitForWorldInfoUpdate`, delayed refresh), which makes regressions hard to spot quickly.
-- Repeated patterns: similar drop handlers and menu construction patterns appear in multiple places, increasing �fix in one place but forget another� risk.
+Chosen split family:
+1. `listPanel.js` (composition + public API)
+2. `listPanel.state.js` (module-local mutable state + lifecycle resets)
+3. `listPanel.filterBar.js` (search + book visibility menu/chips/scope)
+4. `listPanel.foldersView.js` (folder dom map, collapse persistence, folder rendering/wiring)
+5. `listPanel.booksView.js` (book row render shell + entry list container wiring)
+6. `listPanel.bookMenu.js` (book dropdown menu items and actions)
+7. `listPanel.selectionDnD.js` (entry selection model + drag/drop handlers)
+8. `listPanel.coreBridge.js` (core WI selector/click/wait helpers)
 
-## 3. Refactoring Phases
+## Scope Constraints
+1. No behavior changes.
+2. No selector/id/class behavior changes.
+3. No changed labels/menu availability.
+4. No changed `initListPanel` return shape.
+5. No changes under `vendor/SillyTavern`.
 
-### Phase 1 � Make the File Easier to Read
-- Goal (one sentence): Reorganize the file layout so a reader can find behavior by topic without changing any logic.
-- What is allowed to change:
-1. Reorder existing function blocks into clear sections (state setup, filtering, book rendering, folder behavior, menu actions, selection, initialization).
-2. Add short plain-language comments above major sections and tricky behavior.
-3. Normalize naming consistency for local helper names only where meaning becomes clearer and no exported/public names are touched.
-- What must NOT change:
-1. Any event behavior.
-2. Any selector, class toggle, or API call target.
-3. Any returned API shape from `initListPanel`.
-- Why this phase is low-risk: it only changes where code sits and how it is labeled, not what code does.
-- What becomes clearer or safer after this phase:
-1. Faster onboarding for future edits.
-2. Lower chance of editing the wrong region.
-3. Easier review of behavior-specific changes.
+## Baseline Snapshot (Before Any Move)
+1. Save a copy of `src/listPanel.js` as a temporary reference branch/commit.
+2. Record current external surface:
+   1. `initListPanel` export and return members.
+   2. `refreshList` export.
+   3. State members consumed by `worldEntry.js`, `index.js`, `lorebookFolders.js`.
+3. Record integration selectors used by core bridge:
+   1. `#world_import_file`
+   2. `#world_editor_select`
+   3. `#world_info`
+   4. `#world_duplicate`
+   5. `#world_popup_delete`
+   6. `#world_popup_name_button`
 
-### Phase 2 � Clarify State Ownership and Lifecycles
-- Goal (one sentence): Make every mutable state value explicit about who owns it and when it resets.
-- What is allowed to change:
-1. Group top-level mutable variables by concern (selection, visibility filter, folder collapse, drag state, search cache).
-2. Add clear comments for lifecycle boundaries (set during init, reset on refresh, persisted to localStorage, derived from SillyTavern state).
-3. Add internal read/write helpers around direct variable mutation where it improves traceability, without changing behavior.
-- What must NOT change:
-1. Stored key names in localStorage.
-2. Existing default values and reset behavior.
-3. Selection rules (single-book selection, shift range behavior, drag/copy rules).
-- Why this phase is low-risk: behavior remains identical; only state bookkeeping becomes easier to reason about.
-- What becomes clearer or safer after this phase:
-1. Fewer accidental state leaks between refreshes.
-2. Easier debugging when selection/filter/collapse bugs appear.
-3. Better confidence that async flows update the right state.
+## Target Ownership Map
+### `listPanel.state.js`
+Owns:
+1. Mutable locals currently at module scope:
+   1. visibility mode/selections/menu refs
+   2. search refs and entry search cache
+   3. collapse maps and folder dom map
+   4. selection memory
+   5. drag book name
+2. Lifecycle reset/hydration helpers:
+   1. visibility reset
+   2. entry search cache clear
+   3. folder collapse hydration
+   4. selection reset
 
-### Phase 3 � Separate UI Construction from Action Logic (Inside Same File)
-- Goal (one sentence): Split �build DOM� work from �do action� work so handlers are easier to test mentally.
-- What is allowed to change:
-1. Extract local helper groups for menu action handlers, drag/drop decisions, and filter computations while staying in `listPanel.js`.
-2. Route repeated action paths through single internal helpers (for example, common refresh-and-scroll or common book move checks) without changing outcomes.
-3. Make handler names match user intent (for example, �move book�, �duplicate into folder�, �apply visibility filter�).
-- What must NOT change:
-1. Menu contents, labels, and availability conditions.
-2. Integration calls to SillyTavern and companion extensions.
-3. Any observable order of side effects (save, update, refresh, UI toggle).
-- Why this phase is low-risk: the same actions still run; this phase only reduces repetition and makes call paths explicit.
-- What becomes clearer or safer after this phase:
-1. Lower chance of inconsistent behavior between similar drop/menu paths.
-2. Safer future edits because logic has fewer duplicated branches.
-3. Better reviewability for bug fixes.
+Does not own:
+1. ST API calls.
+2. DOM rendering itself.
 
-### Phase 4 � Optional Future-Proofing for Safe Maintenance
-- Goal (one sentence): Add guardrails for known fragile points so future edits are less likely to break integration.
-- What is allowed to change:
-1. Add explicit internal checklists/comments near fragile selectors and async waits explaining expected assumptions.
-2. Consolidate constants for repeated selector strings and tooltip text when this improves drift resistance.
-3. Add lightweight manual test notes near high-risk paths (import, duplicate, move/copy, visibility filtering).
-- What must NOT change:
-1. Runtime behavior, feature set, or UI text meaning.
-2. Public API from this file.
-3. Ownership boundaries with SillyTavern.
-- Why this phase is low-risk: it improves defensive clarity, not product behavior.
-- What becomes clearer or safer after this phase:
-1. Faster detection when upstream SillyTavern DOM changes.
-2. Fewer regressions during routine maintenance.
-3. Better handoff quality for future contributors.
+### `listPanel.filterBar.js`
+Owns:
+1. `setupFilter`.
+2. book visibility constants/options/tooltips.
+3. `getBookVisibilityScope` and `applyActiveFilter`.
+4. query filter application and folder visibility refresh trigger calls.
 
-## 4. Explicit Non-Goals
-- Do not split this work across multiple files in this plan; keep scope to `listPanel.js`.
-- Do not redesign menus, folder UI, filter UI, or interaction flow.
-- Do not replace SillyTavern DOM delegation with new APIs unless requested.
-- Do not change import/export behavior, public method names, or call signatures.
-- Do not optimize for speed first; only address performance if it blocks clarity or causes unsafe complexity.
-- Do not alter optional integration behavior (Bulk Edit, External Editor, STLO).
-- Do not introduce framework patterns, state libraries, or architecture rewrites.
+Depends on:
+1. state store getters/setters.
+2. callbacks injected by composition (`updateFolderActiveToggles`, `state.onBookVisibilityScopeChange`).
 
-## 5. Safety Checklist
-- Invariants that must remain true after every phase:
-1. The same books and entries render in the same places (root vs folder).
-2. Selection still works exactly the same (single book only, Shift range, Ctrl copy behavior).
-3. Drag and drop outcomes stay identical for move vs copy and folder/root targets.
-4. Book visibility filter still supports `All Books`, `All Active`, and custom multi-select sources.
-5. Folder collapse persistence still uses `stwid--folder-collapse-states` and behaves the same on reload.
-6. Book menu and folder menu actions still trigger the same downstream behavior.
-7. `initListPanel` still returns the same callable API expected by `index.js` and `worldEntry.js`.
+### `listPanel.foldersView.js`
+Owns:
+1. folder collapse localStorage helpers.
+2. folder-level collapse all toggle sync.
+3. folder dom creation path (`createFolderDom`) and folder insertion ordering.
+4. folder visibility and folder active toggle refresh helpers.
 
-- Observable signs of regression:
-1. Book rows disappear unexpectedly after refresh or filter changes.
-2. Folder headers appear without correct counts or active toggle state.
-3. Selection highlight and draggable behavior get out of sync.
-4. Duplicate/import/move actions silently fail or target wrong books.
-5. Visibility chips/menu state does not match actual visible books.
-6. Collapse-all buttons show wrong icon or wrong pressed state.
+Depends on:
+1. `listPanel.state.js` for folder dom map.
+2. actions from composition (`handleDraggedBookMoveOrCopy`, `folderMenuActions`).
 
-- Things to manually verify after changes:
-1. Create, rename, duplicate, export, delete book from the book menu.
-2. Move book between folders, back to root, and copy with Ctrl-drag.
-3. Select entries with click and Shift range, then move/copy across books.
-4. Search books, then enable entry search and verify matched entries.
-5. Toggle each visibility mode and confirm list + chips + folder visibility.
-6. Collapse/expand single books and folders, then use global collapse toggles.
-7. Reload the drawer and confirm persisted folder collapse defaults remain correct.
-8. Confirm Order Helper scope still updates when visibility filtering changes.
+### `listPanel.booksView.js`
+Owns:
+1. `renderBook` shell.
+2. `loadList`.
+3. per-book collapse toggle wiring.
+4. source-links rendering hooks.
+5. entry list rendering loop callouts to `state.renderEntry`.
+
+Does not own:
+1. book menu DOM internals.
+2. selection state internals.
+
+### `listPanel.bookMenu.js`
+Owns:
+1. dropdown build for book menu trigger contents.
+2. move-to-folder modal and actions.
+3. duplicate/delete/export/sort/order helper/stlo/external editor menu actions.
+4. folder import dialog entry points tied to book/folder actions.
+
+Depends on:
+1. core bridge functions.
+2. composition actions (`setBookFolder`, `refreshList`, `setBookSortPreference`, etc).
+
+### `listPanel.selectionDnD.js`
+Owns:
+1. `selectAdd`, `selectRemove`, `selectEnd`.
+2. selection state API (`getSelectionState`).
+3. entry move/copy algorithm for drop.
+4. shared drag/drop handler helpers used by books/folders/root container.
+
+Depends on:
+1. state store selection/drag fields.
+2. injected persistence actions (`loadWorldInfo`, `saveWorldInfo`, `deleteWorldInfoEntry`).
+
+### `listPanel.coreBridge.js`
+Owns:
+1. `waitForDom`
+2. `setSelectedBookInCoreUi`
+3. `clickCoreUiAction`
+4. core delegated actions wrappers used by menu actions.
+
+## Implementation Sequence (Detailed)
+### Phase 1: Create state container and move pure state helpers
+1. Add `listPanel.state.js`.
+2. Move module mutable variables and reset/hydration helpers.
+3. Expose only explicit getter/setter operations, not raw objects where possible.
+4. Keep `listPanel.js` behavior identical by adapting calls to state container.
+
+Exit criteria:
+1. App boots.
+2. `initListPanel` and `refreshList` still exported.
+3. No behavior differences in manual smoke test.
+
+### Phase 2: Extract core bridge utilities
+1. Add `listPanel.coreBridge.js`.
+2. Move `waitForDom`, `setSelectedBookInCoreUi`, `clickCoreUiAction`.
+3. Move `duplicateBook`/`deleteBook` wrappers only if they stay bridge-only; otherwise keep orchestration in composition.
+
+Exit criteria:
+1. Rename/duplicate/delete actions still work from book menu.
+2. No selector string changes.
+
+### Phase 3: Extract filter bar slice
+1. Add `listPanel.filterBar.js`.
+2. Move visibility constants and helpers.
+3. Move `setupFilter` with injected callbacks for:
+   1. folder toggle updates
+   2. visibility-scope change callback
+   3. access to cache and selected books
+4. Keep `state.applyActiveFilter` assignment contract available to composition.
+
+Exit criteria:
+1. Search by book name works.
+2. Entry search toggle works.
+3. All visibility modes/chips/menu state remain consistent.
+
+### Phase 4: Extract selection + drag/drop slice
+1. Add `listPanel.selectionDnD.js`.
+2. Move `selectAdd`, `selectRemove`, `selectEnd`, `getSelectionState`.
+3. Move entry move/copy on drop flow into this slice.
+4. Expose reusable handlers for:
+   1. book drop target
+   2. folder drop target
+   3. root list drop target
+
+Exit criteria:
+1. click/shift multi-select unchanged.
+2. ctrl-copy vs move unchanged.
+3. selected visual state and draggable attrs unchanged.
+
+### Phase 5: Extract book menu slice
+1. Add `listPanel.bookMenu.js`.
+2. Move `buildMoveBookMenuItem`, import dialog helpers, and dropdown item builders.
+3. Keep side-effect order unchanged:
+   1. save
+   2. update
+   3. refresh
+   4. UI close/reset
+
+Exit criteria:
+1. All book menu items still appear under the same conditions.
+2. Optional integrations (Bulk Edit, External Editor, STLO) still gate on extension presence.
+
+### Phase 6: Extract folders + books view slices
+1. Add `listPanel.foldersView.js` for folder map/collapse behavior.
+2. Add `listPanel.booksView.js` for `renderBook` and `loadList`.
+3. Inject dependencies from composition for:
+   1. menu builder
+   2. selection/drop handlers
+   3. source link update helpers
+   4. sort helpers
+
+Exit criteria:
+1. `renderBook` still creates identical structure/classes.
+2. folder ordering and root ordering unchanged.
+3. collapse-all books/folders toggle state unchanged.
+
+### Phase 7: Final composition pass in `listPanel.js`
+1. Reduce `listPanel.js` to:
+   1. dependency wiring
+   2. shared orchestration actions
+   3. public API assembly
+2. Ensure returned API names/signatures unchanged.
+3. Remove dead helpers from composition file.
+
+Exit criteria:
+1. `initListPanel` return object exactly matches baseline keys.
+2. `refreshList` export still available and behaviorally identical.
+
+## Risk Register
+1. Hidden shared state drift.
+   1. Risk: two slices update different copies of selection/drag fields.
+   2. Mitigation: single state module, no duplicate state vars.
+2. Event listener multiplication.
+   1. Risk: filter or menu document listeners attach more than before.
+   2. Mitigation: keep one setup path and preserve initialization count.
+3. Timing regressions in core delegation.
+   1. Risk: duplicate/delete/rename flaky after extraction.
+   2. Mitigation: keep bridge code unchanged and covered by targeted manual tests.
+4. Side-effect order changes.
+   1. Risk: refresh before save causes stale UI.
+   2. Mitigation: keep action wrappers with explicit ordered steps.
+5. API breakage with adjacent modules.
+   1. Risk: `worldEntry.js` or `index.js` expect old methods/state paths.
+   2. Mitigation: freeze public API at composition boundary and compare against baseline.
+
+## Validation Gates
+Run after each phase:
+1. `npm test`
+2. `npm run lint`
+3. targeted manual checks for changed slice
+
+Full manual regression pass before completion:
+1. Create/rename/duplicate/export/delete book.
+2. Move book folder-to-folder, folder-to-root, and ctrl-copy.
+3. Entry multi-select click + shift range, then move/copy across books.
+4. Search book and entry content toggles.
+5. Toggle all visibility modes and confirm chips + scope + folder hide/show.
+6. Collapse/expand books and folders; verify global toggle icon/title/pressed state.
+7. Reload and verify folder collapse persistence.
+8. Confirm Order Helper scope updates with visibility changes.
+
+## Done Definition
+1. `src/listPanel.js` reduced to composition/orchestration and exports.
+2. New slice files contain the feature logic listed in ownership map.
+3. No UI or behavior regression in validation gates.
+4. Public API compatibility preserved.
+5. `FEATURE_MAP.md` and `ARCHITECTURE.md` updated to reflect new file ownership.
