@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.4.0] - 2026-02-10
+
+### Internal / Maintenance
+
+- Split `src/orderHelperRender.js` (138 KB, 1966 lines) into focused slice files following the existing `listPanel.*` dot-notation pattern. Public API (`createOrderHelperRenderer` / `renderOrderHelper`) and all behavior are unchanged.
+  - `src/orderHelperRender.js` — now an orchestrator: Init, section builder calls, table assembly, Mount
+  - `src/orderHelperRender.utils.js` — shared DOM/utility helpers (`setTooltip`, `wireMultiselectDropdown`, `createMultiselectDropdownCheckbox`, etc.)
+  - `src/orderHelperRender.actionBar.js` — action bar (select-all, column visibility, sort, filter toggle, Apply Order)
+  - `src/orderHelperRender.filterPanel.js` — script-based filter panel + live preview
+  - `src/orderHelperRender.tableHeader.js` — `<thead>` with 6 multiselect column filter menus
+  - `src/orderHelperRender.tableBody.js` — entry row loop with 14 cell types + post-build filter initialization
+- Moved 4 Order Helper column/option constants (`TOGGLE_COLUMNS`, `TABLE_COLUMNS`, `NUMBER_COLUMN_KEYS`, `RECURSION_OPTIONS`) from file-local to named exports in `src/constants.js` (renamed with `ORDER_HELPER_` prefix to avoid collisions).
+
 ## [2.3.2] - 2026-02-09
 
 ### Internal / Maintenance

@@ -167,20 +167,34 @@
     - Script filter
 
 - `orderHelperRender.js`
-  - Renders the Order Helper table UI
-  - Supports:
-    - Sorting (including CUSTOM using `extensions.display_index`)
-    - jQuery sortable drag ordering + keyboard-like move buttons
-    - Row selection for apply + select-all
-    - Start / step / direction controls
-    - Inline edits (enabled, strategy, position, depth, order, sticky, cooldown, delay, automationId, trigger %)
-    - Recursion flags + budget ignore toggle
-    - Inclusion group + prioritize
-    - Character filter display (read-only)
-    - Column visibility
-    - Hide keys
-    - Script-based filtering via `SlashCommandParser`
-    - Live preview (`{{var::entry}}`) with `highlight.js`
+  - Orchestrator: Init (sync filters, reset state) + section assembly + Mount
+  - Calls section builders in order and threads cross-section return values (e.g. refresh callbacks)
+  - Public API unchanged: `createOrderHelperRenderer` / `renderOrderHelper`
+
+- `orderHelperRender.utils.js`
+  - Shared DOM/utility helpers used across orderHelperRender.* slices:
+    - `setTooltip`, `createMultiselectDropdownCheckbox`, `setMultiselectDropdownOptionCheckboxState`
+    - `closeOpenMultiselectDropdownMenus`, `wireMultiselectDropdown`
+    - `formatCharacterFilter`
+    - `MULTISELECT_DROPDOWN_CLOSE_HANDLER` constant
+
+- `orderHelperRender.actionBar.js`
+  - Action bar: select-all toggle, hide-keys toggle, column visibility dropdown
+  - Sort select + filter panel toggle
+  - Apply Order button with start/step/direction controls
+
+- `orderHelperRender.filterPanel.js`
+  - Script-based filter panel (SlashCommandParser + highlight.js)
+  - Live preview panel
+
+- `orderHelperRender.tableHeader.js`
+  - `<thead>` with 6 multiselect column filter menus (strategy, position, recursion, outlet, automationId, group)
+  - Returns refresh-indicator callbacks for outlet/automationId/group (consumed by tableBody)
+
+- `orderHelperRender.tableBody.js`
+  - `<tbody>` entry row loop with all 14 cell types (select, drag, enabled, entry, strategy, position, depth, outlet, group, order, sticky, cooldown, delay, automationId, trigger, recursion, budget, characterFilter)
+  - jQuery sortable drag reordering + move buttons
+  - Post-build: applies all structured filters and updates select-all state
 
 - `sortHelpers.js`, `utils.js`, `constants.js`, `Settings.js`
   - Sorting logic + shared utilities

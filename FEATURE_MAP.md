@@ -101,14 +101,16 @@ Where each feature or behavior is implemented in the codebase.
 - Order Helper open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → index.js, src/orderHelper.js, src/listPanel.js, src/lorebookFolders.js
 - Order Helper state creation (defaults + restored localStorage state) → src/orderHelperState.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/orderHelper.js
-- Table renderer and control bar (sort, select-all, filter toggle, apply order) → src/orderHelperRender.js
-- Row drag sorting and custom order persistence (`extensions.display_index`) → src/orderHelperRender.js, src/orderHelper.js
-- Start/spacing/direction apply-to-order workflow → src/orderHelperRender.js
-- Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/orderHelperRender.js
-- Recursion flags and budget-ignore controls → src/orderHelperRender.js
-- Column visibility controls and hide-keys toggle → src/orderHelperRender.js, src/orderHelperState.js
-- Structured row filters (strategy, position, recursion, outlet, automation ID, group) → src/orderHelperFilters.js, src/orderHelperRender.js
-- Script-based filtering with SlashCommandParser + syntax-highlighted input → src/orderHelperRender.js
-- Live preview panel for script filter context data → src/orderHelper.js, src/orderHelperRender.js
-- Character filter column display (read-only) → src/orderHelperRender.js
-- Focus entry in main list/editor from Order Helper row link → src/orderHelper.js, src/orderHelperRender.js
+- Table renderer and control bar (sort, select-all, filter toggle, apply order) → src/orderHelperRender.actionBar.js, src/orderHelperRender.js
+- Row drag sorting and custom order persistence (`extensions.display_index`) → src/orderHelperRender.tableBody.js, src/orderHelper.js
+- Start/spacing/direction apply-to-order workflow → src/orderHelperRender.actionBar.js
+- Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/orderHelperRender.tableBody.js
+- Recursion flags and budget-ignore controls → src/orderHelperRender.tableBody.js
+- Column visibility controls and hide-keys toggle → src/orderHelperRender.actionBar.js, src/orderHelperState.js
+- Structured row filters (strategy, position, recursion, outlet, automation ID, group) → src/orderHelperFilters.js, src/orderHelperRender.tableHeader.js, src/orderHelperRender.tableBody.js
+- Script-based filtering with SlashCommandParser + syntax-highlighted input → src/orderHelperRender.filterPanel.js
+- Live preview panel for script filter context data → src/orderHelper.js, src/orderHelperRender.filterPanel.js
+- Character filter column display (read-only) → src/orderHelperRender.tableBody.js
+- Focus entry in main list/editor from Order Helper row link → src/orderHelper.js, src/orderHelperRender.tableBody.js
+- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox) → src/orderHelperRender.utils.js
+- Order Helper table column/option schema constants → src/constants.js
