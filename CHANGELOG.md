@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.4.0] - 2026-02-10
+## [2.3.3] - 2026-02-10
 
 ### Internal / Maintenance
 
