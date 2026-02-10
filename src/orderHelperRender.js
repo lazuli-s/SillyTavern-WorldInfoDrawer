@@ -63,7 +63,13 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
+    // ── Shared constant ───────────────────────────────────────────────────────
+    // Property key used to attach a programmatic close function to each open menu
+    // element so closeOpenMultiselectDropdownMenus can close them uniformly.
     const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
+
+    // ── Utility helpers ───────────────────────────────────────────────────────
+
     const setTooltip = (element, text, { ariaLabel = null } = {})=>{
         if (!element || !text) return;
         element.title = text;
@@ -145,18 +151,128 @@ const createOrderHelperRenderer = ({
         return lines;
     };
 
+    // ── Phase 3: Dropdown wiring helper ──────────────────────────────────────
+    // Wires open/close/outside-click behavior for any multiselect dropdown menu.
+    // Registers a close function on the menu element so closeOpenMultiselectDropdownMenus
+    // can close it externally. Stops click propagation inside the menu so outside-click
+    // detection works correctly. Returns the closeMenu function for callers that need it
+    // (e.g. to close after a preset action).
+    const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
+        const closeMenu = ()=>{
+            if (!menu.classList.contains('stwid--active')) return;
+            menu.classList.remove('stwid--active');
+            document.removeEventListener('click', handleOutsideClick);
+        };
+        const openMenu = ()=>{
+            if (menu.classList.contains('stwid--active')) return;
+            closeOpenMultiselectDropdownMenus(menu);
+            menu.classList.add('stwid--active');
+            document.addEventListener('click', handleOutsideClick);
+        };
+        const handleOutsideClick = (event)=>{
+            if (menuWrap.contains(event.target)) return;
+            closeMenu();
+        };
+        menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
+        menu.addEventListener('click', (event)=>event.stopPropagation());
+        menuButton.addEventListener('click', (event)=>{
+            event.stopPropagation();
+            if (menu.classList.contains('stwid--active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+        return closeMenu;
+    };
+
+    // ── Phase 1: Column definitions (single source of truth) ─────────────────
+    // TOGGLE_COLUMNS: columns that can be shown/hidden via the Column Visibility dropdown.
+    // Fixed columns (select, drag, enabled, entry) are always visible and not listed here.
+    // Keep this list in sync with ORDER_HELPER_DEFAULT_COLUMNS in orderHelperState.js.
+    const TOGGLE_COLUMNS = [
+        { key: 'strategy',        label: 'Strategy' },
+        { key: 'position',        label: 'Position' },
+        { key: 'depth',           label: 'Depth' },
+        { key: 'outlet',          label: 'Outlet' },
+        { key: 'group',           label: 'Inclusion Group' },
+        { key: 'order',           label: 'Order' },
+        { key: 'sticky',          label: 'Sticky' },
+        { key: 'cooldown',        label: 'Cooldown' },
+        { key: 'delay',           label: 'Delay' },
+        { key: 'automationId',    label: 'Automation ID' },
+        { key: 'trigger',         label: 'Trigger %' },
+        { key: 'recursion',       label: 'Recursion' },
+        { key: 'budget',          label: 'Budget' },
+        { key: 'characterFilter', label: 'Character Filter' },
+    ];
+
+    // TABLE_COLUMNS: full ordered column list for the table header,
+    // prepending the always-visible fixed columns before the toggleable ones.
+    const TABLE_COLUMNS = [
+        { key: 'select',  label: '' },
+        { key: 'drag',    label: '' },
+        { key: 'enabled', label: '' },
+        { key: 'entry',   label: 'Entry' },
+        ...TOGGLE_COLUMNS,
+    ];
+
+    // NUMBER_COLUMN_KEYS: columns rendered as numeric inputs (tighter layout, right-aligned).
+    const NUMBER_COLUMN_KEYS = new Set([
+        'depth',
+        'order',
+        'sticky',
+        'cooldown',
+        'delay',
+        'automationId',
+        'trigger',
+    ]);
+
+    // Phase 3: Recursion option definitions.
+    // Used in both the recursion header filter menu and the per-row recursion cell,
+    // so they are defined once here to stay in sync.
+    const RECURSION_OPTIONS = [
+        { value: 'excludeRecursion',    label: 'Non-recursable' },
+        { value: 'preventRecursion',    label: 'Prevent further recursion' },
+        { value: 'delayUntilRecursion', label: 'Delay until recursion' },
+    ];
+
+    // ── Main renderer ─────────────────────────────────────────────────────────
+
     const renderOrderHelper = (book = null)=>{
+        // Phase 4 – Manual verification checklist (run after any change to this function):
+        //   1. Opening in "all active books" mode and single-book mode both render correctly.
+        //   2. Sort selection, drag/drop reorder, and move-button (single/double-click) persist custom order.
+        //   3. "Apply Order" updates only unfiltered, selected rows; start/step/direction rules unchanged.
+        //   4. Every inline field edit (each column) updates the cache entry and persists to the correct book.
+        //   5. Strategy/position/recursion/outlet/automationId/group/script filters combine into the same rows.
+        //   6. Column visibility presets and individual columns persist through reload with the same keys.
+        //   7. Entry link click focuses the correct entry in the main list/editor.
+        //   8. Missing #entry_edit_template controls throw a clear error (no silent failure).
+
+        // ── Init ──────────────────────────────────────────────────────────────
         orderHelperState.book = book;
+
+        // Sync filter option lists to the current book scope before building any UI.
+        // This ensures header filter menus reflect the entries that will be rendered.
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
         syncOrderHelperOutletFilters();
         syncOrderHelperAutomationIdFilters();
         syncOrderHelperGroupFilters();
+
+        // Phase 2: refreshOutlet/AutomationId/GroupFilterIndicator are late-bound.
+        // These callbacks are assigned below when the corresponding column header filter
+        // menus are built. They are noop until then, but may be called from row-level
+        // change listeners that fire only after the full render is complete.
         let refreshOutletFilterIndicator = ()=>{};
         let refreshAutomationIdFilterIndicator = ()=>{};
         let refreshGroupFilterIndicator = ()=>{};
+
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
+
+        // Clear stale DOM refs so partial renders do not persist across reopens.
         dom.order.entries = {};
         dom.order.filter.root = undefined;
         dom.order.filter.preview = undefined;
@@ -169,12 +285,18 @@ const createOrderHelperRenderer = ({
             }
         }
         const entries = getOrderHelperEntries(book);
+
+        // ── Body ──────────────────────────────────────────────────────────────
         const body = document.createElement('div'); {
             body.classList.add('stwid--orderHelper');
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
             applyOrderHelperColumnVisibility(body);
+
+            // ── Action Bar ────────────────────────────────────────────────────
             const actions = document.createElement('div'); {
                 actions.classList.add('stwid--actions');
+
+                // Select-all toggle
                 const selectAll = document.createElement('div'); {
                     dom.order.selectAll = selectAll;
                     selectAll.classList.add('menu_button');
@@ -188,6 +310,8 @@ const createOrderHelperRenderer = ({
                     });
                     actions.append(selectAll);
                 }
+
+                // Key column visibility toggle
                 const keyToggle = document.createElement('div'); {
                     keyToggle.classList.add('menu_button');
                     keyToggle.classList.add('fa-solid', 'fa-fw');
@@ -199,6 +323,7 @@ const createOrderHelperRenderer = ({
                     };
                     applyKeyToggleStyle();
                     keyToggle.addEventListener('click', ()=>{
+                        // Phase 2: update state → update DOM → persist
                         orderHelperState.hideKeys = !orderHelperState.hideKeys;
                         localStorage.setItem(ORDER_HELPER_HIDE_KEYS_STORAGE_KEY, orderHelperState.hideKeys);
                         body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
@@ -206,6 +331,8 @@ const createOrderHelperRenderer = ({
                     });
                     actions.append(keyToggle);
                 }
+
+                // Column visibility dropdown
                 const columnVisibilityWrap = document.createElement('div'); {
                     columnVisibilityWrap.classList.add('stwid--columnVisibility');
                     const labelWrap = document.createElement('div'); {
@@ -231,45 +358,14 @@ const createOrderHelperRenderer = ({
                         }
                         const menu = document.createElement('div'); {
                             menu.classList.add('stwid--multiselectDropdownMenu');
-                            const closeMenu = ()=>{
-                                if (!menu.classList.contains('stwid--active')) return;
-                                menu.classList.remove('stwid--active');
-                                document.removeEventListener('click', handleOutsideClick);
-                            };
-                            const openMenu = ()=>{
-                                if (menu.classList.contains('stwid--active')) return;
-                                closeOpenMultiselectDropdownMenus(menu);
-                                menu.classList.add('stwid--active');
-                                document.addEventListener('click', handleOutsideClick);
-                            };
-                            const handleOutsideClick = (event)=>{
-                                if (menuWrap.contains(event.target)) return;
-                                closeMenu();
-                            };
-                            menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
-                            const columns = [
-                                { key:'strategy', label:'Strategy' },
-                                { key:'position', label:'Position' },
-                                { key:'depth', label:'Depth' },
-                                { key:'outlet', label:'Outlet' },
-                                { key:'group', label:'Inclusion Group' },
-                                { key:'order', label:'Order' },
-                                { key:'sticky', label:'Sticky' },
-                                { key:'cooldown', label:'Cooldown' },
-                                { key:'delay', label:'Delay' },
-                                { key:'automationId', label:'Automation ID' },
-                                { key:'trigger', label:'Trigger %' },
-                                { key:'recursion', label:'Recursion' },
-                                { key:'budget', label:'Budget' },
-                                { key:'characterFilter', label:'Character Filter' },
-                            ];
                             const columnInputs = new Map();
                             const mainColumnDefaults = Object.fromEntries(
                                 Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)
                                     .map(([key, value])=>[key, Boolean(value)]),
                             );
                             const setColumnVisibility = (overrides)=>{
-                                for (const column of columns) {
+                                // Phase 2: update state → update checkboxes → persist → apply to DOM → close
+                                for (const column of TOGGLE_COLUMNS) {
                                     const nextValue = Boolean(overrides[column.key]);
                                     orderHelperState.columns[column.key] = nextValue;
                                     const inputControl = columnInputs.get(column.key);
@@ -280,7 +376,9 @@ const createOrderHelperRenderer = ({
                                     JSON.stringify(orderHelperState.columns),
                                 );
                                 applyOrderHelperColumnVisibility(body);
-                                closeMenu();
+                                // Close via stored handler so this works regardless of declaration order.
+                                const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
+                                if (typeof closeMenu === 'function') closeMenu();
                             };
                             const addColumnAction = ({ label, icon, onClick })=>{
                                 const action = document.createElement('div'); {
@@ -302,7 +400,7 @@ const createOrderHelperRenderer = ({
                                 label: 'SELECT ALL',
                                 icon: 'fa-check-double',
                                 onClick: ()=>setColumnVisibility(
-                                    Object.fromEntries(columns.map((column)=>[column.key, true])),
+                                    Object.fromEntries(TOGGLE_COLUMNS.map((column)=>[column.key, true])),
                                 ),
                             });
                             addColumnAction({
@@ -310,7 +408,7 @@ const createOrderHelperRenderer = ({
                                 icon: 'fa-table-columns',
                                 onClick: ()=>setColumnVisibility(mainColumnDefaults),
                             });
-                            for (const column of columns) {
+                            for (const column of TOGGLE_COLUMNS) {
                                 const option = document.createElement('label'); {
                                     option.classList.add('stwid--multiselectDropdownOption');
                                     const inputControl = createMultiselectDropdownCheckbox(
@@ -318,6 +416,7 @@ const createOrderHelperRenderer = ({
                                     );
                                     columnInputs.set(column.key, inputControl);
                                     inputControl.input.addEventListener('change', ()=>{
+                                        // Phase 2: update state → persist → apply to DOM
                                         orderHelperState.columns[column.key] = inputControl.input.checked;
                                         localStorage.setItem(
                                             ORDER_HELPER_COLUMNS_STORAGE_KEY,
@@ -333,27 +432,24 @@ const createOrderHelperRenderer = ({
                                     menu.append(option);
                                 }
                             }
-                            menu.addEventListener('click', (event)=>event.stopPropagation());
-                            menuButton.addEventListener('click', (event)=>{
-                                event.stopPropagation();
-                                if (menu.classList.contains('stwid--active')) {
-                                    closeMenu();
-                                } else {
-                                    openMenu();
-                                }
-                            });
+                            // Phase 3: wire open/close/outside-click.
+                            // setColumnVisibility closes the menu via menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER].
+                            wireMultiselectDropdown(menu, menuButton, menuWrap);
                             menuWrap.append(menu);
                         }
                         columnVisibilityWrap.append(menuWrap);
                     }
                     actions.append(columnVisibilityWrap);
                 }
+
                 const addDivider = ()=>{
                     const divider = document.createElement('div');
                     divider.classList.add('stwid--actionsDivider');
                     actions.append(divider);
                 };
                 addDivider();
+
+                // Sort select
                 const sortWrap = document.createElement('label'); {
                     sortWrap.classList.add('stwid--inputWrap');
                     setTooltip(sortWrap, 'Sort rows in the table');
@@ -379,6 +475,8 @@ const createOrderHelperRenderer = ({
                     actions.append(sortWrap);
                 }
                 addDivider();
+
+                // Filter panel toggle
                 const filterToggle = document.createElement('div'); {
                     filterToggle.classList.add('menu_button');
                     filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -393,12 +491,17 @@ const createOrderHelperRenderer = ({
                     });
                     actions.append(filterToggle);
                 }
+
+                // ── Right group: start / spacing / direction / apply ───────────
                 const rightGroup = document.createElement('div'); {
                     rightGroup.classList.add('stwid--actionsRight');
                     const divider = document.createElement('div');
                     divider.classList.add('stwid--actionsDivider');
                     rightGroup.append(divider);
                 }
+
+                // Apply Order button (created before direction radios because the direction
+                // radio listeners reference it to toggle its icon class).
                 const apply = document.createElement('div'); {
                     apply.classList.add('menu_button');
                     apply.classList.add('fa-solid', 'fa-fw');
@@ -439,6 +542,7 @@ const createOrderHelperRenderer = ({
                         }
                     });
                 }
+
                 const startLbl = document.createElement('label'); {
                     startLbl.classList.add('stwid--inputWrap');
                     setTooltip(startLbl, 'Starting Order value');
@@ -458,6 +562,7 @@ const createOrderHelperRenderer = ({
                     }
                     rightGroup.append(startLbl);
                 }
+
                 const stepLbl = document.createElement('label'); {
                     stepLbl.classList.add('stwid--inputWrap');
                     setTooltip(stepLbl, 'Spacing between Order values');
@@ -477,6 +582,7 @@ const createOrderHelperRenderer = ({
                     }
                     rightGroup.append(stepLbl);
                 }
+
                 const dir = document.createElement('div'); {
                     dir.classList.add('stwid--inputWrap');
                     setTooltip(dir, 'Direction used when applying Order values');
@@ -529,6 +635,8 @@ const createOrderHelperRenderer = ({
                 actions.append(rightGroup);
                 body.append(actions);
             }
+
+            // ── Filter Panel ──────────────────────────────────────────────────
             const filter = document.createElement('div'); {
                 dom.order.filter.root = filter;
                 filter.classList.add('stwid--filter');
@@ -548,6 +656,15 @@ const createOrderHelperRenderer = ({
                         `;
                         main.append(hint);
                     }
+
+                    // Phase 3: errorEl lives outside the inp block for clearer reading order.
+                    // It is appended here so it appears between the hint and the script editor.
+                    // showFilterError (defined inside the inp block) holds a reference to it.
+                    const errorEl = document.createElement('div');
+                    errorEl.classList.add('stwid--orderFilterError');
+                    errorEl.hidden = true;
+                    main.append(errorEl);
+
                     const script = document.createElement('div'); {
                         script.classList.add('stwid--script');
                         const syntax = document.createElement('pre'); {
@@ -564,7 +681,13 @@ const createOrderHelperRenderer = ({
                             inp.classList.add('text_pole');
                             inp.name = 'filter';
                             inp.value = localStorage.getItem('stwid--order-filter') ?? defaultFilter;
+
+                            // Phase 2: filterStack prevents stale async results from overwriting the UI.
+                            // Each compile run pushes its closure; when a newer run starts before this
+                            // one finishes, the old one checks filterStack.at(-1) !== closure and exits
+                            // early without touching row state.
                             let filterStack = [];
+
                             const updateScroll = ()=>{
                                 const scrollTop = inp.scrollTop;
                                 syntax.scrollTop = scrollTop;
@@ -572,11 +695,6 @@ const createOrderHelperRenderer = ({
                             const updateScrollDebounced = debounce(()=>updateScroll(), 150);
 
                             // Show filter compile/runtime errors inline (non-toastr) to avoid spam.
-                            const errorEl = document.createElement('div');
-                            errorEl.classList.add('stwid--orderFilterError');
-                            errorEl.hidden = true;
-                            main.append(errorEl);
-
                             const showFilterError = (message)=>{
                                 if (!message) {
                                     errorEl.hidden = true;
@@ -658,42 +776,17 @@ const createOrderHelperRenderer = ({
                 }
                 body.append(filter);
             }
+
+            // ── Table ─────────────────────────────────────────────────────────
             const wrap = document.createElement('div'); {
                 wrap.classList.add('stwid--orderTableWrap');
                 const tbl = document.createElement('table'); {
                     tbl.classList.add('stwid--orderTable');
+
+                    // ── Table Header (with column filter menus) ───────────────
                     const thead = document.createElement('thead'); {
                         const tr = document.createElement('tr'); {
-                            const columns = [
-                                { label:'', key:'select' },
-                                { label:'', key:'drag' },
-                                { label:'', key:'enabled' },
-                                { label:'Entry', key:'entry' },
-                                { label:'Strategy', key:'strategy' },
-                                { label:'Position', key:'position' },
-                                { label:'Depth', key:'depth' },
-                                { label:'Outlet', key:'outlet' },
-                                { label:'Inclusion Group', key:'group' },
-                                { label:'Order', key:'order' },
-                                { label:'Sticky', key:'sticky' },
-                                { label:'Cooldown', key:'cooldown' },
-                                { label:'Delay', key:'delay' },
-                                { label:'Automation ID', key:'automationId' },
-                                { label:'Trigger %', key:'trigger' },
-                                { label:'Recursion', key:'recursion' },
-                                { label:'Budget', key:'budget' },
-                                { label:'Character Filter', key:'characterFilter' },
-                            ];
-                            const numberColumnKeys = new Set([
-                                'depth',
-                                'order',
-                                'sticky',
-                                'cooldown',
-                                'delay',
-                                'automationId',
-                                'trigger',
-                            ]);
-                            for (const col of columns) {
+                            for (const col of TABLE_COLUMNS) {
                                 const th = document.createElement('th'); {
                                     if (col.key === 'strategy') {
                                         const header = document.createElement('div'); {
@@ -719,22 +812,6 @@ const createOrderHelperRenderer = ({
                                                     }
                                                     const menu = document.createElement('div'); {
                                                         menu.classList.add('stwid--multiselectDropdownMenu');
-                                                        const closeMenu = ()=>{
-                                                            if (!menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.remove('stwid--active');
-                                                            document.removeEventListener('click', handleOutsideClick);
-                                                        };
-                                                        const openMenu = ()=>{
-                                                            if (menu.classList.contains('stwid--active')) return;
-                                                            closeOpenMultiselectDropdownMenus(menu);
-                                                            menu.classList.add('stwid--active');
-                                                            document.addEventListener('click', handleOutsideClick);
-                                                        };
-                                                        const handleOutsideClick = (event)=>{
-                                                            if (menuWrap.contains(event.target)) return;
-                                                            closeMenu();
-                                                        };
-                                                        menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
                                                         const updateFilterIndicator = ()=>{
                                                             const allValues = orderHelperState.strategyValues.length
                                                                 ? orderHelperState.strategyValues
@@ -745,6 +822,7 @@ const createOrderHelperRenderer = ({
                                                             menuButton.classList.toggle('stwid--active', isActive);
                                                         };
                                                         const updateStrategyFilters = ()=>{
+                                                            // Phase 2: update state → update indicator → apply filter
                                                             orderHelperState.filters.strategy = normalizeStrategyFilters(orderHelperState.filters.strategy);
                                                             updateFilterIndicator();
                                                             applyOrderHelperStrategyFilters();
@@ -780,15 +858,7 @@ const createOrderHelperRenderer = ({
                                                             }
                                                         }
                                                         updateFilterIndicator();
-                                                        menu.addEventListener('click', (event)=>event.stopPropagation());
-                                                        menuButton.addEventListener('click', (event)=>{
-                                                            event.stopPropagation();
-                                                            if (menu.classList.contains('stwid--active')) {
-                                                                closeMenu();
-                                                            } else {
-                                                                openMenu();
-                                                            }
-                                                        });
+                                                        wireMultiselectDropdown(menu, menuButton, menuWrap);
                                                         menuWrap.append(menu);
                                                     }
                                                     filterWrap.append(menuWrap);
@@ -821,22 +891,6 @@ const createOrderHelperRenderer = ({
                                                     }
                                                     const menu = document.createElement('div'); {
                                                         menu.classList.add('stwid--multiselectDropdownMenu');
-                                                        const closeMenu = ()=>{
-                                                            if (!menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.remove('stwid--active');
-                                                            document.removeEventListener('click', handleOutsideClick);
-                                                        };
-                                                        const openMenu = ()=>{
-                                                            if (menu.classList.contains('stwid--active')) return;
-                                                            closeOpenMultiselectDropdownMenus(menu);
-                                                            menu.classList.add('stwid--active');
-                                                            document.addEventListener('click', handleOutsideClick);
-                                                        };
-                                                        const handleOutsideClick = (event)=>{
-                                                            if (menuWrap.contains(event.target)) return;
-                                                            closeMenu();
-                                                        };
-                                                        menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
                                                         const updateFilterIndicator = ()=>{
                                                             const allValues = orderHelperState.positionValues.length
                                                                 ? orderHelperState.positionValues
@@ -847,6 +901,7 @@ const createOrderHelperRenderer = ({
                                                             menuButton.classList.toggle('stwid--active', isActive);
                                                         };
                                                         const updatePositionFilters = ()=>{
+                                                            // Phase 2: update state → update indicator → apply filter
                                                             orderHelperState.filters.position = normalizePositionFilters(orderHelperState.filters.position);
                                                             updateFilterIndicator();
                                                             applyOrderHelperPositionFilters();
@@ -882,15 +937,7 @@ const createOrderHelperRenderer = ({
                                                             }
                                                         }
                                                         updateFilterIndicator();
-                                                        menu.addEventListener('click', (event)=>event.stopPropagation());
-                                                        menuButton.addEventListener('click', (event)=>{
-                                                            event.stopPropagation();
-                                                            if (menu.classList.contains('stwid--active')) {
-                                                                closeMenu();
-                                                            } else {
-                                                                openMenu();
-                                                            }
-                                                        });
+                                                        wireMultiselectDropdown(menu, menuButton, menuWrap);
                                                         menuWrap.append(menu);
                                                     }
                                                     filterWrap.append(menuWrap);
@@ -923,27 +970,6 @@ const createOrderHelperRenderer = ({
                                                     }
                                                     const menu = document.createElement('div'); {
                                                         menu.classList.add('stwid--multiselectDropdownMenu');
-                                                        const closeMenu = ()=>{
-                                                            if (!menu.classList.contains('stwid--active')) return;
-                                                            menu.classList.remove('stwid--active');
-                                                            document.removeEventListener('click', handleOutsideClick);
-                                                        };
-                                                        const openMenu = ()=>{
-                                                            if (menu.classList.contains('stwid--active')) return;
-                                                            closeOpenMultiselectDropdownMenus(menu);
-                                                            menu.classList.add('stwid--active');
-                                                            document.addEventListener('click', handleOutsideClick);
-                                                        };
-                                                        const handleOutsideClick = (event)=>{
-                                                            if (menuWrap.contains(event.target)) return;
-                                                            closeMenu();
-                                                        };
-                                                        menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
-                                                        const getRecursionOptions = ()=>[
-                                                            { value:'excludeRecursion', label:'Non-recursable' },
-                                                            { value:'preventRecursion', label:'Prevent further recursion' },
-                                                            { value:'delayUntilRecursion', label:'Delay until recursion' },
-                                                        ];
                                                         const updateFilterIndicator = ()=>{
                                                             const allValues = orderHelperState.recursionValues ?? [];
                                                             if (!allValues.length) return;
@@ -954,6 +980,7 @@ const createOrderHelperRenderer = ({
                                                             menuButton.classList.toggle('stwid--active', isActive);
                                                         };
                                                         const updateRecursionFilters = ()=>{
+                                                            // Phase 2: update state → update indicator → apply filter
                                                             const allValues = orderHelperState.recursionValues ?? [];
                                                             if (!orderHelperState.filters.recursion.length) {
                                                                 orderHelperState.filters.recursion = [...allValues];
@@ -961,7 +988,8 @@ const createOrderHelperRenderer = ({
                                                             updateFilterIndicator();
                                                             applyOrderHelperRecursionFilters();
                                                         };
-                                                        for (const optionData of getRecursionOptions()) {
+                                                        // Phase 3: use RECURSION_OPTIONS (shared with row cell builder)
+                                                        for (const optionData of RECURSION_OPTIONS) {
                                                             const option = document.createElement('label'); {
                                                                 option.classList.add('stwid--multiselectDropdownOption');
                                                                 const inputControl = createMultiselectDropdownCheckbox(
@@ -987,15 +1015,7 @@ const createOrderHelperRenderer = ({
                                                             }
                                                         }
                                                         updateFilterIndicator();
-                                                        menu.addEventListener('click', (event)=>event.stopPropagation());
-                                                        menuButton.addEventListener('click', (event)=>{
-                                                            event.stopPropagation();
-                                                            if (menu.classList.contains('stwid--active')) {
-                                                                closeMenu();
-                                                            } else {
-                                                                openMenu();
-                                                            }
-                                                        });
+                                                        wireMultiselectDropdown(menu, menuButton, menuWrap);
                                                         menuWrap.append(menu);
                                                     }
                                                     filterWrap.append(menuWrap);
@@ -1029,22 +1049,6 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         const menu = document.createElement('div'); {
                                                             menu.classList.add('stwid--multiselectDropdownMenu');
-                                                            const closeMenu = ()=>{
-                                                                if (!menu.classList.contains('stwid--active')) return;
-                                                                menu.classList.remove('stwid--active');
-                                                                document.removeEventListener('click', handleOutsideClick);
-                                                            };
-                                                            const openMenu = ()=>{
-                                                                if (menu.classList.contains('stwid--active')) return;
-                                                                closeOpenMultiselectDropdownMenus(menu);
-                                                                menu.classList.add('stwid--active');
-                                                                document.addEventListener('click', handleOutsideClick);
-                                                            };
-                                                            const handleOutsideClick = (event)=>{
-                                                                if (menuWrap.contains(event.target)) return;
-                                                                closeMenu();
-                                                            };
-                                                            menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
                                                             const updateFilterIndicator = ()=>{
                                                                 const allValues = orderHelperState.outletValues.length
                                                                     ? orderHelperState.outletValues
@@ -1054,8 +1058,11 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.outlet.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            // Phase 2: assign the late-bound indicator callback so row-level
+                                                            // outlet edits can refresh the header filter button state.
                                                             refreshOutletFilterIndicator = updateFilterIndicator;
                                                             const updateOutletFilters = ()=>{
+                                                                // Phase 2: update state → update indicator → apply filter
                                                                 orderHelperState.filters.outlet = normalizeOutletFilters(orderHelperState.filters.outlet);
                                                                 updateFilterIndicator();
                                                                 applyOrderHelperOutletFilters();
@@ -1087,15 +1094,7 @@ const createOrderHelperRenderer = ({
                                                                 }
                                                             }
                                                             updateFilterIndicator();
-                                                            menu.addEventListener('click', (event)=>event.stopPropagation());
-                                                            menuButton.addEventListener('click', (event)=>{
-                                                                event.stopPropagation();
-                                                                if (menu.classList.contains('stwid--active')) {
-                                                                    closeMenu();
-                                                                } else {
-                                                                    openMenu();
-                                                                }
-                                                            });
+                                                            wireMultiselectDropdown(menu, menuButton, menuWrap);
                                                             menuWrap.append(menu);
                                                         }
                                                         filterWrap.append(menuWrap);
@@ -1128,22 +1127,6 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         const menu = document.createElement('div'); {
                                                             menu.classList.add('stwid--multiselectDropdownMenu');
-                                                            const closeMenu = ()=>{
-                                                                if (!menu.classList.contains('stwid--active')) return;
-                                                                menu.classList.remove('stwid--active');
-                                                                document.removeEventListener('click', handleOutsideClick);
-                                                            };
-                                                            const openMenu = ()=>{
-                                                                if (menu.classList.contains('stwid--active')) return;
-                                                                closeOpenMultiselectDropdownMenus(menu);
-                                                                menu.classList.add('stwid--active');
-                                                                document.addEventListener('click', handleOutsideClick);
-                                                            };
-                                                            const handleOutsideClick = (event)=>{
-                                                                if (menuWrap.contains(event.target)) return;
-                                                                closeMenu();
-                                                            };
-                                                            menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
                                                             const updateFilterIndicator = ()=>{
                                                                 const allValues = orderHelperState.automationIdValues.length
                                                                     ? orderHelperState.automationIdValues
@@ -1153,8 +1136,11 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.automationId.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            // Phase 2: assign the late-bound indicator callback so row-level
+                                                            // automationId edits can refresh the header filter button state.
                                                             refreshAutomationIdFilterIndicator = updateFilterIndicator;
                                                             const updateAutomationIdFilters = ()=>{
+                                                                // Phase 2: update state → update indicator → apply filter
                                                                 orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
                                                                 updateFilterIndicator();
                                                                 applyOrderHelperAutomationIdFilters();
@@ -1186,15 +1172,7 @@ const createOrderHelperRenderer = ({
                                                                 }
                                                             }
                                                             updateFilterIndicator();
-                                                            menu.addEventListener('click', (event)=>event.stopPropagation());
-                                                            menuButton.addEventListener('click', (event)=>{
-                                                                event.stopPropagation();
-                                                                if (menu.classList.contains('stwid--active')) {
-                                                                    closeMenu();
-                                                                } else {
-                                                                    openMenu();
-                                                                }
-                                                            });
+                                                            wireMultiselectDropdown(menu, menuButton, menuWrap);
                                                             menuWrap.append(menu);
                                                         }
                                                         filterWrap.append(menuWrap);
@@ -1227,22 +1205,6 @@ const createOrderHelperRenderer = ({
                                                         }
                                                         const menu = document.createElement('div'); {
                                                             menu.classList.add('stwid--multiselectDropdownMenu');
-                                                            const closeMenu = ()=>{
-                                                                if (!menu.classList.contains('stwid--active')) return;
-                                                                menu.classList.remove('stwid--active');
-                                                                document.removeEventListener('click', handleOutsideClick);
-                                                            };
-                                                            const openMenu = ()=>{
-                                                                if (menu.classList.contains('stwid--active')) return;
-                                                                closeOpenMultiselectDropdownMenus(menu);
-                                                                menu.classList.add('stwid--active');
-                                                                document.addEventListener('click', handleOutsideClick);
-                                                            };
-                                                            const handleOutsideClick = (event)=>{
-                                                                if (menuWrap.contains(event.target)) return;
-                                                                closeMenu();
-                                                            };
-                                                            menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
                                                             const updateFilterIndicator = ()=>{
                                                                 const allValues = orderHelperState.groupValues.length
                                                                     ? orderHelperState.groupValues
@@ -1252,8 +1214,11 @@ const createOrderHelperRenderer = ({
                                                                 const isActive = orderHelperState.filters.group.length !== allValues.length;
                                                                 menuButton.classList.toggle('stwid--active', isActive);
                                                             };
+                                                            // Phase 2: assign the late-bound indicator callback so row-level
+                                                            // group edits can refresh the header filter button state.
                                                             refreshGroupFilterIndicator = updateFilterIndicator;
                                                             const updateGroupFilters = ()=>{
+                                                                // Phase 2: update state → update indicator → apply filter
                                                                 orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
                                                                 updateFilterIndicator();
                                                                 applyOrderHelperGroupFilters();
@@ -1285,15 +1250,7 @@ const createOrderHelperRenderer = ({
                                                                 }
                                                             }
                                                             updateFilterIndicator();
-                                                            menu.addEventListener('click', (event)=>event.stopPropagation());
-                                                            menuButton.addEventListener('click', (event)=>{
-                                                                event.stopPropagation();
-                                                                if (menu.classList.contains('stwid--active')) {
-                                                                    closeMenu();
-                                                                } else {
-                                                                    openMenu();
-                                                                }
-                                                            });
+                                                            wireMultiselectDropdown(menu, menuButton, menuWrap);
                                                             menuWrap.append(menu);
                                                         }
                                                         filterWrap.append(menuWrap);
@@ -1308,7 +1265,7 @@ const createOrderHelperRenderer = ({
                                     }
                                     if (col.key) {
                                         th.setAttribute('data-col', col.key);
-                                        if (numberColumnKeys.has(col.key)) {
+                                        if (NUMBER_COLUMN_KEYS.has(col.key)) {
                                             th.classList.add('stwid--orderTable--NumberColumns');
                                         }
                                     }
@@ -1319,8 +1276,14 @@ const createOrderHelperRenderer = ({
                         }
                         tbl.append(thead);
                     }
+
+                    // ── Table Body (entry rows) ───────────────────────────────
                     const tbody = document.createElement('tbody'); {
                         dom.order.tbody = tbody;
+
+                        // Phase 4 – Invariant: these three template controls must exist in the host DOM
+                        // (#entry_edit_template) before Order Helper renders. If any is missing, a later
+                        // cloneNode call would silently produce a broken element; fail fast here instead.
                         const entryEditTemplate = document.querySelector('#entry_edit_template');
                         const enabledToggleTemplate = entryEditTemplate?.querySelector('[name="entryKillSwitch"]');
                         const strategyTemplate = entryEditTemplate?.querySelector('[name="entryStateSelector"]');
@@ -1328,10 +1291,12 @@ const createOrderHelperRenderer = ({
                         if (!enabledToggleTemplate || !strategyTemplate || !positionTemplate) {
                             throw new Error('[WorldInfoDrawer] Missing entry edit template controls for Order Helper render.');
                         }
+
                         const getVisibleOrderHelperRows = ()=>{
                             const rows = getOrderHelperRows();
                             return rows.filter((row)=>!row.classList.contains('stwid--isFiltered'));
                         };
+
                         const updateCustomOrderFromDom = async()=>{
                             setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
                             const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
@@ -1353,16 +1318,24 @@ const createOrderHelperRenderer = ({
                                 await saveWorldInfo(bookName, buildSavePayload(bookName), true);
                             }
                         };
+
                         $(tbody).sortable({
                             delay: getSortableDelay(),
                             update: async()=>{
                                 await updateCustomOrderFromDom();
                             },
                         });
+
+                        // ── Per-entry rows ────────────────────────────────────
                         for (const e of entries) {
                             const tr = document.createElement('tr'); {
                                 tr.setAttribute('data-book', e.book);
                                 tr.setAttribute('data-uid', e.data.uid);
+
+                                // Phase 4 – Invariant: these dataset keys are the single source of truth
+                                // for row filter visibility. They must be kept in sync with the filter key
+                                // names used by orderHelperFilters.js (setOrderHelperRowFilterState).
+                                // Never rename or remove a key here without updating that module too.
                                 tr.dataset.stwidFilterStrategy = 'false';
                                 tr.dataset.stwidFilterPosition = 'false';
                                 tr.dataset.stwidFilterRecursion = 'false';
@@ -1370,10 +1343,13 @@ const createOrderHelperRenderer = ({
                                 tr.dataset.stwidFilterAutomationId = 'false';
                                 tr.dataset.stwidFilterGroup = 'false';
                                 tr.dataset.stwidFilterScript = 'false';
+
                                 if (!dom.order.entries[e.book]) {
                                     dom.order.entries[e.book] = {};
                                 }
                                 dom.order.entries[e.book][e.data.uid] = tr;
+
+                                // Select cell
                                 const select = document.createElement('td'); {
                                     select.setAttribute('data-col', 'select');
                                     const btn = document.createElement('div'); {
@@ -1392,6 +1368,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(select);
                                 }
+
+                                // Drag handle + move-up/down buttons
                                 const handle = document.createElement('td'); {
                                     handle.setAttribute('data-col', 'drag');
                                     const controls = document.createElement('div'); {
@@ -1472,6 +1450,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(handle);
                                 }
+
+                                // Enabled toggle
                                 const active = document.createElement('td'); {
                                     active.setAttribute('data-col', 'enabled');
                                     const isEnabled = /**@type {HTMLSelectElement}*/(enabledToggleTemplate.cloneNode(true)); {
@@ -1485,6 +1465,7 @@ const createOrderHelperRenderer = ({
 
                                         applyEnabledIcon(isEnabled, e.data.disable);
                                         isEnabled.addEventListener('click', async()=>{
+                                            // Phase 2: update cache → update e.data → update UI → sync list panel → save
                                             const entryData = cache[e.book].entries[e.data.uid];
                                             const nextDisabled = !entryData.disable;
                                             entryData.disable = nextDisabled;
@@ -1503,6 +1484,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(active);
                                 }
+
+                                // Entry cell (book label, comment link, key text)
                                 const entry = document.createElement('td'); {
                                     entry.setAttribute('data-col', 'entry');
                                     const wrap = document.createElement('div'); {
@@ -1539,6 +1522,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(entry);
                                 }
+
+                                // Strategy cell
                                 const strategy = document.createElement('td'); {
                                     strategy.setAttribute('data-col', 'strategy');
                                     const strat = /**@type {HTMLSelectElement}*/(strategyTemplate.cloneNode(true)); {
@@ -1546,6 +1531,7 @@ const createOrderHelperRenderer = ({
                                         setTooltip(strat, 'Entry strategy');
                                         strat.value = entryState(e.data);
                                         strat.addEventListener('change', async()=>{
+                                            // Phase 2: update list panel DOM → update cache → apply filter → save
                                             const value = strat.value;
                                             cache[e.book].dom.entry[e.data.uid].strategy.value = value;
                                             switch (value) {
@@ -1572,6 +1558,10 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(strategy);
                                 }
+
+                                // Position cell
+                                // updateOutlet is declared here and assigned inside the outlet cell below,
+                                // so the position change handler can call it to refresh outlet visibility.
                                 let updateOutlet;
                                 const pos = /**@type {HTMLSelectElement}*/(positionTemplate.cloneNode(true));
                                 const position = document.createElement('td'); {
@@ -1581,6 +1571,7 @@ const createOrderHelperRenderer = ({
                                     setTooltip(pos, 'Where this entry is inserted');
                                     pos.value = e.data.position;
                                     pos.addEventListener('change', async()=>{
+                                        // Phase 2: update cache → update e.data → apply filter → refresh outlet → save
                                         const value = pos.value;
                                         cache[e.book].dom.entry[e.data.uid].position.value = value;
                                         cache[e.book].entries[e.data.uid].position = value;
@@ -1592,6 +1583,8 @@ const createOrderHelperRenderer = ({
                                     position.append(pos);
                                     tr.append(position);
                                 }
+
+                                // Depth cell
                                 const depth = document.createElement('td'); {
                                     depth.setAttribute('data-col', 'depth');
                                     depth.classList.add('stwid--orderTable--NumberColumns');
@@ -1613,6 +1606,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(depth);
                                 }
+
+                                // Outlet cell
                                 const outlet = document.createElement('td'); {
                                     outlet.setAttribute('data-col', 'outlet');
                                     const wrap = document.createElement('div'); {
@@ -1635,6 +1630,8 @@ const createOrderHelperRenderer = ({
                                             };
                                             updateOutlet();
                                             input.addEventListener('change', async()=>{
+                                                // Phase 2: update cache → update e.data → sync filter options
+                                                // → refresh header indicator → apply filter → save → refresh visibility
                                                 const value = input.value;
                                                 cache[e.book].entries[e.data.uid].outletName = value;
                                                 e.data.outletName = value;
@@ -1650,6 +1647,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(outlet);
                                 }
+
+                                // Inclusion group cell (group name + prioritize checkbox)
                                 const group = document.createElement('td'); {
                                     group.setAttribute('data-col', 'group');
                                     const wrap = document.createElement('div'); {
@@ -1665,6 +1664,8 @@ const createOrderHelperRenderer = ({
                                             input.type = 'text';
                                             input.value = cache[e.book].entries[e.data.uid].group ?? '';
                                             input.addEventListener('change', async()=>{
+                                                // Phase 2: update cache → update e.data → sync filter options
+                                                // → refresh header indicator → apply filter → save
                                                 const value = input.value;
                                                 const entryData = cache[e.book].entries[e.data.uid];
                                                 entryData.group = value;
@@ -1699,6 +1700,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(group);
                                 }
+
+                                // Order cell
                                 const order = document.createElement('td'); {
                                     order.setAttribute('data-col', 'order');
                                     order.classList.add('stwid--orderTable--NumberColumns');
@@ -1720,6 +1723,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(order);
                                 }
+
+                                // Sticky cell
                                 const sticky = document.createElement('td'); {
                                     sticky.setAttribute('data-col', 'sticky');
                                     sticky.classList.add('stwid--orderTable--NumberColumns');
@@ -1741,6 +1746,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(sticky);
                                 }
+
+                                // Cooldown cell
                                 const cooldown = document.createElement('td'); {
                                     cooldown.setAttribute('data-col', 'cooldown');
                                     cooldown.classList.add('stwid--orderTable--NumberColumns');
@@ -1762,6 +1769,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(cooldown);
                                 }
+
+                                // Delay cell
                                 const delay = document.createElement('td'); {
                                     delay.setAttribute('data-col', 'delay');
                                     delay.classList.add('stwid--orderTable--NumberColumns');
@@ -1783,6 +1792,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(delay);
                                 }
+
+                                // Automation ID cell
                                 const automationId = document.createElement('td'); {
                                     automationId.setAttribute('data-col', 'automationId');
                                     automationId.classList.add('stwid--orderTable--NumberColumns');
@@ -1795,6 +1806,8 @@ const createOrderHelperRenderer = ({
                                         inp.type = 'text';
                                         inp.value = cache[e.book].entries[e.data.uid].automationId ?? e.data.automationId ?? '';
                                         inp.addEventListener('change', async()=>{
+                                            // Phase 2: update cache → update e.data → sync filter options
+                                            // → refresh header indicator → apply filter → save
                                             const value = inp.value;
                                             cache[e.book].entries[e.data.uid].automationId = value;
                                             e.data.automationId = value;
@@ -1807,6 +1820,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(automationId);
                                 }
+
+                                // Trigger % cell
                                 const probability = document.createElement('td'); {
                                     probability.setAttribute('data-col', 'trigger');
                                     probability.classList.add('stwid--orderTable--NumberColumns');
@@ -1828,6 +1843,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(probability);
                                 }
+
+                                // Recursion cell (uses RECURSION_OPTIONS shared with the header filter)
                                 const recursion = document.createElement('td'); {
                                     recursion.setAttribute('data-col', 'recursion');
                                     const wrap = document.createElement('div'); {
@@ -1853,13 +1870,15 @@ const createOrderHelperRenderer = ({
                                                 wrap.append(row);
                                             }
                                         };
-                                        addCheckbox('excludeRecursion', 'Non-recursable');
-                                        addCheckbox('preventRecursion', 'Prevent further recursion');
-                                        addCheckbox('delayUntilRecursion', 'Delay until recursion');
+                                        for (const { value, label } of RECURSION_OPTIONS) {
+                                            addCheckbox(value, label);
+                                        }
                                         recursion.append(wrap);
                                     }
                                     tr.append(recursion);
                                 }
+
+                                // Budget cell (ignore-budget toggle)
                                 const budget = document.createElement('td'); {
                                     budget.setAttribute('data-col', 'budget');
                                     const wrap = document.createElement('div'); {
@@ -1886,6 +1905,8 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(budget);
                                 }
+
+                                // Character filter cell (read-only display)
                                 const characterFilter = document.createElement('td'); {
                                     characterFilter.setAttribute('data-col', 'characterFilter');
                                     const wrap = document.createElement('div'); {
@@ -1913,10 +1934,13 @@ const createOrderHelperRenderer = ({
                                     }
                                     tr.append(characterFilter);
                                 }
+
                                 setOrderHelperRowSelected(tr, true);
                                 tbody.append(tr);
                             }
                         }
+
+                        // ── Mount: apply all structured filters then attach tbody ─
                         applyOrderHelperStrategyFilters();
                         applyOrderHelperRecursionFilters();
                         applyOrderHelperOutletFilters();
@@ -1930,6 +1954,8 @@ const createOrderHelperRenderer = ({
                 body.append(wrap);
             }
         }
+
+        // ── Mount ─────────────────────────────────────────────────────────────
         dom.editor.append(body);
     };
 

@@ -147,3 +147,38 @@
 - Test apply-order with both direction options and with filtered rows present.
 - Toggle column visibility presets and individual columns, then reopen helper.
 - Use drag, single-click move, and double-click jump move on visible rows.
+
+---
+
+## AFTER IMPLEMENTATION
+
+### Task checklist
+
+- [x] Phase 1: Structure and Reading Order
+- [x] Phase 2: State and Side-Effect Clarity
+- [x] Phase 3: Responsibility Separation Inside the File
+- [x] Phase 4: Optional Future-Proofing
+
+### What changed
+
+**`src/orderHelperRender.js`**
+
+- Extracted `TOGGLE_COLUMNS`, `TABLE_COLUMNS`, `NUMBER_COLUMN_KEYS`, and `RECURSION_OPTIONS` as named constants at factory level — the two previous inline `columns` arrays and the inline recursion options list are now a single source of truth.
+- Added `wireMultiselectDropdown(menu, menuButton, menuWrap)` helper that replaces the repeated open/close/outside-click pattern that appeared in 6 separate dropdown blocks. Moved `errorEl` creation outside the `inp` block for clearer reading order.
+- Added section boundary comments (`── Init`, `── Action Bar`, `── Filter Panel`, `── Table Header`, `── Table Body`, `── Mount`), Phase 2 state-flow comments on key listeners, and Phase 4 invariant comments near the template guard and `stwidFilter*` dataset keys.
+
+### Risks / What might break
+
+- **Column visibility dropdown**: The `setColumnVisibility` preset actions now close the menu via `menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER]` instead of a captured `closeMenu` variable. If the handler property were ever missing, the close step would silently no-op — but this cannot happen because `wireMultiselectDropdown` always writes it before any button can be clicked.
+- **Recursion row builder**: The `addCheckbox` calls are now driven by `RECURSION_OPTIONS` instead of three explicit string literals. If a value or label in `RECURSION_OPTIONS` were wrong it would affect both the header filter and the row cells simultaneously — but the values are identical to what was there before.
+- **All dropdown menus**: The shared `wireMultiselectDropdown` helper now handles open/close/outside-click for all 6 dropdown menus. A bug in that helper would affect every dropdown at once instead of just one.
+
+### Manual checks
+
+- Open Order Helper with multiple active books; confirm all rows and columns appear normally. **Success: table renders with correct entries.**
+- Click each column filter (Strategy, Position, Recursion, Outlet, Automation ID, Inclusion Group); confirm the filter button highlights when options are deselected, and rows hide/show as expected. **Success: button is highlighted when filter is active, rows update immediately.**
+- Open Column Visibility, click "SELECT ALL" and "MAIN COLUMNS"; confirm the table columns show/hide and the menu closes after each. **Success: menu closes and columns change.**
+- Enable the script filter panel; type a valid script (`{{var::entry}}`), then type a broken script; confirm rows are preserved on error and an inline error message appears (not a popup). **Success: error shown inline, row state unchanged.**
+- Edit one value in each of: Strategy, Position, Depth, Outlet, Inclusion Group, Order, Sticky, Cooldown, Delay, Automation ID, Trigger %, Recursion flags, Budget, Enabled toggle; close and reopen Order Helper; confirm each edit persisted. **Success: values match what was entered.**
+- Drag a row to a new position, then reopen Order Helper; confirm the custom order survived. **Success: row is in the same position after reopen.**
+- Use "Apply Order" with direction = down, then direction = up, with some rows filtered out; confirm only unfiltered, selected rows received new order values. **Success: filtered rows are skipped, order increments correctly.**
