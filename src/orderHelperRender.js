@@ -266,9 +266,7 @@ const createOrderHelperRenderer = ({
         refreshVisibilityRow();
         refreshSelectionCount();
 
-        const rowDivider = document.createElement('hr');
-        rowDivider.classList.add('stwid--rowDivider');
-        body.append(visibilityRowEl, rowDivider, bulkEditRowEl, filterEl, wrap);
+        body.append(visibilityRowEl, bulkEditRowEl, filterEl, wrap);
 
         // ── Mount ─────────────────────────────────────────────────────────────
         dom.editor.append(body);

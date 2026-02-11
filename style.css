@@ -1077,11 +1077,6 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   opacity: 0.5;
 }
 
-.stwid--orderHelper .stwid--rowDivider {
-  margin: 0.8em;
-  opacity: 0.1;
-  background-color: var(--SmartThemeBlurTintColor);
-}
 
 .stwid--orderHelper .stwid--visibilityRow .stwid--inputWrap {
   display: flex;
@@ -1382,9 +1377,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   opacity: 0.6;
 }
 
-.stwid--orderTable tr:has(.stwid--enabled.fa-toggle-off) {
-  opacity: var(--stwid-state-disabled-opacity);
-}
 
 .stwid--orderTable tr th,
 .stwid--orderTable tr td {
