@@ -445,6 +445,8 @@ export function buildBulkEditRow({
     getOrderHelperRows,
     getStrategyOptions,
     applyOrderHelperStrategyFilterToRow,
+    getPositionOptions,
+    applyOrderHelperPositionFilterToRow,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
@@ -499,7 +501,7 @@ export function buildBulkEditRow({
 
     const activeStateLabel = document.createElement('span');
     activeStateLabel.classList.add('stwid--bulkEditLabel');
-    activeStateLabel.textContent = 'Toggle Active State';
+    activeStateLabel.textContent = 'State';
     const activeStateLabelHint = document.createElement('i');
     activeStateLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
     setTooltip(activeStateLabelHint, 'Choose enabled or disabled and apply it to all selected entries at once.');
@@ -507,7 +509,7 @@ export function buildBulkEditRow({
     activeStateContainer.append(activeStateLabel);
 
     const activeToggle = document.createElement('div'); {
-        activeToggle.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw');
+        activeToggle.classList.add('fa-solid', 'killSwitch');
         const storedActive = localStorage.getItem('stwid--bulk-active-value');
         const isActiveOn = storedActive !== 'false';
         activeToggle.classList.toggle('fa-toggle-on', isActiveOn);
@@ -622,6 +624,70 @@ export function buildBulkEditRow({
     }
 
     row.append(strategyContainer);
+
+    // ── Position container ────────────────────────────────────────────────
+    const positionContainer = document.createElement('div');
+    positionContainer.classList.add('stwid--bulkEditContainer');
+    positionContainer.dataset.field = 'position';
+
+    const positionLabel = document.createElement('span');
+    positionLabel.classList.add('stwid--bulkEditLabel');
+    positionLabel.textContent = 'Position';
+    const positionLabelHint = document.createElement('i');
+    positionLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(positionLabelHint, 'Choose a position and apply it to all selected entries at once.');
+    positionLabel.append(positionLabelHint);
+    positionContainer.append(positionLabel);
+
+    const positionSelect = document.createElement('select'); {
+        positionSelect.classList.add('stwid--input', 'text_pole');
+        setTooltip(positionSelect, 'Position to apply to selected entries');
+        for (const opt of getPositionOptions()) {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.label;
+            positionSelect.append(option);
+        }
+        const storedPosition = localStorage.getItem('stwid--bulk-position-value');
+        if (storedPosition && [...positionSelect.options].some((o)=>o.value === storedPosition)) {
+            positionSelect.value = storedPosition;
+        }
+        positionSelect.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-position-value', positionSelect.value);
+        });
+        positionContainer.append(positionSelect);
+    }
+
+    const applyPosition = document.createElement('div'); {
+        applyPosition.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyPosition, 'Apply selected position to all selected entries');
+        applyPosition.addEventListener('click', async()=>{
+            const value = positionSelect.value;
+            if (!value) {
+                toastr.warning('No position selected.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].position = value;
+                const domPos = cache[bookName].dom?.entry?.[uid]?.position;
+                if (domPos) domPos.value = value;
+                applyOrderHelperPositionFilterToRow(tr, cache[bookName].entries[uid]);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        positionContainer.append(applyPosition);
+    }
+
+    row.append(positionContainer);
 
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');

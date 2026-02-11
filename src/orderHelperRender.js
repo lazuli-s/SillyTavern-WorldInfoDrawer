@@ -159,6 +159,8 @@ const createOrderHelperRenderer = ({
             getOrderHelperRows,
             getStrategyOptions,
             applyOrderHelperStrategyFilterToRow,
+            getPositionOptions,
+            applyOrderHelperPositionFilterToRow,
         });
 
         const filterEl = buildFilterPanel({

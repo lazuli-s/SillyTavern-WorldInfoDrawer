@@ -102,7 +102,7 @@ Where each feature or behavior is implemented in the codebase.
 - Order Helper state creation (defaults + restored localStorage state) → src/orderHelperState.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/orderHelper.js
 - Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/orderHelperRender.actionBar.js, src/orderHelperRender.js
-- Bulk edit row structure (field containers: Select, Toggle Active State, Strategy, Order) → src/orderHelperRender.actionBar.js
+- Bulk edit row structure (field containers: Select, State, Strategy, Position, Order) → src/orderHelperRender.actionBar.js
 - Row drag sorting and custom order persistence (`extensions.display_index`) → src/orderHelperRender.tableBody.js, src/orderHelper.js
 - Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/orderHelperRender.tableBody.js
 - Recursion flags and budget-ignore controls → src/orderHelperRender.tableBody.js
