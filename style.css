@@ -1213,6 +1213,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   padding-left: 5px;
   padding-right: 5px;
   font-size: 0.95em;
+  min-width: 3.5em;
 }
 
 .stwid--orderHelper .stwid--columnVisibilityLabel {
