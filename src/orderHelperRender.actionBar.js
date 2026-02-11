@@ -897,5 +897,258 @@ export function buildBulkEditRow({
     orderContainer.append(apply);
     row.append(orderContainer);
 
+    // ── Probability container ──────────────────────────────────────────────
+    const probabilityContainer = document.createElement('div');
+    probabilityContainer.classList.add('stwid--bulkEditContainer');
+    probabilityContainer.dataset.field = 'probability';
+
+    const probabilityLabel = document.createElement('span');
+    probabilityLabel.classList.add('stwid--bulkEditLabel');
+    probabilityLabel.textContent = 'Probability';
+    const probabilityLabelHint = document.createElement('i');
+    probabilityLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(probabilityLabelHint, 'Trigger probability (0–100%). Sets how likely the entry fires when its keywords match. Leave blank to skip.');
+    probabilityLabel.append(probabilityLabelHint);
+    probabilityContainer.append(probabilityLabel);
+
+    const probabilityInput = document.createElement('input'); {
+        probabilityInput.classList.add('stwid-compactInput', 'text_pole');
+        probabilityInput.type = 'number';
+        probabilityInput.min = '0';
+        probabilityInput.max = '100';
+        probabilityInput.placeholder = '0–100';
+        setTooltip(probabilityInput, 'Probability value to apply (0–100)');
+        const stored = localStorage.getItem('stwid--bulk-probability-value');
+        if (stored !== null) probabilityInput.value = stored;
+        probabilityInput.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-probability-value', probabilityInput.value);
+        });
+        probabilityContainer.append(probabilityInput);
+    }
+
+    const applyProbability = document.createElement('div'); {
+        applyProbability.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyProbability, 'Apply this probability to all selected entries');
+        applyProbability.addEventListener('click', async()=>{
+            const rawValue = probabilityInput.value.trim();
+            if (rawValue === '') {
+                toastr.warning('Enter a probability value (0–100).');
+                return;
+            }
+            const parsed = parseInt(rawValue, 10);
+            if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+                toastr.warning('Probability must be a whole number between 0 and 100.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].selective_probability = parsed;
+                const rowInp = tr.querySelector('[name="selective_probability"]');
+                if (rowInp) rowInp.value = String(parsed);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        probabilityContainer.append(applyProbability);
+    }
+
+    row.append(probabilityContainer);
+
+    // ── Sticky container ───────────────────────────────────────────────────
+    const stickyContainer = document.createElement('div');
+    stickyContainer.classList.add('stwid--bulkEditContainer');
+    stickyContainer.dataset.field = 'sticky';
+
+    const stickyLabel = document.createElement('span');
+    stickyLabel.classList.add('stwid--bulkEditLabel');
+    stickyLabel.textContent = 'Sticky';
+    const stickyLabelHint = document.createElement('i');
+    stickyLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(stickyLabelHint, 'Sticky turns — keeps the entry active for N turns after it triggers. Leave blank to skip.');
+    stickyLabel.append(stickyLabelHint);
+    stickyContainer.append(stickyLabel);
+
+    const stickyInput = document.createElement('input'); {
+        stickyInput.classList.add('stwid-compactInput', 'text_pole');
+        stickyInput.type = 'number';
+        stickyInput.min = '0';
+        stickyInput.placeholder = '0+';
+        setTooltip(stickyInput, 'Sticky turns value to apply');
+        const stored = localStorage.getItem('stwid--bulk-sticky-value');
+        if (stored !== null) stickyInput.value = stored;
+        stickyInput.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-sticky-value', stickyInput.value);
+        });
+        stickyContainer.append(stickyInput);
+    }
+
+    const applySticky = document.createElement('div'); {
+        applySticky.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applySticky, 'Apply this sticky value to all selected entries');
+        applySticky.addEventListener('click', async()=>{
+            const rawValue = stickyInput.value.trim();
+            if (rawValue === '') {
+                toastr.warning('Enter a sticky value (0 or more).');
+                return;
+            }
+            const parsed = parseInt(rawValue, 10);
+            if (!Number.isInteger(parsed) || parsed < 0) {
+                toastr.warning('Sticky must be a non-negative whole number.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].sticky = parsed;
+                const rowInp = tr.querySelector('[name="sticky"]');
+                if (rowInp) rowInp.value = String(parsed);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        stickyContainer.append(applySticky);
+    }
+
+    row.append(stickyContainer);
+
+    // ── Cooldown container ─────────────────────────────────────────────────
+    const cooldownContainer = document.createElement('div');
+    cooldownContainer.classList.add('stwid--bulkEditContainer');
+    cooldownContainer.dataset.field = 'cooldown';
+
+    const cooldownLabel = document.createElement('span');
+    cooldownLabel.classList.add('stwid--bulkEditLabel');
+    cooldownLabel.textContent = 'Cooldown';
+    const cooldownLabelHint = document.createElement('i');
+    cooldownLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(cooldownLabelHint, 'Cooldown turns — prevents the entry from re-triggering for N turns after activation. Leave blank to skip.');
+    cooldownLabel.append(cooldownLabelHint);
+    cooldownContainer.append(cooldownLabel);
+
+    const cooldownInput = document.createElement('input'); {
+        cooldownInput.classList.add('stwid-compactInput', 'text_pole');
+        cooldownInput.type = 'number';
+        cooldownInput.min = '0';
+        cooldownInput.placeholder = '0+';
+        setTooltip(cooldownInput, 'Cooldown turns value to apply');
+        const stored = localStorage.getItem('stwid--bulk-cooldown-value');
+        if (stored !== null) cooldownInput.value = stored;
+        cooldownInput.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-cooldown-value', cooldownInput.value);
+        });
+        cooldownContainer.append(cooldownInput);
+    }
+
+    const applyCooldown = document.createElement('div'); {
+        applyCooldown.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyCooldown, 'Apply this cooldown value to all selected entries');
+        applyCooldown.addEventListener('click', async()=>{
+            const rawValue = cooldownInput.value.trim();
+            if (rawValue === '') {
+                toastr.warning('Enter a cooldown value (0 or more).');
+                return;
+            }
+            const parsed = parseInt(rawValue, 10);
+            if (!Number.isInteger(parsed) || parsed < 0) {
+                toastr.warning('Cooldown must be a non-negative whole number.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].cooldown = parsed;
+                const rowInp = tr.querySelector('[name="cooldown"]');
+                if (rowInp) rowInp.value = String(parsed);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        cooldownContainer.append(applyCooldown);
+    }
+
+    row.append(cooldownContainer);
+
+    // ── Delay container ────────────────────────────────────────────────────
+    const bulkDelayContainer = document.createElement('div');
+    bulkDelayContainer.classList.add('stwid--bulkEditContainer');
+    bulkDelayContainer.dataset.field = 'bulkDelay';
+
+    const bulkDelayLabel = document.createElement('span');
+    bulkDelayLabel.classList.add('stwid--bulkEditLabel');
+    bulkDelayLabel.textContent = 'Delay';
+    const bulkDelayLabelHint = document.createElement('i');
+    bulkDelayLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(bulkDelayLabelHint, 'Delay turns — the entry will not activate until N messages have passed since the chat started. Leave blank to skip.');
+    bulkDelayLabel.append(bulkDelayLabelHint);
+    bulkDelayContainer.append(bulkDelayLabel);
+
+    const bulkDelayInput = document.createElement('input'); {
+        bulkDelayInput.classList.add('stwid-compactInput', 'text_pole');
+        bulkDelayInput.type = 'number';
+        bulkDelayInput.min = '0';
+        bulkDelayInput.placeholder = '0+';
+        setTooltip(bulkDelayInput, 'Delay turns value to apply');
+        const stored = localStorage.getItem('stwid--bulk-delay-value');
+        if (stored !== null) bulkDelayInput.value = stored;
+        bulkDelayInput.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-delay-value', bulkDelayInput.value);
+        });
+        bulkDelayContainer.append(bulkDelayInput);
+    }
+
+    const applyBulkDelay = document.createElement('div'); {
+        applyBulkDelay.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyBulkDelay, 'Apply this delay value to all selected entries');
+        applyBulkDelay.addEventListener('click', async()=>{
+            const rawValue = bulkDelayInput.value.trim();
+            if (rawValue === '') {
+                toastr.warning('Enter a delay value (0 or more).');
+                return;
+            }
+            const parsed = parseInt(rawValue, 10);
+            if (!Number.isInteger(parsed) || parsed < 0) {
+                toastr.warning('Delay must be a non-negative whole number.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].delay = parsed;
+                const rowInp = tr.querySelector('[name="delay"]');
+                if (rowInp) rowInp.value = String(parsed);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        bulkDelayContainer.append(applyBulkDelay);
+    }
+
+    row.append(bulkDelayContainer);
+
     return { element: row, refreshSelectionCount };
 }

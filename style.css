@@ -1203,6 +1203,10 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   color: var(--SmartThemeQuoteColor);
 }
 
+.stwid--orderHelper .stwid--bulkEditContainer .killSwitch.fa-toggle-off {
+  color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
+}
+
 .stwid--orderHelper .stwid--bulkEditContainer.stwid--isDisabled {
   opacity: var(--stwid-state-disabled-opacity);
   pointer-events: none;
@@ -1213,7 +1217,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   padding-left: 5px;
   padding-right: 5px;
   font-size: 0.95em;
-  min-width: 3.5em;
+  width: 3.5em;
 }
 
 .stwid--orderHelper .stwid--columnVisibilityLabel {
