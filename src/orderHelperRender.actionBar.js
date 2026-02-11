@@ -749,6 +749,15 @@ export function buildBulkEditRow({
 
     row.append(depthContainer);
 
+    // ── Depth visibility: enabled only when position is atDepth (value 4) ─
+    const applyDepthContainerState = ()=>{
+        const isDepth = positionSelect.value === '4';
+        depthContainer.classList.toggle('stwid--isDisabled', !isDepth);
+        depthInput.disabled = !isDepth;
+    };
+    positionSelect.addEventListener('change', applyDepthContainerState);
+    applyDepthContainerState();
+
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
     orderContainer.classList.add('stwid--bulkEditContainer');
