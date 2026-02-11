@@ -443,6 +443,8 @@ export function buildBulkEditRow({
     setAllOrderHelperRowSelected,
     updateOrderHelperSelectAllButton,
     getOrderHelperRows,
+    getStrategyOptions,
+    applyOrderHelperStrategyFilterToRow,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
@@ -455,6 +457,10 @@ export function buildBulkEditRow({
     const selectLabel = document.createElement('span');
     selectLabel.classList.add('stwid--bulkEditLabel');
     selectLabel.textContent = 'Select';
+    const selectLabelHint = document.createElement('i');
+    selectLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(selectLabelHint, 'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.');
+    selectLabel.append(selectLabelHint);
     selectContainer.append(selectLabel);
 
     const selectAll = document.createElement('div'); {
@@ -486,6 +492,73 @@ export function buildBulkEditRow({
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
     };
 
+    // ── Strategy container ────────────────────────────────────────────────
+    const strategyContainer = document.createElement('div');
+    strategyContainer.classList.add('stwid--bulkEditContainer');
+    strategyContainer.dataset.field = 'strategy';
+
+    const strategyLabel = document.createElement('span');
+    strategyLabel.classList.add('stwid--bulkEditLabel');
+    strategyLabel.textContent = 'Strategy';
+    const strategyLabelHint = document.createElement('i');
+    strategyLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(strategyLabelHint, 'Choose a strategy and apply it to all selected entries at once.');
+    strategyLabel.append(strategyLabelHint);
+    strategyContainer.append(strategyLabel);
+
+    const strategySelect = document.createElement('select'); {
+        strategySelect.classList.add('stwid--input', 'text_pole');
+        setTooltip(strategySelect, 'Strategy to apply to selected entries');
+        for (const opt of getStrategyOptions()) {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.label;
+            strategySelect.append(option);
+        }
+        const storedStrategy = localStorage.getItem('stwid--bulk-strategy-value');
+        if (storedStrategy && [...strategySelect.options].some((o)=>o.value === storedStrategy)) {
+            strategySelect.value = storedStrategy;
+        }
+        strategySelect.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-strategy-value', strategySelect.value);
+        });
+        strategyContainer.append(strategySelect);
+    }
+
+    const applyStrategy = document.createElement('div'); {
+        applyStrategy.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyStrategy, 'Apply selected strategy to all selected entries');
+        applyStrategy.addEventListener('click', async()=>{
+            const value = strategySelect.value;
+            if (!value) {
+                toastr.warning('No strategy selected.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].constant   = value === 'constant';
+                cache[bookName].entries[uid].vectorized = value === 'vectorized';
+                const rowStrat = /**@type {HTMLSelectElement}*/(tr.querySelector('[name="entryStateSelector"]'));
+                if (rowStrat) rowStrat.value = value;
+                const domStrat = cache[bookName].dom?.entry?.[uid]?.strategy;
+                if (domStrat) domStrat.value = value;
+                applyOrderHelperStrategyFilterToRow(tr, cache[bookName].entries[uid]);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        strategyContainer.append(applyStrategy);
+    }
+
+    row.append(strategyContainer);
+
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
     orderContainer.classList.add('stwid--bulkEditContainer');
@@ -494,6 +567,10 @@ export function buildBulkEditRow({
     const orderLabel = document.createElement('span');
     orderLabel.classList.add('stwid--bulkEditLabel');
     orderLabel.textContent = 'Order';
+    const orderLabelHint = document.createElement('i');
+    orderLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(orderLabelHint, 'Assign sequential Order numbers to selected entries using the start value, spacing, and direction below.');
+    orderLabel.append(orderLabelHint);
     orderContainer.append(orderLabel);
 
     // Apply Order button (created before direction radios because the direction

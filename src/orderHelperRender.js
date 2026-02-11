@@ -157,6 +157,8 @@ const createOrderHelperRenderer = ({
             setAllOrderHelperRowSelected,
             updateOrderHelperSelectAllButton,
             getOrderHelperRows,
+            getStrategyOptions,
+            applyOrderHelperStrategyFilterToRow,
         });
 
         const filterEl = buildFilterPanel({
@@ -264,7 +266,9 @@ const createOrderHelperRenderer = ({
         refreshVisibilityRow();
         refreshSelectionCount();
 
-        body.append(visibilityRowEl, bulkEditRowEl, filterEl, wrap);
+        const rowDivider = document.createElement('hr');
+        rowDivider.classList.add('stwid--rowDivider');
+        body.append(visibilityRowEl, rowDivider, bulkEditRowEl, filterEl, wrap);
 
         // ── Mount ─────────────────────────────────────────────────────────────
         dom.editor.append(body);

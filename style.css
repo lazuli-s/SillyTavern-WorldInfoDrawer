@@ -1077,6 +1077,14 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   opacity: 0.5;
 }
 
+.stwid--orderHelper .stwid--rowDivider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--SmartThemeBorderColor);
+  opacity: 0.4;
+  flex: 0 0 auto;
+}
+
 .stwid--orderHelper .stwid--visibilityRow .stwid--inputWrap {
   display: flex;
   align-items: center;
