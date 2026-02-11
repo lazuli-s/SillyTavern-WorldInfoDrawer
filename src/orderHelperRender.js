@@ -125,10 +125,6 @@ const createOrderHelperRenderer = ({
             buildSavePayload,
             appendSortOptions,
             getOrderHelperEntries,
-            isOrderHelperRowSelected,
-            setAllOrderHelperRowSelected,
-            updateOrderHelperSelectAllButton,
-            getOrderHelperRows,
             updateOrderHelperPreview,
             SORT,
             SORT_DIRECTION,
@@ -151,13 +147,15 @@ const createOrderHelperRenderer = ({
             filterIndicatorRefs,
         });
 
-        const bulkEditRowEl = buildBulkEditRow({
+        const { element: bulkEditRowEl, refreshSelectionCount } = buildBulkEditRow({
             dom,
             orderHelperState,
             cache,
             saveWorldInfo,
             buildSavePayload,
             isOrderHelperRowSelected,
+            setAllOrderHelperRowSelected,
+            updateOrderHelperSelectAllButton,
             getOrderHelperRows,
         });
 
@@ -230,6 +228,7 @@ const createOrderHelperRenderer = ({
             isOrderHelperRowSelected,
             setOrderHelperRowSelected,
             updateOrderHelperSelectAllButton,
+            refreshSelectionCount,
             setOrderHelperRowFilterState,
             applyOrderHelperStrategyFilterToRow,
             applyOrderHelperPositionFilterToRow,
@@ -261,8 +260,9 @@ const createOrderHelperRenderer = ({
         wrap.classList.add('stwid--orderTableWrap');
         wrap.append(tbl);
 
-        // Initial count after tbody is built.
+        // Initial counts after tbody is built.
         refreshVisibilityRow();
+        refreshSelectionCount();
 
         body.append(visibilityRowEl, bulkEditRowEl, filterEl, wrap);
 

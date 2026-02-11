@@ -1191,8 +1191,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 }
 
 .stwid--orderHelper .stwid--bulkEditRow .stwid--inputWrap .stwid--input {
-  width: 33%;
-  min-width: 4em;
+  width: 4em;
 }
 
 .stwid--orderHelper .stwid--columnVisibilityLabel {
@@ -1506,7 +1505,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.40em;
+  gap: 0.10em;
 }
 
 .stwid--orderTable tr td .stwid--orderMoveButton {

@@ -21,6 +21,7 @@ import { ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
  *   isOrderHelperRowSelected: function,
  *   setOrderHelperRowSelected: function,
  *   updateOrderHelperSelectAllButton: function,
+ *   refreshSelectionCount: function,
  *   setOrderHelperRowFilterState: function,
  *   applyOrderHelperStrategyFilterToRow: function,
  *   applyOrderHelperPositionFilterToRow: function,
@@ -59,6 +60,7 @@ export function buildTableBody({
     isOrderHelperRowSelected,
     setOrderHelperRowSelected,
     updateOrderHelperSelectAllButton,
+    refreshSelectionCount,
     setOrderHelperRowFilterState,
     applyOrderHelperStrategyFilterToRow,
     applyOrderHelperPositionFilterToRow,
@@ -165,6 +167,7 @@ export function buildTableBody({
                     btn.addEventListener('click', ()=>{
                         setOrderHelperRowSelected(tr, !isOrderHelperRowSelected(tr));
                         updateOrderHelperSelectAllButton();
+                        refreshSelectionCount?.();
                     });
                     select.append(btn);
                 }

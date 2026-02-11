@@ -28,10 +28,6 @@ import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './c
  *   buildSavePayload: function,
  *   appendSortOptions: function,
  *   getOrderHelperEntries: function,
- *   isOrderHelperRowSelected: function,
- *   setAllOrderHelperRowSelected: function,
- *   updateOrderHelperSelectAllButton: function,
- *   getOrderHelperRows: function,
  *   updateOrderHelperPreview: function,
  *   SORT: object,
  *   SORT_DIRECTION: object,
@@ -71,10 +67,6 @@ export function buildVisibilityRow({
     buildSavePayload,
     appendSortOptions,
     getOrderHelperEntries,
-    isOrderHelperRowSelected,
-    setAllOrderHelperRowSelected,
-    updateOrderHelperSelectAllButton,
-    getOrderHelperRows,
     updateOrderHelperPreview,
     SORT,
     SORT_DIRECTION, // eslint-disable-line no-unused-vars
@@ -98,21 +90,6 @@ export function buildVisibilityRow({
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--visibilityRow');
-
-    // ── Select-all toggle ─────────────────────────────────────────────────
-    const selectAll = document.createElement('div'); {
-        dom.order.selectAll = selectAll;
-        selectAll.classList.add('menu_button');
-        selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
-        setTooltip(selectAll, 'Select/unselect all entries for Apply Order');
-        selectAll.addEventListener('click', ()=>{
-            const rows = getOrderHelperRows();
-            const shouldSelect = !rows.length || rows.some(row=>!isOrderHelperRowSelected(row));
-            setAllOrderHelperRowSelected(shouldSelect);
-            updateOrderHelperSelectAllButton();
-        });
-        row.append(selectAll);
-    }
 
     // ── Key column visibility toggle ──────────────────────────────────────
     const keyToggle = document.createElement('div'); {
@@ -298,11 +275,6 @@ export function buildVisibilityRow({
     const visibilityInfo = document.createElement('div');
     visibilityInfo.classList.add('stwid--visibilityInfo');
 
-    const countEl = document.createElement('span');
-    countEl.classList.add('stwid--visibilityCount');
-    countEl.textContent = 'Showing 0 of 0 entries';
-    visibilityInfo.append(countEl);
-
     const activeFiltersEl = document.createElement('div');
     activeFiltersEl.classList.add('stwid--activeFilters');
     activeFiltersEl.style.display = 'none';
@@ -399,12 +371,6 @@ export function buildVisibilityRow({
     };
 
     refresh = ()=>{
-        // Count
-        const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
-        const total = rows.length;
-        const visible = rows.filter((r)=>!r.classList.contains('stwid--isFiltered')).length;
-        countEl.textContent = `Showing ${visible} of ${total} entries`;
-
         // Chips
         chipContainer.innerHTML = '';
         const filters = orderHelperState.filters;
@@ -451,8 +417,8 @@ export function buildVisibilityRow({
 /**
  * Builds the Order Helper bulk edit row (Row 2).
  *
- * Contains one bordered labeled container per bulk-editable field.
- * Currently only the "Order" container (start / spacing / direction / apply).
+ * Left side: bordered Select container (select-all toggle + selection count).
+ * Right side: bordered Order container (start / spacing / direction / apply).
  *
  * @param {{
  *   dom: object,
@@ -461,9 +427,11 @@ export function buildVisibilityRow({
  *   saveWorldInfo: function,
  *   buildSavePayload: function,
  *   isOrderHelperRowSelected: function,
+ *   setAllOrderHelperRowSelected: function,
+ *   updateOrderHelperSelectAllButton: function,
  *   getOrderHelperRows: function,
  * }} ctx
- * @returns {HTMLElement}
+ * @returns {{ element: HTMLElement, refreshSelectionCount: function }}
  */
 export function buildBulkEditRow({
     dom,
@@ -472,10 +440,51 @@ export function buildBulkEditRow({
     saveWorldInfo,
     buildSavePayload,
     isOrderHelperRowSelected,
-    getOrderHelperRows, // eslint-disable-line no-unused-vars
+    setAllOrderHelperRowSelected,
+    updateOrderHelperSelectAllButton,
+    getOrderHelperRows,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
+
+    // ── Select container ──────────────────────────────────────────────────
+    const selectContainer = document.createElement('div');
+    selectContainer.classList.add('stwid--bulkEditContainer');
+    selectContainer.dataset.field = 'select';
+
+    const selectLabel = document.createElement('span');
+    selectLabel.classList.add('stwid--bulkEditLabel');
+    selectLabel.textContent = 'Select';
+    selectContainer.append(selectLabel);
+
+    const selectAll = document.createElement('div'); {
+        dom.order.selectAll = selectAll;
+        selectAll.classList.add('menu_button', 'interactable');
+        selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
+        setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
+        selectAll.addEventListener('click', ()=>{
+            const rows = getOrderHelperRows();
+            const shouldSelect = !rows.length || rows.some(r=>!isOrderHelperRowSelected(r));
+            setAllOrderHelperRowSelected(shouldSelect);
+            updateOrderHelperSelectAllButton();
+            refreshSelectionCount();
+        });
+        selectContainer.append(selectAll);
+    }
+
+    const selectionCountEl = document.createElement('span');
+    selectionCountEl.classList.add('stwid--visibilityCount');
+    selectionCountEl.textContent = 'Selected 0 out of 0 entries';
+    selectContainer.append(selectionCountEl);
+
+    row.append(selectContainer);
+
+    const refreshSelectionCount = ()=>{
+        const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
+        const total = rows.length;
+        const selected = rows.filter((r)=>isOrderHelperRowSelected(r)).length;
+        selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
+    };
 
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
@@ -621,5 +630,5 @@ export function buildBulkEditRow({
     orderContainer.append(apply);
     row.append(orderContainer);
 
-    return row;
+    return { element: row, refreshSelectionCount };
 }
