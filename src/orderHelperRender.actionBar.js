@@ -451,6 +451,12 @@ export function buildBulkEditRow({
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
 
+    // ── Row title ─────────────────────────────────────────────────────────
+    const rowTitle = document.createElement('div');
+    rowTitle.classList.add('stwid--bulkEditRowTitle');
+    rowTitle.textContent = 'Bulk Editor';
+    row.append(rowTitle);
+
     // ── Select container ──────────────────────────────────────────────────
     const selectContainer = document.createElement('div');
     selectContainer.classList.add('stwid--bulkEditContainer');

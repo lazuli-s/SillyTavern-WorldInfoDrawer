@@ -1162,6 +1162,24 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   padding: 0.4em 0.5em;
 }
 
+.stwid--orderHelper .stwid--bulkEditRowTitle {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.75em;
+  color: var(--SmartThemeEmColor);
+  opacity: 0.6;
+  margin-bottom: -0.4em;
+}
+
+.stwid--orderHelper .stwid--bulkEditRowTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--SmartThemeBorderColor);
+}
+
 .stwid--orderHelper .stwid--bulkEditContainer {
   display: flex;
   align-items: center;
