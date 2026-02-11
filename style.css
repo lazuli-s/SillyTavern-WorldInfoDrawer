@@ -1199,6 +1199,10 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 4em;
 }
 
+.stwid--orderHelper .stwid--bulkEditContainer .killSwitch.fa-toggle-on {
+  color: var(--SmartThemeQuoteColor);
+}
+
 .stwid--orderHelper .stwid--columnVisibilityLabel {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);

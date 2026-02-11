@@ -689,6 +689,66 @@ export function buildBulkEditRow({
 
     row.append(positionContainer);
 
+    // ── Depth container ───────────────────────────────────────────────────
+    const depthContainer = document.createElement('div');
+    depthContainer.classList.add('stwid--bulkEditContainer');
+    depthContainer.dataset.field = 'depth';
+
+    const depthLabel = document.createElement('span');
+    depthLabel.classList.add('stwid--bulkEditLabel');
+    depthLabel.textContent = 'Depth';
+    const depthLabelHint = document.createElement('i');
+    depthLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(depthLabelHint, 'Apply a Depth value to all selected entries at once. Depth controls how many messages back from the latest the trigger check looks (0 = last message). Leave blank to clear depth.');
+    depthLabel.append(depthLabelHint);
+    depthContainer.append(depthLabel);
+
+    const depthInput = document.createElement('input'); {
+        depthInput.classList.add('stwid--input', 'text_pole');
+        depthInput.type = 'number';
+        depthInput.min = '0';
+        depthInput.max = '99999';
+        depthInput.placeholder = '';
+        setTooltip(depthInput, 'Depth value to apply to selected entries');
+        const storedDepth = localStorage.getItem('stwid--bulk-depth-value');
+        if (storedDepth !== null) depthInput.value = storedDepth;
+        depthInput.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-depth-value', depthInput.value);
+        });
+        depthContainer.append(depthInput);
+    }
+
+    const applyDepth = document.createElement('div'); {
+        applyDepth.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyDepth, 'Apply depth value to all selected entries');
+        applyDepth.addEventListener('click', async()=>{
+            const rawValue = depthInput.value.trim();
+            const parsedDepth = rawValue === '' ? undefined : parseInt(rawValue, 10);
+            if (rawValue !== '' && (!Number.isInteger(parsedDepth) || parsedDepth < 0)) {
+                toastr.warning('Depth must be a non-negative whole number, or blank to clear.');
+                return;
+            }
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].depth = parsedDepth;
+                const rowDepth = /**@type {HTMLInputElement}*/(tr.querySelector('[name="depth"]'));
+                if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        depthContainer.append(applyDepth);
+    }
+
+    row.append(depthContainer);
+
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
     orderContainer.classList.add('stwid--bulkEditContainer');
