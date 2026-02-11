@@ -28,8 +28,9 @@
 |   └-- constants.js             # Sort enums/constants
 |-- docs/
 |   |-- user/                    # End-user and behavior docs (World Info / extension logic, state maps)
-|   |-- planning/                # Feature/issue planning notes
 |   |-- SillyTavernExtensionsDocumentation.md  # ST extension best-practice reference
+|-- tasks/                        # In-progress and finished planning/task docs
+|   └-- finished/                 # Completed task docs
 |-- test/                        # Vitest unit tests (utils/folders)
 |-- scripts/                     # Repository automation scripts/prompts
 |-- .github/
