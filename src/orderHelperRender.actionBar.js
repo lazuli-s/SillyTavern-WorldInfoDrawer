@@ -492,6 +492,70 @@ export function buildBulkEditRow({
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
     };
 
+    // ── Toggle Active State container ─────────────────────────────────────
+    const activeStateContainer = document.createElement('div');
+    activeStateContainer.classList.add('stwid--bulkEditContainer');
+    activeStateContainer.dataset.field = 'activeState';
+
+    const activeStateLabel = document.createElement('span');
+    activeStateLabel.classList.add('stwid--bulkEditLabel');
+    activeStateLabel.textContent = 'Toggle Active State';
+    const activeStateLabelHint = document.createElement('i');
+    activeStateLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(activeStateLabelHint, 'Choose enabled or disabled and apply it to all selected entries at once.');
+    activeStateLabel.append(activeStateLabelHint);
+    activeStateContainer.append(activeStateLabel);
+
+    const activeToggle = document.createElement('div'); {
+        activeToggle.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw');
+        const storedActive = localStorage.getItem('stwid--bulk-active-value');
+        const isActiveOn = storedActive !== 'false';
+        activeToggle.classList.toggle('fa-toggle-on', isActiveOn);
+        activeToggle.classList.toggle('fa-toggle-off', !isActiveOn);
+        setTooltip(activeToggle, 'State to apply: toggle on = enable entries, toggle off = disable entries');
+        activeToggle.addEventListener('click', ()=>{
+            const isOn = activeToggle.classList.contains('fa-toggle-on');
+            activeToggle.classList.toggle('fa-toggle-on', !isOn);
+            activeToggle.classList.toggle('fa-toggle-off', isOn);
+            localStorage.setItem('stwid--bulk-active-value', String(!isOn));
+        });
+        activeStateContainer.append(activeToggle);
+    }
+
+    const applyActiveState = document.createElement('div'); {
+        applyActiveState.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyActiveState, 'Apply the active state to all selected entries');
+        applyActiveState.addEventListener('click', async()=>{
+            const willDisable = activeToggle.classList.contains('fa-toggle-off');
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].disable = willDisable;
+                const rowToggle = tr.querySelector('[name="entryKillSwitch"]');
+                if (rowToggle) {
+                    rowToggle.classList.toggle('fa-toggle-off', willDisable);
+                    rowToggle.classList.toggle('fa-toggle-on', !willDisable);
+                }
+                const listToggle = cache[bookName].dom.entry?.[uid]?.isEnabled;
+                if (listToggle) {
+                    listToggle.classList.toggle('fa-toggle-off', willDisable);
+                    listToggle.classList.toggle('fa-toggle-on', !willDisable);
+                }
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        activeStateContainer.append(applyActiveState);
+    }
+
+    row.append(activeStateContainer);
+
     // ── Strategy container ────────────────────────────────────────────────
     const strategyContainer = document.createElement('div');
     strategyContainer.classList.add('stwid--bulkEditContainer');
