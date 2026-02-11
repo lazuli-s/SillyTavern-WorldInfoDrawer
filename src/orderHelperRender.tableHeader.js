@@ -40,9 +40,13 @@ import {
  *   getAutomationIdValues: function,
  *   getGroupOptions: function,
  *   getGroupValues: function,
+ *   onFilterChange: function,
  * }} ctx
  * @returns {{
  *   thead: HTMLElement,
+ *   refreshStrategyFilterIndicator: function,
+ *   refreshPositionFilterIndicator: function,
+ *   refreshRecursionFilterIndicator: function,
  *   refreshOutletFilterIndicator: function,
  *   refreshAutomationIdFilterIndicator: function,
  *   refreshGroupFilterIndicator: function,
@@ -71,9 +75,13 @@ export function buildTableHeader({
     getAutomationIdValues,
     getGroupOptions,
     getGroupValues,
+    onFilterChange = ()=>{},
 }) {
     // These are assigned inside the respective filter menu blocks and returned
-    // so the orchestrator can pass them to buildTableBody.
+    // so the orchestrator can pass them to buildTableBody and the visibility row.
+    let refreshStrategyFilterIndicator = ()=>{};
+    let refreshPositionFilterIndicator = ()=>{};
+    let refreshRecursionFilterIndicator = ()=>{};
     let refreshOutletFilterIndicator = ()=>{};
     let refreshAutomationIdFilterIndicator = ()=>{};
     let refreshGroupFilterIndicator = ()=>{};
@@ -115,11 +123,13 @@ export function buildTableHeader({
                                         const isActive = orderHelperState.filters.strategy.length !== allValues.length;
                                         menuButton.classList.toggle('stwid--active', isActive);
                                     };
+                                    refreshStrategyFilterIndicator = updateFilterIndicator;
                                     const updateStrategyFilters = ()=>{
                                         // Phase 2: update state → update indicator → apply filter
                                         orderHelperState.filters.strategy = normalizeStrategyFilters(orderHelperState.filters.strategy);
                                         updateFilterIndicator();
                                         applyOrderHelperStrategyFilters();
+                                        onFilterChange();
                                     };
                                     const strategyOptions = getStrategyOptions();
                                     if (!strategyOptions.length) {
@@ -194,11 +204,13 @@ export function buildTableHeader({
                                         const isActive = orderHelperState.filters.position.length !== allValues.length;
                                         menuButton.classList.toggle('stwid--active', isActive);
                                     };
+                                    refreshPositionFilterIndicator = updateFilterIndicator;
                                     const updatePositionFilters = ()=>{
                                         // Phase 2: update state → update indicator → apply filter
                                         orderHelperState.filters.position = normalizePositionFilters(orderHelperState.filters.position);
                                         updateFilterIndicator();
                                         applyOrderHelperPositionFilters();
+                                        onFilterChange();
                                     };
                                     const positionOptions = getPositionOptions();
                                     if (!positionOptions.length) {
@@ -273,6 +285,7 @@ export function buildTableHeader({
                                         const isActive = orderHelperState.filters.recursion.length !== allValues.length;
                                         menuButton.classList.toggle('stwid--active', isActive);
                                     };
+                                    refreshRecursionFilterIndicator = updateFilterIndicator;
                                     const updateRecursionFilters = ()=>{
                                         // Phase 2: update state → update indicator → apply filter
                                         const allValues = orderHelperState.recursionValues ?? [];
@@ -281,6 +294,7 @@ export function buildTableHeader({
                                         }
                                         updateFilterIndicator();
                                         applyOrderHelperRecursionFilters();
+                                        onFilterChange();
                                     };
                                     // Phase 3: use ORDER_HELPER_RECURSION_OPTIONS (shared with row cell builder)
                                     for (const optionData of ORDER_HELPER_RECURSION_OPTIONS) {
@@ -360,6 +374,7 @@ export function buildTableHeader({
                                             orderHelperState.filters.outlet = normalizeOutletFilters(orderHelperState.filters.outlet);
                                             updateFilterIndicator();
                                             applyOrderHelperOutletFilters();
+                                            onFilterChange();
                                         };
                                         const outletOptions = getOutletOptions();
                                         for (const optionData of outletOptions) {
@@ -438,6 +453,7 @@ export function buildTableHeader({
                                             orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
                                             updateFilterIndicator();
                                             applyOrderHelperAutomationIdFilters();
+                                            onFilterChange();
                                         };
                                         const automationIdOptions = getAutomationIdOptions();
                                         for (const optionData of automationIdOptions) {
@@ -516,6 +532,7 @@ export function buildTableHeader({
                                             orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
                                             updateFilterIndicator();
                                             applyOrderHelperGroupFilters();
+                                            onFilterChange();
                                         };
                                         const groupOptions = getGroupOptions();
                                         for (const optionData of groupOptions) {
@@ -569,5 +586,13 @@ export function buildTableHeader({
         thead.append(tr);
     }
 
-    return { thead, refreshOutletFilterIndicator, refreshAutomationIdFilterIndicator, refreshGroupFilterIndicator };
+    return {
+        thead,
+        refreshStrategyFilterIndicator,
+        refreshPositionFilterIndicator,
+        refreshRecursionFilterIndicator,
+        refreshOutletFilterIndicator,
+        refreshAutomationIdFilterIndicator,
+        refreshGroupFilterIndicator,
+    };
 }

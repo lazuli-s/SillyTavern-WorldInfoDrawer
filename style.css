@@ -1058,8 +1058,9 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   display: none;
 }
 
-/* Action bar */
-.stwid--orderHelper .stwid--actions {
+/* Visibility row and bulk edit row — shared base */
+.stwid--orderHelper .stwid--visibilityRow,
+.stwid--orderHelper .stwid--bulkEditRow {
   flex: 0 0 auto;
   display: flex;
   gap: 1.25em;
@@ -1069,14 +1070,14 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   padding: 0 0.5em;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--actionsDivider {
+.stwid--orderHelper .stwid--visibilityRow .stwid--actionsDivider {
   align-self: stretch;
   width: 1px;
   background-color: var(--SmartThemeBorderColor);
   opacity: 0.5;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--inputWrap {
+.stwid--orderHelper .stwid--visibilityRow .stwid--inputWrap {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -1084,12 +1085,7 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   font-size: smaller;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--inputWrap .stwid--input {
-  width: 33%;
-  min-width: 4em;
-}
-
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility {
+.stwid--orderHelper .stwid--visibilityRow .stwid--columnVisibility {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -1098,25 +1094,105 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   position: relative;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnVisibilityLabel {
+.stwid--orderHelper .stwid--visibilityRow .stwid--columnVisibility .stwid--columnVisibilityLabel {
   display: flex;
   align-items: center;
   gap: 0.35em;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--columnVisibility .stwid--columnVisibilityText {
+.stwid--orderHelper .stwid--visibilityRow .stwid--columnVisibility .stwid--columnVisibilityText {
   line-height: 1.1;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--actionsRight {
-  margin-left: auto;
+/* Visibility row — right side */
+.stwid--orderHelper .stwid--visibilityInfo {
   display: flex;
   align-items: center;
   gap: 0.75em;
+  margin-left: auto;
+  flex-wrap: wrap;
 }
 
-.stwid--orderHelper .stwid--actions .stwid--actionsRight .stwid--actionsDivider {
-  margin-right: 0.5em;
+.stwid--orderHelper .stwid--visibilityCount {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+  white-space: nowrap;
+}
+
+.stwid--orderHelper .stwid--activeFilters {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  flex-wrap: wrap;
+  font-size: smaller;
+  color: var(--SmartThemeEmColor);
+}
+
+/* Filter chips — same visual style as stwid--visibilityChip but scoped to orderHelper */
+.stwid--orderHelper .stwid--filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-s, 4px);
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
+}
+
+.stwid--orderHelper .stwid--chipRemove {
+  background: none;
+  border: none;
+  padding: 0 0.1em;
+  cursor: pointer;
+  color: var(--SmartThemeQuoteColor);
+  line-height: 1;
+  font-size: 1em;
+}
+
+.stwid--orderHelper .stwid--chipRemove:hover {
+  color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
+}
+
+/* Bulk edit row */
+.stwid--orderHelper .stwid--bulkEditRow {
+  flex-wrap: wrap;
+  gap: 0.75em;
+  padding: 0.4em 0.5em;
+}
+
+.stwid--orderHelper .stwid--bulkEditContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-s, 4px);
+  padding: 0.35em 0.65em;
+  position: relative;
+}
+
+.stwid--orderHelper .stwid--bulkEditLabel {
+  position: absolute;
+  top: -0.6em;
+  left: 0.4em;
+  font-size: 0.7em;
+  background-color: var(--SmartThemeBlurTintColor);
+  padding: 0 0.25em;
+  color: var(--SmartThemeEmColor);
+  line-height: 1;
+}
+
+.stwid--orderHelper .stwid--bulkEditRow .stwid--inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+}
+
+.stwid--orderHelper .stwid--bulkEditRow .stwid--inputWrap .stwid--input {
+  width: 33%;
+  min-width: 4em;
 }
 
 .stwid--orderHelper .stwid--columnVisibilityLabel {

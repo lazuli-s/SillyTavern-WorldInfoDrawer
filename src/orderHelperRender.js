@@ -1,4 +1,4 @@
-import { buildActionBar }    from './orderHelperRender.actionBar.js';
+import { buildVisibilityRow, buildBulkEditRow } from './orderHelperRender.actionBar.js';
 import { buildFilterPanel }  from './orderHelperRender.filterPanel.js';
 import { buildTableHeader }  from './orderHelperRender.tableHeader.js';
 import { buildTableBody }    from './orderHelperRender.tableBody.js';
@@ -107,11 +107,12 @@ const createOrderHelperRenderer = ({
 
         // ── Section builders ──────────────────────────────────────────────────
 
-        const actionsEl = buildActionBar({
+        const filterIndicatorRefs = {};
+
+        const { element: visibilityRowEl, refresh: refreshVisibilityRow } = buildVisibilityRow({
             body,
             orderHelperState,
             dom,
-            cache,
             ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
             ORDER_HELPER_COLUMNS_STORAGE_KEY,
             ORDER_HELPER_DEFAULT_COLUMNS,
@@ -131,6 +132,33 @@ const createOrderHelperRenderer = ({
             updateOrderHelperPreview,
             SORT,
             SORT_DIRECTION,
+            applyOrderHelperStrategyFilters,
+            applyOrderHelperPositionFilters,
+            applyOrderHelperRecursionFilters,
+            applyOrderHelperOutletFilters,
+            applyOrderHelperAutomationIdFilters,
+            applyOrderHelperGroupFilters,
+            getStrategyOptions,
+            getPositionOptions,
+            getOutletOptions,
+            getAutomationIdOptions,
+            getGroupOptions,
+            getStrategyValues,
+            getPositionValues,
+            getOutletValues,
+            getAutomationIdValues,
+            getGroupValues,
+            filterIndicatorRefs,
+        });
+
+        const bulkEditRowEl = buildBulkEditRow({
+            dom,
+            orderHelperState,
+            cache,
+            saveWorldInfo,
+            buildSavePayload,
+            isOrderHelperRowSelected,
+            getOrderHelperRows,
         });
 
         const filterEl = buildFilterPanel({
@@ -146,6 +174,9 @@ const createOrderHelperRenderer = ({
 
         const {
             thead,
+            refreshStrategyFilterIndicator,
+            refreshPositionFilterIndicator,
+            refreshRecursionFilterIndicator,
             refreshOutletFilterIndicator,
             refreshAutomationIdFilterIndicator,
             refreshGroupFilterIndicator,
@@ -172,7 +203,17 @@ const createOrderHelperRenderer = ({
             getAutomationIdValues,
             getGroupOptions,
             getGroupValues,
+            onFilterChange: ()=>refreshVisibilityRow(),
         });
+
+        // Populate filterIndicatorRefs after tableHeader is built so chip X
+        // handlers in buildVisibilityRow can call these at click time.
+        filterIndicatorRefs.strategy     = refreshStrategyFilterIndicator;
+        filterIndicatorRefs.position     = refreshPositionFilterIndicator;
+        filterIndicatorRefs.recursion    = refreshRecursionFilterIndicator;
+        filterIndicatorRefs.outlet       = refreshOutletFilterIndicator;
+        filterIndicatorRefs.automationId = refreshAutomationIdFilterIndicator;
+        filterIndicatorRefs.group        = refreshGroupFilterIndicator;
 
         const tbody = buildTableBody({
             entries,
@@ -220,7 +261,10 @@ const createOrderHelperRenderer = ({
         wrap.classList.add('stwid--orderTableWrap');
         wrap.append(tbl);
 
-        body.append(actionsEl, filterEl, wrap);
+        // Initial count after tbody is built.
+        refreshVisibilityRow();
+
+        body.append(visibilityRowEl, bulkEditRowEl, filterEl, wrap);
 
         // ── Mount ─────────────────────────────────────────────────────────────
         dom.editor.append(body);

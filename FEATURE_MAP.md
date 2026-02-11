@@ -101,9 +101,9 @@ Where each feature or behavior is implemented in the codebase.
 - Order Helper open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → index.js, src/orderHelper.js, src/listPanel.js, src/lorebookFolders.js
 - Order Helper state creation (defaults + restored localStorage state) → src/orderHelperState.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/orderHelper.js
-- Table renderer and control bar (sort, select-all, filter toggle, apply order) → src/orderHelperRender.actionBar.js, src/orderHelperRender.js
+- Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/orderHelperRender.actionBar.js, src/orderHelperRender.js
+- Bulk edit row structure (field containers starting with Order: start/spacing/direction/apply) → src/orderHelperRender.actionBar.js
 - Row drag sorting and custom order persistence (`extensions.display_index`) → src/orderHelperRender.tableBody.js, src/orderHelper.js
-- Start/spacing/direction apply-to-order workflow → src/orderHelperRender.actionBar.js
 - Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/orderHelperRender.tableBody.js
 - Recursion flags and budget-ignore controls → src/orderHelperRender.tableBody.js
 - Column visibility controls and hide-keys toggle → src/orderHelperRender.actionBar.js, src/orderHelperState.js

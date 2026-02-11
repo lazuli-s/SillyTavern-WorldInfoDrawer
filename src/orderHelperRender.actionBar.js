@@ -4,16 +4,18 @@ import {
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
 } from './orderHelperRender.utils.js';
-import { ORDER_HELPER_TOGGLE_COLUMNS } from './constants.js';
+import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
 
 /**
- * Builds the Order Helper action bar DOM element.
+ * Builds the Order Helper visibility row (Row 1).
+ *
+ * Left side: select-all, key visibility, column visibility dropdown, divider, sort selector, script filter toggle.
+ * Right side: entry count span + active column-filter chips.
  *
  * @param {{
  *   body: HTMLElement,
  *   orderHelperState: object,
  *   dom: object,
- *   cache: object,
  *   ORDER_HELPER_HIDE_KEYS_STORAGE_KEY: string,
  *   ORDER_HELPER_COLUMNS_STORAGE_KEY: string,
  *   ORDER_HELPER_DEFAULT_COLUMNS: object,
@@ -33,14 +35,30 @@ import { ORDER_HELPER_TOGGLE_COLUMNS } from './constants.js';
  *   updateOrderHelperPreview: function,
  *   SORT: object,
  *   SORT_DIRECTION: object,
+ *   applyOrderHelperStrategyFilters: function,
+ *   applyOrderHelperPositionFilters: function,
+ *   applyOrderHelperRecursionFilters: function,
+ *   applyOrderHelperOutletFilters: function,
+ *   applyOrderHelperAutomationIdFilters: function,
+ *   applyOrderHelperGroupFilters: function,
+ *   getStrategyOptions: function,
+ *   getPositionOptions: function,
+ *   getOutletOptions: function,
+ *   getAutomationIdOptions: function,
+ *   getGroupOptions: function,
+ *   getStrategyValues: function,
+ *   getPositionValues: function,
+ *   getOutletValues: function,
+ *   getAutomationIdValues: function,
+ *   getGroupValues: function,
+ *   filterIndicatorRefs: object,
  * }} ctx
- * @returns {HTMLElement} The action bar element to append to the body container.
+ * @returns {{ element: HTMLElement, refresh: function }}
  */
-export function buildActionBar({
+export function buildVisibilityRow({
     body,
     orderHelperState,
     dom,
-    cache,
     ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
     ORDER_HELPER_COLUMNS_STORAGE_KEY,
     ORDER_HELPER_DEFAULT_COLUMNS,
@@ -59,12 +77,29 @@ export function buildActionBar({
     getOrderHelperRows,
     updateOrderHelperPreview,
     SORT,
-    SORT_DIRECTION,
+    SORT_DIRECTION, // eslint-disable-line no-unused-vars
+    applyOrderHelperStrategyFilters,
+    applyOrderHelperPositionFilters,
+    applyOrderHelperRecursionFilters,
+    applyOrderHelperOutletFilters,
+    applyOrderHelperAutomationIdFilters,
+    applyOrderHelperGroupFilters,
+    getStrategyOptions,
+    getPositionOptions,
+    getOutletOptions,
+    getAutomationIdOptions,
+    getGroupOptions,
+    getStrategyValues,
+    getPositionValues,
+    getOutletValues,
+    getAutomationIdValues,
+    getGroupValues,
+    filterIndicatorRefs,
 }) {
-    const actions = document.createElement('div');
-    actions.classList.add('stwid--actions');
+    const row = document.createElement('div');
+    row.classList.add('stwid--visibilityRow');
 
-    // Select-all toggle
+    // ── Select-all toggle ─────────────────────────────────────────────────
     const selectAll = document.createElement('div'); {
         dom.order.selectAll = selectAll;
         selectAll.classList.add('menu_button');
@@ -76,10 +111,10 @@ export function buildActionBar({
             setAllOrderHelperRowSelected(shouldSelect);
             updateOrderHelperSelectAllButton();
         });
-        actions.append(selectAll);
+        row.append(selectAll);
     }
 
-    // Key column visibility toggle
+    // ── Key column visibility toggle ──────────────────────────────────────
     const keyToggle = document.createElement('div'); {
         keyToggle.classList.add('menu_button');
         keyToggle.classList.add('fa-solid', 'fa-fw');
@@ -97,10 +132,10 @@ export function buildActionBar({
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
             applyKeyToggleStyle();
         });
-        actions.append(keyToggle);
+        row.append(keyToggle);
     }
 
-    // Column visibility dropdown
+    // ── Column visibility dropdown ────────────────────────────────────────
     const columnVisibilityWrap = document.createElement('div'); {
         columnVisibilityWrap.classList.add('stwid--columnVisibility');
         const labelWrap = document.createElement('div'); {
@@ -201,23 +236,22 @@ export function buildActionBar({
                     }
                 }
                 // Phase 3: wire open/close/outside-click.
-                // setColumnVisibility closes the menu via menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER].
                 wireMultiselectDropdown(menu, menuButton, menuWrap);
                 menuWrap.append(menu);
             }
             columnVisibilityWrap.append(menuWrap);
         }
-        actions.append(columnVisibilityWrap);
+        row.append(columnVisibilityWrap);
     }
 
     const addDivider = ()=>{
         const divider = document.createElement('div');
         divider.classList.add('stwid--actionsDivider');
-        actions.append(divider);
+        row.append(divider);
     };
     addDivider();
 
-    // Sort select
+    // ── Sort select ───────────────────────────────────────────────────────
     const sortWrap = document.createElement('label'); {
         sortWrap.classList.add('stwid--inputWrap');
         setTooltip(sortWrap, 'Sort rows in the table');
@@ -240,11 +274,11 @@ export function buildActionBar({
             });
             sortWrap.append(sortSel);
         }
-        actions.append(sortWrap);
+        row.append(sortWrap);
     }
     addDivider();
 
-    // Filter panel toggle
+    // ── Filter panel toggle ───────────────────────────────────────────────
     const filterToggle = document.createElement('div'); {
         filterToggle.classList.add('menu_button');
         filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -257,16 +291,201 @@ export function buildActionBar({
                 clearOrderHelperScriptFilters();
             }
         });
-        actions.append(filterToggle);
+        row.append(filterToggle);
     }
 
-    // ── Right group: start / spacing / direction / apply ───────────────────
-    const rightGroup = document.createElement('div'); {
-        rightGroup.classList.add('stwid--actionsRight');
-        const divider = document.createElement('div');
-        divider.classList.add('stwid--actionsDivider');
-        rightGroup.append(divider);
-    }
+    // ── Right side: visibility info ───────────────────────────────────────
+    const visibilityInfo = document.createElement('div');
+    visibilityInfo.classList.add('stwid--visibilityInfo');
+
+    const countEl = document.createElement('span');
+    countEl.classList.add('stwid--visibilityCount');
+    countEl.textContent = 'Showing 0 of 0 entries';
+    visibilityInfo.append(countEl);
+
+    const activeFiltersEl = document.createElement('div');
+    activeFiltersEl.classList.add('stwid--activeFilters');
+    activeFiltersEl.style.display = 'none';
+    const activeFiltersLabel = document.createElement('span');
+    activeFiltersLabel.textContent = 'Active filters:';
+    activeFiltersEl.append(activeFiltersLabel);
+    const chipContainer = document.createElement('div');
+    chipContainer.classList.add('stwid--filterChipContainer');
+    activeFiltersEl.append(chipContainer);
+    visibilityInfo.append(activeFiltersEl);
+
+    row.append(visibilityInfo);
+
+    // ── Filter label lookup ───────────────────────────────────────────────
+    const FILTER_KEY_LABELS = Object.fromEntries(
+        ORDER_HELPER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
+    );
+
+    // ── Option label lookup for chip text ─────────────────────────────────
+    const getFilterValueLabels = (filterKey, selectedValues)=>{
+        let options;
+        switch (filterKey) {
+            case 'strategy':     options = getStrategyOptions();     break;
+            case 'position':     options = getPositionOptions();     break;
+            case 'outlet':       options = getOutletOptions();       break;
+            case 'automationId': options = getAutomationIdOptions(); break;
+            case 'group':        options = getGroupOptions();        break;
+            case 'recursion':    options = ORDER_HELPER_RECURSION_OPTIONS; break;
+            default: return selectedValues.map(String);
+        }
+        const labelMap = Object.fromEntries(options.map((o)=>[o.value, o.label]));
+        return selectedValues.map((v)=>labelMap[v] ?? String(v));
+    };
+
+    // ── refresh() — rebuilds count + chips ───────────────────────────────
+    // Declared as `let` so clearFilterHandlers (defined below) can reference
+    // it in closures that only fire after this function body completes.
+    let refresh = ()=>{};
+
+    // ── Chip X click handlers ─────────────────────────────────────────────
+    const clearFilterHandlers = {
+        strategy: ()=>{
+            const allValues = orderHelperState.strategyValues.length
+                ? [...orderHelperState.strategyValues]
+                : getStrategyValues();
+            orderHelperState.filters.strategy = allValues;
+            applyOrderHelperStrategyFilters();
+            filterIndicatorRefs.strategy?.();
+            refresh();
+        },
+        position: ()=>{
+            const allValues = orderHelperState.positionValues.length
+                ? [...orderHelperState.positionValues]
+                : getPositionValues();
+            orderHelperState.filters.position = allValues;
+            applyOrderHelperPositionFilters();
+            filterIndicatorRefs.position?.();
+            refresh();
+        },
+        recursion: ()=>{
+            const allValues = orderHelperState.recursionValues ?? [];
+            orderHelperState.filters.recursion = [...allValues];
+            applyOrderHelperRecursionFilters();
+            filterIndicatorRefs.recursion?.();
+            refresh();
+        },
+        outlet: ()=>{
+            const allValues = orderHelperState.outletValues.length
+                ? [...orderHelperState.outletValues]
+                : getOutletValues();
+            orderHelperState.filters.outlet = allValues;
+            applyOrderHelperOutletFilters();
+            filterIndicatorRefs.outlet?.();
+            refresh();
+        },
+        automationId: ()=>{
+            const allValues = orderHelperState.automationIdValues.length
+                ? [...orderHelperState.automationIdValues]
+                : getAutomationIdValues();
+            orderHelperState.filters.automationId = allValues;
+            applyOrderHelperAutomationIdFilters();
+            filterIndicatorRefs.automationId?.();
+            refresh();
+        },
+        group: ()=>{
+            const allValues = orderHelperState.groupValues.length
+                ? [...orderHelperState.groupValues]
+                : getGroupValues();
+            orderHelperState.filters.group = allValues;
+            applyOrderHelperGroupFilters();
+            filterIndicatorRefs.group?.();
+            refresh();
+        },
+    };
+
+    refresh = ()=>{
+        // Count
+        const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
+        const total = rows.length;
+        const visible = rows.filter((r)=>!r.classList.contains('stwid--isFiltered')).length;
+        countEl.textContent = `Showing ${visible} of ${total} entries`;
+
+        // Chips
+        chipContainer.innerHTML = '';
+        const filters = orderHelperState.filters;
+        const filterConfigs = [
+            { key: 'strategy',     allValues: orderHelperState.strategyValues.length    ? orderHelperState.strategyValues    : getStrategyValues()    },
+            { key: 'position',     allValues: orderHelperState.positionValues.length    ? orderHelperState.positionValues    : getPositionValues()    },
+            { key: 'recursion',    allValues: orderHelperState.recursionValues ?? []                                                                  },
+            { key: 'outlet',       allValues: orderHelperState.outletValues.length      ? orderHelperState.outletValues      : getOutletValues()      },
+            { key: 'automationId', allValues: orderHelperState.automationIdValues.length? orderHelperState.automationIdValues: getAutomationIdValues()},
+            { key: 'group',        allValues: orderHelperState.groupValues.length       ? orderHelperState.groupValues       : getGroupValues()       },
+        ];
+
+        let hasActiveFilter = false;
+        for (const { key, allValues } of filterConfigs) {
+            const selected = filters[key] ?? [];
+            if (!allValues.length) continue;
+            if (selected.length >= allValues.length) continue;
+            hasActiveFilter = true;
+
+            const chip = document.createElement('div');
+            chip.classList.add('stwid--filterChip');
+
+            const chipLabel = document.createElement('span');
+            const headerName = FILTER_KEY_LABELS[key] ?? key;
+            const valueLabels = getFilterValueLabels(key, selected);
+            chipLabel.textContent = `${headerName}: ${valueLabels.join(', ')}`;
+            chip.append(chipLabel);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('stwid--chipRemove');
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', clearFilterHandlers[key]);
+            chip.append(removeBtn);
+
+            chipContainer.append(chip);
+        }
+
+        activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
+    };
+
+    return { element: row, refresh };
+}
+
+/**
+ * Builds the Order Helper bulk edit row (Row 2).
+ *
+ * Contains one bordered labeled container per bulk-editable field.
+ * Currently only the "Order" container (start / spacing / direction / apply).
+ *
+ * @param {{
+ *   dom: object,
+ *   orderHelperState: object,
+ *   cache: object,
+ *   saveWorldInfo: function,
+ *   buildSavePayload: function,
+ *   isOrderHelperRowSelected: function,
+ *   getOrderHelperRows: function,
+ * }} ctx
+ * @returns {HTMLElement}
+ */
+export function buildBulkEditRow({
+    dom,
+    orderHelperState, // eslint-disable-line no-unused-vars
+    cache,
+    saveWorldInfo,
+    buildSavePayload,
+    isOrderHelperRowSelected,
+    getOrderHelperRows, // eslint-disable-line no-unused-vars
+}) {
+    const row = document.createElement('div');
+    row.classList.add('stwid--bulkEditRow');
+
+    // ── Order container ───────────────────────────────────────────────────
+    const orderContainer = document.createElement('div');
+    orderContainer.classList.add('stwid--bulkEditContainer');
+    orderContainer.dataset.field = 'order';
+
+    const orderLabel = document.createElement('span');
+    orderLabel.classList.add('stwid--bulkEditLabel');
+    orderLabel.textContent = 'Order';
+    orderContainer.append(orderLabel);
 
     // Apply Order button (created before direction radios because the direction
     // radio listeners reference it to toggle its icon class).
@@ -328,7 +547,7 @@ export function buildActionBar({
             });
             startLbl.append(start);
         }
-        rightGroup.append(startLbl);
+        orderContainer.append(startLbl);
     }
 
     const stepLbl = document.createElement('label'); {
@@ -348,7 +567,7 @@ export function buildActionBar({
             });
             stepLbl.append(step);
         }
-        rightGroup.append(stepLbl);
+        orderContainer.append(stepLbl);
     }
 
     const dir = document.createElement('div'); {
@@ -397,10 +616,10 @@ export function buildActionBar({
             }
             dir.append(wrap);
         }
-        rightGroup.append(dir);
+        orderContainer.append(dir);
     }
-    rightGroup.append(apply);
-    actions.append(rightGroup);
+    orderContainer.append(apply);
+    row.append(orderContainer);
 
-    return actions;
+    return row;
 }
