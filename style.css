@@ -1203,6 +1203,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   color: var(--SmartThemeQuoteColor);
 }
 
+.stwid-compactInput {
+  min-height: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size: 0.95em;
+}
+
 .stwid--orderHelper .stwid--columnVisibilityLabel {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);

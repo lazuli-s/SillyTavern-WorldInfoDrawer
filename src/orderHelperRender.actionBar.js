@@ -704,7 +704,7 @@ export function buildBulkEditRow({
     depthContainer.append(depthLabel);
 
     const depthInput = document.createElement('input'); {
-        depthInput.classList.add('stwid--input', 'text_pole');
+        depthInput.classList.add('stwid-compactInput', 'text_pole');
         depthInput.type = 'number';
         depthInput.min = '0';
         depthInput.max = '99999';
