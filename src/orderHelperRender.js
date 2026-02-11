@@ -33,6 +33,7 @@ const createOrderHelperRenderer = ({
     applyOrderHelperRecursionFilterToRow,
     applyOrderHelperRecursionFilters,
     applyOrderHelperOutletFilters,
+    applyOrderHelperOutletFilterToRow,
     applyOrderHelperAutomationIdFilters,
     applyOrderHelperGroupFilters,
     setOrderHelperRowFilterState,
@@ -161,6 +162,9 @@ const createOrderHelperRenderer = ({
             applyOrderHelperStrategyFilterToRow,
             getPositionOptions,
             applyOrderHelperPositionFilterToRow,
+            isOutletPosition,
+            getOutletOptions,
+            applyOrderHelperOutletFilterToRow,
         });
 
         const filterEl = buildFilterPanel({

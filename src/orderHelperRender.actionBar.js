@@ -430,6 +430,12 @@ export function buildVisibilityRow({
  *   setAllOrderHelperRowSelected: function,
  *   updateOrderHelperSelectAllButton: function,
  *   getOrderHelperRows: function,
+ *   getStrategyOptions: function,
+ *   getPositionOptions: function,
+ *   applyOrderHelperPositionFilterToRow: function,
+ *   isOutletPosition: function,
+ *   getOutletOptions: function,
+ *   applyOrderHelperOutletFilterToRow: function,
  * }} ctx
  * @returns {{ element: HTMLElement, refreshSelectionCount: function }}
  */
@@ -447,6 +453,9 @@ export function buildBulkEditRow({
     applyOrderHelperStrategyFilterToRow,
     getPositionOptions,
     applyOrderHelperPositionFilterToRow,
+    isOutletPosition,
+    getOutletOptions,
+    applyOrderHelperOutletFilterToRow,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
@@ -763,6 +772,79 @@ export function buildBulkEditRow({
     };
     positionSelect.addEventListener('change', applyDepthContainerState);
     applyDepthContainerState();
+
+    // ── Outlet container ──────────────────────────────────────────────────
+    const outletContainer = document.createElement('div');
+    outletContainer.classList.add('stwid--bulkEditContainer');
+    outletContainer.dataset.field = 'outlet';
+
+    const outletLabel = document.createElement('span');
+    outletLabel.classList.add('stwid--bulkEditLabel');
+    outletLabel.textContent = 'Outlet';
+    const outletLabelHint = document.createElement('i');
+    outletLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(outletLabelHint, 'Apply an Outlet name to all selected entries at once. Only interactable when Position is set to Outlet.');
+    outletLabel.append(outletLabelHint);
+    outletContainer.append(outletLabel);
+
+    const outletDatalist = document.createElement('datalist');
+    outletDatalist.id = 'stwid--bulk-outlet-options';
+    for (const opt of getOutletOptions()) {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        outletDatalist.append(option);
+    }
+    outletContainer.append(outletDatalist);
+
+    const outletInput = document.createElement('input'); {
+        outletInput.classList.add('stwid--input', 'text_pole');
+        outletInput.type = 'text';
+        outletInput.setAttribute('list', 'stwid--bulk-outlet-options');
+        outletInput.placeholder = '(none)';
+        setTooltip(outletInput, 'Outlet name to apply to selected entries');
+        const storedOutlet = localStorage.getItem('stwid--bulk-outlet-value');
+        if (storedOutlet !== null) outletInput.value = storedOutlet;
+        outletInput.addEventListener('change', ()=>{
+            localStorage.setItem('stwid--bulk-outlet-value', outletInput.value);
+        });
+        outletContainer.append(outletInput);
+    }
+
+    const applyOutlet = document.createElement('div'); {
+        applyOutlet.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyOutlet, 'Apply outlet name to all selected entries');
+        applyOutlet.addEventListener('click', async()=>{
+            const value = outletInput.value.trim();
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                cache[bookName].entries[uid].outletName = value;
+                const rowOutlet = /**@type {HTMLInputElement}*/(tr.querySelector('[name="outletName"]'));
+                if (rowOutlet) rowOutlet.value = value;
+                applyOrderHelperOutletFilterToRow(tr, cache[bookName].entries[uid]);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        outletContainer.append(applyOutlet);
+    }
+
+    row.append(outletContainer);
+
+    // ── Outlet visibility: enabled only when position is outlet ───────────
+    const applyOutletContainerState = ()=>{
+        const isOutlet = isOutletPosition(positionSelect.value);
+        outletContainer.classList.toggle('stwid--isDisabled', !isOutlet);
+        outletInput.disabled = !isOutlet;
+    };
+    positionSelect.addEventListener('change', applyOutletContainerState);
+    applyOutletContainerState();
 
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
