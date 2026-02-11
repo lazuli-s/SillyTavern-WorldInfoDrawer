@@ -1078,11 +1078,9 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
 }
 
 .stwid--orderHelper .stwid--rowDivider {
-  margin: 0;
-  border: none;
-  border-top: 1px solid var(--SmartThemeBorderColor);
-  opacity: 0.4;
-  flex: 0 0 auto;
+  margin: 0.8em;
+  opacity: 0.1;
+  background-color: var(--SmartThemeBlurTintColor);
 }
 
 .stwid--orderHelper .stwid--visibilityRow .stwid--inputWrap {
@@ -1177,6 +1175,10 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   border-radius: var(--stwid-radius-s, 4px);
   padding: 0.35em 0.65em;
   position: relative;
+}
+
+i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
+  padding-left: 0.5em;
 }
 
 .stwid--orderHelper .stwid--bulkEditLabel {

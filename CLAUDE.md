@@ -1,4 +1,4 @@
-# AGENTS.md - AI Agent Rules for This Repository
+# CLAUDE.md - AI Agent Rules for This Repository
 
 This repository is a **third-party SillyTavern frontend extension** that replaces the default World Info editor with a custom full-screen drawer UI.
 

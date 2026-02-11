@@ -576,13 +576,8 @@ export function buildBulkEditRow({
     // Apply Order button (created before direction radios because the direction
     // radio listeners reference it to toggle its icon class).
     const apply = document.createElement('div'); {
-        apply.classList.add('menu_button');
-        apply.classList.add('fa-solid', 'fa-fw');
-        if ((localStorage.getItem('stwid--order-direction') ?? 'down') == 'up') {
-            apply.classList.add('fa-arrow-up-9-1');
-        } else {
-            apply.classList.add('fa-arrow-down-1-9');
-        }
+        apply.classList.add('menu_button', 'interactable');
+        apply.classList.add('fa-solid', 'fa-fw', 'fa-check');
         setTooltip(apply, 'Apply current row order to the Order field');
         apply.addEventListener('click', async()=>{
             const start = Number.parseInt(dom.order.start.value, 10);
@@ -672,8 +667,6 @@ export function buildBulkEditRow({
                     inp.addEventListener('click', ()=>{
                         inp.checked = true;
                         dom.order.direction.down.checked = false;
-                        apply.classList.remove('fa-arrow-down-1-9');
-                        apply.classList.add('fa-arrow-up-9-1');
                         localStorage.setItem('stwid--order-direction', 'up');
                     });
                     up.append(inp);
@@ -691,8 +684,6 @@ export function buildBulkEditRow({
                     inp.addEventListener('click', ()=>{
                         inp.checked = true;
                         dom.order.direction.up.checked = false;
-                        apply.classList.add('fa-arrow-down-1-9');
-                        apply.classList.remove('fa-arrow-up-9-1');
                         localStorage.setItem('stwid--order-direction', 'down');
                     });
                     down.append(inp);
