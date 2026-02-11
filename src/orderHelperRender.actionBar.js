@@ -91,6 +91,12 @@ export function buildVisibilityRow({
     const row = document.createElement('div');
     row.classList.add('stwid--visibilityRow');
 
+    // ── Row title ─────────────────────────────────────────────────────────
+    const rowTitle = document.createElement('div');
+    rowTitle.classList.add('stwid--RowTitle');
+    rowTitle.textContent = 'Visibility';
+    row.append(rowTitle);
+
     // ── Key column visibility toggle ──────────────────────────────────────
     const keyToggle = document.createElement('div'); {
         keyToggle.classList.add('menu_button');
@@ -462,7 +468,7 @@ export function buildBulkEditRow({
 
     // ── Row title ─────────────────────────────────────────────────────────
     const rowTitle = document.createElement('div');
-    rowTitle.classList.add('stwid--bulkEditRowTitle');
+    rowTitle.classList.add('stwid--RowTitle');
     rowTitle.textContent = 'Bulk Editor';
     row.append(rowTitle);
 
