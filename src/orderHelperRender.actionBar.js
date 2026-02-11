@@ -442,6 +442,7 @@ export function buildVisibilityRow({
  *   isOutletPosition: function,
  *   getOutletOptions: function,
  *   applyOrderHelperOutletFilterToRow: function,
+ *   applyOrderHelperRecursionFilterToRow: function,
  * }} ctx
  * @returns {{ element: HTMLElement, refreshSelectionCount: function }}
  */
@@ -462,6 +463,7 @@ export function buildBulkEditRow({
     isOutletPosition,
     getOutletOptions,
     applyOrderHelperOutletFilterToRow,
+    applyOrderHelperRecursionFilterToRow,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
@@ -990,6 +992,132 @@ export function buildBulkEditRow({
     }
     orderContainer.append(apply);
     row.append(orderContainer);
+
+    // ── Recursion container ────────────────────────────────────────────────
+    const recursionContainer = document.createElement('div');
+    recursionContainer.classList.add('stwid--bulkEditContainer');
+    recursionContainer.dataset.field = 'recursion';
+
+    const recursionLabel = document.createElement('span');
+    recursionLabel.classList.add('stwid--bulkEditLabel');
+    recursionLabel.textContent = 'Recursion';
+    const recursionLabelHint = document.createElement('i');
+    recursionLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(recursionLabelHint, 'Set recursion flags on all selected entries. Overwrites the existing values of all three flags.');
+    recursionLabel.append(recursionLabelHint);
+    recursionContainer.append(recursionLabel);
+
+    /** @type {Map<string, HTMLInputElement>} */
+    const recursionCheckboxes = new Map();
+    const recursionOptions = document.createElement('div'); {
+        recursionOptions.classList.add('stwid--recursionOptions');
+        for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
+            const row = document.createElement('label'); {
+                row.classList.add('stwid--recursionRow');
+                const input = document.createElement('input'); {
+                    input.type = 'checkbox';
+                    input.classList.add('checkbox');
+                    setTooltip(input, label);
+                    recursionCheckboxes.set(value, input);
+                    row.append(input);
+                }
+                row.append(label);
+                recursionOptions.append(row);
+            }
+        }
+        recursionContainer.append(recursionOptions);
+    }
+
+    const applyRecursion = document.createElement('div'); {
+        applyRecursion.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyRecursion, 'Apply recursion flags to all selected entries, overwriting their current values');
+        applyRecursion.addEventListener('click', async()=>{
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                const entryData = cache[bookName].entries[uid];
+                const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
+                let i = 0;
+                for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
+                    const checked = recursionCheckboxes.get(value).checked;
+                    entryData[value] = checked;
+                    if (domInputs[i]) domInputs[i].checked = checked;
+                    i++;
+                }
+                applyOrderHelperRecursionFilterToRow(tr, entryData);
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        recursionContainer.append(applyRecursion);
+    }
+
+    row.append(recursionContainer);
+
+    // ── Budget container ───────────────────────────────────────────────────
+    const budgetContainer = document.createElement('div');
+    budgetContainer.classList.add('stwid--bulkEditContainer');
+    budgetContainer.dataset.field = 'budget';
+
+    const budgetLabel = document.createElement('span');
+    budgetLabel.classList.add('stwid--bulkEditLabel');
+    budgetLabel.textContent = 'Budget';
+    const budgetLabelHint = document.createElement('i');
+    budgetLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(budgetLabelHint, 'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.');
+    budgetLabel.append(budgetLabelHint);
+    budgetContainer.append(budgetLabel);
+
+    let budgetIgnoreCheckbox;
+    const budgetOptions = document.createElement('div'); {
+        budgetOptions.classList.add('stwid--recursionOptions');
+        const row = document.createElement('label'); {
+            row.classList.add('stwid--recursionRow');
+            const input = document.createElement('input'); {
+                input.type = 'checkbox';
+                input.classList.add('checkbox');
+                setTooltip(input, 'Ignore World Info budget limit for this entry');
+                budgetIgnoreCheckbox = input;
+                row.append(input);
+            }
+            row.append('Ignore budget');
+            budgetOptions.append(row);
+        }
+        budgetContainer.append(budgetOptions);
+    }
+
+    const applyBudget = document.createElement('div'); {
+        applyBudget.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyBudget, 'Apply Ignore Budget to all selected entries, overwriting their current values');
+        applyBudget.addEventListener('click', async()=>{
+            const checked = budgetIgnoreCheckbox.checked;
+            const rows = [...dom.order.tbody.children];
+            const books = [];
+            for (const tr of rows) {
+                if (tr.classList.contains('stwid--isFiltered')) continue;
+                if (!isOrderHelperRowSelected(tr)) continue;
+                const bookName = tr.getAttribute('data-book');
+                const uid = tr.getAttribute('data-uid');
+                if (!books.includes(bookName)) books.push(bookName);
+                const entryData = cache[bookName].entries[uid];
+                entryData.ignoreBudget = checked;
+                const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
+                if (domInput) domInput.checked = checked;
+            }
+            for (const bookName of books) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        });
+        budgetContainer.append(applyBudget);
+    }
+
+    row.append(budgetContainer);
 
     // ── Probability container ──────────────────────────────────────────────
     const probabilityContainer = document.createElement('div');

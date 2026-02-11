@@ -165,6 +165,7 @@ const createOrderHelperRenderer = ({
             isOutletPosition,
             getOutletOptions,
             applyOrderHelperOutletFilterToRow,
+            applyOrderHelperRecursionFilterToRow,
         });
 
         const filterEl = buildFilterPanel({
