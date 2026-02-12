@@ -1,4 +1,5 @@
 {
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Bash(npm run lint)",
@@ -10,10 +11,11 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   },
-  "includeCoAuthoredBy": false,
   "hooks": {
     "PostToolUse": [
       {
