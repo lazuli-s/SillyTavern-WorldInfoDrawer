@@ -1,5 +1,6 @@
 import {
     MULTISELECT_DROPDOWN_CLOSE_HANDLER,
+    closeOpenMultiselectDropdownMenus,
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
@@ -795,28 +796,79 @@ export function buildBulkEditRow({
     outletLabel.append(outletLabelHint);
     outletContainer.append(outletLabel);
 
-    const outletDatalist = document.createElement('datalist');
-    outletDatalist.id = 'stwid--bulk-outlet-options';
-    for (const opt of getOutletOptions()) {
-        const option = document.createElement('option');
-        option.value = opt.value;
-        outletDatalist.append(option);
-    }
-    outletContainer.append(outletDatalist);
+    const outletDropdownWrap = document.createElement('div');
+    outletDropdownWrap.classList.add('stwid--multiselectDropdownWrap');
 
-    const outletInput = document.createElement('input'); {
-        outletInput.classList.add('stwid--input', 'text_pole');
-        outletInput.type = 'text';
-        outletInput.setAttribute('list', 'stwid--bulk-outlet-options');
-        outletInput.placeholder = '(none)';
-        setTooltip(outletInput, 'Outlet name to apply to selected entries');
-        const storedOutlet = localStorage.getItem('stwid--bulk-outlet-value');
-        if (storedOutlet !== null) outletInput.value = storedOutlet;
-        outletInput.addEventListener('change', ()=>{
-            localStorage.setItem('stwid--bulk-outlet-value', outletInput.value);
-        });
-        outletContainer.append(outletInput);
-    }
+    const outletInput = document.createElement('input');
+    outletInput.classList.add('stwid--input', 'text_pole');
+    outletInput.type = 'text';
+    outletInput.placeholder = '(none)';
+    setTooltip(outletInput, 'Outlet name to apply to selected entries');
+    const storedOutlet = localStorage.getItem('stwid--bulk-outlet-value');
+    if (storedOutlet !== null) outletInput.value = storedOutlet;
+
+    const outletMenu = document.createElement('div');
+    outletMenu.classList.add('stwid--multiselectDropdownMenu');
+
+    const buildOutletMenuOptions = ()=>{
+        outletMenu.innerHTML = '';
+        const filter = outletInput.value.toLowerCase();
+        const allOptions = getOutletOptions();
+        const visible = filter ? allOptions.filter((o)=>o.value.toLowerCase().includes(filter)) : allOptions;
+        for (const opt of visible) {
+            const optEl = document.createElement('div');
+            optEl.classList.add('stwid--multiselectDropdownOption');
+            optEl.textContent = opt.value;
+            if (opt.value === outletInput.value) optEl.classList.add('stwid--active');
+            optEl.addEventListener('mousedown', (e)=>{
+                e.preventDefault();
+                outletInput.value = opt.value;
+                localStorage.setItem('stwid--bulk-outlet-value', outletInput.value);
+                closeOutletMenu();
+            });
+            outletMenu.append(optEl);
+        }
+    };
+    const closeOutletMenu = ()=>{
+        if (!outletMenu.classList.contains('stwid--active')) return;
+        outletMenu.classList.remove('stwid--active');
+        document.removeEventListener('click', handleOutletOutsideClick);
+    };
+    const openOutletMenu = ()=>{
+        if (outletMenu.classList.contains('stwid--active')) return;
+        closeOpenMultiselectDropdownMenus(outletMenu);
+        outletMenu.classList.add('stwid--active');
+        document.addEventListener('click', handleOutletOutsideClick);
+    };
+    const handleOutletOutsideClick = (event)=>{
+        if (outletDropdownWrap.contains(event.target)) return;
+        closeOutletMenu();
+    };
+    outletMenu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeOutletMenu;
+    outletMenu.addEventListener('click', (event)=>event.stopPropagation());
+
+    outletInput.addEventListener('focus', ()=>{
+        buildOutletMenuOptions();
+        if (outletMenu.children.length > 0) openOutletMenu();
+    });
+    outletInput.addEventListener('input', ()=>{
+        buildOutletMenuOptions();
+        if (outletMenu.children.length === 0) closeOutletMenu();
+        else openOutletMenu();
+        localStorage.setItem('stwid--bulk-outlet-value', outletInput.value);
+    });
+    outletInput.addEventListener('change', ()=>{
+        localStorage.setItem('stwid--bulk-outlet-value', outletInput.value);
+    });
+    outletInput.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape') {
+            closeOutletMenu();
+            outletInput.blur();
+        }
+    });
+
+    outletDropdownWrap.append(outletInput, outletMenu);
+    outletContainer.append(outletDropdownWrap);
 
     const applyOutlet = document.createElement('div'); {
         applyOutlet.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');

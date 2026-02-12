@@ -1243,6 +1243,10 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 3.5em;
 }
 
+.stwid--orderHelper .stwid--bulkEditContainer[data-field="outlet"] .stwid--input {
+  width: 8em;
+}
+
 .stwid--orderHelper .stwid--columnVisibilityLabel {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);
