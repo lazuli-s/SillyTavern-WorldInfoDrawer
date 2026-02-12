@@ -347,7 +347,8 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   gap: 0.5em;
   padding: 0.35em 0;
   cursor: pointer;
-  background-color: color-mix(in srgb, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))) 78%, var(--SmartThemeBorderColor) 22%);
+  background-color: color-mix(in srgb, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))) 65%, var(--SmartThemeBorderColor) 35%);
+  backdrop-filter: saturate(150%) blur(8px);
   box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 65%, transparent), 0 1px 3px rgb(0 0 0 / 16%);
   transition: background-color 150ms ease, box-shadow 150ms ease;
   min-height: 2.2em;
@@ -361,6 +362,10 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder.stwid--isTarge
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon {
   color: var(--SmartThemeQuoteColor);
+}
+
+body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder:not(:has(.stwid--folderBooks.stwid--isCollapsed)) .stwid--folderIcon::before {
+  content: '\f07c';
 }
 
 body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderLabel {
