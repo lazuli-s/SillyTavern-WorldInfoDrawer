@@ -1245,6 +1245,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 
 .stwid--orderHelper .stwid--bulkEditContainer[data-field="outlet"] .stwid--input {
   width: 8em;
+  font-size: 0.85em;
 }
 
 .stwid--orderHelper .stwid--columnVisibilityLabel {
