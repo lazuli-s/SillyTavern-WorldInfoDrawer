@@ -1176,6 +1176,33 @@ body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folder
   color: var(--SmartThemeEmColor);
   opacity: 1;
   margin-bottom: 0.5em;
+  transition: margin-bottom 250ms ease;
+}
+
+.stwid--orderHelper .stwid--collapsed .stwid--RowTitle {
+  margin-bottom: 0;
+}
+
+.stwid--orderHelper .stwid--collapsibleTitle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.stwid--orderHelper .stwid--collapseChevron {
+  transition: transform 250ms ease;
+  font-size: 0.8em;
+}
+
+.stwid--orderHelper .stwid--collapsed .stwid--collapseChevron {
+  transform: rotate(-90deg);
+}
+
+.stwid--orderHelper .stwid--rowContentWrap {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: inherit;
+  transition: max-height 250ms ease;
 }
 
 .stwid--orderHelper .stwid--RowTitle::after {

@@ -96,6 +96,10 @@ export function buildVisibilityRow({
     const rowTitle = document.createElement('div');
     rowTitle.classList.add('stwid--RowTitle');
     rowTitle.textContent = 'Visibility';
+    const collapseChevron = document.createElement('i');
+    collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
+    rowTitle.prepend(collapseChevron);
+    rowTitle.classList.add('stwid--collapsibleTitle');
     row.append(rowTitle);
 
     // ── Key column visibility toggle ──────────────────────────────────────
@@ -418,6 +422,40 @@ export function buildVisibilityRow({
         activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
     };
 
+    // Gather all content after rowTitle into a collapsible wrapper
+    const contentWrap = document.createElement('div');
+    contentWrap.classList.add('stwid--rowContentWrap');
+    while (row.children.length > 1) {
+        contentWrap.append(row.children[1]); // row.children[0] is rowTitle
+    }
+    row.append(contentWrap);
+
+    // Wire collapse toggle
+    rowTitle.addEventListener('click', () => {
+        const isCollapsed = row.classList.contains('stwid--collapsed');
+        if (isCollapsed) {
+            // Expanding
+            row.classList.remove('stwid--collapsed');
+            contentWrap.style.overflow = 'hidden';
+            contentWrap.style.maxHeight = '1000px';
+            collapseChevron.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            contentWrap.addEventListener('transitionend', () => {
+                contentWrap.style.overflow = '';
+                contentWrap.style.maxHeight = '';
+            }, { once: true });
+        } else {
+            // Collapsing: close open dropdowns, then animate
+            closeOpenMultiselectDropdownMenus();
+            contentWrap.style.overflow = 'hidden';
+            contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
+            // Force reflow so the browser registers the pinned height before animating
+            void contentWrap.offsetHeight;
+            contentWrap.style.maxHeight = '0';
+            row.classList.add('stwid--collapsed');
+            collapseChevron.classList.replace('fa-chevron-down', 'fa-chevron-right');
+        }
+    });
+
     return { element: row, refresh };
 }
 
@@ -473,6 +511,10 @@ export function buildBulkEditRow({
     const rowTitle = document.createElement('div');
     rowTitle.classList.add('stwid--RowTitle');
     rowTitle.textContent = 'Bulk Editor';
+    const collapseChevron = document.createElement('i');
+    collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
+    rowTitle.prepend(collapseChevron);
+    rowTitle.classList.add('stwid--collapsibleTitle');
     row.append(rowTitle);
 
     // ── Select container ──────────────────────────────────────────────────
@@ -1423,6 +1465,40 @@ export function buildBulkEditRow({
     }
 
     row.append(bulkDelayContainer);
+
+    // Gather all content after rowTitle into a collapsible wrapper
+    const contentWrap = document.createElement('div');
+    contentWrap.classList.add('stwid--rowContentWrap');
+    while (row.children.length > 1) {
+        contentWrap.append(row.children[1]); // row.children[0] is rowTitle
+    }
+    row.append(contentWrap);
+
+    // Wire collapse toggle
+    rowTitle.addEventListener('click', () => {
+        const isCollapsed = row.classList.contains('stwid--collapsed');
+        if (isCollapsed) {
+            // Expanding
+            row.classList.remove('stwid--collapsed');
+            contentWrap.style.overflow = 'hidden';
+            contentWrap.style.maxHeight = '1000px';
+            collapseChevron.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            contentWrap.addEventListener('transitionend', () => {
+                contentWrap.style.overflow = '';
+                contentWrap.style.maxHeight = '';
+            }, { once: true });
+        } else {
+            // Collapsing: close open dropdowns, then animate
+            closeOpenMultiselectDropdownMenus();
+            contentWrap.style.overflow = 'hidden';
+            contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
+            // Force reflow so the browser registers the pinned height before animating
+            void contentWrap.offsetHeight;
+            contentWrap.style.maxHeight = '0';
+            row.classList.add('stwid--collapsed');
+            collapseChevron.classList.replace('fa-chevron-down', 'fa-chevron-right');
+        }
+    });
 
     return { element: row, refreshSelectionCount };
 }
