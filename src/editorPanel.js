@@ -206,8 +206,8 @@ export const initEditorPanel = ({
             dom.order.toggle.click();
         }
         entryDom.classList.add('stwid--active');
-        clearEditor({ resetCurrent: false });
-        appendUnfocusButton();
+        // Defer clearEditor until new content is ready — keeps the old entry visible
+        // during async fetches, eliminating the blank-state flash between entries.
 
         // The header template is relatively cheap, but still async; avoid awaiting it
         // if a newer click has already superseded this one.
@@ -217,9 +217,6 @@ export const initEditorPanel = ({
         const header = document.createRange()
             .createContextualFragment(headerTemplate)
             .querySelector('#WIEntryHeaderTitlesPC');
-        if (header) {
-            dom.editor.append(header);
-        }
 
         // getWorldEntry is the expensive step (template render + DOM construction).
         // Guard it so rapid clicking doesn't queue up wasted work.
@@ -234,7 +231,21 @@ export const initEditorPanel = ({
         }
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
+
+        // Swap atomically: clear old entry and fill with new in one synchronous block.
+        clearEditor({ resetCurrent: false });
+        appendUnfocusButton();
+        if (header) dom.editor.append(header);
         dom.editor.append(editDom);
+
+        // initScrollHeight runs inside getWorldEntry before the element is in the DOM,
+        // so scrollHeight is 0 and height correction does nothing. Fix heights now that
+        // the textareas are live in the document.
+        editDom.querySelectorAll('.keyprimarytextpole, .keysecondarytextpole').forEach(el => {
+            el.style.height = '0px';
+            el.style.height = `${el.scrollHeight + 3}px`;
+        });
+
         setCurrentEditor({ name, uid: entry.uid });
         // Editor DOM is now in sync with the underlying entry snapshot.
         markEditorClean(name, entry.uid);
