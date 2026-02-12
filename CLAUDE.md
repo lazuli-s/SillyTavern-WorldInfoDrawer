@@ -72,9 +72,7 @@ Main shared libs include:
 
 ## 5. Style Guide Compliance
 
-Before making any UI or CSS change, always consult:
-
-- `STYLE_GUIDE.md`
+Before making any UI or CSS change, always run the `style-guide` skill.
 
 Style guide requirements are mandatory:
 
