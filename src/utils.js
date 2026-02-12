@@ -57,9 +57,39 @@ const appendSortOptions = (select, currentSort, currentDirection)=>{
     }
 };
 
+let slashCommandParserCtor = null;
+const getSlashCommandParserCtor = async()=>{
+    if (slashCommandParserCtor) return slashCommandParserCtor;
+    const module = await import('../../../../slash-commands/SlashCommandParser.js');
+    slashCommandParserCtor = module.SlashCommandParser;
+    return slashCommandParserCtor;
+};
+
+const executeSlashCommand = async(command)=>{
+    try {
+        const SlashCommandParser = await getSlashCommandParserCtor();
+        const parser = new SlashCommandParser();
+        const closure = parser.parse(command);
+        await closure.execute();
+    } catch (error) {
+        console.error('Failed to execute slash command', error);
+    }
+};
+
+const getOutletPositionValue = ()=>document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
+
+const isOutletPosition = (position)=>{
+    const outletValue = getOutletPositionValue();
+    if (outletValue === undefined) return false;
+    return String(position) === String(outletValue);
+};
+
 export {
     appendSortOptions,
     createDeferred,
+    executeSlashCommand,
+    getOutletPositionValue,
     getSortLabel,
+    isOutletPosition,
     safeToSorted,
 };

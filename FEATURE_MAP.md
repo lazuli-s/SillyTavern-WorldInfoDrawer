@@ -4,27 +4,28 @@ Where each feature or behavior is implemented in the codebase.
 
 ## Bootstrap & runtime sync
 
-- Extension startup, drawer DOM bootstrap, and panel wiring → index.js
+- Extension startup/module composition → index.js
+- Drawer DOM bootstrap and panel wiring → src/drawer.js
 - List-panel slice composition/dependency wiring and exported list-panel API surface → src/listPanel.js
 - Dev CSS watch/reload via FilesPluginApi (when available) → index.js
-- Incremental cache updates after World Info changes (books and entries) → index.js
-- World Info update waiting/token coordination for async UI actions → index.js, src/utils.js
-- Book source-link detection (character/chat/persona), attribution metadata (character/persona names), and refresh triggers → index.js
-- Source-link refresh applying list visibility filters after map updates → index.js
+- Incremental cache updates after World Info changes (books and entries) → src/wiUpdateHandler.js
+- World Info update waiting/token coordination for async UI actions → src/wiUpdateHandler.js, src/utils.js
+- Book source-link detection (character/chat/persona), attribution metadata (character/persona names), and refresh triggers → src/bookSourceLinks.js
+- Source-link refresh applying list visibility filters after map updates → src/bookSourceLinks.js
 - Source-link icon rendering on book rows, including attribution tooltips/aria labels for character/persona links → src/listPanel.js
 - Jump-to-entry API (open book, scroll, focus editor) → index.js
-- Drawer keyboard handling for selected-entry delete → index.js
-- List/editor splitter drag resize + saved width → index.js
+- Drawer keyboard handling for selected-entry delete → src/drawer.js
+- List/editor splitter drag resize + saved width → src/drawer.js
 
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/listPanel.booksView.js
-- Top control row (new book, new folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders) → index.js, src/listPanel.js
+- Top control row (new book, new folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders) → src/drawer.js, src/listPanel.js
 - Book active toggle (global active status) → src/listPanel.booksView.js
-- Book collapse/expand and collapse-all behavior → src/listPanel.booksView.js, src/listPanel.js, index.js
+- Book collapse/expand and collapse-all behavior → src/listPanel.booksView.js, src/listPanel.js, src/drawer.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.booksView.js, src/listPanel.selectionDnD.js, src/listPanel.js
 - Book context menu actions (rename, move folder, duplicate, export, delete) → src/listPanel.bookMenu.js
-- Fill empty entry titles from keywords (book action) → index.js, src/listPanel.bookMenu.js
+- Fill empty entry titles from keywords (book action) → src/wiUpdateHandler.js, src/listPanel.bookMenu.js
 - Per-book sort preference menu + clear all preferences → src/listPanel.bookMenu.js, src/listPanel.js, src/sortHelpers.js
 
 ## Folder behavior
@@ -33,7 +34,7 @@ Where each feature or behavior is implemented in the codebase.
 - Folder registry persistence (`stwid--folder-registry`) → src/lorebookFolders.js
 - Folder DOM creation (header, count, active toggle, collapse toggle) → src/lorebookFolders.js
 - Folder collapse state persistence (`stwid--folder-collapse-states`) → src/listPanel.state.js
-- Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/listPanel.foldersView.js, src/listPanel.js, index.js
+- Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/listPanel.foldersView.js, src/listPanel.js, src/drawer.js
 - Folder visibility refresh while search/visibility filters are active → src/listPanel.foldersView.js
 - Folder active-toggle tri-state refresh based on currently visible books → src/listPanel.foldersView.js
 - Folder context menu actions (rename, import into folder, export folder, delete folder) → src/lorebookFolders.js
@@ -52,11 +53,11 @@ Where each feature or behavior is implemented in the codebase.
 ## Editor behavior
 
 - Entry editor render pipeline (template header + `getWorldEntry`) → src/editorPanel.js
-- Editor dirty tracking to prevent refresh from discarding unsaved edits → src/editorPanel.js, index.js
+- Editor dirty tracking to prevent refresh from discarding unsaved edits → src/editorPanel.js, src/wiUpdateHandler.js
 - Editor reset/clear and active-row highlight control → src/editorPanel.js
 - Focus/unfocus editor UI toggles → src/editorPanel.js
 - Global activation settings panel embedding/toggling (`#wiActivationSettings`) → src/editorPanel.js
-- Duplicate-entry button refresh queue/reopen behavior → index.js
+- Duplicate-entry button refresh queue/reopen behavior → src/wiUpdateHandler.js, src/drawer.js
 
 ## Selection & interaction
 
@@ -64,7 +65,7 @@ Where each feature or behavior is implemented in the codebase.
 - List panel state container for selection/drag/search/visibility/collapse locals + lifecycle resets/hydration → src/listPanel.state.js
 - Click select, toggle select, and Shift range select behavior → src/worldEntry.js
 - Selection visual state add/remove/clear helpers → src/listPanel.selectionDnD.js
-- Delete selected entries (Del key) with save/update propagation → index.js
+- Delete selected entries (Del key) with save/update propagation → src/drawer.js, src/wiUpdateHandler.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
 - Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
@@ -85,20 +86,20 @@ Where each feature or behavior is implemented in the codebase.
 - Folder collapse state storage → src/listPanel.state.js
 - Order Helper persisted state keys (`sort`, `hide-keys`, `columns`) → src/orderHelperState.js
 - Order Helper local state keys (`start`, `step`, `direction`, `filter`) → src/orderHelperRender.js
-- List panel width persistence (`stwid--list-width`) → index.js
+- List panel width persistence (`stwid--list-width`) → src/drawer.js
 
 ## Integration with SillyTavern
 
-- Core World Info API usage (load/save/create/delete book/entry) → index.js, src/listPanel.js, src/orderHelperRender.js
-- Event bus subscriptions (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`, context events) → index.js
-- Core template usage (`renderTemplateAsync`, `getWorldEntry`) → src/editorPanel.js, index.js
+- Core World Info API usage (load/save/create/delete book/entry) → src/drawer.js, src/wiUpdateHandler.js, src/listPanel.js, src/orderHelperRender.js
+- Event bus subscriptions (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`, context events) → src/wiUpdateHandler.js, src/bookSourceLinks.js
+- Core template usage (`renderTemplateAsync`, `getWorldEntry`) → src/editorPanel.js, src/drawer.js
 - Delegation to core World Info UI buttons for rename/delete/duplicate actions → src/listPanel.bookMenu.js, src/listPanel.coreBridge.js
 - Core WI DOM delegation helpers (`waitForDom`, `setSelectedBookInCoreUi`, `clickCoreUiAction`) and selector map ownership → src/listPanel.coreBridge.js
-- Optional extension/plugin menu integration (Bulk Edit, External Editor, STLO) → src/listPanel.bookMenu.js, index.js
+- Optional extension/plugin menu integration (Bulk Edit, External Editor, STLO) → src/listPanel.bookMenu.js, src/drawer.js
 
 ## Advanced tools (Order Helper)
 
-- Order Helper open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → index.js, src/orderHelper.js, src/listPanel.js, src/lorebookFolders.js
+- Order Helper open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → src/drawer.js, src/orderHelper.js, src/listPanel.js, src/lorebookFolders.js
 - Order Helper state creation (defaults + restored localStorage state) → src/orderHelperState.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/orderHelper.js
 - Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/orderHelperRender.actionBar.js, src/orderHelperRender.js

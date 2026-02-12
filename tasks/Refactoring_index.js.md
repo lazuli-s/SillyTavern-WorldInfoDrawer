@@ -1,5 +1,15 @@
 # Refactoring Plan: index.js
 
+## Implementation Checklist
+
+- [x] Phase 1: Added explicit structure through module boundaries and localized section ownership after extraction.
+- [x] Phase 2: Moved `executeSlashCommand`, `getOutletPositionValue`, and `isOutletPosition` to `src/utils.js`.
+- [x] Phase 3: Extracted source-link tracking into `src/bookSourceLinks.js`.
+- [x] Phase 4: Extracted World Info update handling into `src/wiUpdateHandler.js`.
+- [x] Phase 5: Moved drawer bootstrap (`dom` + `addDrawer`) into `src/drawer.js`.
+- [x] Phase 6: Reduced `index.js` to composition-root responsibilities and removed stale inline logic.
+- [x] Post-phase docs sync: updated `ARCHITECTURE.md` and `FEATURE_MAP.md` to reflect moved ownership.
+
 ## 1. Mental Model of the Current File
 
 ### What this file does
@@ -345,3 +355,52 @@ These things might look tempting but should NOT be done during this refactor:
 - [src/editorPanel.js](../../src/editorPanel.js) — shows what `isDirty`, `clearEditor` look like from the outside
 - [src/listPanel.bookMenu.js](../../src/listPanel.bookMenu.js) — confirms `fillEmptyTitlesWithKeywords` and `executeSlashCommand` are received via injection; call sites do not need to change
 - [src/sortHelpers.js](../../src/sortHelpers.js) — already defines `METADATA_NAMESPACE` / `METADATA_SORT_KEY`; Phase 4 should import from here rather than redefine
+
+## AFTER IMPLEMENTATION
+
+### What changed
+
+- `index.js`
+  - Became a composition root that initializes `bookSourceLinks`, `wiUpdateHandler`, and `drawer`.
+  - Kept `jumpToEntry` as the public API.
+- `src/bookSourceLinks.js` (new)
+  - Moved lorebook source-link detection/refresh logic and related event wiring.
+  - Added `cleanup()` for selector-change listener teardown.
+- `src/wiUpdateHandler.js` (new)
+  - Moved WORLDINFO update processing, deferred wait logic, duplicate-refresh queue, and fill-empty-title flow.
+  - Exposes the same runtime behavior via returned API methods/getters.
+- `src/drawer.js` (new)
+  - Moved `dom` and full drawer bootstrap (`addDrawer`) without changing button flows.
+  - Wires list/editor/order helper using injected APIs from extracted modules.
+- `src/utils.js`, `src/sortHelpers.js`
+  - Moved shared helper functions out of `index.js`.
+  - Exported metadata sort constants from `sortHelpers` for reuse.
+- `ARCHITECTURE.md`, `FEATURE_MAP.md`
+  - Updated ownership mapping to point to the new module boundaries.
+
+### Risks/What might break
+
+- Drawer bootstrap extraction (`src/drawer.js`):
+  - This touches top-level UI event wiring, so keyboard delete handling or splitter persistence could misfire.
+  - Order Helper open/close button state could desync if a reference was missed.
+- WI update extraction (`src/wiUpdateHandler.js`):
+  - This touches async update gating, so duplicate-refresh timing or add-book wait flows could regress.
+  - Entry update refresh guards might fail and cause unexpected editor refreshes.
+- Source-link extraction (`src/bookSourceLinks.js`):
+  - Source icons might not update on chat/character/persona switch if event wiring drifts.
+  - Book Visibility filters tied to source links could fail to reapply after link changes.
+
+### Manual checks
+
+- Create a new book from the drawer; confirm it appears and auto-scrolls into view.
+  - Success: new row is visible and expanded.
+- Edit an entry, then trigger a WORLDINFO update; confirm editor does not refresh while typing.
+  - Success: typed text stays intact.
+- Duplicate an entry from the editor; confirm list refreshes and editor reopens on the duplicate flow as before.
+  - Success: editor remains usable and points to the expected entry.
+- Switch chat/character/persona with linked lorebooks; confirm source-link icons update and visibility filters still work.
+  - Success: icons and filtered rows match active context.
+- Select multiple entries and press `Delete` while drawer is open.
+  - Success: selected entries are removed and selection is cleared.
+- Drag the list/editor splitter, reload, and verify width is restored.
+  - Success: list panel width persists across reload.

@@ -130,6 +130,8 @@ const getSortFromMetadata = (metadata)=>{
 
 export {
     cloneMetadata,
+    METADATA_NAMESPACE,
+    METADATA_SORT_KEY,
     getSortFromMetadata,
     sortEntries,
 };

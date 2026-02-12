@@ -3,10 +3,13 @@
 ## 1. Project Structure
 
 [Project Root]/
-|-- index.js                     # Extension entry point; bootstraps drawer UI and event wiring
+|-- index.js                     # Extension entry point; composes module initialization and public API
 |-- style.css                    # Extension styles
 |-- manifest.json                # SillyTavern extension manifest
 |-- src/
+|   |-- drawer.js                # Drawer UI bootstrap + DOM map + control wiring
+|   |-- bookSourceLinks.js       # Character/chat/persona lorebook source-link tracking
+|   |-- wiUpdateHandler.js       # WORLDINFO update engine (cache sync, waits, duplicate-refresh queue)
 |   |-- listPanel.js             # Left panel composition: books/folders/entries and menu orchestration
 |   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
 |   |-- listPanel.filterBar.js   # Filter/search/visibility slice for list panel
@@ -51,18 +54,36 @@
 
 - `index.js`
   - Watches CSS for local dev (via FilesPluginApi if installed)
-  - Bootstraps the drawer UI + DOM structure (`dom` object)
-  - Wires global events (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`)
-  - Manages the in-memory `cache` of books/entries and updates it incrementally
-  - Recomputes lorebook source links (chat/persona/character) and reapplies list visibility filters on source-link changes
-  - Connects list panel, editor panel, and order helper
+  - Owns shared runtime state (`cache`, `currentEditor`)
+  - Composes module initialization (`bookSourceLinks`, `wiUpdateHandler`, `drawer`)
+  - Exposes `jumpToEntry` as the public extension API
 
 #### Core modules (`/src`)
 
+- `drawer.js`
+  - Owns drawer DOM map (`dom`) and the full `addDrawer` bootstrap flow
+  - Wires top control row actions (new/import/refresh/sort/order helper/collapse toggles)
+  - Wires global drawer interactions:
+    - Delete-key handling for selected entries
+    - Splitter drag/resize + persistence
+    - Drawer/editor mutation observers
+  - Initializes and connects list panel, editor panel, and order helper
+
+- `bookSourceLinks.js`
+  - Owns lorebook source-link derivation (character/chat/persona + attribution names)
+  - Subscribes to context-change events and lorebook-selector DOM changes
+  - Updates list-panel source-link icons + reapplies active visibility filters
+
+- `wiUpdateHandler.js`
+  - Owns `WORLDINFO_UPDATED`/`WORLDINFO_SETTINGS_UPDATED` event handling
+  - Maintains incremental cache sync for books/entries
+  - Owns update-cycle wait primitives (`waitForWorldInfoUpdate*`)
+  - Owns duplicate-entry refresh queue worker and "fill empty titles from keywords"
+  - Provides shared save payload builder (`buildSavePayload`)
+
 - `listPanel.js`
   - Composes list panel slices and shared orchestration actions
-  - Wires slice dependency injection (`filterBar`, `selectionDnD`, `bookMenu`, `foldersView`, `booksView`) and returns the consolidated list-panel API surface used by `index.js`
-  - Control row: create book, create folder, import book, import folder, refresh, collapse/expand all books, collapse/expand all folders
+  - Wires slice dependency injection (`filterBar`, `selectionDnD`, `bookMenu`, `foldersView`, `booksView`) and returns the consolidated list-panel API surface used by `drawer.js` and `index.js` jump navigation
   - Owns source-link icon rendering helpers and sort/metadata orchestration helpers shared by slices
 
 - `listPanel.booksView.js`
@@ -114,7 +135,7 @@
 
 - `listPanel.selectionDnD.js`
   - Owns entry selection UI helpers (`selectAdd`, `selectRemove`, `selectEnd`)
-  - Owns selection state API (`getSelectionState`) used by `worldEntry.js` and `index.js`
+  - Owns selection state API (`getSelectionState`) used by `worldEntry.js` and `drawer.js`
   - Owns entry drag/drop move-copy persistence flow between books
   - Owns reusable drag/drop handlers for book, folder, and root drop targets
 
@@ -375,7 +396,7 @@ Code Quality Tools: ESLint (`eslint.config.js`), Stylelint (`.stylelintrc.json`)
 - Improve Order Helper filter UX (from README to-do).
 - Add lorebook tag system (classification/filtering/enable-disable by tag).
 - Resolve remaining CSS alignment issues.
-- Increase test coverage for high-coupling modules (`index.js`, `listPanel.js`, `orderHelperRender.js`) that currently rely heavily on host DOM and runtime APIs.
+- Increase test coverage for high-coupling modules (`src/drawer.js`, `listPanel.js`, `orderHelperRender.js`) that currently rely heavily on host DOM and runtime APIs.
 - Track SillyTavern upstream template/API changes to avoid selector drift and integration regressions.
 
 ## 10. Project Identification
