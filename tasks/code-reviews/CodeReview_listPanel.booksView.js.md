@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: listPanel.booksView.js
+# CODE REVIEW FINDINGS: `src/listPanel.booksView.js`
 
 Scope reviewed:
 - `src/listPanel.booksView.js`

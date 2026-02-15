@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: listPanel.filterBar.js
+# CODE REVIEW FINDINGS: `src/listPanel.filterBar.js`
 
 Scope reviewed:
 - `src/listPanel.filterBar.js` (primary)

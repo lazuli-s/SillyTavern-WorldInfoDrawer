@@ -468,24 +468,22 @@ saveSettingsDebounced();
 ### [#](#chat-metadata)Chat metadata
 
 To bind some data to a specific chat, you can use the 
-```
 
+```
 chatMetadata
-
 ```
+
  object from the 
-```
 
+```
 getContext()
-
 ```
+
  function. This object allows you to store arbitrary data associated with a chat, which can be useful for storing extension-specific state.
 
 To persist the metadata, use the 
 ```
-
 saveMetadata()
-
 ```
  function, which will save the metadata to the server.
 

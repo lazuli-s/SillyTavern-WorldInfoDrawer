@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: drawer.js
+# CODE REVIEW FINDINGS: `src/drawer.js`
 
 Scope reviewed:
 - `src/drawer.js`
@@ -51,6 +51,71 @@ Scope reviewed:
 - Why it’s safe to implement  
   The observable behavior remains: “creating a new book causes it to appear, expand, and center.” This only makes the timing deterministic and prevents null-deref crashes.
 
+- **Pros:**
+  - Clear anchor snippet and a plausible async/race failure mode tied to update-cycle primitives.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The anchor snippet matches the current implementation in `src/drawer.js` (the handler captures `getUpdateWIChangeStarted().promise` before the async popup + create flow, then awaits it).
+  - `src/wiUpdateHandler.js` explicitly documents that token-based waiting is needed because non-specific "started" promises can resolve from earlier cycles (`waitForWorldInfoUpdate()` captures `updateWIChangeToken` and waits for a strictly later cycle).
+
+- **Top risks:**
+  - The review is correct directionally, but it does not explicitly state the most important implementation detail: the wait must be registered *before* calling `createNewWorldInfo(...)` (otherwise the next update can be missed).
+  - The proposed guard `cache[finalName]?.dom?.root` is necessary, but if it fails the UX "center new book" step is silently skipped; consider minimal fallback (e.g., `await listPanelApi.refreshList()` in that specific failure case) — this is optional and may be scope creep if not careful.
+
+#### Technical Accuracy Audit
+
+> *"That “started” deferred is global and can resolve for an unrelated update cycle that began earlier (or even immediately if already resolved)"*
+
+- **Why it may be wrong/speculative:**
+  - It is not speculative: `updateWIChangeStarted` is a shared deferred in `src/wiUpdateHandler.js` and is re-created at the end of `updateWIChange()`. If an update cycle already started (or completed) prior to the click, the captured promise can resolve without correlating to the new-book creation cycle.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspecting `src/wiUpdateHandler.js`:
+  - `updateWIChangeStarted` is a single module-scoped deferred.
+  - `updateWIChange()` resolves it, then re-initializes it near the end: `updateWIChangeStarted = createDeferred();`
+
+> *"the code can attempt to access `cache[finalName].dom.root` before the new book is actually present in `cache`/DOM"*
+
+- **Why it may be wrong/speculative:**
+  - This is plausible because `cache` is extension-owned and is only populated for new books during the `updateWIChange` reconciliation loop (`added books` block). If the awaited update is unrelated, `cache[finalName]` can still be absent.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspecting `src/wiUpdateHandler.js` and `src/drawer.js`:
+  - New books are added in `updateWIChange()` by iterating `world_names` and calling `renderBook(...)` to create DOM + cache entries.
+  - `src/drawer.js` dereferences `cache[finalName].dom.root` without a null guard.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Sound and within correct module boundaries. `drawer.js` should wait using `wiHandlerApi.waitForWorldInfoUpdate()` rather than reinventing its own correlation logic.
+
+- **Behavioral change:**
+  - No intended behavior change; this should only reduce flakiness and prevent occasional null derefs.
+
+- **Ambiguity:**
+  - Single clear fix direction (token-based wait) — good.
+
+- **Proportionality:**
+  - Proportionate for Medium severity / Medium confidence.
+
+- **Checklist:**
+  - Mostly actionable. The first checklist item (“Identify whether ... can be already-resolved”) is redundant because the code already demonstrates this is possible; it can be replaced by an implementation step that ensures the wait is registered before creation:
+    - Example actionable step: “Create `const wait = wiHandlerApi.waitForWorldInfoUpdate();` before calling `createNewWorldInfo`, then `await wait` after.”
+
+- **Dependency integrity:**
+  - No cross-finding dependency required.
+
+- **Fix risk calibration:**
+  - Medium seems accurate: this touches update ordering assumptions but only for new-book creation.
+
+- **"Why it's safe" validity:**
+  - Adequately specific and behavior-preserving.
+
+- **Verdict:** Implementation plan needs revision 🟡  
+  The direction is correct, but the checklist should be tightened to specify the correct correlation pattern (register wait before calling create), and remove the redundant "investigate if resolved" step.
+
 ---
 
 ## F02: Drawer “reopen” MutationObserver can trigger a synthetic click that rebuilds the editor and discards unsaved typed input (Behavior Change Required)
@@ -94,6 +159,73 @@ Scope reviewed:
 
 - Why it’s safe to implement  
   In the non-dirty case, behavior remains unchanged (selection is restored). The only change is preventing silent loss of unsaved edits.
+
+- **Pros:**
+  - Correctly identifies a data-loss class issue and explicitly labels it as behavior-changing.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The MutationObserver exists and does a synthetic `.click()` on the current editor entry row when `#WorldInfo` becomes visible (`style` no longer includes `display: none;`).
+  - `editorPanelApi.openEntryEditor(...)` performs a full editor rebuild (it clears and re-renders the editor DOM), and it intentionally uses dirty tracking to avoid rebuilds in other contexts (`src/wiUpdateHandler.js` consults `editorPanelApi.isDirty(...)` before auto-refresh clicks).
+
+- **Top risks:**
+  - The review’s fix is ambiguous (“skip or prompt”). The workflow rules require a single least-behavior-change recommendation; prompting introduces user input flow and new UX complexity.
+  - It does not validate whether the existing editor DOM is actually preserved across hide/show; if ST fully re-mounts or clears the container, skipping the click might result in no editor content. (In current code, the observer watches `#WorldInfo` style changes, which suggests DOM remains, but this should be treated as an assumption.)
+
+#### Technical Accuracy Audit
+
+> *"That click path ultimately goes through `editorPanelApi.openEntryEditor(...)` and rebuilds editor DOM."*
+
+- **Why it may be wrong/speculative:**
+  - It assumes entry row click triggers openEntryEditor. This is consistent with this project’s architecture (entry clicks route to editor open), but the claim should be verified for this specific click path.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspection of `src/editorPanel.js`: `openEntryEditor(...)` clears editor and mounts new DOM (`clearEditor({ resetCurrent:false })` then appends header + edit DOM).
+
+> *"reopening can trigger a rebuild and discard in-progress text in the editor inputs"*
+
+- **Why it may be wrong/speculative:**
+  - This depends on two things:
+    1) whether the click is triggered when dirty, and
+    2) whether the dirty state implies unsaved text exists only in the DOM, not persisted.
+  - Both are plausible, but the review doesn't cite the `openEntryEditor` logic that marks clean early, which makes the risk more concrete.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspection of `src/editorPanel.js`:
+  - `openEntryEditor` calls `markEditorClean(name, entry.uid)` near the start.
+  - It later does `clearEditor({ resetCurrent:false })` before re-mounting. If the user’s typed text was not persisted to the payload, it is discarded.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Sound and within module boundaries: the observer lives in `drawer.js`, and it should respect the editor panel’s dirty-state contract.
+
+- **Behavioral change:**
+  - Correctly labeled as behavior change. Skipping the restore click when dirty changes reopen behavior.
+
+- **Ambiguity:**
+  - Needs tightening: choose one approach. Least behavioral change is:
+    - If dirty: do not trigger synthetic click (preserve existing DOM, preserving typed text).
+    - If not dirty: allow restore click.
+
+- **Proportionality:**
+  - Proportionate for High severity.
+
+- **Checklist:**
+  - Contains a decision step (“keep DOM as-is, or prompt”), which is ambiguous for an LLM implementation plan. Replace with a single explicit rule (skip when dirty).
+
+- **Dependency integrity:**
+  - Related to `drawer.js` F07 (also about dirty guards). The intended UX should be consistent across all “mode switches” that can clear/rebuild the editor. This dependency should be called out.
+
+- **Fix risk calibration:**
+  - Medium seems fair: changes selection-restore behavior.
+
+- **"Why it's safe" validity:**
+  - Mostly valid, but it should state what happens in dirty case (editor content will remain whatever it was before hide).
+
+- **Verdict:** Implementation plan needs revision 🟡  
+  Technically correct issue, but the fix plan must remove the “prompt vs skip” ambiguity and declare dependency/consistency with other dirty-guard findings (notably F07).
 
 ---
 
@@ -147,6 +279,62 @@ Scope reviewed:
 - Why it’s safe to implement  
   Intended behavior (“Delete removes currently selected entries in the current book”) remains the same; this only prevents selection changes from affecting an in-flight delete.
 
+- **Pros:**
+  - Strongly anchored to concrete `await` boundaries and destructive side effects; fix is small and localized.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The handler in `src/drawer.js` does read `selectionState.selectFrom` multiple times across `await` boundaries (`loadWorldInfo(...)`, `deleteWorldInfoEntry(...)`, `saveWorldInfo(...)`).
+  - `selectionState` is a mutable object returned by `listPanelApi.getSelectionState()`, so it can change due to other UI interactions during the async delete.
+
+- **Top risks:**
+  - The review slightly overstates “worst-case corruption risk”: `saveWorldInfo` is called with the loaded `srcBook` object, so even if the book name argument changes, the payload is still the loaded object. However, saving a book object under the wrong name could still be catastrophic depending on ST’s API implementation, so the risk remains non-trivial.
+  - The optional “abort if selection changes” introduces ambiguity; the least behavioral change is snapshot-only (do not abort mid-flight).
+
+#### Technical Accuracy Audit
+
+> *"partially delete one selection but save under another book name (worst-case corruption risk, depending on ST API behavior)"*
+
+- **Why it may be wrong/speculative:**
+  - The code loads the book object first (`srcBook = await loadWorldInfo(selectionState.selectFrom)`) and then mutates that object. If `selectFrom` changes after load but before save, the mutated object still corresponds to the original book. The "wrong name" save is the real hazard, not mismatched deletes within the object itself.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspection of `src/drawer.js`:
+  - `srcBook` is loaded once, then mutated, then passed to `saveWorldInfo(selectionState.selectFrom, srcBook, true)`.
+
+- **What needs to be done/inspected to successfully validate:**
+  - (Optional) Check ST `saveWorldInfo(name, data)` behavior to confirm it uses `name` as the file key; if so, saving with wrong `name` can overwrite another file. (This would be in vendor ST; not required for implementing the snapshot fix.)
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Sound, localized, and within module boundary (`drawer.js` owns this handler).
+
+- **Behavioral change:**
+  - Snapshot-only is behavior-preserving (it deletes what was selected at keypress time). Adding “abort if selection changes” is a behavioral change and should not be recommended unless clearly required.
+
+- **Ambiguity:**
+  - Needs tightening: remove the “optionally abort” branch from the implementation plan.
+
+- **Proportionality:**
+  - Proportionate for High severity.
+
+- **Checklist:**
+  - Actionable, though the “abort” step should be removed to keep one recommendation.
+
+- **Dependency integrity:**
+  - None.
+
+- **Fix risk calibration:**
+  - Low is accurate.
+
+- **"Why it's safe" validity:**
+  - Specific and verifiable.
+
+- **Verdict:** Implementation plan needs revision 🟡  
+  The fix is correct, but the plan should remove the optional behavior-changing “abort if selection changes” branch and stick to snapshotting as the sole recommendation.
+
 ---
 
 ## F04: Drawer-open detection for Delete relies on `elementFromPoint` at screen center, which is brittle with overlays/popups
@@ -194,6 +382,63 @@ Scope reviewed:
 
 - Why it’s safe to implement  
   Deleting selected entries while the drawer is genuinely open remains possible; only accidental trigger scenarios are reduced.
+
+- **Pros:**
+  - Identifies a brittle heuristic in a destructive hotkey path and suggests seeking a deterministic state signal.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The `elementFromPoint` gating exists exactly as described in `src/drawer.js`.
+  - Delete is a destructive action; gating correctness matters.
+
+- **Top risks:**
+  - The review’s stated primary failure (“false-positive allows delete while popup open”) is not well-evidenced. In many overlay designs, `elementFromPoint` will *prevent* delete (false-negative) because the overlay is not inside `.stwid--body`.
+  - The proposed fix is under-specified: it lists 3+ alternative signals and asks the implementer to pick one, which violates the “single recommendation” rule.
+
+#### Technical Accuracy Audit
+
+> *"a false-positive can allow Delete to run when the user is not meaningfully “in the drawer,” increasing accidental deletion risk."*
+
+- **Why it may be wrong/speculative:**
+  - With the current code, the risk might skew toward false negatives (Delete blocked when a popup is centered), which is safer for data integrity. A false positive would require the center element to be inside `.stwid--body` even though user focus is elsewhere — possible (e.g., popup not centered), but not demonstrated.
+
+- **Validation:** Needs extensive analysis ❌  
+  Confirming actual false-positive vs false-negative behavior requires inspecting how ST popups/toasts are layered in the DOM (likely vendor ST templates/CSS) and how `#WorldInfo` is shown/hidden in practice.
+
+- **What needs to be done/inspected to successfully validate:**
+  - Inspect ST popup DOM placement and overlay containers in the runtime:
+    - Are popups appended inside `#WorldInfo`, inside `.stwid--body`, or elsewhere (e.g., `document.body`)?
+  - Test in UI: open ST `Popup.show.input` while drawer open, press Delete, observe whether it triggers.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Good instinct (avoid heuristics for destructive hotkeys), but the plan should be narrowed.
+
+- **Behavioral change:**
+  - Changing hotkey gating is a behavioral change and should be acknowledged; it can impact users who rely on Delete while certain overlays are present.
+
+- **Ambiguity:**
+  - Too many alternative “signals” are listed. The plan must choose one smallest safe change.
+
+- **Proportionality:**
+  - For Medium severity / Medium confidence, a conservative minimal change is appropriate (e.g., additionally require `document.body.classList.contains('stwid--')` *and* `.stwid--body` exists, rather than a bigger refactor).
+
+- **Checklist:**
+  - Not fully actionable because it delegates the key choice to the implementer and implies manual verification.
+
+- **Dependency integrity:**
+  - Depends on F08/F05 to the extent that duplicate initialization could also make keydown handling unpredictable; however the gating problem exists even in single-init.
+
+- **Fix risk calibration:**
+  - Medium is reasonable.
+
+- **"Why it's safe" validity:**
+  - Vague (“only accidental trigger scenarios are reduced”) without specifying which ones.
+
+- **Verdict:** Implementation plan discarded 🔴  
+  The main impact claim is not evidence-backed and validation would require broader runtime investigation. The plan is also ambiguous (multiple alternative signals) and would require manual UI verification to choose correctly.
 
 ---
 
@@ -243,6 +488,66 @@ Scope reviewed:
 - Why it’s safe to implement  
   Observer-driven behavior remains; only duplicate observers from previous loads are prevented.
 
+- **Pros:**
+  - Identifies concrete leak sources and suggests the standard `.disconnect()` pattern.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `moSel` and `moDrawer` are created and observed, and there is no `.disconnect()` call in `src/drawer.js`.
+  - The only cleanup in `drawer.js` is a `beforeunload` handler that removes `keydown` listener and calls `bookSourceLinksApi.cleanup()`.
+
+- **Top risks:**
+  - The proposed cleanup path still only runs on `beforeunload`. If ST reloads extensions without full unload, the plan does not fully solve the stated problem unless there is an additional teardown hook.
+  - There is an undeclared dependency with F08 (singleton/teardown): preventing multiple inits is often the primary solution; disconnecting observers is secondary/defensive.
+
+#### Technical Accuracy Audit
+
+> *"If the extension is reinitialized without a full page unload ... old observers remain active."*
+
+- **Why it may be wrong/speculative:**
+  - This depends on ST extension lifecycle capabilities (in-place reload). The code’s own “best-effort cleanup” comment implies it is expected, but it's not proven in this repo.
+
+- **Validation:** Needs extensive analysis ❌  
+  Confirming re-init without page unload is possible requires either:
+  - reading ST extension loader behavior (vendor), or
+  - runtime testing in ST.
+
+- **What needs to be done/inspected to successfully validate:**
+  - Inspect how ST reloads extensions (if at all) and whether it re-imports ESM modules in the same page session.
+  - Reproduce by reloading the extension from ST UI/dev tools and observe whether `initDrawer()` runs multiple times.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Disconnecting observers is correct, but the plan must also address *when* teardown runs. Within current module boundaries, the most realistic fix is to combine:
+    - idempotent init (F08) to prevent duplicate observers, and
+    - defensive `.disconnect()` on page unload.
+
+- **Behavioral change:**
+  - None.
+
+- **Ambiguity:**
+  - Not ambiguous, but incomplete: it assumes a teardown hook exists.
+
+- **Proportionality:**
+  - Reasonable.
+
+- **Checklist:**
+  - Actionable as written, but should include the explicit limitation: this only helps for unload unless you also implement a re-init teardown mechanism.
+
+- **Dependency integrity:**
+  - Depends on F08; should be declared.
+
+- **Fix risk calibration:**
+  - Low seems correct for disconnecting on known teardown.
+
+- **"Why it's safe" validity:**
+  - Valid.
+
+- **Verdict:** Implementation plan discarded 🔴  
+  The plan relies on an unproven lifecycle (in-place reload without unload) and does not include a concrete, evidence-backed teardown trigger. This needs either (a) a verified ST lifecycle hook or (b) a redesigned idempotent init/teardown strategy (see F08) before being implementable safely.
+
 ---
 
 ## F06: Splitter drag lifecycle does not handle `pointercancel`, risking stuck listeners and inconsistent stored widths
@@ -290,6 +595,55 @@ Scope reviewed:
 - Why it’s safe to implement  
   Normal resizing behavior remains the same; this only improves robustness under interruption scenarios.
 
+- **Pros:**
+  - Concrete, low-risk robustness improvement with a clear failure mode and minimal code change.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Verified in `src/drawer.js`: listeners are attached to `window` for `pointermove`/`pointerup` only; there is no `pointercancel` handling.
+
+- **Top risks:**
+  - Minor: the code uses `setPointerCapture` on the splitter; `lostpointercapture` may be a more relevant event than `pointercancel` in some browsers. The review covers this (“optionally lostpointercapture”) which is good.
+
+#### Technical Accuracy Audit
+
+> *"If the pointer is canceled ... the cleanup may not run."*
+
+- **Why it may be wrong/speculative:**
+  - Not speculative; it is a standard pointer-event lifecycle concern.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspecting the code: cleanup only occurs in `onUp`, and only `pointerup` removes listeners and persists width.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Correct and stays within `drawer.js`.
+
+- **Behavioral change:**
+  - None intended.
+
+- **Ambiguity:**
+  - Minor optionality (`lostpointercapture`), but this is acceptable as an additive robustness measure.
+
+- **Proportionality:**
+  - Good (Low severity, low scope).
+
+- **Checklist:**
+  - Actionable.
+
+- **Dependency integrity:**
+  - None.
+
+- **Fix risk calibration:**
+  - Low is accurate.
+
+- **"Why it's safe" validity:**
+  - Specific and verifiable.
+
+- **Verdict:** Ready to implement 🟢
+
 ---
 
 ## F07: Toggling Activation Settings / Order Helper can clear the entry editor without any dirty-state guard (Behavior Change Required)
@@ -334,6 +688,60 @@ Scope reviewed:
 
 - Why it’s safe to implement  
   When the editor is not dirty, behavior remains unchanged. The only behavior change is preventing silent loss of unsaved edits.
+
+- **Pros:**
+  - Correctly connects the issue to the established dirty-tracking contract and highlights user-facing data loss risk.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Verified in `src/editorPanel.js`: `toggleActivationSettings()` clears editor DOM and resets dirty state (`clearEditor({ resetCurrent:false })` and `isEditorDirty = false`), which would discard any unsaved text that only exists in DOM.
+  - Verified in `src/drawer.js`: activation gear calls `toggleActivationSettings()` without consulting dirty state; order helper close path explicitly calls `editorPanelApi.clearEditor()`.
+
+- **Top risks:**
+  - The proposed fix is ambiguous (prompt vs refuse). Per rules, the plan should pick the least-behavior-change option and stick to it.
+  - This finding overlaps with F02 (drawer reopen) — if implemented inconsistently, users could still lose edits through a different path.
+
+#### Technical Accuracy Audit
+
+> *"both paths clear editor content"*
+
+- **Why it may be wrong/speculative:**
+  - For activation settings, yes: it clears editor and mounts activation block.
+  - For order helper, `drawer.js` close path calls `clearEditor()`; open path calls `openOrderHelper(...)` which likely also affects editor. The review doesn’t cite order helper implementation details; however the explicit `clearEditor()` call on close is enough to justify the data loss risk.
+
+- **Validation:** Validated ✅  
+  Confirmed by inspection of `src/drawer.js` and `src/editorPanel.js`.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - Sound: these are mode switches owned by `drawer.js` and should honor `editorPanelApi.isDirty(...)`.
+
+- **Behavioral change:**
+  - Correctly labeled. Blocking the toggle while dirty is behavior change.
+
+- **Ambiguity:**
+  - Needs revision: choose one strategy. Least complex / least scope is:
+    - If dirty: do nothing (optionally show a toast) rather than adding a new confirmation UI flow.
+
+- **Proportionality:**
+  - Proportionate for High severity.
+
+- **Checklist:**
+  - Actionable but includes a “decide UX” step that is ambiguous.
+
+- **Dependency integrity:**
+  - Depends on consistent dirty-guard behavior in F02 as well; should be declared.
+
+- **Fix risk calibration:**
+  - Medium is fair.
+
+- **"Why it's safe" validity:**
+  - Good for non-dirty case; it should explicitly state the dirty-case behavior (toggle is ignored).
+
+- **Verdict:** Implementation plan needs revision 🟡  
+  The issue is correct and important, but the fix plan must select one behavior (skip toggle when dirty) and avoid introducing a prompt/confirmation flow unless explicitly required.
 
 ---
 
@@ -380,3 +788,70 @@ Scope reviewed:
 
 - Why it’s safe to implement  
   In normal use (single init), behavior remains unchanged. This only prevents duplicate initialization side effects in reload/hot-reload scenarios.
+
+- **Pros:**
+  - Correctly flags a common extension-reload failure mode and ties it to concrete duplicated side effects (keydown, observers, duplicated DOM).
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Verified in `src/drawer.js`: `addDrawer()` is defined and immediately invoked without any "already initialized" check.
+  - The code registers global listeners (`document.addEventListener('keydown', ...)`) and creates MutationObservers each time `addDrawer()` runs.
+
+- **Top risks:**
+  - The proposed fix is ambiguous (skip init vs teardown+reinit). Skipping init can break consumers because `initDrawer()` expects to initialize and then return live `listPanelApi/editorPanelApi` references; if you early-return, you may return undefined APIs or leave other modules in an inconsistent state.
+  - The finding assumes `initDrawer()` can be called multiple times in one session; while plausible, it is not proven in this repo without checking ST extension loader behavior.
+
+#### Technical Accuracy Audit
+
+> *"In reload scenarios ... this can lead to multiple `.stwid--body` instances ... multiple `keydown` listeners ... observers"*
+
+- **Why it may be wrong/speculative:**
+  - The duplication is accurate *if* the module is re-executed. The missing piece is whether ST actually reloads ESM extensions in-place.
+
+- **Validation:** Needs extensive analysis ❌  
+  Requires either:
+  - inspecting ST extension loader/reload behavior (vendor), or
+  - runtime reproduction.
+
+- **What needs to be done/inspected to successfully validate:**
+  - Confirm if ST has a “reload extension” path that re-imports the module in the same page.
+  - If yes, validate whether previous module instances remain alive (which would keep listeners/observers active).
+
+#### Fix Quality Audit
+
+- **Direction:**
+  - The direction “make init idempotent” is good, but it must be implemented in a way that does not break `initDrawer` consumers.
+
+- **Behavioral change:**
+  - None intended in normal runtime.
+
+- **Ambiguity:**
+  - Too ambiguous. The plan must choose one approach, and "skip init" is likely not viable without also providing a way to retrieve existing API handles.
+
+- **Proportionality:**
+  - Reasonable for Medium severity but high complexity if done fully.
+
+- **Checklist:**
+  - The checklist lacks the key missing step: define a concrete teardown hook (or an idempotent singleton registry on `globalThis`) so repeated inits can either:
+    - return existing handles, or
+    - tear down prior instance cleanly.
+
+- **Dependency integrity:**
+  - Overlaps with F05 (observer teardown) and with global listener duplication in other modules; should be declared.
+
+- **Fix risk calibration:**
+  - “Low” is likely under-rated because implementing correct teardown/idempotence touches many global hooks and must avoid leaving ST DOM in a broken state.
+
+- **"Why it's safe" validity:**
+  - Too generic; does not specify how idempotence is achieved without breaking init state.
+
+- **Verdict:** Implementation plan discarded 🔴  
+  Requires a concrete, evidence-backed lifecycle model (does ST reload extensions in-place?) and a defined strategy (singleton registry vs teardown+reinit). As written, it is too ambiguous and risks breaking `initDrawer()` consumers if implemented as a simple early-return.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified.
+- **Severity calibration:** F04 and F05/F08 are lifecycle-dependent; their severities/confidence should be explicitly tied to whether in-place extension reload occurs in the target ST environment.

@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: index.js
+# CODE REVIEW FINDINGS: `index.js`
 
 Scope reviewed:
 - `index.js`

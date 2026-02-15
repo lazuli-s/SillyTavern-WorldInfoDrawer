@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: listPanel.foldersView.js
+# CODE REVIEW FINDINGS: `src/listPanel.foldersView.js`
 
 Scope reviewed:
 - `src/listPanel.foldersView.js` (primary)

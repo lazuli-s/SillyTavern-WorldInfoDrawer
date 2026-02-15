@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: editorPanel.js
+# CODE REVIEW FINDINGS: `src/editorPanel.js`
 
 Scope reviewed:
 - `src/editorPanel.js`

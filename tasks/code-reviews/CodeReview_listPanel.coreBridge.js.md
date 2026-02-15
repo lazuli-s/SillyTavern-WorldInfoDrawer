@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: listPanel.coreBridge.js
+# CODE REVIEW FINDINGS: `src/listPanel.coreBridge.js`
 
 Scope reviewed:
 - `src/listPanel.coreBridge.js` (primary)

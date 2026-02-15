@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: src/listPanel.js
+# CODE REVIEW FINDINGS: `src/listPanel.js`
 
 ## F01: Race: `setBookSortPreference()` can crash or reorder stale DOM after an awaited save
 - Location:  
