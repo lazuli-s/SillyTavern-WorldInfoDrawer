@@ -415,25 +415,37 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added subscription tracking and removed `eventSource` listeners during cleanup to prevent duplicate refreshes on re-init.
+    - Manual checks:
+      - [ ] Reload / re-init the extension UI twice, then change chat; confirm source-icon debug logs fire only once per event.
 
 - **F02** — `getBookSourceLinks()` fallback returns a different object shape than normal entries
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Impact/severity rationale is overstated; at least one current caller normalizes missing fields, so validate other call sites and adjust severity/justification accordingly.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Updated `EMPTY_BOOK_SOURCE_LINKS` to a full-shape fallback so `getBookSourceLinks()` always returns a consistent object shape.
+    - Manual checks:
+      - [ ] Open the World Info drawer and verify book source icons + tooltips still render correctly for books with no chat/persona/character linkage.
 
 - **F03** — Signature computation uses full `JSON.stringify(nextLinks)` (unnecessary churn + ordering sensitivity)
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Performance/ordering instability claims are plausible but unproven; revise toward a minimal, lower-risk stabilization (e.g., canonicalize `characterNames` ordering) and avoid over-scoped signature refactor.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Sorted `characterNames` to reduce signature churn without changing the overall signature mechanism.
+    - Manual checks:
+      - [ ] Join a group chat with multiple characters linked to the same book; confirm the tooltip lists the same names (now in stable order) and source icons still update on character/group changes.
 
 - **F04** — Direct imports from internal ST modules increase upstream breakage risk (prefer `getContext()` where possible)
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Must include an explicit compatibility policy (minimum supported ST version) or a context-first fallback strategy; otherwise refactor can introduce host-version breakages.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Switched to context-first ST state access with fallback to existing direct imports for compatibility across host versions.
+    - Manual checks:
+      - [ ] Load the extension on your target ST version and verify source icons update when switching chats and when selecting a persona lorebook (no console errors).
 
 ---
 

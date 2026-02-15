@@ -5,10 +5,13 @@ import { getCharaFilename } from '../../../../utils.js';
 import { METADATA_KEY, world_info, world_names } from '../../../../world-info.js';
 
 const SOURCE_ICON_LOG_PREFIX = '[STWID][SOURCE_ICONS]';
+const EMPTY_STRING_ARRAY = Object.freeze([]);
 const EMPTY_BOOK_SOURCE_LINKS = Object.freeze({
     character: false,
     chat: false,
     persona: false,
+    characterNames: EMPTY_STRING_ARRAY,
+    personaName: '',
 });
 
 const addCharacterLinkedBooks = (target, character, fallbackCharacterId = null)=>{
@@ -45,11 +48,11 @@ const addCharacterLinkedBooks = (target, character, fallbackCharacterId = null)=
     }
 };
 
-const getActivePersonaName = ()=>{
-    const personaMap = power_user?.personas;
+const getActivePersonaName = ({ powerUserSettings, chatMetadata, fallbackName })=>{
+    const personaMap = powerUserSettings?.personas;
     if (!personaMap || typeof personaMap !== 'object') return '';
 
-    const lockedPersonaAvatar = chat_metadata?.persona;
+    const lockedPersonaAvatar = chatMetadata?.persona;
     if (typeof lockedPersonaAvatar === 'string' && lockedPersonaAvatar) {
         const lockedPersonaName = personaMap[lockedPersonaAvatar];
         if (typeof lockedPersonaName === 'string' && lockedPersonaName.trim()) {
@@ -57,9 +60,9 @@ const getActivePersonaName = ()=>{
         }
     }
 
-    const currentLorebook = power_user?.persona_description_lorebook;
+    const currentLorebook = powerUserSettings?.persona_description_lorebook;
     if (typeof currentLorebook === 'string' && currentLorebook) {
-        const descriptors = power_user?.persona_descriptions;
+        const descriptors = powerUserSettings?.persona_descriptions;
         if (descriptors && typeof descriptors === 'object') {
             for (const [avatar, descriptor] of Object.entries(descriptors)) {
                 if (descriptor?.lorebook !== currentLorebook) continue;
@@ -71,8 +74,8 @@ const getActivePersonaName = ()=>{
         }
     }
 
-    if (typeof name1 === 'string' && name1.trim()) {
-        return name1.trim();
+    if (typeof fallbackName === 'string' && fallbackName.trim()) {
+        return fallbackName.trim();
     }
     return '';
 };
@@ -80,6 +83,21 @@ const getActivePersonaName = ()=>{
 export const initBookSourceLinks = ({ getListPanelApi })=>{
     let lorebookSourceLinks = {};
     let lorebookSourceLinksSignature = '';
+
+    // Context-first with fallback for compatibility: some older ST versions may not expose getContext or all fields.
+    const ctx = globalThis.SillyTavern?.getContext?.() ?? null;
+
+    const chatMetadata = ctx?.chatMetadata ?? chat_metadata;
+    const runtimeCharacters = ctx?.characters ?? characters;
+    const runtimeEventSource = ctx?.eventSource ?? eventSource;
+    const runtimeEventTypes = ctx?.eventTypes ?? event_types;
+    const runtimeName1 = ctx?.name1 ?? name1;
+    const runtimeCharacterId = ctx?.characterId ?? this_chid;
+    const runtimeGroups = ctx?.groups ?? groups;
+    const runtimeGroupId = ctx?.groupId ?? selected_group;
+    const powerUserSettings = ctx?.powerUserSettings ?? power_user;
+
+    const eventSubscriptions = [];
 
     const buildLorebookSourceLinks = ()=>{
         /**@type {{[book:string]:{character:boolean,chat:boolean,persona:boolean,characterNames:string[],personaName:string}}} */
@@ -93,36 +111,38 @@ export const initBookSourceLinks = ({ getListPanelApi })=>{
             };
         }
 
-        const chatWorld = chat_metadata?.[METADATA_KEY];
+        const chatWorld = chatMetadata?.[METADATA_KEY];
         if (typeof chatWorld === 'string' && linksByBook[chatWorld]) {
             linksByBook[chatWorld].chat = true;
         }
 
-        const personaWorld = power_user?.persona_description_lorebook;
+        const personaWorld = powerUserSettings?.persona_description_lorebook;
         if (typeof personaWorld === 'string' && linksByBook[personaWorld]) {
             linksByBook[personaWorld].persona = true;
-            const activePersonaName = getActivePersonaName();
+            const activePersonaName = getActivePersonaName({ powerUserSettings, chatMetadata, fallbackName: runtimeName1 });
             if (activePersonaName) {
                 linksByBook[personaWorld].personaName = activePersonaName;
             }
         }
 
         const characterBooks = new Map();
-        if (selected_group) {
-            const activeGroup = groups.find((group)=>group?.id == selected_group);
+        if (runtimeGroupId !== undefined && runtimeGroupId !== null) {
+            const activeGroup = runtimeGroups.find((group)=>group?.id == runtimeGroupId);
             const members = Array.isArray(activeGroup?.members) ? activeGroup.members : [];
             for (const member of members) {
-                const character = characters.find((it)=>it?.avatar === member || it?.name === member);
+                const character = runtimeCharacters.find((it)=>it?.avatar === member || it?.name === member);
                 addCharacterLinkedBooks(characterBooks, character);
             }
-        } else if (this_chid !== undefined && this_chid !== null && characters[this_chid]) {
-            addCharacterLinkedBooks(characterBooks, characters[this_chid], this_chid);
+        } else if (runtimeCharacterId !== undefined && runtimeCharacterId !== null && runtimeCharacters[runtimeCharacterId]) {
+            addCharacterLinkedBooks(characterBooks, runtimeCharacters[runtimeCharacterId], runtimeCharacterId);
         }
 
         for (const [worldName, characterNameSet] of characterBooks.entries()) {
             if (!linksByBook[worldName]) continue;
             linksByBook[worldName].character = true;
-            linksByBook[worldName].characterNames = [...characterNameSet];
+
+            // Canonicalize ordering to avoid churn in signature comparisons.
+            linksByBook[worldName].characterNames = Array.from(characterNameSet).sort((a, b)=>a.localeCompare(b));
         }
 
         return linksByBook;
@@ -158,19 +178,27 @@ export const initBookSourceLinks = ({ getListPanelApi })=>{
         refreshBookSourceLinks('lorebook_source_selector_change');
     };
 
-    for (const eventType of [
-        event_types.CHAT_CHANGED,
-        event_types.GROUP_UPDATED,
-        event_types.CHARACTER_EDITED,
-        event_types.CHARACTER_PAGE_LOADED,
-        event_types.SETTINGS_UPDATED,
-    ]) {
-        eventSource.on(eventType, ()=>refreshBookSourceLinks(eventType));
+    const subscribedEventTypes = [
+        runtimeEventTypes?.CHAT_CHANGED,
+        runtimeEventTypes?.GROUP_UPDATED,
+        runtimeEventTypes?.CHARACTER_EDITED,
+        runtimeEventTypes?.CHARACTER_PAGE_LOADED,
+        runtimeEventTypes?.SETTINGS_UPDATED,
+    ].filter(Boolean);
+
+    for (const eventType of subscribedEventTypes) {
+        const handler = ()=>refreshBookSourceLinks(eventType);
+        eventSubscriptions.push({ eventType, handler });
+        runtimeEventSource.on(eventType, handler);
     }
     document.addEventListener('change', onSourceSelectorChange);
 
     return {
         cleanup: ()=>{
+            for (const { eventType, handler } of eventSubscriptions) {
+                runtimeEventSource?.removeListener?.(eventType, handler);
+            }
+            eventSubscriptions.length = 0;
             document.removeEventListener('change', onSourceSelectorChange);
         },
         getBookSourceLinks: (name)=>lorebookSourceLinks[name] ?? EMPTY_BOOK_SOURCE_LINKS,

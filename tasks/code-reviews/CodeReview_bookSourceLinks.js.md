@@ -125,6 +125,26 @@
 
 - **Verdict:** Ready to implement 🟢
 
+### Final Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Introduce a local `eventSubscriptions` array in `initBookSourceLinks`.
+- [ ] Replace inline `()=>refreshBookSourceLinks(eventType)` with named handler functions stored in `eventSubscriptions`.
+- [ ] Extend `cleanup()` to remove each `eventSource` listener via `removeListener`.
+- [ ] Leave the `document` listener removal in place.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Added `eventSubscriptions` to retain handler references for `eventSource.on(...)` registrations.
+  - `cleanup()` now unsubscribes each registered `eventSource` handler via `removeListener(...)`, preventing duplicate refresh work on re-init.
+
+- Risks / Side effects
+  - If the host `eventSource` implementation doesn’t support `removeListener`, unsubscribing may no-op (probability: ⭕)
+      - Manual check: Reload / re-init the extension UI twice, then change chat; confirm source-icon debug logs fire only once per event.
+
 ---
 
 ## F02: `getBookSourceLinks()` fallback returns a different object shape than normal entries
@@ -246,6 +266,28 @@
 - **Verdict:** Implementation plan needs revision 🟡
   The fix is fine, but the finding’s impact/severity rationale should be corrected to match actual caller behavior (no-throw due to normalization), and the validation step should explicitly confirm other call sites.
 
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Impact/severity rationale is overstated; at least one current caller normalizes missing fields, so validate other call sites and adjust severity/justification accordingly.
+> Revisions applied: Added an explicit “validate call sites” step and tightened the fix scope to contract-shape only (no behavioral/severity changes beyond adding missing default fields).
+
+- [ ] Search for all consumers of `getBookSourceLinks()` and confirm none directly dereference `links.characterNames` / `links.personaName` without guards.
+- [ ] Update `EMPTY_BOOK_SOURCE_LINKS` to include `characterNames: []` and `personaName: ''` (same shape as normal entries).
+- [ ] Ensure `EMPTY_BOOK_SOURCE_LINKS.characterNames` is not accidentally mutable shared state (use a frozen empty array or always override per-book arrays).
+- [ ] Confirm `buildLorebookSourceLinks()` continues to assign **fresh** `characterNames: []` and `personaName: ''` per book entry (not the shared fallback).
+- [ ] Keep `Object.freeze(...)` on the shared default.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Updated `EMPTY_BOOK_SOURCE_LINKS` to a full-shape default (includes `characterNames` and `personaName`) so `getBookSourceLinks()` always returns a consistent object shape.
+
+- Risks / Side effects
+  - Some code may have been (incorrectly) using presence/absence of `characterNames` to detect “no data”; that code will now see an empty array instead (probability: ⭕)
+      - Manual check: Open the World Info drawer and verify book source icons + tooltips still render correctly for books with no chat/persona/character linkage.
+
 ---
 
 ## F03: Signature computation uses full `JSON.stringify(nextLinks)` (unnecessary churn + ordering sensitivity)
@@ -359,6 +401,26 @@
 
 - **Verdict:** Implementation plan needs revision 🟡
   Revise toward a minimal change (canonicalize `characterNames` ordering and/or canonicalize only the unstable parts) and add a crisp definition of “render-relevant fields” if a custom signature is kept.
+
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Performance/ordering instability claims are plausible but unproven; revise toward a minimal, lower-risk stabilization (e.g., canonicalize `characterNames` ordering) and avoid over-scoped signature refactor.
+> Revisions applied: Dropped the custom signature builder; instead canonicalize the only known order-sensitive field (`characterNames`) before computing the existing `JSON.stringify` signature.
+
+- [ ] When converting `characterNameSet` → array, sort the resulting `characterNames` (stable lexical order).
+- [ ] Keep the existing `JSON.stringify(nextLinks)` signature approach (no changes to which fields are signed).
+- [ ] Confirm that no other fields with non-deterministic ordering are introduced into the signed object in this module.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Canonicalized `characterNames` ordering (`Array.from(set).sort(...)`) to reduce “signature changed” churn when the underlying set contents are the same.
+
+- Risks / Side effects
+  - Character-name tooltip ordering may change (now sorted) (probability: ⭕)
+      - Manual check: Join a group chat with multiple characters linked to the same book; confirm the tooltip lists the same names, just in a stable order, and source icons still update on character/group changes.
 
 ---
 
@@ -484,6 +546,28 @@
 
 - **Verdict:** Implementation plan needs revision 🟡
   The plan must include a compatibility decision (minimum ST version or context-first fallback), otherwise the refactor can introduce host-version breakages.
+
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Must include an explicit compatibility policy (minimum supported ST version) or a context-first fallback strategy; otherwise refactor can introduce host-version breakages.
+> Revisions applied: Implement a context-first strategy **with fallback to existing direct imports** (no minimum-version policy required), and add an inline comment documenting the fallback intent.
+
+- [ ] Add a safe “context-first” accessor (use `globalThis.SillyTavern?.getContext?.()` when available).
+- [ ] Prefer `ctx.*` values when present, but fall back to current direct imports for compatibility.
+- [ ] Keep direct imports for values not exposed via `getContext()` (e.g., `world_names`, `world_info`, `METADATA_KEY`, `getCharaFilename`) and document the exception/fallback in a short inline comment.
+- [ ] Ensure event subscription/cleanup uses the same `eventSource` instance (context or fallback) so `removeListener` actually works.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Switched to a context-first strategy (`globalThis.SillyTavern?.getContext?.()`) for ST state access, with fallback to existing direct imports for older hosts.
+  - Ensured the same runtime `eventSource` instance is used for both `.on(...)` and `.removeListener(...)`.
+
+- Risks / Side effects
+  - If a host provides a partial/legacy context object, the field mapping may differ from expectations (probability: ❗)
+      - Manual check: Load the extension on your target ST version and verify source icons update when switching chats and when selecting a persona lorebook (no console errors).
 
 ---
 
