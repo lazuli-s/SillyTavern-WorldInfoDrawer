@@ -72,6 +72,12 @@ Iteratively process `tasks/code-reviews/QUEUE_IMPLEMENTATION.md` "Files Pending 
 
 For **each** finding with verdict 🟢 or 🟡 (skip 🔴 immediately — see below), determine whether it is **still present** or **already fixed**:
 
+### Check the implementation changelog
+
+- Use `read_file` on `tasks/code-reviews/CODE_REVIEW_CHANGELOG.md`.
+- Scan for any recent entry (within the last few dated sections) that references `TARGET_SOURCE_FILE`.
+- If a matching entry is found: mark the finding as **Already Fixed (changelog)** and record the evidence (e.g. "logged in changelog entry dated February 15, 2026 — pointercancel added to splitter drag"). Then verify via source code (step below) before finalizing the "Already Fixed" status.
+
 ### Verify in source code
 
 - Using the **Location** anchor snippet from the finding, confirm whether the defective code pattern still exists in the current source file read in Step 3.
@@ -86,7 +92,7 @@ After Step 4, each finding has one of these statuses:
 |---|---|
 | **Skip 🔴** | Verdict is 🔴 in tracker |
 | **Skip 🚩** | Meta-review contains a `🚩 Requires user input` flag |
-| **Already Fixed** | `Implemented: ✔` in tracker, OR defect absent from source |
+| **Already Fixed** | `Implemented: ✅` in tracker, OR defect absent from source |
 | **Ready 🟢** | Verdict 🟢, defect still present |
 | **Revised 🟡** | Verdict 🟡, defect still present — checklist must be auto-revised |
 
@@ -222,7 +228,7 @@ After all findings are processed, use `replace_in_file` to update the `REVIEW_TR
 For each finding:
 
 1. Set `Implemented:` to:
-    - `✔` — if the finding was successfully implemented
+    - `✅` — if the finding was successfully implemented
     - `❌ Already fixed` — if the defect was no longer present in source
     - `❌ Skipped (🔴 discarded)` — if verdict was 🔴
     - `❌ Skipped (🚩 requires user input)` — if a 🚩 flag was present
@@ -231,6 +237,18 @@ For each finding:
     - `Implementation Notes: Added pointercancel to drag cleanup handler in splitter drag lifecycle.`
     - `Implementation Notes: Already fixed — guard present at line 42 of current source.`
     - `Implementation Notes: Skipped — plan discarded; requires confirmed lifecycle hook for teardown.`
+
+3. If the finding was **implemented** (✅) and the `### Implementation Notes` section contains a `Risks / Side effects` block with `Manual check:` items, add a `Manual checks:` sub-bullet after `Implementation Notes:` listing each check as an unchecked checkbox. Example:
+
+    ```markdown
+    - Implemented: ✅
+      - Implementation Notes: Added pointercancel to splitter drag cleanup.
+      - Manual checks:
+        - [ ] Drag the splitter, then release the pointer outside the window; confirm no console errors and width is saved.
+        - [ ] Rapidly drag and release; confirm the panel does not get stuck.
+    ```
+
+    Omit the `Manual checks:` sub-bullet entirely for skipped or already-fixed findings.
 
 Do **not** modify the `Meta-reviewed` or `Verdict` or `Reason` fields.
 
@@ -261,7 +279,7 @@ Do **not** modify the `Meta-reviewed` or `Verdict` or `Reason` fields.
     - **F06** — <Finding title>: <summary of what changed>
     ```
 
-    > Only include findings that were **implemented** (✔). Do not list skipped or already-fixed findings.
+    > Only include findings that were **implemented** (✅). Do not list skipped or already-fixed findings.
     >
     > If no findings were implemented for this file (all were skipped/already fixed), add a note instead:
     > ```markdown

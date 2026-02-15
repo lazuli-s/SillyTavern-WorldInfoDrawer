@@ -229,6 +229,17 @@ Apply the following updates across three files:
         - `Reason:` (brief, only if 🟡 or 🔴; otherwise can be empty or "N/A")
     3. Do not modify the `Implemented:` field (leave as-is).
 
+    4. Also add a **Neglect Risk** line for each finding:
+
+    ```
+    - **Neglect Risk:** Low ⭕ / Medium ❗ / High ❗❗ — <short justification>
+    ```
+
+    This reflects **the risk of leaving the issues in this review unaddressed** (not the risk of fixing them). Choose based on the worst confirmed finding:
+    - **High ❗❗** — at least one High-severity, confirmed finding that poses real risk to data integrity, async correctness, or user-visible correctness if left unfixed
+    - **Medium ❗** — findings are real but degraded, low-confidence, or limited in blast radius; ignoring them is tolerable short-term
+    - **Low ⭕** — all findings are cosmetic, speculative, or have negligible impact if left unfixed
+
 5. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
 ## 7. Clear context and repeat
