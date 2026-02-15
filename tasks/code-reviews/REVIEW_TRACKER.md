@@ -441,33 +441,38 @@ Track all code-review findings across the extension's JS files.
 → `CodeReview_constants.js.md`
 
 - **F01** — `SORT_DIRECTION` docstrings are incorrect/misaligned with actual meaning
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Documentation-only mismatch; leaving it unfixed mainly risks developer confusion.
   - Implemented:
 
 - **F02** — Recursion option values are duplicated across modules — drift risk breaks filters/indicators
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Duplication increases future drift risk that can break filter behavior/indicators in Order Helper.
   - Implemented:
 
 - **F03** — Column-schema “sync” is comment-only — mismatch can silently break column visibility/persistence
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Step 1 plan is ambiguous about fallback policy and does not specify canonical schema key handling in state/hydration.
+  - **Neglect Risk:** Medium ❗ — Drift would silently degrade column visibility persistence, making preferences feel unreliable.
   - Implemented:
 
 - **F04** — Exported “constant” objects/arrays are mutable — accidental mutation can cascade across UI
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan discarded 🔴
+    - Reason: Requires extensive analysis to validate absence of runtime mutation paths; freezing could introduce runtime exceptions.
+  - **Neglect Risk:** Low ⭕ — No evidence of current mutation; risk is mostly hypothetical unless future code mutates shared schema.
   - Implemented:
 
 - **F05** — `SORT` enum names overlap conceptually (TITLE vs ALPHABETICAL) — increases future misuse risk
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Step 1 fix references UI label mapping without evidence the option is exposed, and misses the concrete doc mismatch vs `sortEntries()` behavior.
+  - **Neglect Risk:** Low ⭕ — Primarily a maintainability/docs clarity issue; limited immediate user impact.
   - Implemented:
 
 ---

@@ -50,9 +50,6 @@
 - **Proposed fix:**
   In `src/constants.js`, replace the two incorrect comments with direction-accurate descriptions, e.g. “Ascending (A→Z / low→high)” and “Descending (Z→A / high→low)”.
 
-- **Implementation Checklist:**
-  - [ ] Update the JSDoc comments for `SORT_DIRECTION.ASCENDING` and `SORT_DIRECTION.DESCENDING` to correctly describe direction semantics.
-
 - **Fix risk:** Low 🟢
   Pure comment change; no runtime effect.
 
@@ -62,7 +59,54 @@
 - **Pros:**
   Prevents misunderstandings and future wiring mistakes.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - ✅ `src/constants.js` currently has incorrect docstrings on `SORT_DIRECTION.ASCENDING` / `DESCENDING`. This is directly visible in the reviewed source.
+
+- **Top risks:**
+  - Very low implementation risk (comment-only), but moderate *review* risk: the Step 1 review includes an unverified “copy/paste from other sort descriptions” claim which is plausible but not required to justify the fix.
+
+#### Technical Accuracy Audit
+
+> *“The JSDoc blocks … appear to be copy/pasted from other sort descriptions …”*
+
+- **Why it may be wrong/speculative:**
+  The repo contains similar docstrings on `SORT` values, but proving copy/paste origin is not possible from current evidence. The claim is not necessary for the core finding.
+
+- **Validation:** Validated ✅
+  The docstrings are definitively wrong regardless of origin.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Sound and within `src/constants.js` responsibilities (docstrings on exported enums).
+
+- **Behavioral change:**
+  None.
+
+- **Ambiguity:**
+  None.
+
+- **Checklist:**
+  Step 1 checklist was actionable and complete for this change.
+
+- **Dependency integrity:**
+  No cross-finding dependency.
+
+- **Fix risk calibration:**
+  “Low” is accurate.
+
+- **"Why it's safe" validity:**
+  Specific and verifiable (comment-only).
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Update the JSDoc comments for `SORT_DIRECTION.ASCENDING` and `SORT_DIRECTION.DESCENDING` to correctly describe direction semantics.
 
 ---
 
@@ -119,11 +163,6 @@
 - **Proposed fix:**
   In `src/orderHelperState.js`, derive `recursionValues` from `ORDER_HELPER_RECURSION_OPTIONS.map(o => o.value)` by importing `ORDER_HELPER_RECURSION_OPTIONS` from `./constants.js`. Then use that derived array for both `filters.recursion` and `recursionValues`.
 
-- **Implementation Checklist:**
-  - [ ] Import `ORDER_HELPER_RECURSION_OPTIONS` into `src/orderHelperState.js`.
-  - [ ] Replace the hardcoded `recursionValues = [...]` array with `ORDER_HELPER_RECURSION_OPTIONS.map(({ value }) => value)`.
-  - [ ] Keep `state.filters.recursion` initialized from that derived list.
-
 - **Fix risk:** Low 🟢
   Very localized change; values should remain identical.
 
@@ -133,7 +172,59 @@
 - **Pros:**
   Eliminates a silent drift vector between state init and UI rendering.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - ✅ `ORDER_HELPER_RECURSION_OPTIONS` is defined in `src/constants.js` with the three recursion flags.
+  - ✅ `createOrderHelperState()` in `src/orderHelperState.js` separately hardcodes `recursionValues` with the same three strings.
+  - ✅ `ORDER_HELPER_RECURSION_OPTIONS` is used by the header filter UI and row cell rendering (imported in `orderHelperRender.actionBar.js`, `orderHelperRender.tableHeader.js`, `orderHelperRender.tableBody.js`).
+
+- **Top risks:**
+  - Low. This is a textbook “duplicate contract values” drift risk.
+  - Ensure the import direction doesn’t create a circular dependency (`orderHelperState.js` currently has no imports; adding an import from `constants.js` is safe and is already the intended contract boundary).
+
+#### Technical Accuracy Audit
+
+> *“The result can be dead filter options … or hidden options …”*
+
+- **Why it may be wrong/speculative:**
+  It depends on what drifts and where (state init vs UI schema), but the risk scenario is plausible.
+
+- **Validation:** Validated ✅
+  If either list drifts, state defaults and UI options can become inconsistent; this is supported by the current architecture (state init + UI schema are in separate modules).
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Sound; keeps contract values in `src/constants.js` (per module responsibility).
+
+- **Behavioral change:**
+  None in the healthy case (values remain identical).
+
+- **Ambiguity:**
+  None.
+
+- **Checklist:**
+  Actionable and complete.
+
+- **Dependency integrity:**
+  No dependency on other findings, though it pairs well with F03’s “schema drift guard” if implemented later.
+
+- **Fix risk calibration:**
+  “Low” is accurate.
+
+- **"Why it's safe" validity:**
+  Specific: “derived list matches previous list” is verifiable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Import `ORDER_HELPER_RECURSION_OPTIONS` into `src/orderHelperState.js`.
+- [ ] Replace the hardcoded `recursionValues = [...]` array with `ORDER_HELPER_RECURSION_OPTIONS.map(({ value }) => value)`.
+- [ ] Keep `state.filters.recursion` initialized from that derived list.
 
 ---
 
@@ -206,11 +297,6 @@
 
   (This is a preventative guard; it should not change behavior in the healthy case.)
 
-- **Implementation Checklist:**
-  - [ ] Compute the schema key set (`ORDER_HELPER_TOGGLE_COLUMNS` keys) and the default key set.
-  - [ ] If sets differ, log a warning listing missing/extra keys.
-  - [ ] Ensure state hydration backfills missing keys to a safe default (likely `false`) without throwing.
-
 - **Fix risk:** Medium 🟡
   Even “just warnings” can reveal latent issues; and an automatic backfill/ignore policy can alter behavior in a mismatched state (but that state is already broken).
 
@@ -220,7 +306,81 @@
 - **Pros:**
   Prevents future regressions from shipping silently; makes drift bugs diagnosable.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - ✅ There are currently *two* separate key-sets that must stay in sync:
+    - `ORDER_HELPER_TOGGLE_COLUMNS` keys in `src/constants.js`
+    - `ORDER_HELPER_DEFAULT_COLUMNS` keys in `src/orderHelperState.js`
+  - ✅ There is no runtime validation today; only a comment warns about sync.
+
+- **Top risks:**
+  - The Step 1 plan is directionally correct but under-specified: it suggests warning + “backfill and/or ignore” without choosing a single deterministic policy.
+  - Any automatic backfill policy is a **Behavior Change Required** in *mismatched* states (not in the healthy state). The review should explicitly label and constrain that behavior.
+
+#### Technical Accuracy Audit
+
+> *“Mismatch can silently break column visibility/persistence …”*
+
+- **Why it may be wrong/speculative:**
+  The exact failure mode depends on which side drifts and how the UI is wired.
+
+- **Validation:** Validated ✅
+  The current wiring makes mismatch possible and hard to diagnose:
+  - The Column Visibility menu iterates `ORDER_HELPER_TOGGLE_COLUMNS`.
+  - State hydration only iterates `ORDER_HELPER_DEFAULT_COLUMNS` keys.
+  - `applyOrderHelperColumnVisibility()` toggles CSS classes based on `Object.entries(orderHelperState.columns)`.
+
+  This can produce “column exists but default/hydration ignores it” and vice-versa.
+
+- **What needs to be done/inspected to successfully validate:**
+  Not required; the drift hazard is structural and observable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Sound. This belongs in Order Helper state init/hydration (module boundary is acceptable; no architecture changes needed).
+
+- **Behavioral change:**
+  **Behavior Change Required** only when keys drift:
+  - Choosing a backfill default (e.g., missing keys default to `false`) changes what a user sees in a mismatched state.
+  - This should be explicitly declared and constrained to “only when mismatch detected”.
+
+- **Ambiguity:**
+  Step 1 proposes multiple alternatives (“backfill and/or ignore”) which is ambiguous. Must pick one.
+
+- **Checklist:**
+  Not implementation-ready as written; it doesn’t specify:
+  - where the check should live (state creation vs renderer init),
+  - what the exact backfill/ignore policy is,
+  - how to ensure `orderHelperState.columns` contains the canonical schema keys.
+
+- **Dependency integrity:**
+  This finding overlaps with F02 (schema constants as source of truth). If you import from `constants.js` for recursion values, it’s consistent to do the same for column schema validation.
+
+- **Fix risk calibration:**
+  “Medium” is reasonable because it touches persisted preferences and can change behavior when mismatch exists.
+
+- **"Why it's safe" validity:**
+  Valid for the healthy case, but incomplete for the mismatch case unless the fallback policy is clearly defined.
+
+- **Verdict:** Implementation plan needs revision 🟡
+
+#### Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Step 1 checklist is ambiguous about fallback policy and does not specify how schema keys are made canonical in `orderHelperState.columns`.
+> Revisions applied: Pinned the fix to `createOrderHelperState()` (single init point) and defined a deterministic policy: warn on mismatch, backfill missing schema keys to `false` in defaults/state, and ignore stored unknown keys.
+
+- [ ] In `src/orderHelperState.js`, import `ORDER_HELPER_TOGGLE_COLUMNS` from `./constants.js` and compute `schemaKeys = ORDER_HELPER_TOGGLE_COLUMNS.map(({ key }) => key)`.
+- [ ] Add a one-time validation inside `createOrderHelperState()`:
+  - Compare `schemaKeys` vs `Object.keys(ORDER_HELPER_DEFAULT_COLUMNS)`.
+  - If mismatch, `console.warn` listing `missingInDefaults` and `extraInDefaults`.
+- [ ] Define the canonical column defaults as:
+  - Start from `{ ...ORDER_HELPER_DEFAULT_COLUMNS }`
+  - For each `key` in `schemaKeys` missing from defaults, add `key: false` (explicit **Behavior Change Required** only in mismatch state).
+- [ ] When hydrating `storedColumns`, apply only keys in `schemaKeys` (ignore unknown stored keys), and always backfill missing schema keys to their canonical defaults.
+- [ ] Ensure `orderHelperState.columns` contains *all* `schemaKeys` so `applyOrderHelperColumnVisibility()` can consistently toggle CSS classes.
 
 ---
 
@@ -276,11 +436,6 @@
 
   🚩 Requires user input: confirm whether any consumer (including future planned work) intentionally mutates these exports at runtime; if so, freezing would be a behavior change and should be avoided.
 
-- **Implementation Checklist:**
-  - [ ] Freeze top-level “constant” objects/arrays in `src/constants.js`.
-  - [ ] Freeze nested option objects inside exported arrays.
-  - [ ] Replace exported mutable `Set` with a non-mutable predicate helper OR document it as read-only and avoid exporting it directly.
-
 - **Fix risk:** Medium 🟡
   Freezing will throw in strict mode (or silently fail) if any existing code mutates these structures; that would surface as runtime errors.
 
@@ -290,7 +445,62 @@
 - **Pros:**
   Makes accidental mutation bugs impossible (or immediately obvious), improving long-term stability.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - ✅ In ES modules, exported object/array *bindings* are immutable, but the underlying objects/arrays/sets are still mutable (language semantics).
+  - ✅ The repo uses these exports as shared schema/contract across Order Helper modules (multiple imports from `./constants.js`).
+
+- **Top risks:**
+  - The Step 1 review adds a 🚩 “Requires user input” flag that is not actually required for validation: we can validate current in-repo behavior via code search (which Step 1 already partially did).
+  - The Step 1 proposal mixes multiple strategies (freeze everything vs export predicate for the Set) without selecting a single minimal plan.
+  - Freezing is a **Behavior Change Required** only if any runtime mutation exists (currently not evidenced). The plan should explicitly include a hard “no mutation call sites” validation step.
+
+#### Technical Accuracy Audit
+
+> *“Repo search did not find mutation call sites … suggests current code treats them as read-only.”*
+
+- **Why it may be wrong/speculative:**
+  Search can miss dynamic mutation (e.g., bracket access, indirect aliases), but in this repo the constants are imported by name and used directly; that lowers the likelihood of missed mutations.
+
+- **Validation:** Needs extensive analysis ❌
+  Proving *absence* of all mutation paths in all runtime contexts is not feasible from static inspection alone.
+
+- **What needs to be done/inspected to successfully validate:**
+  - Perform a targeted repo search for common mutation operations on these identifiers (e.g., `.push`, `.splice`, `.add`, property assignment).
+  - If implementing freezing: ensure there is no code that intentionally mutates these exports during init (including dev/hot-reload helpers).
+  - If possible, run the extension and open Order Helper to ensure no runtime exceptions are thrown after freezing.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Direction is reasonable (defensive immutability for schema constants), but the validation burden is understated.
+
+- **Behavioral change:**
+  Potential behavior change if any mutation exists (would surface as exceptions in strict mode). This must be declared and mitigated by narrowing scope.
+
+- **Ambiguity:**
+  Multiple fix options are proposed; the plan needs to pick one minimal approach.
+
+- **Checklist:**
+  Step 1 checklist is incomplete because it does not include:
+  - a concrete “prove no mutations” validation step (at least via repo search), and
+  - a pinned decision for the Set (`keep as Set but treat as read-only` vs `replace with predicate`).
+
+- **Dependency integrity:**
+  Touching `ORDER_HELPER_NUMBER_COLUMN_KEYS` impacts `orderHelperRender.tableHeader.js` (and possibly other slices). This must be explicitly included if the Set is replaced.
+
+- **Fix risk calibration:**
+  “Medium” is plausible, but the reason should be “can throw at runtime if hidden mutation exists”, not “freezing is generally risky”.
+
+- **"Why it's safe" validity:**
+  As written, it’s too vague (“repo search did not find…”) unless it names exact search terms and/or call sites.
+
+- **Mitigation:**
+  If freezing is implemented, keep it limited to the arrays/objects (not the Set) for the first pass, to minimize cross-file blast radius.
+
+- **Verdict:** Implementation plan discarded 🔴
+  Needs extensive analysis ❌ is TRUE (absence-of-mutation proof and runtime validation cannot be completed purely by inspection in this workflow).
 
 ---
 
@@ -340,10 +550,6 @@
   - Update documentation/comments to clarify that `ALPHABETICAL` means “Comment/Memo (A→Z)” (or similar).
   - Ensure any UI label mapping (likely in `src/utils.js` / sort option label builders) presents it as “Comment”/“Memo” rather than “Alphabetical”.
 
-- **Implementation Checklist:**
-  - [ ] Clarify the `SORT.ALPHABETICAL` docstring to explicitly mention the field (“comment/memo”), not the method.
-  - [ ] Ensure UI labels (where sort choices are displayed) don’t present this as a generic “Alphabetical” option.
-
 - **Fix risk:** Low 🟢
   Doc/label changes only (if limited to labels/comments).
 
@@ -353,4 +559,69 @@
 - **Pros:**
   Reduces the chance of future incorrect wiring without breaking compatibility.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - ✅ `SORT.ALPHABETICAL` exists as a constant and is handled in `src/sortHelpers.js`.
+  - ✅ `src/utils.js`’s `SORT_OPTIONS` currently does **not** surface `SORT.ALPHABETICAL` in any dropdown labels; therefore “UI label mapping” is not evidenced for this option.
+
+- **Top risks:**
+  - The Step 1 impact scenario (“developer might choose ALPHABETICAL thinking it means title”) is plausible but not evidence-backed because the option is not currently exposed via UI label lists.
+  - The Step 1 finding misses a more concrete drift: `SORT.TITLE` is documented as “entry title”, but `sortEntries()` treats `SORT.TITLE` and `SORT.ALPHABETICAL` identically and sorts primarily by `entry.comment` (title/memo). That indicates the docs, not just naming, may be misaligned.
+
+#### Technical Accuracy Audit
+
+> *“Ensure any UI label mapping … presents it as ‘Comment’/‘Memo’ rather than ‘Alphabetical’.”*
+
+- **Why it may be wrong/speculative:**
+  There is no current UI label mapping entry for `SORT.ALPHABETICAL` in `src/utils.js` (`SORT_OPTIONS` lacks it).
+
+- **Validation:** Validated ✅
+  Confirmed by inspection of `src/utils.js` (`SORT_OPTIONS`) and a repo search for `'alphabetical'`.
+
+- **What needs to be done/inspected to successfully validate:**
+  If the intent is to surface this option, identify the UI surface(s) that should include it (e.g., list panel sort menu vs order helper sort menu) and confirm how those menus are built.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  “Do not rename stored enum values” is correct (compatibility).
+
+- **Behavioral change:**
+  None required if limiting to docs/comments. If you choose to surface a new dropdown option, that is a behavior change and must be labeled.
+
+- **Ambiguity:**
+  Step 1 implies changes to UI labels for an option that currently isn’t shown. The fix needs to pick a single minimal target.
+
+- **Checklist:**
+  Not implementation-ready: it references UI labels without naming the exact label source (`SORT_OPTIONS`) and doesn’t address the more concrete doc mismatch around `SORT.TITLE` semantics.
+
+- **Dependency integrity:**
+  No cross-finding dependency, but this overlaps with F01 (docstring correctness) at a “documentation semantics must match actual usage” level.
+
+- **Fix risk calibration:**
+  “Low” is accurate if restricted to docs; could be higher if UI behavior is changed.
+
+- **"Why it's safe" validity:**
+  Valid if restricted to docs/comments only.
+
+- **Verdict:** Implementation plan needs revision 🟡
+
+#### Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Step 1 plan references UI label mapping for `SORT.ALPHABETICAL` without evidence it is currently exposed; it also misses the doc mismatch that `SORT.TITLE` is sorted by `entry.comment` in `sortEntries()`.
+> Revisions applied: Tightened the plan to documentation-only changes scoped to `src/constants.js`, and added an explicit “confirm UI exposure” step before changing dropdown labels.
+
+- [ ] In `src/constants.js`, update the docstrings for `SORT.TITLE` and `SORT.ALPHABETICAL` to explicitly describe their effective sort field(s) as implemented in `sortEntries()` (currently `entry.comment` / “title/memo”, with `entry.key` fallback).
+- [ ] Add a short inline comment near `SORT.ALPHABETICAL` indicating whether it is a legacy/compatibility alias vs an intended UI option.
+- [ ] (Only if you confirm `SORT.ALPHABETICAL` is intentionally user-facing) Update `src/utils.js` `SORT_OPTIONS` to include a non-ambiguous label such as “Comment A‑Z / Z‑A”, and ensure it maps to `SORT.ALPHABETICAL` (declare this as a behavior change).
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:**  
+  `ORDER_HELPER_NUMBER_COLUMN_KEYS` includes keys that aren’t numeric inputs (e.g., `automationId` is a text input, and “Trigger %” is a percentage UI). This isn’t necessarily wrong (the CSS class name may just mean “tight/right-aligned column”), but it is a potential naming/semantic mismatch similar to F01/F05. No clear runtime bug was identified from `src/constants.js` alone.
+- **Severity calibration:**  
+  The file is largely schema/constants. Most issues are maintainability/drift risks rather than user-facing breakages today, so Low/Medium severities are appropriate.
