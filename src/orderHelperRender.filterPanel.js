@@ -1,3 +1,5 @@
+import { DOMPurify } from '../../../../../lib.js';
+
 /**
  * Builds the Order Helper script-filter panel DOM element.
  *
@@ -34,7 +36,7 @@ export function buildFilterPanel({
             const bookContextHint = orderHelperState.book
                 ? `<br>Book context: <code>${orderHelperState.book}</code> (entries are scoped to this book).`
                 : '';
-            hint.innerHTML = `
+            hint.innerHTML = DOMPurify.sanitize(`
                 Script will be called for each entry in all active books.
                 Every entry for which the script returns <code>true</code> will be kept.
                 Other entries will be filtered out.
@@ -42,7 +44,7 @@ export function buildFilterPanel({
                 Use <code>{{var::entry}}</code> to access the entry and its properties (look
                 right for available fields).
                 ${bookContextHint}
-            `;
+            `);
             main.append(hint);
         }
 
@@ -141,7 +143,7 @@ export function buildFilterPanel({
                 };
                 const updateListDebounced = debounce(()=>updateList(), 1000);
                 inp.addEventListener('input', () => {
-                    syntax.innerHTML = hljs.highlight(`${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`, { language:'stscript', ignoreIllegals:true })?.value;
+                    syntax.innerHTML = DOMPurify.sanitize(hljs.highlight(`${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`, { language:'stscript', ignoreIllegals:true })?.value ?? '');
                     updateScrollDebounced();
                     updateListDebounced();
                 });
@@ -151,7 +153,7 @@ export function buildFilterPanel({
                 inp.style.color = 'transparent';
                 inp.style.background = 'transparent';
                 inp.style.setProperty('text-shadow', 'none', 'important');
-                syntax.innerHTML = hljs.highlight(`${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`, { language:'stscript', ignoreIllegals:true })?.value;
+                syntax.innerHTML = DOMPurify.sanitize(hljs.highlight(`${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`, { language:'stscript', ignoreIllegals:true })?.value ?? '');
                 script.append(inp);
             }
             main.append(script);
