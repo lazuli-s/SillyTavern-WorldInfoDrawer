@@ -117,15 +117,25 @@ export const initDrawer = ({
                 case 'Delete': {
                     evt.preventDefault();
                     evt.stopPropagation();
-                    const srcBook = await loadWorldInfo(selectionState.selectFrom);
-                    for (const uid of selectionState.selectList) {
+
+                    // Snapshot selection at keypress time so changes during async operations
+                    // can't affect which book/uids are deleted.
+                    const selectFrom = selectionState.selectFrom;
+                    const selectedUids = [...(selectionState.selectList ?? [])];
+                    if (selectFrom === null || !selectedUids.length) return;
+
+                    const srcBook = await loadWorldInfo(selectFrom);
+                    if (!srcBook) return;
+
+                    for (const uid of selectedUids) {
                         const deleted = await deleteWorldInfoEntry(srcBook, uid, { silent:true });
                         if (deleted) {
                             deleteWIOriginalDataValue(srcBook, uid);
                         }
                     }
-                    await saveWorldInfo(selectionState.selectFrom, srcBook, true);
-                    wiHandlerApi.updateWIChange(selectionState.selectFrom, srcBook);
+
+                    await saveWorldInfo(selectFrom, srcBook, true);
+                    wiHandlerApi.updateWIChange(selectFrom, srcBook);
                     listPanelApi.selectEnd();
                     break;
                 }
@@ -161,18 +171,27 @@ export const initDrawer = ({
                             add.setAttribute('aria-label', 'Create New Book');
                             add.querySelector('span')?.remove();
                             add.addEventListener('click', async()=>{
-                                const startPromise = wiHandlerApi.getUpdateWIChangeStarted().promise;
                                 const tempName = getFreeWorldName();
                                 const finalName = await Popup.show.input('Create a new World Info', 'Enter a name for the new file:', tempName);
-                                if (finalName) {
-                                    const created = await createNewWorldInfo(finalName, { interactive: true });
-                                    if (created) {
-                                        await startPromise;
-                                        await wiHandlerApi.getUpdateWIChangeFinished()?.promise;
-                                        listPanelApi.setBookCollapsed(finalName, false);
-                                        cache[finalName].dom.root.scrollIntoView({ block:'center', inline:'center' });
-                                    }
+                                if (!finalName) return;
+
+                                // Register the wait BEFORE creating the book so we can't miss the next update cycle.
+                                const waitForUpdate = wiHandlerApi.waitForWorldInfoUpdate();
+                                const created = await createNewWorldInfo(finalName, { interactive: true });
+                                if (!created) return;
+
+                                await waitForUpdate;
+                                await wiHandlerApi.getUpdateWIChangeFinished()?.promise;
+
+                                // Expand and center the new book once it exists in cache/DOM.
+                                listPanelApi.setBookCollapsed(finalName, false);
+
+                                if (!cache[finalName]?.dom?.root) {
+                                    console.warn('[STWID] New book created but not yet present in cache/DOM; forcing refresh.', finalName);
+                                    await listPanelApi.refreshList();
                                 }
+
+                                cache[finalName]?.dom?.root?.scrollIntoView({ block:'center', inline:'center' });
                             });
                             controlsPrimary.append(add);
                         }
@@ -235,6 +254,18 @@ export const initDrawer = ({
                             settings.title = 'Global Activation Settings';
                             settings.setAttribute('aria-label', 'Global Activation Settings');
                             settings.addEventListener('click', ()=>{
+                                const currentEditor = getCurrentEditor();
+                                const isDirty = Boolean(
+                                    currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid),
+                                );
+
+                                // Only guard the "open" direction. Closing activation settings doesn't discard entry edits
+                                // because opening it already clears the entry editor (which this guard prevents while dirty).
+                                if (isDirty && !settings.classList.contains('stwid--active')) {
+                                    toastr.warning('Unsaved edits detected. Save or discard changes before opening Activation Settings.');
+                                    return;
+                                }
+
                                 editorPanelApi.toggleActivationSettings();
                             });
                             controlsPrimary.append(settings);
@@ -247,11 +278,31 @@ export const initDrawer = ({
                             order.setAttribute('aria-label', 'Open Order Helper for current Book Visibility scope');
                             order.addEventListener('click', ()=>{
                                 const isActive = order.classList.contains('stwid--active');
+
+                                const currentEditor = getCurrentEditor();
+                                const isDirty = Boolean(
+                                    currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid),
+                                );
+
+                                // Guard the open direction: don't allow a mode switch that clears/replaces the editor
+                                // while the current entry has unsaved edits.
+                                if (!isActive && isDirty) {
+                                    toastr.warning('Unsaved edits detected. Save or discard changes before opening Order Helper.');
+                                    return;
+                                }
+
                                 if (isActive) {
+                                    // Defensive: if an upstream flow left dirty state set, avoid clearing the editor.
+                                    if (isDirty) {
+                                        toastr.warning('Unsaved edits detected. Save or discard changes before closing Order Helper.');
+                                        return;
+                                    }
+
                                     order.classList.remove('stwid--active');
                                     editorPanelApi.clearEditor();
                                     return;
                                 }
+
                                 const visibilityScope = listPanelApi?.getBookVisibilityScope?.();
                                 openOrderHelper(null, visibilityScope);
                             });
@@ -506,19 +557,36 @@ export const initDrawer = ({
                             const nextWidth = Math.min(Math.max(MIN_LIST_WIDTH, startWidth + delta), maxWidth);
                             queueWidthApply(nextWidth);
                         };
-                        const onUp = (upEvt)=>{
-                            splitter.releasePointerCapture(upEvt.pointerId);
+
+                        const cleanupDrag = (endEvt)=>{
+                            try {
+                                splitter.releasePointerCapture(endEvt.pointerId);
+                            } catch {
+                                // ignore (capture may already be released/canceled)
+                            }
+
                             window.removeEventListener('pointermove', onMove);
                             window.removeEventListener('pointerup', onUp);
+                            window.removeEventListener('pointercancel', onCancel);
+                            splitter.removeEventListener('lostpointercapture', onLostCapture);
+
                             if (rafId !== null) {
                                 cancelAnimationFrame(rafId);
                                 rafId = null;
                                 appliedListWidth = applyListWidth(pendingWidth);
                             }
+
                             localStorage.setItem(SPLITTER_STORAGE_KEY, String(Math.round(appliedListWidth)));
                         };
+
+                        const onUp = (upEvt)=>cleanupDrag(upEvt);
+                        const onCancel = (cancelEvt)=>cleanupDrag(cancelEvt);
+                        const onLostCapture = (lostEvt)=>cleanupDrag(lostEvt);
+
                         window.addEventListener('pointermove', onMove);
                         window.addEventListener('pointerup', onUp);
+                        window.addEventListener('pointercancel', onCancel);
+                        splitter.addEventListener('lostpointercapture', onLostCapture);
                     });
                 }
                 const editor = document.createElement('div'); {
@@ -555,8 +623,17 @@ export const initDrawer = ({
         const moDrawer = new MutationObserver(()=>{
             const style = drawerContent.getAttribute('style') ?? '';
             if (style.includes('display: none;')) return;
+
             const currentEditor = getCurrentEditor();
-            if (currentEditor && cache[currentEditor.name]?.dom?.entry?.[currentEditor.uid]?.root) {
+            if (!currentEditor) return;
+
+            const isDirty = Boolean(editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid));
+            if (isDirty) {
+                console.debug('[STWID] Drawer reopen: editor is dirty; skipping auto-restore click.');
+                return;
+            }
+
+            if (cache[currentEditor.name]?.dom?.entry?.[currentEditor.uid]?.root) {
                 cache[currentEditor.name].dom.entry[currentEditor.uid].root.click();
             }
         });

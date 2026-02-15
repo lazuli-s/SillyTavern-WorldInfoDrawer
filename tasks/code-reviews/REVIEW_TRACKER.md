@@ -75,49 +75,57 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Checklist needs to explicitly register `waitForWorldInfoUpdate()` *before* `createNewWorldInfo(...)` and remove redundant investigation step.
-  - Implemented: 
+  - Implemented: ✔
+    - Implementation Notes: Registered `waitForWorldInfoUpdate()` before `createNewWorldInfo(...)` and added cache/DOM guard with refresh fallback before scrolling to the new book.
 
 - **F02** — Drawer "reopen" MutationObserver forces synthetic click that can discard unsaved edits
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Fix plan is ambiguous (prompt vs skip); must pick a single least-behavior-change rule and declare consistency/dependency with other dirty-guard fixes.
-  - Implemented: 
+  - Implemented: ✔
+    - Implementation Notes: Drawer reopen observer now skips the synthetic entry-row click when the current editor is dirty, preventing unsaved input loss.
 
 - **F03** — Delete handler reads live `selectionState` across `await` — can delete wrong entries
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Remove optional behavior-changing “abort if selection changes” branch; snapshot-only should be the sole recommendation.
-  - Implemented: 
+  - Implemented: ✔
+    - Implementation Notes: Delete hotkey now snapshots `selectFrom` and selected UIDs before any `await` to prevent selection changes from affecting an in-flight delete.
 
 - **F04** — Drawer-open detection uses `elementFromPoint` at screen center — brittle with overlays
   - Meta-reviewed: [X]
     - Verdict: Implementation plan discarded 🔴
     - Reason: Impact claim is not evidence-backed (likely false negatives vs false positives) and proposed fix is ambiguous/multi-option; requires broader runtime validation.
-  - Implemented: 
+  - Implemented: ❌ Skipped (🔴 discarded)
+    - Implementation Notes: Skipped — plan discarded; requires runtime validation to choose an authoritative drawer-open signal and overlay behavior.
 
 - **F05** — No teardown for `moSel`/`moDrawer` MutationObservers — accumulate on reload
   - Meta-reviewed: [X]
     - Verdict: Implementation plan discarded 🔴
     - Reason: Relies on unproven in-place reload lifecycle and lacks a concrete teardown trigger; needs a verified lifecycle hook or a broader singleton/teardown strategy.
-  - Implemented: 
+  - Implemented: ❌ Skipped (🔴 discarded)
+    - Implementation Notes: Skipped — plan discarded; no evidence-backed teardown lifecycle beyond `beforeunload` to safely disconnect observers on reload.
 
 - **F06** — Splitter drag lifecycle missing `pointercancel` — listeners can leak
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - Implemented: 
+  - Implemented: ✔
+    - Implementation Notes: Added `pointercancel` and `lostpointercapture` termination paths to splitter drag cleanup so listeners always detach and width persists.
 
 - **F07** — Toggling Activation Settings / Order Helper clears entry editor without dirty-state guard
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Fix plan is ambiguous (prompt vs refuse); should pick a single least-scope behavior (skip toggle when dirty) and keep dirty-guard behavior consistent with F02.
-  - Implemented: 
+  - Implemented: ✔
+    - Implementation Notes: Added dirty guards to Activation Settings and Order Helper toggles, showing a toast and blocking mode switches that would discard unsaved edits.
 
 - **F08** — `addDrawer()` has no singleton guard — multiple inits duplicate UI and global listeners
   - Meta-reviewed: [X]
     - Verdict: Implementation plan discarded 🔴
     - Reason: Requires evidence of in-place reload + a concrete singleton registry/teardown strategy; “skip init” risks breaking `initDrawer()` consumers and fix risk is under-rated.
-  - Implemented: 
+  - Implemented: ❌ Skipped (🔴 discarded)
+    - Implementation Notes: Skipped — plan discarded; safe idempotent init/teardown requires validated ST reload semantics and a concrete singleton/registry approach.
 
 ---
 

@@ -116,6 +116,28 @@ Scope reviewed:
 - **Verdict:** Implementation plan needs revision 🟡  
   The direction is correct, but the checklist should be tightened to specify the correct correlation pattern (register wait before calling create), and remove the redundant "investigate if resolved" step.
 
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Checklist needs to explicitly register `waitForWorldInfoUpdate()` *before* `createNewWorldInfo(...)` and remove redundant investigation step.
+> Revisions applied: Removed the redundant "investigate if started promise is already resolved" step and replaced it with the concrete token-based wait pattern (register wait before create, await after). Added explicit null-guard + fallback behavior when the book isn't yet in cache.
+
+- [ ] Register a token-based wait **before** calling `createNewWorldInfo(...)`: `const waitForUpdate = wiHandlerApi.waitForWorldInfoUpdate();`
+- [ ] After successful creation, `await waitForUpdate` (optionally also await `wiHandlerApi.getUpdateWIChangeFinished()?.promise` if still needed for DOM reconciliation).
+- [ ] Guard before using DOM/cache: if `cache[finalName]?.dom?.root` is missing, log a warning and fall back to `await listPanelApi.refreshList()` before attempting to expand/scroll.
+- [ ] Keep cancel/failure behavior unchanged: if user cancels the prompt or creation fails, do nothing.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - New-book creation now registers `waitForWorldInfoUpdate()` before `createNewWorldInfo(...)` and awaits that token-based wait instead of using the global “update started” deferred.
+  - Added null-guard for `cache[finalName]?.dom?.root` with a `refreshList()` fallback before scrolling into view.
+
+- Risks / Side effects
+  - New-book centering could be delayed by one extra list refresh in rare cases where cache/DOM is still not ready (probability: ⭕)
+      - Manual check: Create a new book while other updates are happening; confirm the new book expands and scrolls into view without console errors.
+
 ---
 
 ## F02: Drawer “reopen” MutationObserver can trigger a synthetic click that rebuilds the editor and discards unsaved typed input (Behavior Change Required)
@@ -225,7 +247,29 @@ Scope reviewed:
   - Mostly valid, but it should state what happens in dirty case (editor content will remain whatever it was before hide).
 
 - **Verdict:** Implementation plan needs revision 🟡  
-  Technically correct issue, but the fix plan must remove the “prompt vs skip” ambiguity and declare dependency/consistency with other dirty-guard findings (notably F07).
+  Technically correct issue, but the fix plan must remove the “prompt vs skip” ambiguity and declare dependency/consistency with other dirty-guard fixes (notably F07).
+
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Fix plan is ambiguous (prompt vs skip); must pick a single least-behavior-change rule and declare consistency/dependency with other dirty-guard fixes.
+> Revisions applied: Chose the smallest behavior change (skip synthetic restore click when dirty) and explicitly aligned the dirty-guard rule with F07 (other drawer-level editor-clearing actions).
+
+- [ ] In the drawer reopen `MutationObserver` callback, compute a dirty flag for the currently open editor: `editorPanelApi.isDirty(currentEditor.name, currentEditor.uid)`.
+- [ ] If dirty, **do not** trigger the synthetic `.click()`; leave the current editor DOM as-is to preserve typed input.
+- [ ] If not dirty (or no current editor), keep existing behavior: restore selection by clicking the entry row if it exists.
+- [ ] Add a brief debug log when skipping due to dirty state (to aid diagnosis without user-facing prompts).
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Drawer reopen `MutationObserver` now checks `editorPanelApi.isDirty(currentEditor.name, currentEditor.uid)` and skips the synthetic entry-row click when dirty.
+  - Added a debug log line when the restore click is skipped due to dirty state.
+
+- Risks / Side effects
+  - If SillyTavern ever fully clears the editor DOM on hide/show (not just toggling `display`), skipping the restore click could leave the editor blank until the user reselects an entry (probability: ❗)
+      - Manual check: Open an entry, type without saving, close and reopen the drawer; confirm typed text is preserved and no unexpected blank editor state occurs.
 
 ---
 
@@ -335,6 +379,28 @@ Scope reviewed:
 - **Verdict:** Implementation plan needs revision 🟡  
   The fix is correct, but the plan should remove the optional behavior-changing “abort if selection changes” branch and stick to snapshotting as the sole recommendation.
 
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Remove optional behavior-changing “abort if selection changes” branch; snapshot-only should be the sole recommendation.
+> Revisions applied: Removed the optional abort behavior; the handler now operates on a snapshot taken at keypress time.
+
+- [ ] At the start of `onDrawerKeydown` (before any `await`), snapshot selection into local constants:
+  - [ ] `const selectFrom = selectionState.selectFrom;`
+  - [ ] `const selectedUids = [...(selectionState.selectList ?? [])];`
+- [ ] Use only `selectFrom`/`selectedUids` for `loadWorldInfo`, delete loop, and `saveWorldInfo`.
+- [ ] Keep post-delete UX unchanged: call `wiHandlerApi.updateWIChange(selectFrom, srcBook)` and `listPanelApi.selectEnd()` once.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Global Delete now snapshots `selectFrom` + `selectList` before any `await` and uses the snapshot for `loadWorldInfo`, delete loop, and `saveWorldInfo`.
+
+- Risks / Side effects
+  - Delete will always act on the selection at keypress time even if the user changes selection immediately after pressing Delete (probability: ⭕)
+      - Manual check: Select multiple entries, press Delete, then quickly click another book; confirm only the originally selected entries are deleted.
+
 ---
 
 ## F04: Drawer-open detection for Delete relies on `elementFromPoint` at screen center, which is brittle with overlays/popups
@@ -439,6 +505,16 @@ Scope reviewed:
 
 - **Verdict:** Implementation plan discarded 🔴  
   The main impact claim is not evidence-backed and validation would require broader runtime investigation. The plan is also ambiguous (multiple alternative signals) and would require manual UI verification to choose correctly.
+
+### Final Implementation Checklist
+
+> Verdict: Implementation plan discarded 🔴 — skipped.
+> Reason: Impact claim is not evidence-backed (likely false negatives vs false positives) and proposed fix is ambiguous/multi-option; requires broader runtime validation.
+
+### Implementation Notes
+
+❌ Skipped — Implementation plan discarded 🔴  
+> Reason (from tracker/meta-review): Impact claim is not evidence-backed and validating a better “drawer open” signal requires runtime UI investigation.
 
 ---
 
@@ -548,6 +624,16 @@ Scope reviewed:
 - **Verdict:** Implementation plan discarded 🔴  
   The plan relies on an unproven lifecycle (in-place reload without unload) and does not include a concrete, evidence-backed teardown trigger. This needs either (a) a verified ST lifecycle hook or (b) a redesigned idempotent init/teardown strategy (see F08) before being implementable safely.
 
+### Final Implementation Checklist
+
+> Verdict: Implementation plan discarded 🔴 — skipped.
+> Reason: Relies on unproven in-place reload lifecycle and lacks a concrete teardown trigger; needs a verified lifecycle hook or a broader singleton/teardown strategy.
+
+### Implementation Notes
+
+❌ Skipped — Implementation plan discarded 🔴  
+> Reason (from tracker/meta-review): No evidence-backed teardown lifecycle beyond `beforeunload`; implementing observer disconnect safely requires validated extension reload semantics.
+
 ---
 
 ## F06: Splitter drag lifecycle does not handle `pointercancel`, risking stuck listeners and inconsistent stored widths
@@ -643,6 +729,26 @@ Scope reviewed:
   - Specific and verifiable.
 
 - **Verdict:** Ready to implement 🟢
+
+### Final Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add a `pointercancel` handler that mirrors the `pointerup` cleanup path.
+- [ ] (Optional but recommended) Also handle `lostpointercapture` and route it through the same cleanup to avoid stuck listeners across browsers.
+- [ ] Ensure any pending RAF is canceled and the final width is applied once before persisting.
+- [ ] Persist the final width to `localStorage` in all termination paths (up/cancel/lostcapture).
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Splitter drag now uses a shared `cleanupDrag(...)` function and listens for `pointercancel` (window) and `lostpointercapture` (splitter) in addition to `pointerup`.
+  - Cleanup consistently removes move/up/cancel listeners, cancels any pending RAF, applies the final width once, and persists it to `localStorage`.
+
+- Risks / Side effects
+  - Some termination events (e.g., `lostpointercapture`) do not provide a meaningful `pointerId` in all browsers; `releasePointerCapture` is now best-effort and failures are ignored (probability: ⭕)
+      - Manual check: Start dragging the splitter, then alt-tab / open an OS overlay / trigger a gesture cancel; confirm the list is still resizable afterward and the final width persists after reload.
 
 ---
 
@@ -742,6 +848,32 @@ Scope reviewed:
 
 - **Verdict:** Implementation plan needs revision 🟡  
   The issue is correct and important, but the fix plan must select one behavior (skip toggle when dirty) and avoid introducing a prompt/confirmation flow unless explicitly required.
+
+### Final Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Fix plan is ambiguous (prompt vs refuse); should pick a single least-scope behavior (skip toggle when dirty) and keep dirty-guard behavior consistent with F02.
+> Revisions applied: Chose a single behavior (block the toggle action while dirty, with a toast) and aligned the dirty guard with F02’s rule (no prompts).
+
+- [ ] Define a shared drawer-level helper (local function) to check whether the current editor is dirty using `getCurrentEditor()` + `editorPanelApi.isDirty(name, uid)`.
+- [ ] Activation Settings toggle:
+  - [ ] If dirty and the activation settings panel is not currently active, do nothing and show a warning toast (do not clear editor / do not toggle).
+  - [ ] Otherwise, keep existing behavior by calling `editorPanelApi.toggleActivationSettings()`.
+- [ ] Order Helper toggle:
+  - [ ] If dirty and the Order Helper is not currently active, do nothing and show a warning toast (do not open order helper).
+  - [ ] If closing Order Helper while dirty, do not call `editorPanelApi.clearEditor()`; instead just close Order Helper UI and leave editor intact.
+- [ ] Keep non-dirty behavior unchanged.
+
+### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Activation Settings gear now blocks opening while the current entry editor is dirty, showing a warning toast instead of clearing the editor.
+  - Order Helper toggle now blocks opening while dirty, and defensively avoids calling `clearEditor()` on close if dirty state is still present.
+
+- Risks / Side effects
+  - Users may perceive the toggles as “not responding” if they miss the toast; however this prevents silent data loss (probability: ❗)
+      - Manual check: Type unsaved edits in an entry, click the gear/order toggle; confirm a toast appears and the editor content remains unchanged.
 
 ---
 
@@ -848,6 +980,16 @@ Scope reviewed:
 
 - **Verdict:** Implementation plan discarded 🔴  
   Requires a concrete, evidence-backed lifecycle model (does ST reload extensions in-place?) and a defined strategy (singleton registry vs teardown+reinit). As written, it is too ambiguous and risks breaking `initDrawer()` consumers if implemented as a simple early-return.
+
+### Final Implementation Checklist
+
+> Verdict: Implementation plan discarded 🔴 — skipped.
+> Reason: Requires evidence of in-place reload + a concrete singleton registry/teardown strategy; “skip init” risks breaking `initDrawer()` consumers and fix risk is under-rated.
+
+### Implementation Notes
+
+❌ Skipped — Implementation plan discarded 🔴  
+> Reason (from tracker/meta-review): Implementing idempotent init/teardown safely requires validated ST extension reload semantics and a concrete singleton/registry strategy to avoid breaking `initDrawer()` consumers.
 
 ---
 
