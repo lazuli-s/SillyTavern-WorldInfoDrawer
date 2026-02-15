@@ -1,7 +1,7 @@
 <task name="Code Review - Step 2: Meta-Review">
 
 <task_objective>
-Iteratively process `tasks/code-reviews/QUEUE_META_REVIEW.md` "Files Pending Meta-Review": for each pending `tasks/code-reviews/CodeReview_*.md`, reload authoritative repo/ST docs, audit the quality/technical accuracy/actionability of each finding, insert a `### STEP 2: META CODE REVIEW` section **inside each finding** (immediately after `- **Pros:**` content), update queue files and `REVIEW_TRACKER.md` (remove from meta-review queue, add to implementation queue; mark each finding Meta-reviewed and add Verdict/Reason in the tracker), then call `new_task` to clear context and repeat until none remain. Only output the created/updated files.
+Iteratively process `tasks/code-reviews/QUEUE_META_REVIEW.md` "Files Pending Meta-Review": for each pending `tasks/code-reviews/CodeReview_*.md`, reload authoritative repo/ST docs, audit the quality/technical accuracy/actionability of each finding, insert a `### STEP 2: META CODE REVIEW` section **inside each finding** (immediately after `- **Pros:**` content) — including an `#### Implementation Checklist` at its end for 🟢/🟡 verdicts — and remove the original `- **Implementation Checklist:**` block from Step 1, update queue files and `REVIEW_TRACKER.md` (remove from meta-review queue, add to implementation queue; mark each finding Meta-reviewed and add Verdict/Reason in the tracker), then call `new_task` to clear context and repeat until none remain. Only output the created/updated files.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -115,10 +115,6 @@ Evaluate the proposed fix:
 
 - **Ambiguity:**
   Is there ONLY one suggestion to fix the same issue? If there's more than one, the least-behavioral-change option must be the sole recommendation.
-
-- **Proportionality:**
-  Is the fix scope proportionate to the finding's severity and confidence? A Low/Low finding should not require a complex multi-step refactor. A High/High finding should not be dismissed with a trivial patch that leaves the root cause unaddressed.
-
 - **Checklist:**
   Are checklist items complete and actionable by an LLM without human input? Flag any step that is vague (e.g., "refactor X" without specifying exactly what to change), implies manual verification, or skips obviously required follow-up actions (e.g., updating callers after renaming a function, or re-registering a listener after removing one).
 
@@ -149,6 +145,36 @@ Evaluate the proposed fix:
   - Implementation plan discarded 🔴:
     - If Needs extensive analysis ❌ = TRUE
     - If 🚩 Requires user input = TRUE
+
+#### Implementation Checklist
+
+After writing the Verdict, append an `#### Implementation Checklist` block — **only for 🟢 and 🟡 verdicts**. Omit it entirely for 🔴 and 🚩.
+
+**For 🟢 (Ready to implement):**
+
+```markdown
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] <checklist step 1, copied from the original Step 1 Implementation Checklist>
+- [ ] <checklist step 2>
+...
+```
+
+**For 🟡 (Needs revision):**
+
+```markdown
+#### Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: <reason from Fix Quality Audit — Checklist>
+> Revisions applied: <1–2 sentences describing exactly what was changed in the checklist>
+
+- [ ] <revised checklist step 1>
+- [ ] <revised checklist step 2>
+...
+```
 
 #### After all findings: Coverage Note
 
@@ -181,7 +207,9 @@ After auditing all individual findings, produce a standalone `### Coverage Note`
 
         - `- **Pros:**`
 
-    2. Insert the full meta-review block **immediately after** that section’s content.
+    2. Insert the full meta-review block **immediately after** that section's content. For 🟢 and 🟡 verdicts, the block ends with `#### Implementation Checklist` (see format in Section 4). Omit `#### Implementation Checklist` for 🔴 and 🚩.
+
+    3. Using a **separate** `replace_in_file` edit on the same finding, **remove the `- **Implementation Checklist:**` block** from the `#### ADDRESSING THE ISSUE` section. Delete everything from the `- **Implementation Checklist:**` line through the last `- [ ]` item (the line immediately before `- **Fix risk:**`).
 
 3. Important formatting constraints:
     1. Insert the meta-review block **inside the same finding**, not at the end of the file.
@@ -189,9 +217,9 @@ After auditing all individual findings, produce a standalone `### Coverage Note`
 
         - `### STEP 2: META CODE REVIEW`
 
-    3. Do not change the original review’s text unless necessary to fix:
+    3. Do not change the original review's text unless necessary to fix:
         - broken formatting (e.g., headings not rendering)
-        - missing required labels (e.g., “Immplementation Checklist” typos that break consistency)
+        - missing required labels (e.g., "Immplementation Checklist" typos that break consistency)
         - factual errors you can prove
 
 4. Editing approach:

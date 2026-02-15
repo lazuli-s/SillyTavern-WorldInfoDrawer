@@ -1,7 +1,7 @@
 <task name="Code Review - Step 3: Implementation">
 
 <task_objective>
-Iteratively process `tasks/code-reviews/QUEUE_IMPLEMENTATION.md` "Files Pending Implementation": for each pending `tasks/code-reviews/CodeReview_*.md`, reload authoritative docs, scan the review and its source file, check whether each finding is already fixed (via git log + REVIEW_TRACKER.md + source inspection), write a `### Final Implementation Checklist` inside each finding, implement all actionable findings in order, update the code review file with `### Implementation Notes`, update `REVIEW_TRACKER.md`, create/update `CODE_REVIEW_CHANGELOG.md`, remove from the implementation queue, then call `new_task` to clear context and repeat until none remain. Only output the created/updated files.
+Iteratively process `tasks/code-reviews/QUEUE_IMPLEMENTATION.md` "Files Pending Implementation": for each pending `tasks/code-reviews/CodeReview_*.md`, reload authoritative docs, scan the review and its source file, check whether each finding is already fixed (via changelog + source inspection), overwrite the `#### Implementation Checklist` with an "Already fixed" note when applicable, implement all actionable findings in order (checking off `[ ]` items as they complete), update the code review file with a `### STEP 3: IMPLEMENTATION` section containing `#### Implementation Notes`, update `REVIEW_TRACKER.md`, create/update `CODE_REVIEW_CHANGELOG.md`, remove from the implementation queue, then call `new_task` to clear context and repeat until none remain. Only output the created/updated files.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -53,7 +53,6 @@ Iteratively process `tasks/code-reviews/QUEUE_IMPLEMENTATION.md` "Files Pending 
     1. Identify each finding section: `## F01: ...`, `## F02: ...`, etc.
     2. For each finding, record:
         - Its **verdict** from `REVIEW_TRACKER.md` (read it next): 🟢 / 🟡 / 🔴
-        - Its **Reason** field from `REVIEW_TRACKER.md` (needed for 🟡 auto-revision)
         - Whether the STEP 2 meta-review contains a `🚩 Requires user input` flag
         - Any declared cross-finding dependencies (e.g. "Depends on F02 being applied first")
 
@@ -94,65 +93,26 @@ After Step 4, each finding has one of these statuses:
 | **Skip 🚩** | Meta-review contains a `🚩 Requires user input` flag |
 | **Already Fixed** | `Implemented: ✅` in tracker, OR defect absent from source |
 | **Ready 🟢** | Verdict 🟢, defect still present |
-| **Revised 🟡** | Verdict 🟡, defect still present — checklist must be auto-revised |
+| **Ready 🟡** | Verdict 🟡, defect still present — `#### Implementation Checklist` already revised by Step 2 |
 
 ---
 
-## 5. Write Final Implementation Checklists for ALL findings (before any code changes)
+## 5. Update `#### Implementation Checklist` for Already Fixed findings (before any code changes)
 
-For **every** finding in `TARGET_REVIEW_FILE`, insert a `### Final Implementation Checklist` section immediately after the `### STEP 2: META CODE REVIEW` block.
+For findings with **Already Fixed** status only: overwrite the `#### Implementation Checklist` block inside the `### STEP 2: META CODE REVIEW` section with an "Already fixed" note.
 
-Use `replace_in_file` or `write_to_file` to insert the content.
+Use `replace_in_file` to replace the entire `#### Implementation Checklist` block (from the `#### Implementation Checklist` heading through the last `- [ ]` item) with:
 
-### Format for each status:
-
-**Skip 🔴:**
 ```markdown
-### Final Implementation Checklist
-
-> Verdict: Implementation plan discarded 🔴 — skipped.
-> Reason: <copy the Reason field from REVIEW_TRACKER.md>
-```
-
-**Skip 🚩:**
-```markdown
-### Final Implementation Checklist
-
-> Verdict: Requires user input 🚩 — skipped.
-> Reason: Cannot implement without runtime confirmation. <summarize the 🚩 flag from the meta-review in 1 sentence.>
-```
-
-**Already Fixed:**
-```markdown
-### Final Implementation Checklist
+#### Implementation Checklist
 
 > Already fixed — not implemented.
 > Evidence: <one sentence citing the evidence: specific line in source that shows the fix, or REVIEW_TRACKER.md entry>
 ```
 
-**Ready 🟢 (copy original checklist):**
-```markdown
-### Final Implementation Checklist
+For **Skip 🔴** and **Skip 🚩** findings: no `#### Implementation Checklist` exists in the file — nothing to update here.
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
-
-- [ ] <checklist step 1>
-- [ ] <checklist step 2>
-...
-```
-
-**Revised 🟡 (auto-revise based on the meta-review):**
-```markdown
-### Final Implementation Checklist
-
-> Verdict: Needs revision 🟡 — checklist auto-revised.
-> Meta-review Reason: <write the reason here>
-> Revisions applied: <1–2 sentences describing exactly what was changed in the checklist>
-
-- [ ] <revised checklist step 1>
-- [ ] <revised checklist step 2>
-...
-```
+For **Ready 🟢** and **Ready 🟡** findings: the `#### Implementation Checklist` was already written by Step 2 — do not modify it before implementing. Checklist items will be checked off (`[x]`) during implementation in Step 7.
 
 ---
 
@@ -160,10 +120,10 @@ Use `replace_in_file` or `write_to_file` to insert the content.
 
 Before implementing, compute the final ordered list of findings to implement:
 
-1. Start with all findings that have status **Ready 🟢** or **Revised 🟡**.
-2. Within that set, sort: **🟢 first**, then **🟡 revised**.
+1. Start with all findings that have status **Ready 🟢** or **Ready 🟡**.
+2. Within that set, sort: **🟢 first**, then **🟡**.
 3. Respect any declared cross-finding dependencies:
-    - If the Final Implementation Checklist for F03 says "Depends on F02 being applied first", ensure F02 comes before F03 in the order, even if F02 is 🟡 and F03 is 🟢.
+    - If the `#### Implementation Checklist` for F03 says "Depends on F02 being applied first", ensure F02 comes before F03 in the order, even if F02 is 🟡 and F03 is 🟢.
     - If a dependency target has status Skip or Already Fixed, proceed normally (treat the dependency as satisfied).
 4. Findings with status Skip or Already Fixed are excluded from the implementation order.
 
@@ -173,24 +133,27 @@ Before implementing, compute the final ordered list of findings to implement:
 
 For each finding in the ordered list from Step 6:
 
-1. Re-read the **Final Implementation Checklist** you wrote for this finding.
+1. Re-read the **`#### Implementation Checklist`** inside the `### STEP 2: META CODE REVIEW` block for this finding.
 2. Implement each checklist step by modifying the source files.
     - Use `read_file` on any file you are about to modify (if not already read).
     - Use `replace_in_file` for targeted edits; use `write_to_file` only if changes are too scattered for targeted edits.
     - If the checklist requires changes in multiple source files (e.g. caller updates), implement all of them in this same finding pass.
-3. After implementing, write the `### Implementation Notes` section (see Step 8) immediately.
+    - After completing each checklist step, mark the corresponding `- [ ]` item as `- [x]` in the `#### Implementation Checklist` using `replace_in_file`.
+3. After implementing all steps, write the `### STEP 3: IMPLEMENTATION` section (see Step 8) immediately.
 4. Proceed to the next finding.
 
 ---
 
-## 8. Write Implementation Notes for each finding
+## 8. Write STEP 3: IMPLEMENTATION section for each finding
 
-Immediately after implementing each finding (or determining it should be skipped), insert a `### Implementation Notes` section immediately after the `### Final Implementation Checklist` block.
+Immediately after implementing each finding (or determining it should be skipped), insert a `### STEP 3: IMPLEMENTATION` section immediately after the `### STEP 2: META CODE REVIEW` block (as a sibling to `### STEP 1` and `### STEP 2`).
 
 ### Format for implemented findings:
 
 ```markdown
-### Implementation Notes
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
 
 - What changed
   - Files changed: `<path/to/file.js>`
@@ -213,7 +176,9 @@ Immediately after implementing each finding (or determining it should be skipped
 ### Format for skipped / already-fixed findings:
 
 ```markdown
-### Implementation Notes
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
 
 ❌ <Skipped — [reason: Implementation plan discarded 🔴 / Requires user input 🚩 / Already fixed]>
 > <One sentence of evidence or reason. For 🔴: copy the Reason from the tracker. For 🚩: summarize the required input. For Already Fixed: cite evidence (commit, line, or tracker entry).>
@@ -238,7 +203,7 @@ For each finding:
     - `Implementation Notes: Already fixed — guard present at line 42 of current source.`
     - `Implementation Notes: Skipped — plan discarded; requires confirmed lifecycle hook for teardown.`
 
-3. If the finding was **implemented** (✅) and the `### Implementation Notes` section contains a `Risks / Side effects` block with `Manual check:` items, add a `Manual checks:` sub-bullet after `Implementation Notes:` listing each check as an unchecked checkbox. Example:
+3. If the finding was **implemented** (✅) and the `#### Implementation Notes` section contains a `Risks / Side effects` block with `Manual check:` items, add a `Manual checks:` sub-bullet after `Implementation Notes:` listing each check as an unchecked checkbox. Example:
 
     ```markdown
     - Implemented: ✅
