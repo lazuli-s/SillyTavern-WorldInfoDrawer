@@ -5,7 +5,6 @@ Source files queued for first-pass code review; entries are removed from this li
 ---
 
 ## Files Pending Review
-- `src/constants.js`
 - `src/orderHelperRender.actionBar.js`
 - `src/orderHelperRender.filterPanel.js`
 - `src/orderHelperRender.tableBody.js`

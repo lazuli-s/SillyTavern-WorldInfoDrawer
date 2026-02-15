@@ -441,34 +441,34 @@ Track all code-review findings across the extension's JS files.
 → `CodeReview_constants.js.md`
 
 - **F01** — `SORT_DIRECTION` docstrings are incorrect/misaligned with actual meaning
-  - Meta-reviewed: [X]
-    - Verdict: Ready to implement 🟢
-    - Reason: N/A
-  - Implemented: 
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 - **F02** — Recursion option values are duplicated across modules — drift risk breaks filters/indicators
-  - Meta-reviewed: [X]
-    - Verdict: Ready to implement 🟢
-    - Reason: N/A
-  - Implemented: 
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 - **F03** — Column-schema “sync” is comment-only — mismatch can silently break column visibility/persistence
-  - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
-    - Reason: Preventive drift check; checklist lacks a concrete one-time integration point/gating strategy.
-  - Implemented: 
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 - **F04** — Exported “constant” objects/arrays are mutable — accidental mutation can cascade across UI
-  - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
-    - Reason: Preventive-only; freeze/copy strategy is not narrowed to a smallest safe change and could be breaking.
-  - Implemented: 
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 - **F05** — `SORT` enum names overlap conceptually (TITLE vs ALPHABETICAL) — increases future misuse risk
-  - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
-    - Reason: Forward-looking; `SORT.ALPHABETICAL` not currently surfaced in UI and rename/compat concerns outweigh benefit.
-  - Implemented: 
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 ---
 
