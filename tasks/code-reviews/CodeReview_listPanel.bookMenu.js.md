@@ -52,11 +52,6 @@
 - **Proposed fix:**
   In `duplicateBook`, replace `findNewName()` usage with logic that computes `addedNames = currentNames.filter((entry)=>!initialNameSet.has(entry))`. Return a name only when `addedNames.length === 1`; otherwise keep waiting until timeout and finally return `null`. In `duplicateBookIntoFolder`, keep the existing `if (!duplicatedName) return false;` behavior so ambiguous cases do not move any book.
 
-- **Implementation Checklist:**
-  [ ] Replace first-match duplicate detection in `duplicateBook` with exact-cardinality (`addedNames.length === 1`) detection.
-  [ ] Preserve timeout behavior and return `null` when the new name is ambiguous.
-  [ ] Keep `duplicateBookIntoFolder` early-return behavior for null duplicate names.
-
 - **Fix risk:** Low 🟢
   The change is constrained to name-resolution logic and favors no-op over wrong-target mutation.
 
@@ -66,7 +61,63 @@
 - **Pros:**
   Prevents wrong-book moves caused by concurrent updates.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "If another action creates a book during the same window (for example import/new-book from another UI flow), `findNewName()` can return that unrelated book."
+    - **Evidence:** Code shows `findNewName()` returns first non-initial name without cardinality check. ✅ Verified.
+
+- **Top risks:**
+  - Internal inconsistency: The proposed fix changes the return value semantics (from first-match to exact-match), which could break callers expecting any result.
+
+#### Technical Accuracy Audit
+
+> The race condition scenario is plausible given the code's first-match logic.
+
+- **Why it may be wrong/speculative:**
+  N/A - claim is evidence-backed by code inspection.
+
+- **Validation:**
+  Validated ✅
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound - stays within the `listPanel.bookMenu.js` module per ARCHITECTURE.md.
+
+- **Behavioral change:**
+  Changes return value behavior when multiple books are added - this is labeled and intentional (reject ambiguous results). ✅ Labeled
+
+- **Ambiguity:**
+  Single suggestion (exact-cardinality detection). ✅
+
+- **Checklist:**
+  Checklist items are actionable: replace find logic, preserve timeout, keep existing null-handling. ✅ Complete
+
+- **Dependency integrity:**
+  No cross-finding dependencies declared. ✅
+
+- **Fix risk calibration:**
+  Fix risk rated Low - correct. Logic-only change, favors no-op over wrong mutation. ✅
+
+- **Why it's safe to implement:**
+  Claim is specific: "does not change core duplicate triggering, book data payloads, or folder metadata write paths" - these are verifiable. ✅ Specific
+
+- **Mitigation:**
+  N/A - fix risk is low.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Replace first-match duplicate detection in `duplicateBook` with exact-cardinality (`addedNames.length === 1`) detection.
+- [ ] Preserve timeout behavior and return `null` when the new name is ambiguous.
+- [ ] Keep `duplicateBookIntoFolder` early-return behavior for null duplicate names.
 
 ---
 
@@ -108,11 +159,6 @@
 - **Proposed fix:**
   **Behavior Change Required:** block folder-change actions when the active editor is dirty. Add a guard callback from `drawer.js` through `initListPanel`/`createBookMenuSlice` (for example `canRefreshWithoutDataLoss`), and in each folder-change click handler (`Save`, `New Folder`, `No Folder`) return early with a warning toast when refresh is unsafe.
 
-- **Implementation Checklist:**
-  [ ] Extend list-panel wiring (`drawer.js` -> `src/listPanel.js` -> `src/listPanel.bookMenu.js`) with a dirty-safe refresh guard callback.
-  [ ] Gate all three folder-change handlers in `buildMoveBookMenuItem` before `applyBookFolderChange`.
-  [ ] Keep existing folder-change persistence logic unchanged when the guard passes.
-
 - **Fix risk:** Medium 🟡
   This introduces a new guard branch in an existing flow and must stay consistent with other dirty-state guard UX.
 
@@ -122,7 +168,65 @@
 - **Pros:**
   Removes a high-impact unsaved-edit loss path.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "In `src/listPanel.js`, that path executes `refreshList()`, and `refreshList()` immediately calls `state.resetEditor?.()`."
+    - **Evidence:** Source verification needed - the Step 1 finding references this behavior but it should be verified against actual `listPanel.js` code.
+  - Claim: "There is no dirty-state guard in `listPanel.bookMenu.js` before triggering this refresh."
+    - **Evidence:** Code shows `applyBookFolderChange` is called directly without any guard. ✅ Verified.
+
+- **Top risks:**
+  - Missing evidence: The claim about `refreshList()` calling `resetEditor` needs verification in `listPanel.js`.
+
+#### Technical Accuracy Audit
+
+> The dirty-loss path is evidence-backed but the downstream call chain needs verification.
+
+- **Why it may be wrong/speculative:**
+  The finding states `refreshList()` calls `resetEditor` but this needs verification in `listPanel.js`.
+
+- **Validation:**
+  Needs extensive analysis ❌ — Requires reading `src/listPanel.js` to verify the call chain from `applyBookFolderChange` to `refreshList` to `resetEditor`.
+
+- **What needs to be done/inspected to successfully validate:**
+  Read `src/listPanel.js` to confirm: (1) `applyBookFolderChange` calls `refreshList`, (2) `refreshList` calls `resetEditor`, (3) no existing dirty guard exists in this path.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound - adding dirty guards is consistent with existing drawer guard patterns (per ARCHITECTURE.md and FEATURE_MAP).
+
+- **Behavioral change:**
+  Labeled as "Behavior Change Required" - correctly identifies blocking user action as a change. ✅ Labeled
+
+- **Ambiguity:**
+  Single suggestion (add guard callback). ✅
+
+- **Checklist:**
+  Checklist items are actionable but reference module wiring that needs specification: extending list-panel wiring with guard callback. ✅ Complete but needs detail
+
+- **Dependency integrity:**
+  No cross-finding dependencies. ✅
+
+- **Fix risk calibration:**
+  Fix risk rated Medium - correct. Touches shared dirty-state pattern across modules. ✅
+
+- **Why it's safe to implement:**
+  Claim is specific: "does not alter how folder metadata is written; it only blocks the call when unsaved edits would be destroyed" - verifiable. ✅ Specific
+
+- **Mitigation:**
+  N/A - fix risk is medium and acceptable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Extend list-panel wiring (`drawer.js` -> `src/listPanel.js` -> `src/listPanel.bookMenu.js`) with a dirty-safe refresh guard callback.
+- [ ] Gate all three folder-change handlers in `buildMoveBookMenuItem` before `applyBookFolderChange`.
+- [ ] Keep existing folder-change persistence logic unchanged when the guard passes.
 
 ---
 
@@ -166,12 +270,6 @@
 - **Proposed fix:**
   In `importFolderFile`, wrap each create/save block in `try/catch`. Track `successCount` and `failedBooks`. If `saveWorldInfo` fails after creation, attempt rollback with `state.deleteWorldInfo?.(name)` and record rollback outcome. After loop completion, refresh list if any success and show one summary toast including failures.
 
-- **Implementation Checklist:**
-  [ ] Add per-book `try/catch` in `importFolderFile` for `createNewWorldInfo` and `saveWorldInfo`.
-  [ ] Track successes/failures and continue loop on per-book errors.
-  [ ] Attempt rollback with `deleteWorldInfo` when save fails after create.
-  [ ] Emit final summary toast reporting counts.
-
 - **Fix risk:** Medium 🟡
   Rollback paths must avoid deleting pre-existing books with colliding names; use only names created in this import pass.
 
@@ -181,7 +279,66 @@
 - **Pros:**
   Improves resilience and avoids silent partial-import failure states.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "Per-book create/save calls are not wrapped in a local `try/catch`."
+    - **Evidence:** Code shows `await state.createNewWorldInfo(name, { interactive: false })` directly in loop without try/catch. ✅ Verified.
+  - Claim: "Because creation happens before save, a failure after `createNewWorldInfo` can leave an empty placeholder book behind."
+    - **Evidence:** Code flow shows `createNewWorldInfo` is called before `saveWorldInfo` in the loop, so failure between them leaves created book. ✅ Verified.
+
+- **Top risks:**
+  - None identified - evidence is clear from code inspection.
+
+#### Technical Accuracy Audit
+
+> Both claims are fully evidence-backed.
+
+- **Why it may be wrong/speculative:**
+  N/A - claims verified by code inspection.
+
+- **Validation:**
+  Validated ✅
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound - stays within `listPanel.bookMenu.js` module per ARCHITECTURE.md.
+
+- **Behavioral change:**
+  No behavioral change to successful imports - only error handling paths change. ✅ Not applicable (no behavior change for success path)
+
+- **Ambiguity:**
+  Single suggestion (per-book try/catch with rollback). ✅
+
+- **Checklist:**
+  Checklist items are complete and actionable. ✅ Complete
+
+- **Dependency integrity:**
+  No cross-finding dependencies. ✅
+
+- **Fix risk calibration:**
+  Fix risk rated Medium - correct. Rollback logic has edge cases around name collision. ✅
+
+- **Why it's safe to implement:**
+  Claim is specific: "isolated to import error handling" - verifiable. ✅ Specific
+
+- **Mitigation:**
+  N/A - medium risk is acceptable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add per-book `try/catch` in `importFolderFile` for `createNewWorldInfo` and `saveWorldInfo`.
+- [ ] Track successes/failures and continue loop on per-book errors.
+- [ ] Attempt rollback with `deleteWorldInfo` when save fails after create.
+- [ ] Emit final summary toast reporting counts.
 
 ---
 
@@ -223,11 +380,6 @@
 - **Proposed fix:**
   Change export payload to include `metadata` (cloned) alongside `entries`, for example `{ entries: structuredClone(...), metadata: structuredClone(state.cache[name].metadata ?? {}) }` before `JSON.stringify`.
 
-- **Implementation Checklist:**
-  [ ] Update export handler payload to include `metadata`.
-  [ ] Clone exported objects before serialization to avoid accidental live-reference mutation.
-  [ ] Keep filename and MIME type behavior unchanged.
-
 - **Fix risk:** Low 🟢
   Backward-compatible superset payload; existing consumers that only need `entries` can still read it.
 
@@ -237,7 +389,65 @@
 - **Pros:**
   Preserves user organization/sort settings across export/import.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "Export serializes only `entries` and omits `metadata`."
+    - **Evidence:** Code shows `{ entries:state.cache[name].entries }` - no metadata. ✅ Verified.
+  - Claim: "Folder placement and per-book sort preference are metadata-backed (`folder`, `stwid.sort`)."
+    - **Evidence:** Consistent with ARCHITECTURE.md and FEATURE_MAP. ✅ Verified.
+
+- **Top risks:**
+  - None identified - evidence is clear from code inspection.
+
+#### Technical Accuracy Audit
+
+> Claims are fully evidence-backed by code inspection and documentation.
+
+- **Why it may be wrong/speculative:**
+  N/A - claims verified.
+
+- **Validation:**
+  Validated ✅
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound - stays within `listPanel.bookMenu.js` module per ARCHITECTURE.md.
+
+- **Behavioral change:**
+  No behavioral change - export format expansion only. ✅ Not applicable
+
+- **Ambiguity:**
+  Single suggestion (add metadata to export). ✅
+
+- **Checklist:**
+  Checklist items are complete and actionable. ✅ Complete
+
+- **Dependency integrity:**
+  No cross-finding dependencies. ✅
+
+- **Fix risk calibration:**
+  Fix risk rated Low - correct. Simple serialization change. ✅
+
+- **Why it's safe to implement:**
+  Claim is specific: "touches only export serialization" - verifiable. ✅ Specific
+
+- **Mitigation:**
+  N/A - low risk.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Update export handler payload to include `metadata`.
+- [ ] Clone exported objects before serialization to avoid accidental live-reference mutation.
+- [ ] Keep filename and MIME type behavior unchanged.
 
 ---
 
@@ -283,11 +493,6 @@
 - **Proposed fix:**
   Wrap the handler in `try/catch`, `await fetch(...)`, check `response.ok`, and show `toastr.error(...)` on failures. Optionally show a success/info toast when request is accepted.
 
-- **Implementation Checklist:**
-  [ ] Convert the External Editor click handler to `await fetch` with `response.ok` validation.
-  [ ] Add `try/catch` and show user-visible error feedback.
-  [ ] Keep request URL, headers, and payload schema unchanged.
-
 - **Fix risk:** Low 🟢
   Localized to one optional integration action.
 
@@ -297,4 +502,67 @@
 - **Pros:**
   Improves reliability and debuggability of optional plugin integration.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "The handler invokes `fetch` without `await`, response status handling, or `catch`."
+    - **Evidence:** Code shows `fetch(...)` call without await or .then(). ✅ Verified.
+
+- **Top risks:**
+  - None identified - evidence is clear from code inspection.
+
+#### Technical Accuracy Audit
+
+> Claim is fully evidence-backed.
+
+- **Why it may be wrong/speculative:**
+  N/A - claim verified.
+
+- **Validation:**
+  Validated ✅
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound - stays within `listPanel.bookMenu.js` module per ARCHITECTURE.md.
+
+- **Behavioral change:**
+  No behavioral change to core functionality - adds error feedback only. ✅ Not applicable
+
+- **Ambiguity:**
+  Single suggestion (await + error handling). ✅
+
+- **Checklist:**
+  Checklist items are complete and actionable. ✅ Complete
+
+- **Dependency integrity:**
+  No cross-finding dependencies. ✅
+
+- **Fix risk calibration:**
+  Fix risk rated Low - correct. Simple error handling addition. ✅
+
+- **Why it's safe to implement:**
+  Claim is specific: "does not alter book data or core WI behavior, only feedback/error handling" - verifiable. ✅ Specific
+
+- **Mitigation:**
+  N/A - low risk.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Convert the External Editor click handler to `await fetch` with `response.ok` validation.
+- [ ] Add `try/catch` and show user-visible error feedback.
+- [ ] Keep request URL, headers, and payload schema unchanged.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified - the five findings cover the main functional areas of the book menu module (duplicate, folder-move, import, export, external editor).
+- **Severity calibration:** Severity ratings appear appropriate: F02 (High) for data loss risk, F01/F03/F04 (Medium) for integrity/UX issues, F05 (Low) for best practice.

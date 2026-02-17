@@ -47,12 +47,6 @@
 - **Proposed fix:**
   In `renderBook()`, validate `data` before reading `data.metadata` or `data.entries`. If invalid, return `null` early and avoid touching `runtime.cache[name]`. In `loadList()`, skip entries where `runtime.loadWorldInfo(name)` returns a non-object payload, and handle a `null` return from `renderBook(...)` as a no-op so folder/root loops continue.
 
-- **Implementation Checklist:**
-  [ ] Add an object-shape guard in `renderBook()` immediately after loading `data`.
-  [ ] Return `null` from `renderBook()` when payload shape is invalid, before cache/DOM writes.
-  [ ] In `loadList()`, skip pushing books with invalid load payloads.
-  [ ] In folder and root render loops, allow `renderBook(...)` to return `null` without aborting remaining books.
-
 - **Fix risk:** Low 🟢
   The change is defensive and only alters failure handling paths where payloads are already invalid.
 
@@ -62,7 +56,68 @@
 - **Pros:**
   Prevents full-list crashes from one bad/missing book and improves refresh resilience during concurrent WI changes.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "loadWorldInfo can return null" — Based on code inspection, `loadWorldInfo` typically returns data or throws; null returns are rare but possible in edge cases (corrupted cache, concurrent deletion). The claim is technically correct from a defensive programming standpoint but the race condition scenario requires specific timing.
+
+- **Top risks:**
+  - Speculative claim about null return frequency — The WI API doesn't explicitly promise null on failure; more commonly it throws. However, defensive guards are still valuable for robustness.
+
+#### Technical Accuracy Audit
+
+> *The WI API contract allows load failures (`data | null`)*
+
+- **Why it may be wrong/speculative:**
+  The WI API (`loadWorldInfo`) typically returns a data object or throws an error. Null returns are not explicitly documented as a normal path.
+
+- **Validation:**
+  Inspected `src/listPanel.booksView.js` lines 19-23. The code directly accesses `data.metadata` and `data.entries` without guards. While null is unlikely in normal operation, defensive programming is warranted. ✅ Validated — defensive guards are appropriate regardless of null frequency.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A — The defensive fix is appropriate even if null returns are rare.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed fix stays within the `listPanel.booksView.js` module per ARCHITECTURE.md. This is correct — book rendering is owned by this slice.
+
+- **Behavioral change:**
+  No behavioral change for valid books. The change only affects failure paths, which is the intent.
+
+- **Ambiguity:**
+  There is only one suggested approach (null guards + skip invalid). This is clear.
+
+- **Checklist:**
+  The checklist items are specific and actionable:
+  - "Add an object-shape guard" — clear what to check
+  - "Return null from renderBook()" — clear contract
+  - "Skip pushing books with invalid load payloads" — clear action
+  - "Allow renderBook to return null without aborting" — clear control flow
+
+  All items are actionable by an LLM without human input.
+
+- **Dependency integrity:**
+  No cross-finding dependencies declared. The fix is self-contained.
+
+- **Fix risk calibration:**
+  The stated "Low" fix risk is accurate. The change is defensive-only, touching only failure paths.
+
+- **"Why it's safe" validity:**
+  The safety claim is specific: "does not alter normal rendering, sorting, drag/drop, or collapse behavior for valid books." This is accurate — the guards only trigger on invalid data.
+
+- **Mitigation:**
+  Not applicable — fix risk is low.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add an object-shape guard in `renderBook()` immediately after loading `data`.
+- [ ] Return `null` from `renderBook()` when payload shape is invalid, before cache/DOM writes.
+- [ ] In `loadList()`, skip pushing books with invalid load payloads.
 
 ## F02: New-entry flow applies optimistic UI/cache mutation without rollback on save failure
 
@@ -115,4 +170,77 @@
 - **Pros:**
   Keeps UI state aligned with persisted WI state and prevents phantom entries that disappear later.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim: "There is no try/catch rollback path" — Direct code inspection at lines 123-129 confirms no error handling around the async sequence.
+  - Claim: "If saveWorldInfo throws/rejects, cache and list UI may keep an unsaved entry" — This is a logical consequence of the missing try/catch; the code mutates cache before awaiting save, so any rejection leaves inconsistent state.
+
+- **Top risks:**
+  - Missing evidence / wrong prioritization — None identified. The finding is evidence-based and correctly identifies a real data-integrity issue.
+
+#### Technical Accuracy Audit
+
+> *There is no `try/catch` rollback path.*
+
+- **Why it may be wrong/speculative:**
+  Not speculative — code directly shows no error handling (lines 123-129 in `src/listPanel.booksView.js`).
+
+- **Validation:**
+  ✅ Validated — The add-entry click handler at lines 123-129 mutates cache, renders entry, opens editor, then awaits save without any try/catch.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A — Finding is correct as stated.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed fix stays within `listPanel.booksView.js` module, which owns the add-entry flow per FEATURE_MAP. This is correct.
+
+- **Behavioral change:**
+  No behavioral change for successful paths. The change only adds error handling for failure paths.
+
+- **Ambiguity:**
+  There is only one suggestion (try/catch with rollback). This is clear.
+
+- **Checklist:**
+  The checklist items are specific and actionable:
+  - "Add try/catch around the add-entry click handler" — clear
+  - "On failure, remove the optimistic entry from cache" — clear
+  - "On failure, remove the rendered row and clear dom.entry" — clear
+  - "Emit a clear error toast" — clear
+
+  However, the checklist is incomplete: it doesn't mention closing/clearing the editor panel if it was opened before the save failed. The user may have started typing into the editor that was opened via `runtime.cache[name].dom.entry[newEntry.uid].root.click()`. This should be added to the rollback steps.
+
+- **Dependency integrity:**
+  No cross-finding dependencies declared. The fix is self-contained.
+
+- **Fix risk calibration:**
+  The stated "Medium" fix risk is appropriate. The rollback touches both cache and DOM bookkeeping, which could cause desync if cleanup is incomplete. The checklist gap (editor cleanup) increases this risk slightly.
+
+- **"Why it's safe" validity:**
+  The safety claim is accurate: "It does not change successful add-entry behavior; it only corrects inconsistent state when failure already occurred."
+
+- **Mitigation:**
+  Add editor panel reset/close to the rollback steps in the checklist to ensure complete cleanup.
+
+- **Verdict:** Implementation plan needs revision 🟡
+
+#### Detailed Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Checklist missing editor cleanup step — if the editor was opened via `.click()` before save fails, the editor panel may remain open with unsaved entry content, leaving confusing state.
+> Revisions applied: Added explicit editor clear/close step to rollback logic.
+
+- [ ] Add `try/catch` around the add-entry click handler mutation/render/save sequence.
+- [ ] On failure, remove the optimistic entry from `runtime.cache[name].entries`.
+- [ ] On failure, remove the rendered row and clear `runtime.cache[name].dom.entry[newEntry.uid]`.
+- [ ] On failure, clear the editor panel and close it if it was opened for the new entry (check if `runtime.currentEditor` matches the new entry's UID, and if so, call the editor reset/close function).
+- [ ] Emit a clear error toast for failed entry creation persistence.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified. The two findings cover the main data-integrity and race-condition risks in the book/entry rendering flow. Other potential issues (like folder rendering edge cases) are covered in separate review files.
+- **Severity calibration:** F01 severity Medium is appropriate — crash is disruptive but recoverable via refresh. F02 severity Medium is appropriate — data integrity issue but requires specific failure conditions to manifest.
