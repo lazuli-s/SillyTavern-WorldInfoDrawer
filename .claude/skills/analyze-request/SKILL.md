@@ -139,10 +139,35 @@ If there are none, write "None — all questions resolved during interview."]
 If nothing was excluded, write "None identified."]
 ```
 
-### Step 3: Tell the user
+### Step 3: Update TASKS_PENDING_IMPLEMENTATION.md
 
-After creating the file, tell the user:
+After writing the task file, always create or update `tasks/TASKS_PENDING_IMPLEMENTATION.md`.
+
+- If the file does not exist, create it using this template:
+
+```markdown
+# Queue: Tasks Pending Implementation
+
+Task files that have been analyzed and are ready for implementation.
+
+---
+
+## Tasks Pending Implementation
+```
+
+- Then append the new task file path as a list item:
+
+```markdown
+- `tasks/<filename>.md`
+```
+
+Never remove existing entries from the list. Only append.
+
+### Step 4: Tell the user
+
+After creating the task file and updating the queue, tell the user:
 
 - Where the task file was saved
-- That it is ready to hand off to a coding agent
+- That `tasks/TASKS_PENDING_IMPLEMENTATION.md` was updated with the new entry
+- That both files are ready to hand off to a coding agent
 - A one-sentence plain-language summary of what was agreed
