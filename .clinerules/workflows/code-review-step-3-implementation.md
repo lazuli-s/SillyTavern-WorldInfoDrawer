@@ -1,7 +1,7 @@
 <task name="Code Review - Step 3: Implementation">
 
 <task_objective>
-Iteratively process `tasks/code-reviews/QUEUE_IMPLEMENTATION.md` "Files Pending Implementation": for each pending `tasks/code-reviews/CodeReview_*.md`, reload authoritative docs, scan the review and its source file, check whether each finding is already fixed (via changelog + source inspection), overwrite the `#### Implementation Checklist` with an "Already fixed" note when applicable, implement all actionable findings in order (checking off `[ ]` items as they complete), update the code review file with a `### STEP 3: IMPLEMENTATION` section containing `#### Implementation Notes`, update `REVIEW_TRACKER.md`, create/update `CODE_REVIEW_CHANGELOG.md`, remove from the implementation queue. Only output the created/updated files. Output proper emojis.
+Process `tasks/code-reviews/QUEUE_IMPLEMENTATION.md` "Files Pending Implementation": for the first pending `tasks/code-reviews/CodeReview_*.md`, load authoritative docs, scan the review and its source file, check whether each finding is already fixed (via changelog + source inspection), overwrite the `#### Implementation Checklist` with an "Already fixed" note when applicable, implement all actionable findings in order (checking off `[ ]` items as they complete), update the code review file with a `### STEP 3: IMPLEMENTATION` section containing `#### Implementation Notes`, update `REVIEW_TRACKER.md`, create/update `CODE_REVIEW_CHANGELOG.md`, remove from the implementation queue. Only output the created/updated files. Output proper emojis.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -261,6 +261,8 @@ Do **not** modify the `Meta-reviewed` or `Verdict` or `Reason` fields.
 1. In `tasks/code-reviews/QUEUE_IMPLEMENTATION.md`: use `replace_in_file` to remove `TARGET_REVIEW_FILE` from the bullet list under `## Files Pending Implementation`.
 
 2. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
+
+Finish the workflow (one code review file at a time.)
 
 </detailed_sequence_steps>
 

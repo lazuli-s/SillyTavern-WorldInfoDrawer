@@ -13,7 +13,9 @@
       "Bash(git pull:*)",
       "Bash(git log:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(python:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)"
     ]
   },
   "hooks": {
