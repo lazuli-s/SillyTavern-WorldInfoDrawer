@@ -486,6 +486,8 @@ export function buildVisibilityRow({
  *   isOutletPosition: function,
  *   getOutletOptions: function,
  *   applyOrderHelperOutletFilterToRow: function,
+ *   syncOrderHelperOutletFilters: function,
+ *   filterIndicatorRefs: object,
  *   applyOrderHelperRecursionFilterToRow: function,
  * }} ctx
  * @returns {{ element: HTMLElement, refreshSelectionCount: function, cleanup: function }}
@@ -507,6 +509,8 @@ export function buildBulkEditRow({
     isOutletPosition,
     getOutletOptions,
     applyOrderHelperOutletFilterToRow,
+    syncOrderHelperOutletFilters,
+    filterIndicatorRefs,
     applyOrderHelperRecursionFilterToRow,
 }) {
     const row = document.createElement('div');
@@ -987,13 +991,20 @@ export function buildBulkEditRow({
             if (!rows) return;
             const targets = getBulkTargets(rows);
             const books = new Set();
+            // Pass 1: mutate all entries before syncing the filter snapshot.
             for (const { tr, bookName, entryData } of targets) {
                 books.add(bookName);
                 entryData.outletName = value;
                 const rowOutlet = /**@type {HTMLInputElement}*/(tr.querySelector('[name="outletName"]'));
                 if (rowOutlet) rowOutlet.value = value;
+            }
+            // Refresh the snapshot so the new outlet value is included in the allowed list.
+            syncOrderHelperOutletFilters();
+            // Pass 2: apply the updated filter to each row.
+            for (const { tr, entryData } of targets) {
                 applyOrderHelperOutletFilterToRow(tr, entryData);
             }
+            filterIndicatorRefs.outlet?.();
             await saveUpdatedBooks(books);
         });
         outletContainer.append(applyOutlet);

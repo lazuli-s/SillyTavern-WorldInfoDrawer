@@ -8,7 +8,8 @@ documents the findings in the task file, then moves the file to `tasks/finished/
 
 ## Pending Review
 
-- 
+- `tasks/Issue_OrderHelperBulkEditHidesEntries.md`
+
 ---
 
 ## Reviewed

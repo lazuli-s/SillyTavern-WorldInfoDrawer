@@ -76,3 +76,61 @@ called anywhere in the bulk-edit apply flow.
   `refreshOutletFilterIndicator` after each inline change, but the same root cause may
   affect them. Confirm whether the same issue occurs during inline outlet edits; if so,
   apply the same fix pattern.
+
+**Resolution (from code inspection):** `tableBody.js` line 443–444 already calls
+`syncOrderHelperOutletFilters()` then `refreshOutletFilterIndicator()` on every inline
+outlet edit. No change needed there.
+
+## Implementation Plan
+
+- [x] In `src/orderHelperRender.js` (lines 157–175), add `syncOrderHelperOutletFilters`
+      and `filterIndicatorRefs` to the `buildBulkEditRow` call. Both are already in scope
+      at that point (`syncOrderHelperOutletFilters` from the outer ctx, `filterIndicatorRefs`
+      defined at line 117 before the call).
+- [x] In `src/orderHelperRender.actionBar.js`, add `syncOrderHelperOutletFilters` and
+      `filterIndicatorRefs` to the JSDoc comment and destructured parameter list of
+      `buildBulkEditRow`.
+- [x] In the `applyOutlet` click handler (lines 984–999), restructure into two passes:
+      - Pass 1: mutate `entryData.outletName` and `rowOutlet.value` as today; collect `books`.
+        Remove `applyOrderHelperOutletFilterToRow` from inside this loop.
+      - After pass 1: call `syncOrderHelperOutletFilters()`.
+      - Pass 2: iterate `targets` and call `applyOrderHelperOutletFilterToRow(tr, entryData)`.
+      - After pass 2: call `filterIndicatorRefs.outlet?.()`.
+      - Then `await saveUpdatedBooks(books)` as before.
+- [x] Confirm `orderHelperFilters.js` — no change needed (already verified correct).
+- [x] Confirm `orderHelperRender.tableBody.js` — no change needed (inline edits already
+      handle sync correctly; verified above).
+
+## After Implementation
+
+### What changed
+
+- Files changed: `src/orderHelperRender.js`, `src/orderHelperRender.actionBar.js`
+  - `orderHelperRender.js` — passes `syncOrderHelperOutletFilters` and `filterIndicatorRefs`
+    into `buildBulkEditRow` so the apply handler can use them
+  - `buildBulkEditRow` / `applyOutlet` handler — split the single loop into two passes:
+    first all mutations run, then `syncOrderHelperOutletFilters()` refreshes the snapshot,
+    then `applyOrderHelperOutletFilterToRow` runs per row, then `filterIndicatorRefs.outlet?.()`
+    updates the filter-button indicator
+
+### Risks / What might break
+
+- This touches the outlet filter sync flow in the bulk-edit path, so it could affect
+  filter state if `syncOrderHelperOutletFilters` ever produces unexpected results (e.g.
+  if `getOutletValues` returns stale cache data before the save completes — though the
+  mutation happens in-memory first, before save, so this should be fine).
+- The filter indicator chip (`filterIndicatorRefs.outlet?.()`) is now called after bulk
+  edits, matching what inline edits already do. If the indicator had not fired before, any
+  test relying on it staying un-updated after a bulk outlet edit would now behave differently.
+
+### Manual checks
+
+- [ ] Open the Order Helper, select several entries that currently have no outlet name.
+  Type a brand-new outlet name (one that doesn't exist yet) into the Outlet bulk-edit
+  field and click Apply. **Success: all selected entries remain visible in the table.**
+- [ ] Same setup, but this time first use the outlet column filter to narrow to a specific
+  outlet value, then bulk-apply a *different* outlet name. **Success: the affected entries
+  disappear because the intentional filter is respected.**
+- [ ] Inline outlet edit (click an outlet cell in a row, type a new value, press Enter or
+  blur). Confirm entries remain visible. **Success: no regression — inline edits were
+  already working and should continue to work.**
