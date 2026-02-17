@@ -6,4 +6,4 @@ Code review files queued for meta-review; entries are added after a `CodeReview_
 
 ## Files Pending Meta-Review
 
-(No files pending)
+- `tasks/code-reviews/CodeReview_listPanel.booksView.js.md`

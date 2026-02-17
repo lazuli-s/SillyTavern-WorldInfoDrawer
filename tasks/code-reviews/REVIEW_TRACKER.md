@@ -163,6 +163,23 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
+### `src/listPanel.booksView.js`
+-> `CodeReview_listPanel.booksView.js.md`
+
+- **F01** -- Missing null guard for loaded book data can crash full list rendering
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+
+- **F02** -- New-entry flow applies optimistic UI/cache mutation without rollback on save failure
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+
+---
+
 ### `src/listPanel.bookMenu.js`
 -> `CodeReview_listPanel.bookMenu.js.md`
 
