@@ -66,7 +66,62 @@
   - Prevents a direct unsaved-edit loss path.
   - Aligns public API behavior with existing dirty protections in drawer controls.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that `jumpToEntry()` performs synthetic click without dirty guard is **evidence-based** and confirmed by code inspection.
+
+- **Top risks:**
+  - None — the finding is well-evidenced with specific code anchors.
+
+#### Technical Accuracy Audit
+
+> `jumpToEntry()` performs a synthetic `click()` whenever the requested entry is not already open. That click path goes into `openEntryEditor()` which does not have a dirty-state guard at this API boundary.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `index.js` lines 66-72 show unconditional `entryDom.click()` when entry differs.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (add dirty check) is sound and stays within module responsibility.
+
+- **Behavioral change:**
+  Explicitly labeled "Behavior Change Required" — ✅ correctly flags that callers may receive `false` returns.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium 🟡" — ✅ accurate. Callers may need to handle new return value.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add a dirty-state check at the top of `jumpToEntry()` before toggling activation/order modes.
+- [ ] Return `false` when dirty state is true, without firing `entryDom.click()`.
+- [ ] Keep existing behavior unchanged for clean editor state.
 
 ---
 
@@ -121,7 +176,62 @@
   - Eliminates unhandled-promise noise.
   - Improves diagnosability of startup failures.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that `refreshList()` is called without error handling is **evidence-based** and correct.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> The call is fire-and-forget and has no `await`/`.catch(...)`.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `index.js` line 60 shows bare `refreshList()` call.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (add catch handler) is sound.
+
+- **Behavioral change:**
+  Not explicitly labeled — internal improvement.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Low 🟢" — ✅ accurate.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Update the startup invocation to `void refreshList().catch((error)=>{ ... })`.
+- [ ] Emit a clear prefixed error message with the caught exception.
+- [ ] Preserve current non-blocking startup order.
 
 ---
 
@@ -177,4 +287,66 @@
   - Prevents duplicate watcher/listener accumulation.
   - Brings lifecycle handling in line with extension best-practice guidance.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that the CSS watcher has no cleanup is **evidence-based** and correct — PERF-02 violation.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> `watchCss()` registers a `message` listener on the watcher object, but no cleanup function is stored or exposed.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `index.js` lines 13-27 show watcher setup with no cleanup path.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (add cleanup) is sound and follows best practices.
+
+- **Behavioral change:**
+  Labeled as "Structural Issue" — ✅ appropriate.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium 🟡" — ✅ accurate.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Refactor `watchCss()` to keep a named listener reference and return a cleanup function.
+- [ ] Persist the cleanup handle in module scope.
+- [ ] Invoke cleanup from the extension teardown/re-init path before creating a new watcher.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified. All findings are well-evidenced with specific code anchors. The review covers key data integrity, startup error handling, and lifecycle management issues in the extension entry point.
+- **Severity calibration:** Severity ratings appear appropriate — F01 (High) addresses a direct data-loss path, F02 (Medium) addresses startup error handling, F03 (Low) addresses a best-practice violation.

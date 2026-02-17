@@ -70,7 +70,69 @@
   - Prevents a direct unsaved-edit loss path.
   - Makes row-control behavior more predictable.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that status clicks bubble to entry click handler when row is active is **evidence-based** and **confirmed** by code inspection in `src/worldEntry.js` lines 107-110.
+
+- **Top risks:**
+  - None identified — the finding is well-evidenced with specific code anchors and a concrete failure path.
+
+#### Technical Accuracy Audit
+
+> The `status` container only stops click propagation when the row is *not* the active editor row. For the active row, status clicks bubble to `entry` and call `openEntryEditor` again.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `src/worldEntry.js:107-110` shows conditional stopPropagation that only fires when NOT active:
+  ```js
+  status.addEventListener('click', (evt)=>{
+      if (context.currentEditor?.name != name || context.currentEditor?.uid != e.uid) evt.stopPropagation();
+  });
+  ```
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed direction is sound — unconditional `evt.stopPropagation()` in status click handler prevents the bubble-up path entirely. This stays within module responsibility (worldEntry.js owns row rendering).
+
+- **Behavioral change:**
+  Explicitly labeled "Behavior Change Required" in Step 1 — ✅ correctly flags that row-clicks no longer trigger when status controls are clicked.
+
+- **Ambiguity:**
+  Only one suggestion (unconditional stopPropagation) — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable:
+  1. Update status click handler to stop propagation unconditionally.
+  2. Verify row status controls still toggle state without re-triggering editor.
+  Both are specific and implementable by LLM without human input.
+
+- **Dependency integrity:**
+  No dependencies declared or required — ✅ self-contained fix.
+
+- **Fix risk calibration:**
+  Fix risk rated "Low 🟢" — ✅ accurate. The change is localized to event bubbling and has no cross-module impact.
+
+- **Why it's safe validity:**
+  Safety claim is specific: "only affects click propagation from status controls" — ✅ verifiable. Normal row click behavior remains unchanged.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Update the `status` click handler in `src/worldEntry.js` to stop propagation unconditionally.
+- [ ] Verify row status controls still toggle entry state/strategy without re-triggering `openEntryEditor()`.
 
 ---
 
@@ -139,7 +201,62 @@
   - Prevents out-of-order persistence for rapid user actions.
   - Makes save behavior deterministic.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that concurrent saves can race is **evidence-based** — both handlers perform async `saveWorldInfo` calls without any coordination mechanism.
+
+- **Top risks:**
+  - None — the finding identifies a real race condition that can cause user-visible state inconsistency.
+
+#### Technical Accuracy Audit
+
+> Both handlers launch async saves with no per-entry in-flight guard, no sequencing token, and no UI lock. Users can trigger back-to-back actions before prior saves complete.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct based on code inspection.
+
+- **Validation:**
+  Validated ✅ — `src/worldEntry.js` lines 123-126 and 139-152 show async handlers with no guard.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (add per-row save guard with control disabling) is sound and stays within module responsibility.
+
+- **Behavioral change:**
+  Not explicitly labeled as "Behavior Change Required" but should be — disabling controls during save changes interaction feel. The impact is minor but should be acknowledged.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable. All three steps can be implemented by LLM without human input.
+
+- **Dependency integrity:**
+  No dependencies declared or required — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium 🟡" — ✅ accurate. Control disabling can change interaction feel but is low-risk.
+
+- **Why it's safe validity:**
+  Safety claim is specific: "only constrains overlapping row-control saves" — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add a local `isSavingState` flag for each rendered entry row.
+- [ ] In both handlers, return early when `isSavingState` is true.
+- [ ] Set `isSavingState=true` before `saveWorldInfo(...)`, disable controls, then restore in `finally`.
 
 ---
 
@@ -204,7 +321,63 @@
   - Prevents stale optimistic state after failed saves.
   - Gives clear user feedback when persistence fails.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that cache/UI is mutated before await with no rollback is **evidence-based** — confirmed by code inspection.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> Row handlers update `context.cache` and control visuals first, then await persistence. There is no `try/catch` to restore previous values when `saveWorldInfo` rejects.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `src/worldEntry.js` lines 123-126 show direct cache mutation before await, no try/catch.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (snapshot + rollback) is sound.
+
+- **Behavioral change:**
+  Not explicitly labeled as "Behavior Change Required" — ✅ correctly flags that UI now shows errors on failure instead of silent mismatch.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable. All four steps can be implemented by LLM without human input.
+
+- **Dependency integrity:**
+  The fix declares a dependency on F02: "Depends on F02 being applied first to reduce concurrent rollback complexity." — ✅ this is appropriate as F02's guard would prevent the race condition that makes rollback more complex.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium 🟡" — ✅ accurate. Rollback logic does touch both cache and DOM.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Snapshot previous entry values before mutation in both handlers.
+- [ ] Wrap each `saveWorldInfo(...)` call in `try/catch`.
+- [ ] On catch, restore previous cache values and row-control UI (`applyEnabledIcon`, `strat.value`).
+- [ ] Emit a user-visible error toast on save failure.
 
 ---
 
@@ -272,4 +445,66 @@
   - Prevents partial/invisible entry rows.
   - Keeps cache/DOM state consistent under template drift.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim about early returns leaving partial state is **evidence-based** — confirmed by code inspection showing `world.dom.entry[e.uid] = {}` is set before the return statements.
+
+- **Top risks:**
+  - None — the finding is well-evidenced with specific code paths.
+
+#### Technical Accuracy Audit
+
+> `renderEntry()` writes `world.dom.entry[e.uid]` before control-template checks. If `#entry_edit_template` controls are missing, the function returns early from inside the status block.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `src/worldEntry.js` line 9 sets `world.dom.entry[e.uid] = {}` before the early returns at lines 112 and 121.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (guarded skips instead of early returns) is sound and improves resilience.
+
+- **Behavioral change:**
+  Not explicitly labeled "Behavior Change Required" but should be — the behavior changes from "fail entirely" to "degraded rendering" when templates are missing. This is a minor but positive change.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable. All three steps can be implemented by LLM without human input.
+
+- **Dependency integrity:**
+  No dependencies declared or required — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Low 🟢" — ✅ accurate. Change is local and improves failure handling.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Remove early returns tied to `!isEnabled` and `!strat`.
+- [ ] Guard control creation blocks so row construction continues when either template is missing.
+- [ ] Ensure final insertion (`before...` / `entryList.append`) and click handlers always run.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified. All findings are well-evidenced with specific code anchors and concrete failure triggers. The review covers the key data integrity, race condition, and UI correctness issues in the entry rendering code.
+- **Severity calibration:** Severity ratings appear appropriate — F01 (High) addresses a direct data-loss path, F02-F03 (Medium) address race conditions and failure handling, F04 (Medium) addresses a template availability edge case.

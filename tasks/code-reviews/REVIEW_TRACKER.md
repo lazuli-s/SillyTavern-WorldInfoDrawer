@@ -21,21 +21,24 @@ Track all code-review findings across the extension's JS files.
 -> `CodeReview_index.js.md`
 
 - **F01** -- `jumpToEntry()` can discard unsaved editor work when switching entries
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path via public API; external callers can cause data loss.
   - Implemented:
 
 - **F02** -- Startup `refreshList()` promise is not handled
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Startup failures become opaque; harder to diagnose issues.
   - Implemented:
 
 - **F03** -- Dev CSS watch has no teardown path for watcher/listener lifecycle
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Best practice violation; only affects dev workflow.
   - Implemented:
 
 ---
@@ -109,47 +112,54 @@ Track all code-review findings across the extension's JS files.
 ### `src/editorPanel.js`
 -> `CodeReview_editorPanel.js.md`
 
-- **F01** â€” Dirty tracking silently fails for entry UID `0` because of falsy checks
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F01** — Dirty tracking silently fails for entry UID `0` because of falsy checks
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** High ❗❗ — Direct data-loss path for entry UID 0; users can lose unsaved edits without warning.
+  - Implemented:
 
-- **F02** â€” `openEntryEditor()` marks the new entry clean before async load succeeds
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F02** — `openEntryEditor()` marks the new entry clean before async load succeeds
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** High ❗❗ — Dirty-state desync can cause guards to fail, leading to data loss on abort.
+  - Implemented:
 
-- **F03** â€” Dirty state can remain permanently "dirty" after successful saves
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F03** — Dirty state can remain permanently "dirty" after successful saves
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Users repeatedly blocked from Activation Settings/Order Helper despite having no unsaved changes.
+  - Implemented:
 
-- **F04** â€” Stale open abort can leave active-row highlight inconsistent with editor content
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F04** — Stale open abort can leave active-row highlight inconsistent with editor content
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Visual mismatch can lead to accidental edits on wrong entry.
+  - Implemented:
 
-- **F05** â€” `clearEntryHighlights()` scans every entry on every open/reset
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F05** — `clearEntryHighlights()` scans every entry on every open/reset
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Performance issue; UI lag on large lorebooks.
+  - Implemented:
 
-- **F06** â€” Pointer-based dirty tracking marks non-editing UI interactions as unsaved edits
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F06** — Pointer-based dirty tracking marks non-editing UI interactions as unsaved edits
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — False positives cause misleading warnings and blocked actions.
+  - Implemented:
 
-- **F07** â€” Editor-level event listeners are attached without a teardown path
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F07** — Editor-level event listeners are attached without a teardown path
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Best practice violation; listener leak only affects re-init scenarios.
+  - Implemented:
 
 ---
 
@@ -493,27 +503,31 @@ Track all code-review findings across the extension's JS files.
 -> `CodeReview_worldEntry.js.md`
 
 - **F01** -- Clicking status controls on the active row can re-open the editor and discard unsaved text
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path on common interaction; users can lose typed content without warning.
   - Implemented:
 
 - **F02** -- Rapid toggle/strategy changes can race and persist stale state out of order
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Race condition can cause user-visible state inconsistency where controls show one value but persisted state reverts.
   - Implemented:
 
 - **F03** -- Save failures leave optimistic UI/cache mutations without rollback
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Failed saves leave confusing UI state; users may think changes were saved when they weren't.
   - Implemented:
 
 - **F04** -- Missing template controls cause early return with a partially initialized, non-inserted row
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Edge case failure mode; template availability is generally stable.
   - Implemented:
 
 ---

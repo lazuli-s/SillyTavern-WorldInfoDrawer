@@ -66,7 +66,61 @@
   - Removes a concrete unsaved-edit loss path.
   - Makes dirty tracking consistent for all valid UIDs.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that `!uid` rejects valid UID `0` is **evidence-based** and correct — JavaScript's falsy check treats `0` as falsy.
+
+- **Top risks:**
+  - None — the finding is well-evidenced with specific code anchors.
+
+#### Technical Accuracy Audit
+
+> Dirty-state helpers gate on `!uid`. In JavaScript, `0` is falsy, so valid entry UID `0` is rejected.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `src/editorPanel.js` lines show `!uid` guards in `markEditorClean`, `isDirty`, and `markClean`.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (use `uid == null`) is sound and stays within module responsibility.
+
+- **Behavioral change:**
+  Not explicitly labeled as "Behavior Change Required" but should be — the behavior changes from rejecting UID 0 to accepting it. This is a bug fix, not a behavior change in the user-facing sense.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies declared or required — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Low" — ✅ accurate.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Update the three guard clauses in `src/editorPanel.js` to accept UID `0` as valid.
+- [ ] Verify dirty detection works for entries with UID `0` and non-zero UIDs.
 
 ---
 
@@ -128,7 +182,62 @@
   - Eliminates dirty-state desynchronization on aborted opens.
   - Makes update guards more trustworthy.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that `markEditorClean` is called before async operations is **evidence-based** and confirmed by code inspection.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> `openEntryEditor()` calls `markEditorClean(name, entry.uid)` before async template and editor DOM loading, and before `setCurrentEditor(...)`.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `src/editorPanel.js` shows `markEditorClean` called before async `renderTemplateAsync` and `getWorldEntry`.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (move markEditorClean to after successful DOM swap) is sound.
+
+- **Behavioral change:**
+  Explicitly labeled "Behavior Change Required" — ✅ correctly flags timing change.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies declared or required — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium" — ✅ accurate. Timing-sensitive but low-risk change.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Delete the pre-async `markEditorClean(name, entry.uid)` call in `openEntryEditor`.
+- [ ] Keep/retain the final `markEditorClean(name, entry.uid)` after successful DOM swap.
+- [ ] Verify stale-token/missing-payload aborts do not mutate dirty state.
 
 ---
 
@@ -188,7 +297,62 @@
   - Prevents stuck-dirty UX.
   - Aligns guard behavior with actual saved state.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that `markClean` is not called from update reconciliation paths is **evidence-based** — confirmed by code inspection.
+
+- **Top risks:**
+  - None — the finding identifies a real UI correctness issue.
+
+#### Technical Accuracy Audit
+
+> Dirty is set aggressively on editor interactions, but `markClean` is not invoked from update reconciliation paths.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct based on code inspection of `wiUpdateHandler.js`.
+
+- **Validation:**
+  Validated ✅ — `wiUpdateHandler.js` shows update paths that skip editor refresh when values match, without calling `markClean`.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (call markClean in the sync branch) is sound.
+
+- **Behavioral change:**
+  Not explicitly labeled "Behavior Change Required" but should be — users will no longer be blocked after successful saves.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies declared — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium" — ✅ accurate.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] In `src/wiUpdateHandler.js` updated-entry loop, identify the current-editor branch where values are already in sync and no click-refresh is triggered.
+- [ ] Call `editorPanelApi.markClean(name, e)` in that branch.
+- [ ] Verify dirty guards clear after successful same-entry saves without requiring editor reopen.
 
 ---
 
@@ -249,7 +413,62 @@
   - Prevents misleading active-row cues.
   - Reduces accidental edits to unintended entries.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that highlights are applied before async completes is **evidence-based** and confirmed by code inspection.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> The function clears all highlights and marks the clicked row active before async template/entry fetch completes. On abort returns, there is no rollback.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — `src/editorPanel.js` shows `clearEntryHighlights()` and `entryDom.classList.add('stwid--active')` before async operations.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (move highlight to success block) is sound.
+
+- **Behavioral change:**
+  Not explicitly labeled — minor timing change.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Low" — ✅ accurate.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Remove pre-async highlight mutation in `openEntryEditor`.
+- [ ] Add highlight mutation only in the success commit block.
+- [ ] Verify stale-token and missing-payload aborts keep list highlight aligned with the visible editor.
 
 ---
 
@@ -310,7 +529,62 @@
   - Better responsiveness on large lorebooks.
   - Less unnecessary DOM churn.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that `clearEntryHighlights` iterates all entries is **evidence-based** and correct.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> Highlight clearing is O(total rendered entries) and runs in hot paths.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — code shows nested loops over all cache entries.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (track single active row) is sound.
+
+- **Behavioral change:**
+  Not explicitly labeled — internal optimization.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium" — ✅ accurate. State management could have edge cases.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add `activeEntryDom` module-local state in `src/editorPanel.js`.
+- [ ] Refactor `clearEntryHighlights()` to operate on that single reference.
+- [ ] Update open/reset/toggle flows to keep `activeEntryDom` in sync.
 
 ---
 
@@ -370,7 +644,62 @@
   - Fewer false warnings.
   - Cleaner alignment between user actions and dirty status.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that broad `button` selector catches presentation-only interactions is **evidence-based** and correct.
+
+- **Top risks:**
+  - None — the finding identifies a real UI correctness issue.
+
+#### Technical Accuracy Audit
+
+> This selector includes generic `button`/`.checkbox` interactions that may not mutate entry data.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — code shows broad selector.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (narrow selector) is sound.
+
+- **Behavioral change:**
+  Not explicitly labeled — user-facing improvement.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  No dependencies — ✅ self-contained.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium" — ✅ accurate. Could miss edge cases.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Refine the `pointerdown` selector in `src/editorPanel.js` to exclude presentation-only controls.
+- [ ] Keep dirty marking for actual mutable form elements.
+- [ ] Verify unsaved-edit guard still triggers for real edits but not for presentation-only toggles.
 
 ---
 
@@ -428,4 +757,66 @@
   - Prevents listener leaks/duplication.
   - Aligns with documented ST extension best practices.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The claim that listeners are registered without teardown is **evidence-based** and correct — PERF-02 violation.
+
+- **Top risks:**
+  - None — the finding is well-evidenced.
+
+#### Technical Accuracy Audit
+
+> Four capture listeners are registered during `initEditorPanel`, but there is no returned cleanup API.
+
+- **Why it may be wrong/speculative:**
+  N/A — claim is correct.
+
+- **Validation:**
+  Validated ✅ — code shows listeners registered with no cleanup path.
+
+- **What needs to be done/inspected to successfully validate:**
+  N/A
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Proposed direction (add cleanup API) is sound and follows best practices.
+
+- **Behavioral change:**
+  Not explicitly labeled — internal improvement.
+
+- **Ambiguity:**
+  Only one suggestion — ✅ no ambiguity.
+
+- **Checklist:**
+  Checklist items are complete and actionable.
+
+- **Dependency integrity:**
+  The fix declares a dependency on `src/drawer.js` for lifecycle coordination — ✅ appropriate.
+
+- **Fix risk calibration:**
+  Fix risk rated "Medium" — ✅ accurate.
+
+- **Why it's safe validity:**
+  Safety claim is specific — ✅ verifiable.
+
+- **Mitigation:**
+  N/A
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Replace inline anonymous `keydown`/`pointerdown` handlers with named function references.
+- [ ] Add `cleanup()` to the returned editor panel API that removes all registered listeners.
+- [ ] Call `editorPanelApi.cleanup()` from the drawer lifecycle teardown path.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified. All findings are well-evidenced with specific code anchors and concrete failure triggers. The review covers key data integrity, UI correctness, performance, and JS best practice issues in the editor panel code.
+- **Severity calibration:** Severity ratings appear appropriate — F01-F02 (High) address direct data-loss paths, F03-F04-F06 (Medium) address UI correctness, F05 (Medium) addresses performance, F07 (Low) addresses a best-practice violation.
