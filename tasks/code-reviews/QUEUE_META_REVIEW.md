@@ -6,9 +6,6 @@ Code review files queued for meta-review; entries are added after a `CodeReview_
 
 ## Files Pending Meta-Review
 
-- `src/listPanel.foldersView.js`
-- `src/listPanel.js`
-- `src/listPanel.selectionDnD.js`
 - `src/listPanel.state.js`
 - `src/lorebookFolders.js`
 - `src/Settings.js`
