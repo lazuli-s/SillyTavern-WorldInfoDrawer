@@ -69,8 +69,14 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
+    /** @type {null | (() => void)} */
+    let cleanupBulkEditRow = null;
 
     const renderOrderHelper = (book = null)=>{
+        if (typeof cleanupBulkEditRow === 'function') {
+            cleanupBulkEditRow();
+            cleanupBulkEditRow = null;
+        }
 
         // ── Init ──────────────────────────────────────────────────────────────
         orderHelperState.book = book;
@@ -148,7 +154,7 @@ const createOrderHelperRenderer = ({
             filterIndicatorRefs,
         });
 
-        const { element: bulkEditRowEl, refreshSelectionCount } = buildBulkEditRow({
+        const { element: bulkEditRowEl, refreshSelectionCount, cleanup } = buildBulkEditRow({
             dom,
             orderHelperState,
             cache,
@@ -167,6 +173,7 @@ const createOrderHelperRenderer = ({
             applyOrderHelperOutletFilterToRow,
             applyOrderHelperRecursionFilterToRow,
         });
+        cleanupBulkEditRow = cleanup;
 
         const filterEl = buildFilterPanel({
             dom,

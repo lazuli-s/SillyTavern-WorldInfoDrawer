@@ -62,10 +62,10 @@
   - In `cleanup()`, iterate that array and call `eventSource.removeListener(eventType, handler)` for each, then clear the array.
 
 - **Implementation Checklist:**
-  - [ ] Introduce a local `eventSubscriptions` array in `initBookSourceLinks`.
-  - [ ] Replace inline `()=>refreshBookSourceLinks(eventType)` with named handler functions stored in `eventSubscriptions`.
-  - [ ] Extend `cleanup()` to remove each `eventSource` listener via `removeListener`.
-  - [ ] Leave the `document` listener removal in place.
+  - [x] Introduce a local `eventSubscriptions` array in `initBookSourceLinks`.
+  - [x] Replace inline `()=>refreshBookSourceLinks(eventType)` with named handler functions stored in `eventSubscriptions`.
+  - [x] Extend `cleanup()` to remove each `eventSource` listener via `removeListener`.
+  - [x] Leave the `document` listener removal in place.
 
 - **Fix risk:** Low 🟢
   The change is localized to teardown behavior; it should not affect normal runtime behavior when initialized once.
@@ -125,6 +125,20 @@
 
 - **Verdict:** Ready to implement 🟢
 
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Added `eventSubscriptions` storage and stable per-event handler references during event bus registration.
+  - Extended `cleanup()` to remove all registered `eventSource` listeners and clear subscription state.
+  - Kept existing document change-listener teardown in place.
+
+- Risks / Side effects
+  - If another module depends on leaked duplicate listeners, that accidental behavior will stop (probability: ?)
+      - **?? MANUAL CHECK**: [ ] Reopen/reinitialize the drawer extension, then switch chats/characters and confirm source-link refresh logs/events fire once per action (not duplicates).
 ---
 
 ## F02: `getBookSourceLinks()` fallback returns a different object shape than normal entries
@@ -183,9 +197,9 @@
   - Ensure `buildLorebookSourceLinks` spreads from this full-shape object (still OK) and `getBookSourceLinks` falls back to it.
 
 - **Implementation Checklist:**
-  - [ ] Update `EMPTY_BOOK_SOURCE_LINKS` to include `characterNames: []` and `personaName: ''`.
-  - [ ] Confirm `buildLorebookSourceLinks` still initializes each book entry with the correct default arrays/strings.
-  - [ ] Keep `Object.freeze` to prevent accidental mutation of the shared default.
+  - [x] Update `EMPTY_BOOK_SOURCE_LINKS` to include `characterNames: []` and `personaName: '`.
+  - [x] Confirm `buildLorebookSourceLinks` still initializes each book entry with the correct default arrays/strings.
+  - [x] Keep `Object.freeze` to prevent accidental mutation of the shared default.
 
 - **Fix risk:** Low 🟢
   This only adds missing properties; it does not remove or rename anything.
@@ -246,6 +260,20 @@
 - **Verdict:** Implementation plan needs revision 🟡
   The fix is fine, but the finding’s impact/severity rationale should be corrected to match actual caller behavior (no-throw due to normalization), and the validation step should explicitly confirm other call sites.
 
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Expanded `EMPTY_BOOK_SOURCE_LINKS` to the full shape (`character/chat/persona/characterNames/personaName`) and kept it frozen.
+  - Preserved per-book initialization with fresh arrays/strings so mutable fields are not shared across books.
+  - Validated current call sites (`src/listPanel.js`, `src/listPanel.filterBar.js`) already normalize fields; this change hardens the API contract without behavior regressions.
+
+- Risks / Side effects
+  - Fallback object now contains extra empty fields, which should only improve caller safety (probability: ?)
+      - **?? MANUAL CHECK**: [ ] Open the book list with mixed source-linked and unlinked books and confirm source icons/tooltips render without missing text or errors.
 ---
 
 ## F03: Signature computation uses full `JSON.stringify(nextLinks)` (unnecessary churn + ordering sensitivity)
@@ -295,10 +323,10 @@
   - Build the signature as a simple concatenated string (or array joined with delimiters) to avoid deep serialization overhead.
 
 - **Implementation Checklist:**
-  - [ ] Add a helper inside `initBookSourceLinks` like `buildSourceLinksSignature(linksByBook)`.
-  - [ ] In that helper, sort book keys and sort `characterNames` before including them.
-  - [ ] Update `refreshBookSourceLinks` to call the helper instead of `JSON.stringify`.
-  - [ ] Keep the current early-return behavior unchanged (only signature computation changes).
+  - [x] Add a helper inside `initBookSourceLinks` like `buildSourceLinksSignature(linksByBook)`.
+  - [x] In that helper, sort book keys and sort `characterNames` before including them.
+  - [x] Update `refreshBookSourceLinks` to call the helper instead of `JSON.stringify`.
+  - [x] Keep the current early-return behavior unchanged (only signature computation changes).
 
 - **Fix risk:** Medium 🟡
   If the signature omits a field that actually affects UI, the UI may fail to update when it should. This is avoidable by explicitly including all render-relevant fields.
@@ -360,6 +388,20 @@
 - **Verdict:** Implementation plan needs revision 🟡
   Revise toward a minimal change (canonicalize `characterNames` ordering and/or canonicalize only the unstable parts) and add a crisp definition of “render-relevant fields” if a custom signature is kept.
 
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Added `buildSourceLinksSignature(linksByBook)` to compute a canonical signature from sorted book keys and sorted character-name lists.
+  - Updated refresh change-detection to use the canonical signature instead of raw `JSON.stringify(nextLinks)`.
+  - Kept refresh early-return behavior unchanged and also sorted emitted `characterNames` arrays for deterministic ordering.
+
+- Risks / Side effects
+  - Canonicalization may reduce some previously-triggered refreshes caused only by order differences (probability: ?)
+      - **?? MANUAL CHECK**: [ ] Trigger multiple source-link refresh events (chat switch, character edit, settings update) and confirm icons/tooltips still refresh when real source links change.
 ---
 
 ## F04: Direct imports from internal ST modules increase upstream breakage risk (prefer `getContext()` where possible)
@@ -418,11 +460,11 @@
   - Keep direct imports for `METADATA_KEY`, `world_info`, and `world_names` (unless there is an already-available context accessor), and keep `getCharaFilename` as-is.
 
 - **Implementation Checklist:**
-  - [ ] Replace `script.js` imports with `const { ... } = SillyTavern.getContext()` destructuring (or `ctx.*`).
-  - [ ] Replace `groups/selected_group` usage with `ctx.groups` / `ctx.groupId`.
-  - [ ] Replace `power_user` usage with `ctx.powerUserSettings`.
-  - [ ] Keep remaining direct imports only for values not exposed via context, and add a brief inline comment explaining the exception.
-  - [ ] Avoid behavior changes: preserve the existing logic and only change data access paths.
+  - [x] Replace `script.js` imports with `const { ... } = SillyTavern.getContext()` destructuring (or `ctx.*`).
+  - [x] Replace `groups/selected_group` usage with `ctx.groups` / `ctx.groupId`.
+  - [x] Replace `power_user` usage with `ctx.powerUserSettings`.
+  - [x] Keep remaining direct imports only for values not exposed via context, and add a brief inline comment explaining the exception.
+  - [x] Avoid behavior changes: preserve the existing logic and only change data access paths.
 
 - **Fix risk:** Medium 🟡
   Risk is primarily compatibility: context field names differ (`eventTypes` vs `event_types`, etc.), and older ST versions may not provide some fields.
@@ -485,6 +527,20 @@
 - **Verdict:** Implementation plan needs revision 🟡
   The plan must include a compatibility decision (minimum ST version or context-first fallback), otherwise the refactor can introduce host-version breakages.
 
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Switched the module to context-first runtime data access (`SillyTavern.getContext()`) with direct-import fallback for host compatibility.
+  - Replaced direct runtime usage of `script.js`, `group-chats.js`, and `power-user.js` values with resolved runtime context fields.
+  - Kept direct imports only for values not exposed in context (`METADATA_KEY`, `world_info`, `world_names`) and documented that exception inline.
+
+- Risks / Side effects
+  - On very old hosts with partial context objects, fallback paths now decide which source wins per field (probability: ?)
+      - **?? MANUAL CHECK**: [ ] Switch chats/groups/characters and verify source-link icons still update correctly with no console errors on your current SillyTavern version.
 ---
 
 ### Coverage Note

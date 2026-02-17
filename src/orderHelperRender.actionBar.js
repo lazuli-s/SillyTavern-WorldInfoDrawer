@@ -483,7 +483,7 @@ export function buildVisibilityRow({
  *   applyOrderHelperOutletFilterToRow: function,
  *   applyOrderHelperRecursionFilterToRow: function,
  * }} ctx
- * @returns {{ element: HTMLElement, refreshSelectionCount: function }}
+ * @returns {{ element: HTMLElement, refreshSelectionCount: function, cleanup: function }}
  */
 export function buildBulkEditRow({
     dom,
@@ -560,6 +560,64 @@ export function buildBulkEditRow({
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
     };
 
+    const getSafeTbodyRows = ()=>{
+        const tbody = dom.order?.tbody;
+        if (!(tbody instanceof HTMLElement)) {
+            toastr.warning('Order Helper table is not ready yet.');
+            return null;
+        }
+        return [...tbody.children].filter((child)=>child instanceof HTMLElement);
+    };
+
+    const getBulkTargets = (rows, { reverse = false } = {})=>{
+        const orderedRows = reverse ? [...rows].reverse() : rows;
+        const targets = [];
+        let skippedInvalidRow = false;
+        for (const tr of orderedRows) {
+            if (tr.classList.contains('stwid--isFiltered')) continue;
+            if (!isOrderHelperRowSelected(tr)) continue;
+            const bookName = tr.getAttribute('data-book');
+            const uid = tr.getAttribute('data-uid');
+            if (!bookName || uid === null) {
+                skippedInvalidRow = true;
+                continue;
+            }
+            const entryData = cache?.[bookName]?.entries?.[uid];
+            if (!entryData) {
+                skippedInvalidRow = true;
+                continue;
+            }
+            targets.push({ tr, bookName, uid, entryData });
+        }
+        if (skippedInvalidRow) {
+            console.warn('STWID: skipped one or more bulk-edit rows due to missing book/entry data.');
+        }
+        return targets;
+    };
+
+    const saveUpdatedBooks = async (books)=>{
+        for (const bookName of books) {
+            await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+        }
+    };
+
+    const setApplyButtonBusy = (button, isBusy)=>{
+        button.dataset.stwidBusy = isBusy ? '1' : '0';
+        button.style.pointerEvents = isBusy ? 'none' : '';
+        button.classList.toggle('stwid--isDisabled', isBusy);
+        button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+    };
+
+    const withApplyButtonLock = async (button, callback)=>{
+        if (button.dataset.stwidBusy === '1') return;
+        setApplyButtonBusy(button, true);
+        try {
+            await callback();
+        } finally {
+            setApplyButtonBusy(button, false);
+        }
+    };
+
     // ── Toggle Active State container ─────────────────────────────────────
     const activeStateContainer = document.createElement('div');
     activeStateContainer.classList.add('stwid--bulkEditContainer');
@@ -594,30 +652,33 @@ export function buildBulkEditRow({
         applyActiveState.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyActiveState, 'Apply the active state to all selected entries');
         applyActiveState.addEventListener('click', async()=>{
-            const willDisable = activeToggle.classList.contains('fa-toggle-off');
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].disable = willDisable;
-                const rowToggle = tr.querySelector('[name="entryKillSwitch"]');
-                if (rowToggle) {
-                    rowToggle.classList.toggle('fa-toggle-off', willDisable);
-                    rowToggle.classList.toggle('fa-toggle-on', !willDisable);
+            await withApplyButtonLock(applyActiveState, async()=>{
+                const rows = getSafeTbodyRows();
+                if (!rows) return;
+
+                const willDisable = activeToggle.classList.contains('fa-toggle-off');
+                const targets = getBulkTargets(rows);
+                const books = new Set();
+                for (let i = 0; i < targets.length; i++) {
+                    const { tr, bookName, uid, entryData } = targets[i];
+                    books.add(bookName);
+                    entryData.disable = willDisable;
+                    const rowToggle = tr.querySelector('[name="entryKillSwitch"]');
+                    if (rowToggle) {
+                        rowToggle.classList.toggle('fa-toggle-off', willDisable);
+                        rowToggle.classList.toggle('fa-toggle-on', !willDisable);
+                    }
+                    const listToggle = cache?.[bookName]?.dom?.entry?.[uid]?.isEnabled;
+                    if (listToggle) {
+                        listToggle.classList.toggle('fa-toggle-off', willDisable);
+                        listToggle.classList.toggle('fa-toggle-on', !willDisable);
+                    }
+                    if ((i + 1) % 200 === 0) {
+                        await new Promise((resolve)=>setTimeout(resolve, 0));
+                    }
                 }
-                const listToggle = cache[bookName].dom.entry?.[uid]?.isEnabled;
-                if (listToggle) {
-                    listToggle.classList.toggle('fa-toggle-off', willDisable);
-                    listToggle.classList.toggle('fa-toggle-on', !willDisable);
-                }
-            }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+                await saveUpdatedBooks(books);
+            });
         });
         activeStateContainer.append(applyActiveState);
     }
@@ -661,30 +722,33 @@ export function buildBulkEditRow({
         applyStrategy.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyStrategy, 'Apply selected strategy to all selected entries');
         applyStrategy.addEventListener('click', async()=>{
-            const value = strategySelect.value;
-            if (!value) {
-                toastr.warning('No strategy selected.');
-                return;
-            }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].constant   = value === 'constant';
-                cache[bookName].entries[uid].vectorized = value === 'vectorized';
-                const rowStrat = /**@type {HTMLSelectElement}*/(tr.querySelector('[name="entryStateSelector"]'));
-                if (rowStrat) rowStrat.value = value;
-                const domStrat = cache[bookName].dom?.entry?.[uid]?.strategy;
-                if (domStrat) domStrat.value = value;
-                applyOrderHelperStrategyFilterToRow(tr, cache[bookName].entries[uid]);
-            }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await withApplyButtonLock(applyStrategy, async()=>{
+                const value = strategySelect.value;
+                if (!value) {
+                    toastr.warning('No strategy selected.');
+                    return;
+                }
+                const rows = getSafeTbodyRows();
+                if (!rows) return;
+
+                const targets = getBulkTargets(rows);
+                const books = new Set();
+                for (let i = 0; i < targets.length; i++) {
+                    const { tr, bookName, uid, entryData } = targets[i];
+                    books.add(bookName);
+                    entryData.constant = value === 'constant';
+                    entryData.vectorized = value === 'vectorized';
+                    const rowStrat = /**@type {HTMLSelectElement}*/(tr.querySelector('[name="entryStateSelector"]'));
+                    if (rowStrat) rowStrat.value = value;
+                    const domStrat = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
+                    if (domStrat) domStrat.value = value;
+                    applyOrderHelperStrategyFilterToRow(tr, entryData);
+                    if ((i + 1) % 200 === 0) {
+                        await new Promise((resolve)=>setTimeout(resolve, 0));
+                    }
+                }
+                await saveUpdatedBooks(books);
+            });
         });
         strategyContainer.append(applyStrategy);
     }
@@ -733,22 +797,18 @@ export function buildBulkEditRow({
                 toastr.warning('No position selected.');
                 return;
             }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].position = value;
-                const domPos = cache[bookName].dom?.entry?.[uid]?.position;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, uid, entryData } of targets) {
+                books.add(bookName);
+                entryData.position = value;
+                const domPos = cache?.[bookName]?.dom?.entry?.[uid]?.position;
                 if (domPos) domPos.value = value;
-                applyOrderHelperPositionFilterToRow(tr, cache[bookName].entries[uid]);
+                applyOrderHelperPositionFilterToRow(tr, entryData);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         positionContainer.append(applyPosition);
     }
@@ -794,21 +854,17 @@ export function buildBulkEditRow({
                 toastr.warning('Depth must be a non-negative whole number, or blank to clear.');
                 return;
             }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].depth = parsedDepth;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
+                entryData.depth = parsedDepth;
                 const rowDepth = /**@type {HTMLInputElement}*/(tr.querySelector('[name="depth"]'));
                 if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         depthContainer.append(applyDepth);
     }
@@ -886,6 +942,10 @@ export function buildBulkEditRow({
         if (outletDropdownWrap.contains(event.target)) return;
         closeOutletMenu();
     };
+    const cleanup = ()=>{
+        closeOutletMenu();
+        document.removeEventListener('click', handleOutletOutsideClick);
+    };
     outletMenu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeOutletMenu;
     outletMenu.addEventListener('click', (event)=>event.stopPropagation());
 
@@ -917,22 +977,18 @@ export function buildBulkEditRow({
         setTooltip(applyOutlet, 'Apply outlet name to all selected entries');
         applyOutlet.addEventListener('click', async()=>{
             const value = outletInput.value.trim();
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].outletName = value;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
+                entryData.outletName = value;
                 const rowOutlet = /**@type {HTMLInputElement}*/(tr.querySelector('[name="outletName"]'));
                 if (rowOutlet) rowOutlet.value = value;
-                applyOrderHelperOutletFilterToRow(tr, cache[bookName].entries[uid]);
+                applyOrderHelperOutletFilterToRow(tr, entryData);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         outletContainer.append(applyOutlet);
     }
@@ -969,34 +1025,37 @@ export function buildBulkEditRow({
         apply.classList.add('fa-solid', 'fa-fw', 'fa-check');
         setTooltip(apply, 'Apply current row order to the Order field');
         apply.addEventListener('click', async()=>{
-            const start = Number.parseInt(dom.order.start.value, 10);
-            const step = Number.parseInt(dom.order.step.value, 10);
-            if (!Number.isInteger(start) || start <= 0) {
-                toastr.warning('Start must be a positive whole number.');
-                return;
-            }
-            if (!Number.isInteger(step) || step <= 0) {
-                toastr.warning('Spacing must be a positive whole number.');
-                return;
-            }
-            const up = dom.order.direction.up.checked;
-            let order = start;
-            let rows = [...dom.order.tbody.children];
-            const books = [];
-            if (up) rows.reverse();
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].order = order;
-                /**@type {HTMLInputElement}*/(tr.querySelector('[name="order"]')).value = order.toString();
-                order += step;
-            }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await withApplyButtonLock(apply, async()=>{
+                const start = Number.parseInt(dom.order.start.value, 10);
+                const step = Number.parseInt(dom.order.step.value, 10);
+                if (!Number.isInteger(start) || start <= 0) {
+                    toastr.warning('Start must be a positive whole number.');
+                    return;
+                }
+                if (!Number.isInteger(step) || step <= 0) {
+                    toastr.warning('Spacing must be a positive whole number.');
+                    return;
+                }
+                const rows = getSafeTbodyRows();
+                if (!rows) return;
+
+                const up = dom.order.direction.up.checked;
+                const targets = getBulkTargets(rows, { reverse: up });
+                let order = start;
+                const books = new Set();
+                for (let i = 0; i < targets.length; i++) {
+                    const { tr, bookName, entryData } = targets[i];
+                    books.add(bookName);
+                    entryData.order = order;
+                    const orderInput = /**@type {HTMLInputElement | null}*/(tr.querySelector('[name="order"]'));
+                    if (orderInput) orderInput.value = order.toString();
+                    order += step;
+                    if ((i + 1) % 200 === 0) {
+                        await new Promise((resolve)=>setTimeout(resolve, 0));
+                    }
+                }
+                await saveUpdatedBooks(books);
+            });
         });
     }
 
@@ -1044,6 +1103,7 @@ export function buildBulkEditRow({
         dir.classList.add('stwid--inputWrap');
         setTooltip(dir, 'Direction used when applying Order values');
         dir.append('Direction: ');
+        const directionRadioGroupName = 'stwid--order-direction';
         const wrap = document.createElement('div'); {
             wrap.classList.add('stwid--toggleWrap');
             const up = document.createElement('label'); {
@@ -1052,10 +1112,10 @@ export function buildBulkEditRow({
                 const inp = document.createElement('input'); {
                     dom.order.direction.up = inp;
                     inp.type = 'radio';
+                    inp.name = directionRadioGroupName;
                     inp.checked = (localStorage.getItem('stwid--order-direction') ?? 'down') == 'up';
-                    inp.addEventListener('click', ()=>{
-                        inp.checked = true;
-                        dom.order.direction.down.checked = false;
+                    inp.addEventListener('change', ()=>{
+                        if (!inp.checked) return;
                         localStorage.setItem('stwid--order-direction', 'up');
                     });
                     up.append(inp);
@@ -1069,10 +1129,10 @@ export function buildBulkEditRow({
                 const inp = document.createElement('input'); {
                     dom.order.direction.down = inp;
                     inp.type = 'radio';
+                    inp.name = directionRadioGroupName;
                     inp.checked = (localStorage.getItem('stwid--order-direction') ?? 'down') == 'down';
-                    inp.addEventListener('click', ()=>{
-                        inp.checked = true;
-                        dom.order.direction.up.checked = false;
+                    inp.addEventListener('change', ()=>{
+                        if (!inp.checked) return;
                         localStorage.setItem('stwid--order-direction', 'down');
                     });
                     down.append(inp);
@@ -1126,15 +1186,12 @@ export function buildBulkEditRow({
         applyRecursion.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyRecursion, 'Apply recursion flags to all selected entries, overwriting their current values');
         applyRecursion.addEventListener('click', async()=>{
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                const entryData = cache[bookName].entries[uid];
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
                 const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
                 let i = 0;
                 for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
@@ -1145,9 +1202,7 @@ export function buildBulkEditRow({
                 }
                 applyOrderHelperRecursionFilterToRow(tr, entryData);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         recursionContainer.append(applyRecursion);
     }
@@ -1191,22 +1246,17 @@ export function buildBulkEditRow({
         setTooltip(applyBudget, 'Apply Ignore Budget to all selected entries, overwriting their current values');
         applyBudget.addEventListener('click', async()=>{
             const checked = budgetIgnoreCheckbox.checked;
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                const entryData = cache[bookName].entries[uid];
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
                 entryData.ignoreBudget = checked;
                 const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
                 if (domInput) domInput.checked = checked;
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         budgetContainer.append(applyBudget);
     }
@@ -1256,21 +1306,17 @@ export function buildBulkEditRow({
                 toastr.warning('Probability must be a whole number between 0 and 100.');
                 return;
             }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].selective_probability = parsed;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
+                entryData.selective_probability = parsed;
                 const rowInp = tr.querySelector('[name="selective_probability"]');
                 if (rowInp) rowInp.value = String(parsed);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         probabilityContainer.append(applyProbability);
     }
@@ -1319,21 +1365,17 @@ export function buildBulkEditRow({
                 toastr.warning('Sticky must be a non-negative whole number.');
                 return;
             }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].sticky = parsed;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
+                entryData.sticky = parsed;
                 const rowInp = tr.querySelector('[name="sticky"]');
                 if (rowInp) rowInp.value = String(parsed);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         stickyContainer.append(applySticky);
     }
@@ -1382,21 +1424,17 @@ export function buildBulkEditRow({
                 toastr.warning('Cooldown must be a non-negative whole number.');
                 return;
             }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].cooldown = parsed;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
+                entryData.cooldown = parsed;
                 const rowInp = tr.querySelector('[name="cooldown"]');
                 if (rowInp) rowInp.value = String(parsed);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         cooldownContainer.append(applyCooldown);
     }
@@ -1445,21 +1483,17 @@ export function buildBulkEditRow({
                 toastr.warning('Delay must be a non-negative whole number.');
                 return;
             }
-            const rows = [...dom.order.tbody.children];
-            const books = [];
-            for (const tr of rows) {
-                if (tr.classList.contains('stwid--isFiltered')) continue;
-                if (!isOrderHelperRowSelected(tr)) continue;
-                const bookName = tr.getAttribute('data-book');
-                const uid = tr.getAttribute('data-uid');
-                if (!books.includes(bookName)) books.push(bookName);
-                cache[bookName].entries[uid].delay = parsed;
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (const { tr, bookName, entryData } of targets) {
+                books.add(bookName);
+                entryData.delay = parsed;
                 const rowInp = tr.querySelector('[name="delay"]');
                 if (rowInp) rowInp.value = String(parsed);
             }
-            for (const bookName of books) {
-                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-            }
+            await saveUpdatedBooks(books);
         });
         bulkDelayContainer.append(applyBulkDelay);
     }
@@ -1500,5 +1534,5 @@ export function buildBulkEditRow({
         }
     });
 
-    return { element: row, refreshSelectionCount };
+    return { element: row, refreshSelectionCount, cleanup };
 }
