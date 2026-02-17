@@ -100,6 +100,7 @@ export function buildVisibilityRow({
     collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
     rowTitle.prepend(collapseChevron);
     rowTitle.classList.add('stwid--collapsibleTitle');
+    row.dataset.collapsed = 'false';
     row.append(rowTitle);
 
     // ── Key column visibility toggle ──────────────────────────────────────
@@ -432,13 +433,15 @@ export function buildVisibilityRow({
 
     // Wire collapse toggle
     rowTitle.addEventListener('click', () => {
-        const isCollapsed = row.classList.contains('stwid--collapsed');
+        const isCollapsed = row.dataset.collapsed === 'true';
         if (isCollapsed) {
             // Expanding
+            row.dataset.collapsed = 'false';
             row.classList.remove('stwid--collapsed');
             contentWrap.style.overflow = 'hidden';
             contentWrap.style.maxHeight = '1000px';
-            collapseChevron.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            collapseChevron.classList.remove('fa-chevron-right');
+            collapseChevron.classList.add('fa-chevron-down');
             contentWrap.addEventListener('transitionend', () => {
                 contentWrap.style.overflow = '';
                 contentWrap.style.maxHeight = '';
@@ -451,8 +454,10 @@ export function buildVisibilityRow({
             // Force reflow so the browser registers the pinned height before animating
             void contentWrap.offsetHeight;
             contentWrap.style.maxHeight = '0';
+            row.dataset.collapsed = 'true';
             row.classList.add('stwid--collapsed');
-            collapseChevron.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            collapseChevron.classList.remove('fa-chevron-down');
+            collapseChevron.classList.add('fa-chevron-right');
         }
     });
 
@@ -515,6 +520,7 @@ export function buildBulkEditRow({
     collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
     rowTitle.prepend(collapseChevron);
     rowTitle.classList.add('stwid--collapsibleTitle');
+    row.dataset.collapsed = 'false';
     row.append(rowTitle);
 
     // ── Select container ──────────────────────────────────────────────────
@@ -1510,13 +1516,15 @@ export function buildBulkEditRow({
 
     // Wire collapse toggle
     rowTitle.addEventListener('click', () => {
-        const isCollapsed = row.classList.contains('stwid--collapsed');
+        const isCollapsed = row.dataset.collapsed === 'true';
         if (isCollapsed) {
             // Expanding
+            row.dataset.collapsed = 'false';
             row.classList.remove('stwid--collapsed');
             contentWrap.style.overflow = 'hidden';
             contentWrap.style.maxHeight = '1000px';
-            collapseChevron.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            collapseChevron.classList.remove('fa-chevron-right');
+            collapseChevron.classList.add('fa-chevron-down');
             contentWrap.addEventListener('transitionend', () => {
                 contentWrap.style.overflow = '';
                 contentWrap.style.maxHeight = '';
@@ -1529,8 +1537,10 @@ export function buildBulkEditRow({
             // Force reflow so the browser registers the pinned height before animating
             void contentWrap.offsetHeight;
             contentWrap.style.maxHeight = '0';
+            row.dataset.collapsed = 'true';
             row.classList.add('stwid--collapsed');
-            collapseChevron.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            collapseChevron.classList.remove('fa-chevron-down');
+            collapseChevron.classList.add('fa-chevron-right');
         }
     });
 
