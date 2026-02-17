@@ -5,13 +5,15 @@ Source files queued for first-pass code review; entries are removed from this li
 ---
 
 ## Files Pending Review
-- `src/orderHelperRender.actionBar.js`
-- `src/orderHelperRender.filterPanel.js`
-- `src/orderHelperRender.tableBody.js`
-- `src/orderHelperRender.tableHeader.js`
-- `src/orderHelperRender.utils.js`
-- `src/orderHelperState.js`
-- `src/sortHelpers.js`
-- `src/utils.js`
-- `src/wiUpdateHandler.js`
-- `src/worldEntry.js`
+- `src/listPanel.booksView.js`
+- `src/listPanel.coreBridge.js`
+- `src/listPanel.filterBar.js`
+- `src/listPanel.foldersView.js`
+- `src/listPanel.js`
+- `src/listPanel.selectionDnD.js`
+- `src/listPanel.state.js`
+- `src/lorebookFolders.js`
+- `src/Settings.js`
+- `src/orderHelper.js`
+- `src/orderHelperRender.js`
+- `src/orderHelperFilters.js`

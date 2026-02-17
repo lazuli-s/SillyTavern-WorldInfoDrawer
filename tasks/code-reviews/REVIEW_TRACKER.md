@@ -1,13 +1,15 @@
-# Code Review Tracker
+﻿# Code Review Tracker
 
 Track all code-review findings across the extension's JS files.
 
 **Fields per finding:**
 
 - **Meta-reviewed**: Has this finding already been meta-reviewed by a second LLM? [ ] or [X]
-- **Verdict**: Ready to implement 🟢 / Implementation plan needs revision 🟡 / Implementation plan is not usable 🔴
+- **Verdict**: Ready to implement ðŸŸ¢ / Implementation plan needs revision ðŸŸ¡ / Implementation plan is not usable ðŸ”´
 - **Reason**: If rejected, why
-- **Implemented**: Has the implementation plan been implemented? ❌ or ✔
+- **Implemented**: Has the implementation plan been implemented? âŒ or âœ”
+  - **Implementation Notes**:
+  - **ðŸŸ¥ MANUAL CHECK**: [] checklist for the user
 
 ---
 
@@ -16,158 +18,134 @@ Track all code-review findings across the extension's JS files.
 ---
 
 ### `index.js`
-→ `CodeReview_index.js.md`
+-> `CodeReview_index.js.md`
 
-- **F01** — Debounced `WORLDINFO_UPDATED` handler can drop intermediate updates, leaving cache stale
+- **F01** -- `jumpToEntry()` can discard unsaved editor work when switching entries
   - Meta-reviewed: [ ]
-  - Verdict:
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
-- **F02** — `updateWIChange()` races with `refreshList()` — DOM/cache consistency
+- **F02** -- Startup `refreshList()` promise is not handled
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-  
-- **F03** — `jumpToEntry()` can discard in-progress editor work via synthetic clicks
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
-- **F04** — `jumpToEntry()` reports success even when entry is filtered out / not visible
+- **F03** -- Dev CSS watch has no teardown path for watcher/listener lifecycle
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F05** — `bookSourceLinksApi.cleanup()` does not unsubscribe `eventSource` listeners
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F06** — Global `keydown` Delete handler can be duplicated; brittle drawer-open detection
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F07** — `updateWIChange()` uses expensive `JSON.stringify` deep comparisons in hot loop
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F08** — Dev CSS watch leaks watchers/style tags on module reload (no teardown)
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 ---
 
 ### `src/drawer.js`
-→ `CodeReview_drawer.js.md`
+â†’ `CodeReview_drawer.js.md`
 
-- **F01** — New-book creation awaits non-specific "update started" promise — race with cache init
+- **F01** â€” New-book creation awaits non-specific "update started" promise â€” race with cache init
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Checklist needs to explicitly register `waitForWorldInfoUpdate()` *before* `createNewWorldInfo(...)` and remove redundant investigation step.
-  - Implemented: ✅
+  - Implemented: âœ…
     - Implementation Notes: Registered `waitForWorldInfoUpdate()` before `createNewWorldInfo(...)` and added cache/DOM guard with refresh fallback before scrolling to the new book.
-    - Manual check: Create a new book while other updates are happening; confirm the new book expands and scrolls into view without console errors.
+    - **ðŸŸ¥ MANUAL CHECK**: [ ] Create a new book while other updates are happening; confirm the new book expands and scrolls into view without console errors.
 
-- **F02** — Drawer "reopen" MutationObserver forces synthetic click that can discard unsaved edits
+- **F02** â€” Drawer "reopen" MutationObserver forces synthetic click that can discard unsaved edits
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Fix plan is ambiguous (prompt vs skip); must pick a single least-behavior-change rule and declare consistency/dependency with other dirty-guard fixes.
-  - Implemented: ✅
+  - Implemented: âœ…
     - Implementation Notes: Drawer reopen observer now skips the synthetic entry-row click when the current editor is dirty, preventing unsaved input loss.
-    - Manual check: Open an entry, type without saving, close and reopen the drawer; confirm typed text is preserved and no unexpected blank editor state occurs.
+    - **ðŸŸ¥ MANUAL CHECK**: [ ] Open an entry, type without saving, close and reopen the drawer; confirm typed text is preserved and no unexpected blank editor state occurs.
 
-- **F03** — Delete handler reads live `selectionState` across `await` — can delete wrong entries
+- **F03** â€” Delete handler reads live `selectionState` across `await` â€” can delete wrong entries
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Remove optional behavior-changing "abort if selection changes" branch; snapshot-only should be the sole recommendation.
-  - Implemented: ✅
+  - Implemented: âœ…
     - Implementation Notes: Delete hotkey now snapshots `selectFrom` and selected UIDs before any `await` to prevent selection changes from affecting an in-flight delete.
-    - Manual check: Select multiple entries, press Delete, then quickly click another book; confirm only the originally selected entries are deleted.
+    - **ðŸŸ¥ MANUAL CHECK**: [ ] Select multiple entries, press Delete, then quickly click another book; confirm only the originally selected entries are deleted.
 
-- **F04** — Drawer-open detection uses `elementFromPoint` at screen center — brittle with overlays
+- **F04** â€” Drawer-open detection uses `elementFromPoint` at screen center â€” brittle with overlays
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan discarded 🔴
+    - Verdict: Implementation plan discarded ðŸ”´
     - Reason: Impact claim is not evidence-backed (likely false negatives vs false positives) and proposed fix is ambiguous/multi-option; requires broader runtime validation.
-  - Implemented: ❌ Skipped (🔴 discarded)
-    - Implementation Notes: Skipped — plan discarded; requires runtime validation to choose an authoritative drawer-open signal and overlay behavior.
+  - Implemented: âŒ Skipped (ðŸ”´ discarded)
+    - Implementation Notes: Skipped â€” plan discarded; requires runtime validation to choose an authoritative drawer-open signal and overlay behavior.
 
-- **F05** — No teardown for `moSel`/`moDrawer` MutationObservers — accumulate on reload
+- **F05** â€” No teardown for `moSel`/`moDrawer` MutationObservers â€” accumulate on reload
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan discarded 🔴
+    - Verdict: Implementation plan discarded ðŸ”´
     - Reason: Relies on unproven in-place reload lifecycle and lacks a concrete teardown trigger; needs a verified lifecycle hook or a broader singleton/teardown strategy.
-  - Implemented: ❌ Skipped (🔴 discarded)
-    - Implementation Notes: Skipped — plan discarded; no evidence-backed teardown lifecycle beyond `beforeunload` to safely disconnect observers on reload.
+  - Implemented: âŒ Skipped (ðŸ”´ discarded)
+    - Implementation Notes: Skipped â€” plan discarded; no evidence-backed teardown lifecycle beyond `beforeunload` to safely disconnect observers on reload.
 
-- **F06** — Splitter drag lifecycle missing `pointercancel` — listeners can leak
+- **F06** â€” Splitter drag lifecycle missing `pointercancel` â€” listeners can leak
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement 🟢
+    - Verdict: Ready to implement ðŸŸ¢
     - Reason: N/A
-  - Implemented: ✅
+  - Implemented: âœ…
     - Implementation Notes: Added `pointercancel` and `lostpointercapture` termination paths to splitter drag cleanup so listeners always detach and width persists.
-    - Manual check: Start dragging the splitter, then alt-tab / open an OS overlay / trigger a gesture cancel; confirm the list is still resizable afterward and the final width persists after reload.
+    - **ðŸŸ¥ MANUAL CHECK**: [ ] Start dragging the splitter, then alt-tab / open an OS overlay / trigger a gesture cancel; confirm the list is still resizable afterward and the final width persists after reload.
 
-- **F07** — Toggling Activation Settings / Order Helper clears entry editor without dirty-state guard
+- **F07** â€” Toggling Activation Settings / Order Helper clears entry editor without dirty-state guard
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Fix plan is ambiguous (prompt vs refuse); should pick a single least-scope behavior (skip toggle when dirty) and keep dirty-guard behavior consistent with F02.
-  - Implemented: ✅
+  - Implemented: âœ…
     - Implementation Notes: Added dirty guards to Activation Settings and Order Helper toggles, showing a toast and blocking mode switches that would discard unsaved edits.
-    - Manual check: Type unsaved edits in an entry, click the gear/order toggle; confirm a toast appears and the editor content remains unchanged.
+    - **ðŸŸ¥ MANUAL CHECK**: [ ] Type unsaved edits in an entry, click the gear/order toggle; confirm a toast appears and the editor content remains unchanged.
 
-- **F08** — `addDrawer()` has no singleton guard — multiple inits duplicate UI and global listeners
+- **F08** â€” `addDrawer()` has no singleton guard â€” multiple inits duplicate UI and global listeners
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan discarded 🔴
+    - Verdict: Implementation plan discarded ðŸ”´
     - Reason: Requires evidence of in-place reload + a concrete singleton registry/teardown strategy; "skip init" risks breaking `initDrawer()` consumers and fix risk is under-rated.
-  - Implemented: ❌ Skipped (🔴 discarded)
-    - Implementation Notes: Skipped — plan discarded; safe idempotent init/teardown requires validated ST reload semantics and a concrete singleton/registry approach.
+  - Implemented: âŒ Skipped (ðŸ”´ discarded)
+    - Implementation Notes: Skipped â€” plan discarded; safe idempotent init/teardown requires validated ST reload semantics and a concrete singleton/registry approach.
 
 ---
 
 ### `src/editorPanel.js`
-→ `CodeReview_editorPanel.js.md`
+-> `CodeReview_editorPanel.js.md`
 
-- **F01** — Dirty-tracking desynchronized when `openEntryEditor` aborts early — can lose edits
+- **F01** â€” Dirty tracking silently fails for entry UID `0` because of falsy checks
   - Meta-reviewed: [ ]
     - Verdict: 
     - Reason: 
   - Implemented: 
 
-- **F02** — Dirty tracking is one-way — no "user reverted to clean" — causes stuck-dirty scenarios
+- **F02** â€” `openEntryEditor()` marks the new entry clean before async load succeeds
   - Meta-reviewed: [ ]
     - Verdict: 
     - Reason: 
   - Implemented: 
 
-- **F03** — `clearEntryHighlights` is O(total entries) on every editor open — input latency
+- **F03** â€” Dirty state can remain permanently "dirty" after successful saves
   - Meta-reviewed: [ ]
     - Verdict: 
     - Reason: 
   - Implemented: 
 
-- **F04** — `openEntryEditor` leaves entry highlighted but editor unchanged on abort
+- **F04** â€” Stale open abort can leave active-row highlight inconsistent with editor content
   - Meta-reviewed: [ ]
     - Verdict: 
     - Reason: 
   - Implemented: 
 
-- **F05** — Editor event listeners have no teardown — duplicate dirty-marking handlers on reload
+- **F05** â€” `clearEntryHighlights()` scans every entry on every open/reset
   - Meta-reviewed: [ ]
     - Verdict: 
     - Reason: 
   - Implemented: 
 
-- **F06** — Focus/unfocus toggle buttons can mark editor dirty despite being presentation-only
+- **F06** â€” Pointer-based dirty tracking marks non-editing UI interactions as unsaved edits
+  - Meta-reviewed: [ ]
+    - Verdict: 
+    - Reason: 
+  - Implemented: 
+
+- **F07** â€” Editor-level event listeners are attached without a teardown path
   - Meta-reviewed: [ ]
     - Verdict: 
     - Reason: 
@@ -176,421 +154,311 @@ Track all code-review findings across the extension's JS files.
 ---
 
 ### `src/listPanel.bookMenu.js`
-→ `CodeReview_listPanel.bookMenu.js.md`
+-> `CodeReview_listPanel.bookMenu.js.md`
 
-- **F01** — Duplicate-book detection picks wrong "new book" under concurrent creation — wrong folder move
+- **F01** -- Duplicate-book detection can pick the wrong new book under concurrent creates
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
-- **F02** — "Move Book to Folder" always triggers `refreshList()` — can clear editor and lose typed edits
+- **F02** -- Move-to-folder actions can discard unsaved editor edits via forced list refresh
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
-- **F03** — Folder import is sequential with no yield / progress / partial-failure handling
+- **F03** -- Folder import can abort mid-run and leave partial/empty books without clear recovery
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
-- **F04** — "Export Book" omits metadata — loses folder assignment and sort preference on re-import
+- **F04** -- Exported book payload drops metadata needed for folder/sort restoration
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
-- **F05** — External Editor fires fire-and-forget POST — silent failure, no user feedback
+- **F05** -- External Editor integration suppresses request failures and user feedback
   - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/listPanel.booksView.js`
-→ `CodeReview_listPanel.booksView.js.md`
-
-- **F01** — "Create new entry" uses stale snapshot payload with no save-failure rollback
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — Book "active" toggle can desync from canonical ST selection state on missing selector or rapid toggle
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F03** — `loadList()` aborts entirely on single book-load failure — blank panel
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F04** — `renderBook()` dereferences `data.entries`/`data.metadata` without null guards — throws on race
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F05** — Large-book entry rendering is sequential with no yielding — UI stall
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F06** — `dragend` cleanup iterates cache without null guards — throws if cache cleared during drag
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/listPanel.coreBridge.js`
-→ `CodeReview_listPanel.coreBridge.js.md`
-
-- **F01** — `setSelectedBookInCoreUi()` can resolve before core selection is confirmed — wrong-book delete/duplicate
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — Redundant `change` event dispatched when book is already selected — unnecessary core reloads
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F03** — `clickCoreUiAction()` re-resolves element after wait — can click missing/wrong element
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F04** — `waitForDom()` observes entire `document` subtree with attributes — performance footgun
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F05** — `renameBook` selector list has only one entry — higher breakage risk on upstream DOM change
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/listPanel.filterBar.js`
-→ `CodeReview_listPanel.filterBar.js.md`
-
-- **F01** — `applySearchFilter()` throws during list load when entry DOM not yet rendered
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — Filtering can hide selected entries — Delete then destroys invisible entries silently
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F03** — Search filter traverses and writes all entry DOM nodes every keystroke — input lag
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F04** — Entry search cache grows unbounded — no pruning on entry/book removal
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F05** — Global `document` click handler for visibility menu has no cleanup path — listener leak
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/listPanel.foldersView.js`
-→ `CodeReview_listPanel.foldersView.js.md`
-
-- **F01** — Folder header `onToggle` throws when folder DOM is missing due to refresh/click race
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — "Expand All Folders" not applied to folders created after the action — inconsistent state
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F03** — Folder active-toggle refresh is O(Folders × Books) — input lag on large collections
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F04** — "Collapse All Folders" writes `localStorage` once per folder — avoidable sync overhead
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/listPanel.js`
-→ `CodeReview_listPanel.js.md`
-
-- **F01** — `setBookSortPreference()` calls `sortEntriesIfNeeded()` post-await on possibly-cleared cache
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — `setBookSortPreference()` saves full `buildSavePayload()` for a metadata-only change — overwrites risk
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F03** — `refreshList()` awaits debounced loader — can drop/merge requests and produce stale UI
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F04** — `initListPanel()` has no teardown — duplicate handlers if called more than once
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-  
-- **F05** — `renderBookSourceLinks()` clears container via `innerHTML = ''` — drops keyboard focus
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/Settings.js`
-→ `CodeReview_Settings.js.md`
-
-- **F01** — `useBookSorts` validation can silently override persisted false when stored as non-boolean
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — `Object.assign` hydrates arbitrary keys into the Settings instance
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F03** — Overwriting `extension_settings.worldInfoDrawer` with a class instance relies on `toJSON` behavior
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+    - Verdict:
+    - Reason:
+  - Implemented:
 
 ---
 
 ### `src/bookSourceLinks.js`
-→ `CodeReview_bookSourceLinks.js.md`
+â†’ `CodeReview_bookSourceLinks.js.md`
 
-- **F01** — `cleanup()` does not unsubscribe `eventSource` listeners (leak / duplicate refresh on re-init)
+- **F01** â€” `cleanup()` does not unsubscribe `eventSource` listeners (leak / duplicate refresh on re-init)
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement 🟢
+    - Verdict: Ready to implement ðŸŸ¢
     - Reason: N/A
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added tracked event subscriptions and cleanup-time `eventSource.removeListener(...)` teardown for all source-link event handlers.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Reopen/reinitialize the drawer extension, then switch chats/characters and confirm source-link refresh events fire once per action.
 
-- **F02** — `getBookSourceLinks()` fallback returns a different object shape than normal entries
+- **F02** â€” `getBookSourceLinks()` fallback returns a different object shape than normal entries
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Impact/severity rationale is overstated; at least one current caller normalizes missing fields, so validate other call sites and adjust severity/justification accordingly.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Expanded the fallback object to full link shape and verified existing callers still normalize safely.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open the book list with mixed source-linked and unlinked books and confirm source icons/tooltips render without missing text or errors.
 
-- **F03** — Signature computation uses full `JSON.stringify(nextLinks)` (unnecessary churn + ordering sensitivity)
+- **F03** â€” Signature computation uses full `JSON.stringify(nextLinks)` (unnecessary churn + ordering sensitivity)
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Performance/ordering instability claims are plausible but unproven; revise toward a minimal, lower-risk stabilization (e.g., canonicalize `characterNames` ordering) and avoid over-scoped signature refactor.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added canonical source-link signature generation with sorted keys/names and kept refresh early-return behavior unchanged.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Trigger source-link refresh events (chat switch, character edit, settings update) and confirm icons/tooltips refresh when actual links change.
 
-- **F04** — Direct imports from internal ST modules increase upstream breakage risk (prefer `getContext()` where possible)
+- **F04** â€” Direct imports from internal ST modules increase upstream breakage risk (prefer `getContext()` where possible)
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Must include an explicit compatibility policy (minimum supported ST version) or a context-first fallback strategy; otherwise refactor can introduce host-version breakages.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Refactored to context-first runtime access with direct-import fallback strategy for compatibility across host versions.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Switch chats/groups/characters and verify source-link icons still update correctly with no console errors on your current SillyTavern version.
 
 ---
 
 ### `src/constants.js`
-→ `CodeReview_constants.js.md`
+â†’ `CodeReview_constants.js.md`
 
-- **F01** — `SORT_DIRECTION` docstrings are incorrect/misaligned with actual meaning
+- **F01** â€” `SORT_DIRECTION` docstrings are incorrect/misaligned with actual meaning
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement 🟢
+    - Verdict: Ready to implement ðŸŸ¢
     - Reason: N/A
-  - **Neglect Risk:** Low ⭕ — Documentation-only mismatch; leaving it unfixed mainly risks developer confusion.
+  - **Neglect Risk:** Low â­• â€” Documentation-only mismatch; leaving it unfixed mainly risks developer confusion.
   - Implemented:
 
-- **F02** — Recursion option values are duplicated across modules — drift risk breaks filters/indicators
+- **F02** â€” Recursion option values are duplicated across modules â€” drift risk breaks filters/indicators
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement 🟢
+    - Verdict: Ready to implement ðŸŸ¢
     - Reason: N/A
-  - **Neglect Risk:** Medium ❗ — Duplication increases future drift risk that can break filter behavior/indicators in Order Helper.
+  - **Neglect Risk:** Medium â— â€” Duplication increases future drift risk that can break filter behavior/indicators in Order Helper.
   - Implemented:
 
-- **F03** — Column-schema “sync” is comment-only — mismatch can silently break column visibility/persistence
+- **F03** â€” Column-schema â€œsyncâ€ is comment-only â€” mismatch can silently break column visibility/persistence
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Step 1 plan is ambiguous about fallback policy and does not specify canonical schema key handling in state/hydration.
-  - **Neglect Risk:** Medium ❗ — Drift would silently degrade column visibility persistence, making preferences feel unreliable.
+  - **Neglect Risk:** Medium â— â€” Drift would silently degrade column visibility persistence, making preferences feel unreliable.
   - Implemented:
 
-- **F04** — Exported “constant” objects/arrays are mutable — accidental mutation can cascade across UI
+- **F04** â€” Exported â€œconstantâ€ objects/arrays are mutable â€” accidental mutation can cascade across UI
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan discarded 🔴
+    - Verdict: Implementation plan discarded ðŸ”´
     - Reason: Requires extensive analysis to validate absence of runtime mutation paths; freezing could introduce runtime exceptions.
-  - **Neglect Risk:** Low ⭕ — No evidence of current mutation; risk is mostly hypothetical unless future code mutates shared schema.
+  - **Neglect Risk:** Low â­• â€” No evidence of current mutation; risk is mostly hypothetical unless future code mutates shared schema.
   - Implemented:
 
-- **F05** — `SORT` enum names overlap conceptually (TITLE vs ALPHABETICAL) — increases future misuse risk
+- **F05** â€” `SORT` enum names overlap conceptually (TITLE vs ALPHABETICAL) â€” increases future misuse risk
   - Meta-reviewed: [X]
-    - Verdict: Implementation plan needs revision 🟡
+    - Verdict: Implementation plan needs revision ðŸŸ¡
     - Reason: Step 1 fix references UI label mapping without evidence the option is exposed, and misses the concrete doc mismatch vs `sortEntries()` behavior.
-  - **Neglect Risk:** Low ⭕ — Primarily a maintainability/docs clarity issue; limited immediate user impact.
+  - **Neglect Risk:** Low â­• â€” Primarily a maintainability/docs clarity issue; limited immediate user impact.
   - Implemented:
 
 ---
 
-### `src/listPanel.selectionDnD.js`
-→ `CodeReview_listPanel.selectionDnD.js.md`
+### `src/orderHelperRender.actionBar.js`
+â†’ `CodeReview_orderHelperRender.actionBar.js.md`
 
-- **F01** — Drag-drop uses live selection list after async loads, enabling wrong-entry moves
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F01** â€” Bulk-apply actions can throw if table DOM/cache is not ready (missing null guards)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Medium â— â€” Crash during bulk operations can disrupt user workflow and require drawer reopen.
+  - Implemented: ✅
+    - Implementation Notes: Added safe tbody/entry guards for bulk apply handlers so invalid table/cache rows are skipped instead of throwing.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open Order Helper, trigger a quick refresh, click bulk Apply buttons, and confirm there are no console errors and valid selected rows still update.
 
-- **F02** — Missing null guards on `loadWorldInfo` results can crash drag-drop
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F02** â€” Outside-click listeners can leak if the component is removed while menus are open
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision ðŸŸ¡
+    - Reason: Needs research step to validate existing cleanup coverage via MULTISELECT_DROPDOWN_CLOSE_HANDLER and exact lifecycle before implementation.
+  - **Neglect Risk:** Low â­• â€” Listener leak only affects repeated opens without page reload; speculative severity.
+  - Implemented: ✅
+    - Implementation Notes: Added bulk-row cleanup plus renderer rerender cleanup invocation to always remove outlet outside-click listeners.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open the outlet dropdown, switch Order Helper scope or rerender, and confirm no ghost outside-click behavior remains.
 
-- **F03** — Move operation can create duplicates on partial delete failures
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F03** â€” Bulk apply loops can freeze the UI on large tables (no yielding in hot loops)
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision ðŸŸ¡
+    - Reason: Async yielding introduces behavioral changes (user interaction during gaps) that require button-disabling mitigation.
+  - **Neglect Risk:** Low â­• â€” Performance-only issue; only affects users with large lorebooks and no data loss risk.
+  - Implemented: ✅
+    - Implementation Notes: Refactored State/Strategy/Order bulk applies to precompute targets, lock Apply buttons, and yield every 200 rows.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Run State/Strategy/Order apply on a large entry list and confirm the button is temporarily disabled, the UI stays responsive, and final saved values are correct.
 
----
-
-### `src/listPanel.state.js`
-→ `CodeReview_listPanel.state.js.md`
-
-- **F01** — State caches use plain objects with user-controlled keys (prototype pollution / key collisions)
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — Selection state can survive list reloads, leaving stale `selectFrom`/`selectList`
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
----
-
-### `src/lorebookFolders.js`
-→ `CodeReview_lorebookFolders.js.md`
-
-- **F01** — `createBookInFolder` assumes `loadWorldInfo()` always succeeds and returns an object
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
-
-- **F02** — Folder import can miss the update event if it fires before `waitForWorldInfoUpdate` is registered
-  - Meta-reviewed: [ ]
-    - Verdict: 
-    - Reason: 
-  - Implemented: 
+- **F04** â€” Direction radios are not grouped as radios (no `name`), risking inconsistent UI/accessibility
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Low â­• â€” Accessibility/maintenance concern only; mouse behavior works correctly.
+  - Implemented: ✅
+    - Implementation Notes: Grouped direction radios with a shared name and switched persistence to change handlers with native exclusivity.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Toggle Direction between up/down and reload; confirm the selected option persists and only one option can be selected at a time.
 
 ---
 
-### `src/orderHelper.js`
-→ `CodeReview_orderHelper.js.md`
+### `src/orderHelperRender.utils.js`
+â†’ `CodeReview_orderHelperRender.utils.js.md`
 
-- **F01** — Opening Order Helper can clear the entry editor and lose unsaved typing (no “dirty” guard)
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F01** â€” `setTooltip()` can throw if `text` is not a string (missing type guard)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Medium â— â€” Can cause hard crashes if tooltip receives non-string values.
   - Implemented:
 
-- **F02** — Order Helper entry collection can throw if cache/DOM desyncs during updates (missing null guards)
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F02** â€” `wireMultiselectDropdown()` does not keep `aria-expanded` in sync with open/close state
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Low â­• â€” Accessibility issue only; no functional impact.
   - Implemented:
 
-- **F03** — Scope comparison is order-sensitive and can cause unnecessary full rerenders
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
-
-- **F04** — `getOrderHelperSourceEntries()` does repeated `includes()` scans and late book filtering (avoidable overhead)
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
-
-- **F05** — Custom-order display index assignment mutates cache and triggers background saves with no error handling
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F03** â€” Outside-click `document` listener can leak if a menu is removed while open (no teardown path)
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan discarded ðŸ”´
+    - Reason: Finding contains a ðŸš© flag requiring user input. Per meta-review rules, findings with ðŸš© flags must be discarded.
+  - **Neglect Risk:** Medium â— â€” Listener leaks can accumulate over repeated Order Helper opens/rerenders, causing performance degradation.
   - Implemented:
 
 ---
 
-### `src/orderHelperFilters.js`
-→ `CodeReview_orderHelperFilters.js.md`
+### `src/orderHelperRender.tableBody.js`
+â†’ `CodeReview_orderHelperRender.tableBody.js.md`
 
-- **F01** — Applying filters mutates filter state (auto-selects “all”) and can override user intent
+- **F01** â€” Concurrent `saveWorldInfo(..., true)` calls can persist stale snapshots (last-write-wins race)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** High â—â— â€” Real data integrity risk; users can lose edits when making rapid changes in Order Helper.
+  - Implemented:
+
+- **F02** â€” `updateCustomOrderFromDom()` can throw on missing book/entry during refresh/desync
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Medium â— â€” Crash during concurrent updates can disrupt user workflow.
+  - Implemented:
+
+- **F03** â€” Comment link can render as the string "undefined" for entries without a comment
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Low â­• â€” Cosmetic issue only; no data integrity or functionality impact.
+  - Implemented:
+
+---
+
+### `src/orderHelperRender.filterPanel.js`
+â†’ `CodeReview_orderHelperRender.filterPanel.js.md`
+
+- **F01** â€” Script filter is read from localStorage but never persisted back
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - Implemented: 
+  - **Neglect Risk:** Medium â— â€” Users can lose complex filter scripts, causing frustration and rework.
+
+- **F02** â€” Missing null guards when resolving rows can throw during refresh/desync
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - Implemented: 
+  - **Neglect Risk:** Medium â— â€” Filter panel can crash during concurrent UI rebuilds, breaking the filtering feature.
+
+- **F03** â€” In-flight async filter execution can apply stale results after filter panel is no longer active
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - Implemented: 
+  - **Neglect Risk:** Low â­• â€” Edge case timing issue; users may see confusing background changes but no data loss.
+
+- **F04** â€” Syntax highlighting runs on every keystroke and may cause input lag for long scripts
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - Implemented: 
+  - **Neglect Risk:** Low â­• â€” Performance issue only; depends on script size/device.
+
+---
+
+### `src/sortHelpers.js`
+-> `CodeReview_sortHelpers.js.md`
+
+- **F01** â€” Length sorting recomputes word counts inside the comparator, causing avoidable UI stalls
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Low â­• â€” Performance optimization; impact depends on dataset size and is cosmetic when small.
+  - Implemented:
+
+- **F02** â€” Metadata parser drops valid per-book sort preferences when legacy data omits direction
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Medium â— â€” Users with legacy metadata lose per-book sort preferences without clear feedback.
+  - Implemented:
+
+---
+
+### `src/utils.js`
+-> `CodeReview_utils.js.md`
+
+- **F01** -- `executeSlashCommand()` swallows failures, so callers cannot react or inform the user
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Medium â— â€” Silent failures confuse users when slash command actions (like STLO integration) don't work.
+  - Implemented:
+
+- **F02** -- Direct internal import of `SlashCommandParser` is brittle across SillyTavern updates
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement ðŸŸ¢
+    - Reason: N/A
+  - **Neglect Risk:** Medium â— â€” Upcoming SillyTavern updates can break slash command functionality without warning.
+  - Implemented:
+
+---
+
+### `src/wiUpdateHandler.js`
+-> `CodeReview_wiUpdateHandler.js.md`
+
+- **F01** -- Failed update cycles can leave waiters hanging indefinitely
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
   - Implemented:
 
-- **F02** — Group filter can throw if `getGroupValue()` returns null/undefined (assumes array)
+- **F02** -- `fillEmptyTitlesWithKeywords()` forces a duplicate update pass for the same save
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
   - Implemented:
 
-- **F03** — Recursion “delayUntilRecursion” flag detection is overly permissive and may misclassify values
+- **F03** -- Event bus listeners are registered without a teardown path
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
   - Implemented:
 
-- **F04** — Filter application is more expensive than necessary (repeated Set creation per row), risking lag on large tables
+- **F04** -- Direct `script.js` imports bypass the stable context API
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
@@ -598,22 +466,28 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
-### `src/orderHelperRender.js`
-→ `CodeReview_orderHelperRender.js.md`
+### `src/worldEntry.js`
+-> `CodeReview_worldEntry.js.md`
 
-- **F01** — Opening Order Helper can silently wipe unsaved editor work (forced editor reset)
+- **F01** -- Clicking status controls on the active row can re-open the editor and discard unsaved text
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
   - Implemented:
 
-- **F02** — Custom sort persistence uses fire-and-forget saves, risking race conditions and silent failures
+- **F02** -- Rapid toggle/strategy changes can race and persist stale state out of order
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
   - Implemented:
 
-- **F03** — Renderer mounts new Order Helper DOM without clearing previous content (duplication / leaks)
+- **F03** -- Save failures leave optimistic UI/cache mutations without rollback
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+
+- **F04** -- Missing template controls cause early return with a partially initialized, non-inserted row
   - Meta-reviewed: [ ]
     - Verdict:
     - Reason:
@@ -630,3 +504,5 @@ The live work queues have been moved to dedicated files:
 | Pending first-pass review | [`QUEUE_REVIEW.md`](QUEUE_REVIEW.md) |
 | Pending meta-review (step 2) | [`QUEUE_META_REVIEW.md`](QUEUE_META_REVIEW.md) |
 | Pending implementation | [`QUEUE_IMPLEMENTATION.md`](QUEUE_IMPLEMENTATION.md) |
+
+
