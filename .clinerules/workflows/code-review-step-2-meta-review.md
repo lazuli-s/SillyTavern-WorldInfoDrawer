@@ -1,14 +1,14 @@
 <task name="Code Review - Step 2: Meta-Review">
 
 <task_objective>
-Iteratively process `tasks/code-reviews/QUEUE_META_REVIEW.md` "Files Pending Meta-Review": for each pending `tasks/code-reviews/CodeReview_*.md`, reload authoritative repo/ST docs, audit the quality/technical accuracy/actionability of each finding, insert a `### STEP 2: META CODE REVIEW` section **inside each finding** (immediately after `- **Pros:**` content) — including an `#### Implementation Checklist` at its end for 🟢/🟡 verdicts — and remove the original `- **Implementation Checklist:**` block from Step 1, update queue files and `REVIEW_TRACKER.md` (remove from meta-review queue, add to implementation queue; mark each finding Meta-reviewed and add Verdict/Reason in the tracker), then call `new_task` to clear context and repeat until none remain. Only output the created/updated files.
+Process `tasks/code-reviews/QUEUE_META_REVIEW.md` "Files Pending Meta-Review": pick the first pending `tasks/code-reviews/CodeReview_*.md`, load authoritative repo/ST docs, audit the quality/technical accuracy/actionability of each finding, insert a `### STEP 2: META CODE REVIEW` section **inside each finding** (immediately after `- **Pros:**` content) — including an `#### Implementation Checklist` at its end for 🟢/🟡 verdicts — and remove the original `- **Implementation Checklist:**` block from Step 1, update queue files and `REVIEW_TRACKER.md` (remove from meta-review queue, add to implementation queue; mark each finding Meta-reviewed and add Verdict/Reason in the tracker). Only output the created/updated files.
 </task_objective>
 
 <detailed_sequence_steps>
 
-# Meta-Review Code Reviews Loop Process - Detailed Sequence of Steps
+# Meta-Review Code Reviews - Detailed Sequence of Steps
 
-## 1. Start an iteration by scanning the pending meta-review list (single source of truth)
+## 1. Scan the pending meta-review list (single source of truth)
 
 1. Use `read_file` on `tasks/code-reviews/QUEUE_META_REVIEW.md`.
 
@@ -24,9 +24,7 @@ Iteratively process `tasks/code-reviews/QUEUE_META_REVIEW.md` "Files Pending Met
 5. Otherwise:
     1. Choose the **first** file in that list as `TARGET_REVIEW_FILE` (exactly as written, e.g. `tasks/code-reviews/CodeReview_drawer.js.md`).
 
-## 2. Mandatory “before anything”: reload authoritative docs for this iteration
-
-> This workflow intentionally reloads docs **every iteration** because the workflow requires `new_task` context clearing after each meta-reviewed file.
+## 2. Mandatory "before anything": load authoritative docs
 
 1. Use `read_file` on:
     1. `AGENTS.md` (mandatory constraints)
@@ -341,20 +339,9 @@ Apply the following updates:
 
 7. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
-## 7. Clear context and repeat
+## 7. Finalize the workflow run
 
-1. Call `new_task` with the following prompt:
-
-    ```
-    Your immediate task is applying the `.clinerules/workflows/code-review-step-2-meta-review.md` workflow on the first file in the updated "Files Pending Meta-Review" list.
-    ```
-
-2. Then restart and repeat until the pending meta-review list is empty.
-
-## 8. Finalize the workflow run
-
-1. When `## Files Pending Meta-Review` in `tasks/code-reviews/QUEUE_META_REVIEW.md` becomes empty:
-    1. Use `attempt_completion` to indicate that all pending code reviews have been meta-reviewed and the queue files have been updated accordingly.
+1. After updating all queue files and the tracker, report the file that was meta-reviewed and stop.
 
 </detailed_sequence_steps>
 

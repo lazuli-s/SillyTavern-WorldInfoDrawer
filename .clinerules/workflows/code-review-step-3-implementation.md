@@ -262,7 +262,19 @@ Do **not** modify the `Meta-reviewed` or `Verdict` or `Reason` fields.
 
 2. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
-Finish the workflow (one code review file at a time.)
+---
+
+## 12. Move the code review file to the finished folder
+
+1. Use a bash `mv` command to move `TARGET_REVIEW_FILE` into `tasks/code-reviews/finished/`:
+
+    ```bash
+    mv "tasks/code-reviews/CodeReview_<BASENAME>.md" "tasks/code-reviews/finished/CodeReview_<BASENAME>.md"
+    ```
+
+    Substitute the actual filename (e.g. `CodeReview_utils.js.md`) for `<BASENAME>`.
+
+2. Report the file that was processed and stop.
 
 </detailed_sequence_steps>
 

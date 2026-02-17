@@ -1,14 +1,14 @@
-<task name="Code Review - Step 1: Review Pending Files Loop">
+<task name="Code Review - Step 1: Review Pending Files">
 
 <task_objective>
-Iteratively process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": for each file, load required repo/ST docs, review the first pending file using the provided code-review prompt, write `tasks/code-reviews/CodeReview_<filename>.md`, update queue files and `REVIEW_TRACKER.md` (add findings under Reviewed Files, remove from pending queue, add to meta-review queue). Only output the created/updated files.
+Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the first pending file, load required repo/ST docs, review it using the provided code-review prompt, write `tasks/code-reviews/CodeReview_<filename>.md`, update queue files and `REVIEW_TRACKER.md` (add findings under Reviewed Files, remove from pending queue, add to meta-review queue). Only output the created/updated files.
 </task_objective>
 
 <detailed_sequence_steps>
 
-# Review Pending Files Loop Process - Detailed Sequence of Steps
+# Review Pending Files - Detailed Sequence of Steps
 
-## 1. Start an iteration by scanning the pending list (single source of truth)
+## 1. Scan the pending list (single source of truth)
 
 1. Use `read_file` on `tasks/code-reviews/QUEUE_REVIEW.md`.
 
@@ -22,9 +22,9 @@ Iteratively process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review":
     1. Use `attempt_completion` to report completion of the workflow run (no pending files remaining).
 
 5. Otherwise:
-    1. Choose the **first** file in that list as `TARGET_FILE` (exactly as written, e.g. `src/Settings.js`). For this task, this will be the only file on the list to be reviewed.
+    1. Choose the **first** file in that list as `TARGET_FILE` (exactly as written, e.g. `src/Settings.js`).
 
-## 2. Mandatory “before anything”: reload authoritative docs for this iteration
+## 2. Mandatory "before anything": load authoritative docs
 
 1. Use `read_file` on:
     1. `AGENTS.md` (mandatory constraints)
@@ -180,7 +180,7 @@ Apply the following updates across three files:
 
 4. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
-5. Finalize the workflow run.
+5. Report the file that was reviewed and stop.
 
 </detailed_sequence_steps>
 
