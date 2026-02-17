@@ -163,7 +163,7 @@ Immediately after implementing each finding (or determining it should be skipped
 
 - Risks / Side effects
   - <Short description of side effect> (probability: ⭕ / ❗ / ❗❗❗)
-      - Manual check: <Concrete thing the user should do to verify. Include what success looks like.>
+      - **🟥 MANUAL CHECK**: [ ] <Concrete checklist the user should do to verify. Include what success looks like.>
 ```
 
 > **Risk format guidance:**
@@ -208,7 +208,7 @@ For each finding:
     ```markdown
     - Implemented: ✅
       - Implementation Notes: Added pointercancel to splitter drag cleanup.
-      - Manual checks:
+      - **🟥 MANUAL CHECK**:
         - [ ] Drag the splitter, then release the pointer outside the window; confirm no console errors and width is saved.
         - [ ] Rapidly drag and release; confirm the panel does not get stuck.
     ```

@@ -1,7 +1,7 @@
 <task name="Code Review - Step 1: Review Pending Files Loop">
 
 <task_objective>
-Iteratively process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": for each file, load required repo/ST docs, review the first pending file using the provided code-review prompt, write `tasks/code-reviews/CodeReview_<filename>.md`, update queue files and `REVIEW_TRACKER.md` (add findings under Reviewed Files, remove from pending queue, add to meta-review queue), then call `new_task` to clear context and repeat until none remain. Only output the created/updated files.
+Iteratively process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": for each file, load required repo/ST docs, review the first pending file using the provided code-review prompt, write `tasks/code-reviews/CodeReview_<filename>.md`, update queue files and `REVIEW_TRACKER.md` (add findings under Reviewed Files, remove from pending queue, add to meta-review queue). Only output the created/updated files.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -19,14 +19,12 @@ Iteratively process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review":
 3. Extract the file list items (bullet list entries like `- \`src/utils.js\``).
 
 4. If the list is empty:
-    1. Stop the loop and use `attempt_completion` to report completion of the workflow run (no pending files remaining).
+    1. Use `attempt_completion` to report completion of the workflow run (no pending files remaining).
 
 5. Otherwise:
-    1. Choose the **first** file in that list as `TARGET_FILE` (exactly as written, e.g. `src/Settings.js`).
+    1. Choose the **first** file in that list as `TARGET_FILE` (exactly as written, e.g. `src/Settings.js`). For this task, this will be the only file on the list to be reviewed.
 
 ## 2. Mandatory “before anything”: reload authoritative docs for this iteration
-
-> This workflow intentionally reloads docs **every iteration** because the workflow requires `new_task` context clearing after each reviewed file.
 
 1. Use `read_file` on:
     1. `AGENTS.md` (mandatory constraints)
@@ -182,22 +180,7 @@ Apply the following updates across three files:
 
 4. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
-## 7. Clear context and repeat
-
-1. After updating the queue files, re-read `tasks/code-reviews/QUEUE_REVIEW.md`. Take the **exact path** of the first entry under `## Files Pending Review` — this is `NEXT_FILE`.
-
-2. If `## Files Pending Review` in `tasks/code-reviews/QUEUE_REVIEW.md` is now empty, skip to Step 9 (Finalize).
-
-3. Call `new_task` with the following prompt, substituting the actual `NEXT_FILE` path — do NOT use a placeholder:
-
-    ```text
-    Your immediate task is applying the `.clinerules/workflows/code-review-step-1-first-review.md` workflow on `<NEXT_FILE>`.
-    ```
-
-## 9. Finalize the workflow run
-
-1. When `## Files Pending Review` in `tasks/code-reviews/QUEUE_REVIEW.md` becomes empty:
-    1. Use `attempt_completion` to indicate that all pending files have been reviewed and the queue files have been updated accordingly.
+5. Finalize the workflow run.
 
 </detailed_sequence_steps>
 

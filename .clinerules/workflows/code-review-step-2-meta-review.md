@@ -87,7 +87,7 @@ Use the following file structure, adding it right after each STEP 1:
     Highlight evidence-based claims
 
 - **Top risks:**
-  Missing evidence / wrong prioritization / speculative claims / internal inconsistency / risk of the issue actually causing real impact > risk of fixing/benefits
+  Choose which ones are applicable, if any: missing evidence / wrong prioritization / speculative claims / internal inconsistency / risk of the issue actually causing real impact > risk of fixing/benefits / others (specify)
 
 #### Technical Accuracy Audit
 For each questionable claim:
@@ -115,6 +115,7 @@ Evaluate the proposed fix:
 
 - **Ambiguity:**
   Is there ONLY one suggestion to fix the same issue? If there's more than one, the least-behavioral-change option must be the sole recommendation.
+
 - **Checklist:**
   Are checklist items complete and actionable by an LLM without human input? Flag any step that is vague (e.g., "refactor X" without specifying exactly what to change), implies manual verification, or skips obviously required follow-up actions (e.g., updating callers after renaming a function, or re-registering a listener after removing one).
 
@@ -165,7 +166,7 @@ After writing the Verdict, append an `#### Implementation Checklist` block — *
 **For 🟡 (Needs revision):**
 
 ```markdown
-#### Implementation Checklist
+#### Detailed Implementation Checklist
 
 > Verdict: Needs revision 🟡 — checklist auto-revised.
 > Meta-review Reason: <reason from Fix Quality Audit — Checklist>
@@ -175,6 +176,8 @@ After writing the Verdict, append an `#### Implementation Checklist` block — *
 - [ ] <revised checklist step 2>
 ...
 ```
+
+Remove `<!-- META-REVIEW: STEP 2 will be inserted here -->` afterwards, if present.
 
 #### After all findings: Coverage Note
 
