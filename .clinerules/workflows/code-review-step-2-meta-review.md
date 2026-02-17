@@ -243,17 +243,79 @@ After auditing all individual findings, produce a standalone `### Coverage Note`
 
 ## 6. Update queue files and tracker (preserve structure)
 
-Apply the following updates across three files:
+Apply the following updates:
 
 1. In `tasks/code-reviews/QUEUE_META_REVIEW.md`: use `replace_in_file` to remove `TARGET_REVIEW_FILE` from the bullet list under `## Files Pending Meta-Review`.
 
 2. In `tasks/code-reviews/QUEUE_IMPLEMENTATION.md`: use `replace_in_file` to add `TARGET_REVIEW_FILE` as a new bullet entry under `## Files Pending Implementation` (if it's not already present).
 
-3. In `tasks/code-reviews/REVIEW_TRACKER.md`: use `replace_in_file` to find the reviewed file section that corresponds to `TARGET_REVIEW_FILE`:
+3. For findings with a **🚩 Requires user input** flag: add entries to `tasks/code-reviews/QUEUE_USER_REVIEW.md`.
+
+    1. If the file does not exist, create it with:
+
+        ```markdown
+        # User Review Queue
+
+        Findings that cannot be implemented without additional input from the user. Each entry summarizes what question needs answering before implementation can proceed.
+
+        ---
+
+        ## Findings Pending User Review
+        ```
+
+    2. For each 🚩 finding, check whether `TARGET_SOURCE_FILE` already has a `### \`<TARGET_SOURCE_FILE>\`` section in the file:
+        - If yes: append the new finding entry at the end of that section.
+        - If no: append a new `### \`<TARGET_SOURCE_FILE>\`` section at the bottom of `## Findings Pending User Review`, then add the finding entry.
+
+    3. Use this format for each finding entry:
+
+        ```markdown
+        #### F<N> — <Title>
+
+        - **Source review:** `tasks/code-reviews/CodeReview_<BASENAME>.md`
+        - **Plain-language summary:** <copied from Step 1 `- **Plain-language summary:**`>
+        - **Location:** <copied from Step 1 `- **Location:**`>
+        - **Why it matters:** <copied from Step 1 `- **Why it matters:**`>
+        - **What needs user input:** <the `🚩 Requires user input` text from Step 1 `- **Proposed fix:**` — state exactly what the user must confirm, using plain language, considering user knows nothing about programming.>
+        ```
+
+    > **Note:** If a finding has both 🚩 and ❌ flags, route it to `QUEUE_USER_REVIEW.md` only (user input takes priority). Append `Also requires extensive analysis (❌).` to the "What needs user input" field.
+
+4. For findings with a **❌ Needs extensive analysis** flag (and no 🚩 flag): add entries to `tasks/code-reviews/QUEUE_EXTENSIVE_REVIEW.md`.
+
+    1. If the file does not exist, create it with:
+
+        ```markdown
+        # Extensive Review Queue
+
+        Findings that require deeper code analysis before implementation can proceed. Each entry summarizes what needs to be verified.
+
+        ---
+
+        ## Findings Pending Extensive Review
+        ```
+
+    2. For each ❌ finding, check whether `TARGET_SOURCE_FILE` already has a `### \`<TARGET_SOURCE_FILE>\`` section in the file:
+        - If yes: append the new finding entry at the end of that section.
+        - If no: append a new `### \`<TARGET_SOURCE_FILE>\`` section at the bottom of `## Findings Pending Extensive Review`, then add the finding entry.
+
+    3. Use this format for each finding entry:
+
+        ```markdown
+        #### F<N> — <Title>
+
+        - **Source review:** `tasks/code-reviews/CodeReview_<BASENAME>.md`
+        - **Plain-language summary:** <copied from Step 1 `- **Plain-language summary:**`>
+        - **Location:** <copied from Step 1 `- **Location:**`>
+        - **Why it matters:** <copied from Step 1 `- **Why it matters:**`>
+        - **What needs analysis:** <the `❌` "What needs to be done/inspected to successfully validate" text from Step 2's Technical Accuracy Audit>
+        ```
+
+5. In `tasks/code-reviews/REVIEW_TRACKER.md`: use `replace_in_file` to find the reviewed file section that corresponds to `TARGET_REVIEW_FILE`:
     1. Identify it by its `### \`<TARGET_FILE>\`` heading and the arrow line `→ \`CodeReview_<BASENAME>.md\``.
     2. Ensure you're updating the correct reviewed file block.
 
-4. For each finding bullet (`- **F0X** — <Title>`) in that `REVIEW_TRACKER.md` block:
+6. For each finding bullet (`- **F0X** — <Title>`) in that `REVIEW_TRACKER.md` block:
     1. Mark `Meta-reviewed: [X]`.
     2. Fill in:
         - `Verdict:` (must match the meta-review's Fix Quality Audit verdict)
@@ -271,7 +333,13 @@ Apply the following updates across three files:
     - **Medium ❗** — findings are real but degraded, low-confidence, or limited in blast radius; ignoring them is tolerable short-term
     - **Low ⭕** — all findings are cosmetic, speculative, or have negligible impact if left unfixed
 
-5. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
+    For each finding with verdict 🔴 that was routed to a queue file (steps 3 or 4), also add a **Routed to** line immediately after the Neglect Risk line:
+
+    ```text
+    - **Routed to:** `QUEUE_USER_REVIEW.md` / `QUEUE_EXTENSIVE_REVIEW.md`
+    ```
+
+7. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
 ## 7. Clear context and repeat
 
