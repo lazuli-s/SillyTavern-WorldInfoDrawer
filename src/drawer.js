@@ -146,6 +146,7 @@ export const initDrawer = ({
         // Best-effort cleanup: if ST tears down/reloads extensions, remove global listeners.
         globalThis.addEventListener?.('beforeunload', ()=>{
             document.removeEventListener('keydown', onDrawerKeydown);
+            wiHandlerApi.cleanup?.();
             bookSourceLinksApi.cleanup();
         }, { once:true });
 

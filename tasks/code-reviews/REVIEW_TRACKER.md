@@ -452,28 +452,40 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Real data-integrity risk; can deadlock UI flows waiting on update completion.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Wrapped `updateWIChange()` in `try/finally` with per-cycle deferred finalization so waiters always receive a finish signal.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Temporarily force an error during `updateWIChange()` (for example with a test throw), then create or edit a book and confirm follow-up UI actions do not wait forever.
 
 - **F02** -- `fillEmptyTitlesWithKeywords()` forces a duplicate update pass for the same save
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Performance issue causing redundant UI work; no data integrity risk.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Removed the direct post-save `updateWIChange(name, data)` call so fill-empty-title reconciliation runs once via the standard `WORLDINFO_UPDATED` event path.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Run "Fill empty titles from keywords" on a book with empty titles and confirm titles update once with no duplicate `[UPDATE-WI]` pass for the same save.
 
 - **F03** -- Event bus listeners are registered without a teardown path
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Listener leaks on re-init cause duplicate work and performance drift.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added named world-info event handlers plus `cleanup()` teardown in `wiUpdateHandler`, and called `wiHandlerApi.cleanup?.()` in drawer teardown.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Reload/reinitialize the extension flow, then trigger a World Info save and settings change; confirm each handler runs once (no duplicate logs or duplicate list refresh behavior).
 
 - **F04** -- Direct `script.js` imports bypass the stable context API
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⭕ — Compatibility improvement; no runtime impact unless ST internal APIs change.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Migrated event bus access from direct `script.js` imports to `SillyTavern.getContext()` (`eventSource` + `eventTypes`/`event_types`) for listener wiring.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open the drawer, save a lorebook entry, and change WI settings; confirm update and settings handlers still run on your current SillyTavern version.
 
 ---
 

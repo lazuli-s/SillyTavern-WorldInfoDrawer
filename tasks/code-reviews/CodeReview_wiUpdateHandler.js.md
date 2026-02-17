@@ -121,9 +121,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Wrap `updateWIChange()` reconciliation logic in `try/finally`.
-- [ ] Move `updateWIChangeStarted = createDeferred()` and `updateWIChangeFinished.resolve()` into `finally`.
-- [ ] Ensure the deferred created at cycle start is always the same deferred resolved in `finally`.
+- [x] Wrap `updateWIChange()` reconciliation logic in `try/finally`.
+- [x] Move `updateWIChangeStarted = createDeferred()` and `updateWIChangeFinished.resolve()` into `finally`.
+- [x] Ensure the deferred created at cycle start is always the same deferred resolved in `finally`.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`
+  - Wrapped `updateWIChange()` reconciliation flow in `try/finally` so completion signaling always runs.
+  - Replaced the shared finish deferred assignment with a per-cycle deferred (`cycleFinished`) captured at cycle start.
+  - Reset `updateWIChangeStarted` and resolved that same captured deferred inside `finally`.
+
+- Risks / Side effects
+  - Update-cycle completion now resolves even when reconciliation throws, so downstream waits continue instead of hanging (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Temporarily force an error during `updateWIChange()` (for example with a test throw), then create or edit a book and confirm follow-up UI actions do not wait forever.
 
 ---
 
@@ -234,8 +248,21 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Delete the direct `updateWIChange(name, data)` call after `saveWorldInfo(...)` in `fillEmptyTitlesWithKeywords()`.
-- [ ] Keep `saveWorldInfo(name, data, true)` unchanged so ST emits the standard WI update event.
+- [x] Delete the direct `updateWIChange(name, data)` call after `saveWorldInfo(...)` in `fillEmptyTitlesWithKeywords()`.
+- [x] Keep `saveWorldInfo(name, data, true)` unchanged so ST emits the standard WI update event.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`
+  - Removed the direct manual `updateWIChange(name, data)` call after `saveWorldInfo(...)`.
+  - Kept `saveWorldInfo(name, data, true)` unchanged so the normal `WORLDINFO_UPDATED` event remains the single trigger path.
+
+- Risks / Side effects
+  - Reconciliation now depends only on the event-driven path after save, so timing follows ST event dispatch order (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Run "Fill empty titles from keywords" on a book with empty titles and confirm titles update once with no duplicate `[UPDATE-WI]` pass for the same save.
 
 ---
 
@@ -349,10 +376,24 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Replace inline `eventSource.on(...)` callbacks with named handler variables.
-- [ ] Add `cleanup()` in `src/wiUpdateHandler.js` that removes both listeners.
-- [ ] Export `cleanup` on the returned handler API object.
-- [ ] Call `wiHandlerApi.cleanup?.()` from the extension teardown path in `src/drawer.js`.
+- [x] Replace inline `eventSource.on(...)` callbacks with named handler variables.
+- [x] Add `cleanup()` in `src/wiUpdateHandler.js` that removes both listeners.
+- [x] Export `cleanup` on the returned handler API object.
+- [x] Call `wiHandlerApi.cleanup?.()` from the extension teardown path in `src/drawer.js`.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`, `src/drawer.js`
+  - Replaced inline world-info event subscriptions with named handlers.
+  - Added `cleanup()` in `wiUpdateHandler` to remove both global event listeners.
+  - Returned `cleanup` from `initWIUpdateHandler()` and wired `wiHandlerApi.cleanup?.()` into the existing drawer teardown block.
+
+- Risks / Side effects
+  - If teardown paths are not reached in a host reload scenario, listeners may still persist until full page unload (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Reload/reinitialize the extension flow, then trigger a World Info save and settings change; confirm each handler runs once (no duplicate logs or duplicate list refresh behavior).
 
 ---
 
@@ -464,9 +505,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Remove `event_types` and `eventSource` from top-level imports.
-- [ ] Resolve event bus + event enum from `SillyTavern.getContext()` in `initWIUpdateHandler()`.
-- [ ] Replace listener registration/removal to use the context-derived references.
+- [x] Remove `event_types` and `eventSource` from top-level imports.
+- [x] Resolve event bus + event enum from `SillyTavern.getContext()` in `initWIUpdateHandler()`.
+- [x] Replace listener registration/removal to use the context-derived references.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`
+  - Removed direct `script.js` imports for event bus and event enum.
+  - Resolved `eventSource` and `eventTypes`/`event_types` from `SillyTavern.getContext()` inside module init.
+  - Updated listener registration and cleanup paths to use context-derived event references.
+
+- Risks / Side effects
+  - On hosts where context shape is unexpectedly missing event fields, listeners will not attach (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Open the drawer, save a lorebook entry, and change WI settings; confirm update and settings handlers still run on your current SillyTavern version.
 
 ---
 

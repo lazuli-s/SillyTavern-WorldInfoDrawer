@@ -6,6 +6,15 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 17, 2026
 
+### `src/wiUpdateHandler.js`
+
+- **F01** — Failed update cycles can leave waiters hanging indefinitely: Wrapped `updateWIChange()` in `try/finally` and finalized each cycle with a captured deferred so waiters always receive completion.
+- **F02** — `fillEmptyTitlesWithKeywords()` forces a duplicate update pass for the same save: Removed the direct post-save `updateWIChange(...)` call and kept event-driven reconciliation as the single update path.
+- **F03** — Event bus listeners are registered without a teardown path: Replaced inline listeners with named handlers, added `cleanup()` listener removal, and called handler cleanup from drawer teardown.
+- **F04** — Direct `script.js` imports bypass the stable context API: Switched event bus/event enum access to `SillyTavern.getContext()` and updated listener registration/removal to use context-derived references.
+
+## February 17, 2026
+
 ### `src/utils.js`
 
 - **F01** — `executeSlashCommand()` swallows failures, so callers cannot react or inform the user: Returned explicit `true`/`false` execution status, added parser/closure guards, and updated STLO menu handling to keep the menu open with an error toast on failure.
