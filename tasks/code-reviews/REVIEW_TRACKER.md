@@ -407,35 +407,72 @@ Track all code-review findings across the extension's JS files.
 ---
 
 ### `src/orderHelperRender.filterPanel.js`
-Ã¢â€ â€™ `CodeReview_orderHelperRender.filterPanel.js.md`
+-> `CodeReview_orderHelperRender.filterPanel.js.md`
 
-- **F01** Ã¢â‚¬â€ Script filter is read from localStorage but never persisted back
+- **F01** — Script filter is read from localStorage but never persisted back
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement Ã°Å¸Å¸Â¢
+    - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - Implemented: 
-  - **Neglect Risk:** Medium Ã¢Ââ€” Ã¢â‚¬â€ Users can lose complex filter scripts, causing frustration and rework.
+  - Implemented: ✅
+    - Implementation Notes: Added debounced script-filter persistence and seeded default filter value to localStorage when missing.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Type a custom script, close/reopen Order Helper (or reload), and confirm the same script text is restored.
+  - **Neglect Risk:** Medium ❗ — Users can lose complex filter scripts, causing frustration and rework.
 
-- **F02** Ã¢â‚¬â€ Missing null guards when resolving rows can throw during refresh/desync
+- **F02** — Missing null guards when resolving rows can throw during refresh/desync
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement Ã°Å¸Å¸Â¢
+    - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - Implemented: 
-  - **Neglect Risk:** Medium Ã¢Ââ€” Ã¢â‚¬â€ Filter panel can crash during concurrent UI rebuilds, breaking the filtering feature.
+  - Implemented: ✅
+    - Implementation Notes: Added optional-chained row lookups and `if (!row) continue;` guards in both update loops.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Run a script filter, then quickly change Order Helper scope to force rerender; confirm no console errors and visible rows still update.
+  - **Neglect Risk:** Medium ❗ — Filter panel can crash during concurrent UI rebuilds, breaking the filtering feature.
 
-- **F03** Ã¢â‚¬â€ In-flight async filter execution can apply stale results after filter panel is no longer active
+- **F03** — In-flight async filter execution can apply stale results after filter panel is no longer active
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement Ã°Å¸Å¸Â¢
+    - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - Implemented: 
-  - **Neglect Risk:** Low Ã¢Â­â€¢ Ã¢â‚¬â€ Edge case timing issue; users may see confusing background changes but no data loss.
+  - Implemented: ✅
+    - Implementation Notes: Added `isActive()` checks after compile and inside the per-entry execution loop to stop applying results when panel closes.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Start a heavy script filter and close the panel quickly; confirm no further row-state changes are applied after close.
+  - **Neglect Risk:** Low ⭕ — Edge case timing issue; users may see confusing background changes but no data loss.
 
-- **F04** Ã¢â‚¬â€ Syntax highlighting runs on every keystroke and may cause input lag for long scripts
+- **F04** — Syntax highlighting runs on every keystroke and may cause input lag for long scripts
   - Meta-reviewed: [X]
-    - Verdict: Ready to implement Ã°Å¸Å¸Â¢
+    - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - Implemented: 
-  - **Neglect Risk:** Low Ã¢Â­â€¢ Ã¢â‚¬â€ Performance issue only; depends on script size/device.
+  - Implemented: ✅
+    - Implementation Notes: Refactored highlight rendering into `updateHighlight()` and switched input updates to debounced highlighting.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Paste/type a longer script quickly and confirm typing stays smooth while syntax highlighting remains aligned with the textarea content.
+  - **Neglect Risk:** Low ⭕ — Performance issue only; depends on script size/device.
+---
+
+### `src/orderHelperState.js`
+-> `CodeReview_orderHelperState.js.md`
+
+- **F01** -- Order Helper state initialization depends on live core template DOM, causing empty/mismatched option lists
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Timing dependency on DOM can cause empty option lists in edge cases; affects filter functionality.
+  - Implemented:
+
+- **F02** -- Recursion option values are duplicated locally instead of deriving from the shared constants schema
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Already addressed in current code; no action needed.
+  - Implemented:
+
+- **F03** -- Multiple DOM scrapes for strategy/position lists can create inconsistent snapshots and unnecessary work
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Performance optimization; limited user-visible impact.
+  - Implemented:
 
 ---
 
@@ -571,7 +608,6 @@ The live work queues have been moved to dedicated files:
 | Pending first-pass review | [`QUEUE_REVIEW.md`](QUEUE_REVIEW.md) |
 | Pending meta-review (step 2) | [`QUEUE_META_REVIEW.md`](QUEUE_META_REVIEW.md) |
 | Pending implementation | [`QUEUE_IMPLEMENTATION.md`](QUEUE_IMPLEMENTATION.md) |
-
 
 
 

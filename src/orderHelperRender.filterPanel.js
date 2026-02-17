@@ -68,10 +68,17 @@ export function buildFilterPanel({
             }
             const inp = document.createElement('textarea'); {
                 const defaultFilter = '{{var::entry}}';
+                const orderFilterStorageKey = 'stwid--order-filter';
+                const storedFilter = localStorage.getItem(orderFilterStorageKey);
                 inp.classList.add('stwid--input');
                 inp.classList.add('text_pole');
                 inp.name = 'filter';
-                inp.value = localStorage.getItem('stwid--order-filter') ?? defaultFilter;
+                inp.value = storedFilter ?? defaultFilter;
+
+                // Seed localStorage on first open so the default and future edits persist.
+                if (storedFilter == null) {
+                    localStorage.setItem(orderFilterStorageKey, inp.value);
+                }
 
                 // Phase 2: filterStack prevents stale async results from overwriting the UI.
                 // Each compile run pushes its closure; when a newer run starts before this
@@ -84,6 +91,13 @@ export function buildFilterPanel({
                     syntax.scrollTop = scrollTop;
                 };
                 const updateScrollDebounced = debounce(()=>updateScroll(), 150);
+                const updateHighlight = ()=>{
+                    const scriptText = `${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`;
+                    syntax.innerHTML = DOMPurify.sanitize(hljs.highlight(scriptText, { language:'stscript', ignoreIllegals:true })?.value ?? '');
+                };
+                const updateHighlightDebounced = debounce(()=>updateHighlight(), 100);
+                const saveFilterDebounced = debounce(()=>localStorage.setItem(orderFilterStorageKey, inp.value), 200);
+                const isActive = ()=>dom.order.filter.root?.classList.contains('stwid--active');
 
                 // Show filter compile/runtime errors inline (non-toastr) to avoid spam.
                 const showFilterError = (message)=>{
@@ -97,7 +111,7 @@ export function buildFilterPanel({
                 };
 
                 const updateList = async()=>{
-                    if (!dom.order.filter.root.classList.contains('stwid--active')) return;
+                    if (!isActive()) return;
 
                     const closure = new (await SlashCommandParser.getScope())();
                     filterStack.push(closure);
@@ -107,17 +121,20 @@ export function buildFilterPanel({
 
                     try {
                         await closure.compile(script);
+                        if (!isActive()) return;
 
                         const entries = getOrderHelperEntries(orderHelperState.book, true);
 
                         // Start optimistic: mark all rows as "kept" by the script, then flip to filtered
                         // when the script result is not truthy.
                         for (const e of entries) {
-                            const row = dom.order.entries[e.book][e.data.uid];
+                            const row = dom.order.entries?.[e.book]?.[e.data.uid];
+                            if (!row) continue;
                             setOrderHelperRowFilterState(row, 'stwidFilterScript', true);
                         }
 
                         for (const e of entries) {
+                            if (!isActive()) return;
                             closure.scope.setVariable('entry', JSON.stringify(Object.assign({ book:e.book }, e.data)));
                             const result = (await closure.execute()).pipe;
 
@@ -126,7 +143,8 @@ export function buildFilterPanel({
                                 return;
                             }
 
-                            const row = dom.order.entries[e.book][e.data.uid];
+                            const row = dom.order.entries?.[e.book]?.[e.data.uid];
+                            if (!row) continue;
                             setOrderHelperRowFilterState(row, 'stwidFilterScript', !isTrueBoolean(result));
                         }
 
@@ -143,7 +161,8 @@ export function buildFilterPanel({
                 };
                 const updateListDebounced = debounce(()=>updateList(), 1000);
                 inp.addEventListener('input', () => {
-                    syntax.innerHTML = DOMPurify.sanitize(hljs.highlight(`${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`, { language:'stscript', ignoreIllegals:true })?.value ?? '');
+                    saveFilterDebounced();
+                    updateHighlightDebounced();
                     updateScrollDebounced();
                     updateListDebounced();
                 });
@@ -153,7 +172,7 @@ export function buildFilterPanel({
                 inp.style.color = 'transparent';
                 inp.style.background = 'transparent';
                 inp.style.setProperty('text-shadow', 'none', 'important');
-                syntax.innerHTML = DOMPurify.sanitize(hljs.highlight(`${inp.value}${inp.value.slice(-1) == '\n' ? ' ' : ''}`, { language:'stscript', ignoreIllegals:true })?.value ?? '');
+                updateHighlight();
                 script.append(inp);
             }
             main.append(script);

@@ -1,8 +1,16 @@
-﻿# Code Review Implementation Changelog
+# Code Review Implementation Changelog
 
 Changes applied from code review findings across the extension's source files.
 
 ---
+## February 17, 2026
+
+### `src/orderHelperRender.filterPanel.js`
+
+- **F01** — Script filter is read from localStorage but never persisted back: Added debounced script-filter persistence and seeded the default script value when no stored value exists.
+- **F02** — Missing null guards when resolving rows can throw during refresh/desync: Guarded both row lookups with optional chaining and skipped missing rows safely.
+- **F03** — In-flight async filter execution can apply stale results after filter panel is no longer active: Added panel-active checks after compile and during per-entry execution to stop stale updates after panel close.
+- **F04** — Syntax highlighting runs on every keystroke and may cause input lag for long scripts: Extracted highlighting to `updateHighlight()` and debounced input-time syntax rerendering.
 
 ## February 17, 2026
 
@@ -54,4 +62,5 @@ Changes applied from code review findings across the extension's source files.
 - **F03** â€” Delete handler reads live `selectionState` across `await` â€” can delete wrong entries: Snapshotted `selectFrom` and selected UIDs at keypress time so async delete runs against a stable selection.
 - **F06** â€” Splitter drag lifecycle missing `pointercancel` â€” listeners can leak: Added `pointercancel` + `lostpointercapture` termination paths to ensure drag listeners always detach and width is persisted.
 - **F07** â€” Toggling Activation Settings / Order Helper clears entry editor without dirty-state guard: Added dirty guards + warning toasts to block mode switches that would clear the editor while unsaved edits exist.
+
 
