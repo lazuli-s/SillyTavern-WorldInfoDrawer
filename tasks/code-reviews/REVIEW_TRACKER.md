@@ -9,7 +9,7 @@ Track all code-review findings across the extension's JS files.
 - **Reason**: If rejected, why
 - **Implemented**: Has the implementation plan been implemented? âŒ or âœ”
   - **Implementation Notes**:
-  - **ðŸŸ¥ MANUAL CHECK**: [] checklist for the user
+  - **🟥 MANUAL CHECK**: [] checklist for the user
 
 ---
 
