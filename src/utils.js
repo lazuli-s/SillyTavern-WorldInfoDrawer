@@ -58,21 +58,51 @@ const appendSortOptions = (select, currentSort, currentDirection)=>{
 };
 
 let slashCommandParserCtor = null;
+let slashCommandParserCtorResolved = false;
 const getSlashCommandParserCtor = async()=>{
-    if (slashCommandParserCtor) return slashCommandParserCtor;
-    const module = await import('../../../../slash-commands/SlashCommandParser.js');
-    slashCommandParserCtor = module.SlashCommandParser;
+    if (slashCommandParserCtorResolved) return slashCommandParserCtor;
+
+    const runtimeCtor = globalThis.SlashCommandParser;
+    if (typeof runtimeCtor === 'function') {
+        slashCommandParserCtor = runtimeCtor;
+        slashCommandParserCtorResolved = true;
+        return slashCommandParserCtor;
+    }
+
+    // Fallback for ST versions that do not expose the parser constructor globally.
+    try {
+        const module = await import('../../../../slash-commands/SlashCommandParser.js');
+        slashCommandParserCtor = typeof module?.SlashCommandParser === 'function'
+            ? module.SlashCommandParser
+            : null;
+    } catch (error) {
+        console.error('Failed to resolve SlashCommandParser', error);
+        slashCommandParserCtor = null;
+    }
+    slashCommandParserCtorResolved = true;
     return slashCommandParserCtor;
 };
 
 const executeSlashCommand = async(command)=>{
     try {
         const SlashCommandParser = await getSlashCommandParserCtor();
+        if (typeof SlashCommandParser !== 'function') {
+            console.error('Failed to execute slash command: SlashCommandParser is unavailable.');
+            return false;
+        }
+
         const parser = new SlashCommandParser();
         const closure = parser.parse(command);
+        if (!closure || typeof closure.execute !== 'function') {
+            console.error('Failed to execute slash command: parser returned an invalid command closure.');
+            return false;
+        }
+
         await closure.execute();
+        return true;
     } catch (error) {
         console.error('Failed to execute slash command', error);
+        return false;
     }
 };
 

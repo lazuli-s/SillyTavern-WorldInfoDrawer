@@ -426,14 +426,21 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement ðŸŸ¢
     - Reason: N/A
   - **Neglect Risk:** Medium â— â€” Silent failures confuse users when slash command actions (like STLO integration) don't work.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Updated slash command execution to return success/failure with parser/closure guards and updated STLO menu handling to keep the menu open on failure.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Disable or break STLO, click Configure STLO, and confirm the menu stays open and an error toast appears.
+      - [ ] Restore STLO, click Configure STLO, and confirm the command succeeds and the menu closes.
 
 - **F02** -- Direct internal import of `SlashCommandParser` is brittle across SillyTavern updates
   - Meta-reviewed: [X]
     - Verdict: Ready to implement ðŸŸ¢
     - Reason: N/A
   - **Neglect Risk:** Medium â— â€” Upcoming SillyTavern updates can break slash command functionality without warning.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added global parser constructor discovery with try/catch fallback import and null normalization for controlled compatibility failures.
+    - **🟥 MANUAL CHECK**:
+      - [ ] On your current SillyTavern version, click Configure STLO and confirm there are no parser import/constructor errors in the console.
 
 ---
 

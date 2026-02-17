@@ -6,6 +6,13 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 17, 2026
 
+### `src/utils.js`
+
+- **F01** — `executeSlashCommand()` swallows failures, so callers cannot react or inform the user: Returned explicit `true`/`false` execution status, added parser/closure guards, and updated STLO menu handling to keep the menu open with an error toast on failure.
+- **F02** — Direct internal import of `SlashCommandParser` is brittle across SillyTavern updates: Added runtime `globalThis.SlashCommandParser` discovery with guarded direct-import fallback and normalized unresolved parser state to `null`.
+
+## February 17, 2026
+
 ### `src/bookSourceLinks.js`
 
 - **F01** â€” `cleanup()` does not unsubscribe `eventSource` listeners (leak / duplicate refresh on re-init): Added tracked event subscriptions and teardown-time `removeListener` cleanup for each registered source-link event.

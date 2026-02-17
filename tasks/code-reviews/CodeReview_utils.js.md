@@ -120,9 +120,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Change `executeSlashCommand(command)` to return a boolean success value.
-- [ ] Add guard logic for missing/invalid parse results before calling `.execute()`.
-- [ ] Update `src/listPanel.bookMenu.js` call sites to branch on the returned success flag.
+- [x] Change `executeSlashCommand(command)` to return a boolean success value.
+- [x] Add guard logic for missing/invalid parse results before calling `.execute()`.
+- [x] Update `src/listPanel.bookMenu.js` call sites to branch on the returned success flag.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/utils.js`, `src/listPanel.bookMenu.js`
+  - Updated `executeSlashCommand()` to return `true` on success and `false` on failure.
+  - Added guards for missing parser constructor and invalid parsed closure before calling `.execute()`.
+  - Updated the STLO menu action to branch on the returned success flag and keep the menu open when command execution fails.
+
+- Risks / Side effects
+  - A failed STLO command now leaves the menu open, which can lead to repeated error toasts if clicked repeatedly. (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Disable or break STLO, click `Configure STLO`, and confirm the menu stays open and an error toast appears.
 
 ---
 
@@ -227,10 +241,24 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add runtime constructor discovery before internal-module import fallback.
-- [ ] Wrap fallback dynamic import in `try/catch` and normalize unresolved state (`null`).
-- [ ] Update `executeSlashCommand()` to handle missing constructor as a controlled failure return.
-- [ ] Add an inline compatibility note documenting the direct-import fallback rationale.
+- [x] Add runtime constructor discovery before internal-module import fallback.
+- [x] Wrap fallback dynamic import in `try/catch` and normalize unresolved state (`null`).
+- [x] Update `executeSlashCommand()` to handle missing constructor as a controlled failure return.
+- [x] Add an inline compatibility note documenting the direct-import fallback rationale.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/utils.js`
+  - Added runtime parser constructor discovery via `globalThis.SlashCommandParser` before the direct-import fallback.
+  - Wrapped fallback parser import in `try/catch` and normalized unresolved constructor state to `null`.
+  - Added an inline compatibility comment explaining why direct-import fallback remains necessary.
+
+- Risks / Side effects
+  - Parser constructor resolution is cached after first lookup, so a host-side runtime change during the same session would require a reload to re-detect it. (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] On your current SillyTavern version, click `Configure STLO` and confirm there are no parser import/constructor errors in the console.
 
 ---
 

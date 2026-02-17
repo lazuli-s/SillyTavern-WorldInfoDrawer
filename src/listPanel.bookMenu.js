@@ -562,7 +562,11 @@ const createBookMenuSlice = ({
                             stloButton.addEventListener('click', async(evt)=>{
                                 evt.stopPropagation();
                                 const escapedName = name.replaceAll('"', '\\"');
-                                await state.executeSlashCommand(`/stlo "${escapedName}"`);
+                                const didExecute = await state.executeSlashCommand(`/stlo "${escapedName}"`);
+                                if (!didExecute) {
+                                    toastr.error('STLO command failed. Check the browser console for details.');
+                                    return;
+                                }
                                 blocker.remove();
                                 menuTrigger.style.anchorName = '';
                             });
