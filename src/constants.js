@@ -1,7 +1,7 @@
 /** @readonly */
 /** @enum {string} */
 export const SORT = {
-    /** Alphabetical by entry title */
+    /** Alphabetical by entry comment (title/memo), fallback to trigger keywords */
     TITLE: 'title',
     /** Numeric position value */
     POSITION: 'position',
@@ -17,7 +17,7 @@ export const SORT = {
     LENGTH: 'length',
     /** By custom display index */
     CUSTOM: 'custom',
-    /** Alphabetical by entry comment (title/memo) */
+    /** Legacy compatibility alias of TITLE sort semantics (not currently user-facing). */
     ALPHABETICAL: 'alphabetical',
     /** According to prompt depth (position-depth-order) */
     PROMPT: 'prompt',
@@ -25,9 +25,9 @@ export const SORT = {
 /** @readonly */
 /** @enum {string} */
 export const SORT_DIRECTION = {
-    /** Alphabetical by entry comment (title/memo) */
+    /** Ascending direction (A->Z / low->high). */
     ASCENDING: 'ascending',
-    /** According to prompt depth (position-depth-order) */
+    /** Descending direction (Z->A / high->low). */
     DESCENDING: 'descending',
 };
 
