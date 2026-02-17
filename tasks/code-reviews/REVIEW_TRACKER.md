@@ -1,4 +1,4 @@
-﻿# Code Review Tracker
+# Code Review Tracker
 
 Track all code-review findings across the extension's JS files.
 
@@ -448,27 +448,31 @@ Track all code-review findings across the extension's JS files.
 -> `CodeReview_wiUpdateHandler.js.md`
 
 - **F01** -- Failed update cycles can leave waiters hanging indefinitely
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** High ❗❗ — Real data-integrity risk; can deadlock UI flows waiting on update completion.
   - Implemented:
 
 - **F02** -- `fillEmptyTitlesWithKeywords()` forces a duplicate update pass for the same save
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Performance issue causing redundant UI work; no data integrity risk.
   - Implemented:
 
 - **F03** -- Event bus listeners are registered without a teardown path
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Listener leaks on re-init cause duplicate work and performance drift.
   - Implemented:
 
 - **F04** -- Direct `script.js` imports bypass the stable context API
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Compatibility improvement; no runtime impact unless ST internal APIs change.
   - Implemented:
 
 ---

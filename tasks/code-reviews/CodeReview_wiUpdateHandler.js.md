@@ -54,11 +54,6 @@
   - In `finally`, always reset `updateWIChangeStarted` and resolve `updateWIChangeFinished`.
   - Optionally add `catch` logging before rethrow so failures are visible without masking errors.
 
-- **Implementation Checklist:**
-  [ ] Wrap `updateWIChange()` reconciliation logic in `try/finally`.
-  [ ] Move `updateWIChangeStarted = createDeferred()` and `updateWIChangeFinished.resolve()` into `finally`.
-  [ ] Ensure the deferred created at cycle start is always the same deferred resolved in `finally`.
-
 - **Fix risk:** Medium 🟡
   Changing synchronization primitives can affect timing-sensitive flows if done incorrectly, but scope is limited to one function.
 
@@ -69,7 +64,66 @@
   - Prevents indefinite waits after update exceptions.
   - Makes async coordination behavior deterministic under failure.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `updateWIChange()` creates deferreds at start (lines 55-58) and resolves them at end (line 184) without try/finally protection
+  - `waitForWorldInfoUpdate()` loops on token comparison and awaits promises that may never resolve
+
+- **Top risks:**
+  - Missing evidence / Risk of the issue actually causing real impact
+
+#### Technical Accuracy Audit
+
+> *Any thrown error before the last two lines leaves `updateWIChangeFinished.promise` pending forever*
+
+- **Why it may be wrong/speculative:**
+  The claim is partially speculative - it assumes an error can occur in the reconciliation logic that would prevent reaching line 184. While possible, the exact failure modes aren't enumerated.
+
+- **Validation:**
+  Validated ✅ — Code inspection confirms no try/finally wrapping the reconciliation body. If an error occurs in lines 59-183, `updateWIChangeFinished.resolve()` on line 184 is never reached.
+
+- **What needs to be done/inspected to successfully validate:**
+  Not applicable - claim is validated.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed fix correctly addresses the issue by adding try/finally protection. It stays within the module boundary per ARCHITECTURE.md.
+
+- **Behavioral change:**
+  No behavioral change - the fix only ensures the finish signal always fires even under error conditions. Explicitly labeled as such: N/A
+
+- **Ambiguity:**
+  Single solution - wrapping reconciliation in try/finally.
+
+- **Checklist:**
+  All checklist items are actionable:
+  - "Wrap reconciliation logic in try/finally" - specific action
+  - "Move deferred creation and resolution into finally" - specific
+  - "Ensure same deferred is resolved" - specific
+
+- **Dependency integrity:**
+  No cross-finding dependencies declared.
+
+- **Fix risk calibration:**
+  Medium 🟡 rating is appropriate - while the fix is localized, it touches synchronization primitives that other code depends on.
+
+- **Why it's safe to implement:**
+  Claim is specific: "does not change entry/book merge logic" - this is verifiable by code inspection of the reconciliation function. Valid.
+
+- **Mitigation:**
+  Not applicable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Wrap `updateWIChange()` reconciliation logic in `try/finally`.
+- [ ] Move `updateWIChangeStarted = createDeferred()` and `updateWIChangeFinished.resolve()` into `finally`.
+- [ ] Ensure the deferred created at cycle start is always the same deferred resolved in `finally`.
 
 ---
 
@@ -111,10 +165,6 @@
 - **Proposed fix:**
   Remove the direct `updateWIChange(name, data)` call in `fillEmptyTitlesWithKeywords()` and rely on the `WORLDINFO_UPDATED` subscription to run reconciliation once.
 
-- **Implementation Checklist:**
-  [ ] Delete the direct `updateWIChange(name, data)` call after `saveWorldInfo(...)` in `fillEmptyTitlesWithKeywords()`.
-  [ ] Keep `saveWorldInfo(name, data, true)` unchanged so ST emits the standard WI update event.
-
 - **Fix risk:** Low 🟢
   Behavior remains contract-aligned with ST event flow; it removes duplicate work rather than changing data semantics.
 
@@ -125,7 +175,67 @@
   - Eliminates redundant reconciliation cycles.
   - Reduces avoidable UI churn after bulk title fill.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `saveWorldInfo` emits `WORLDINFO_UPDATED` event (WI API contract)
+  - Module subscribes to this event via line 240: `eventSource.on(event_types.WORLDINFO_UPDATED, (name, world)=>updateWIChangeDebounced(...))`
+  - Direct call to `updateWIChange(name, data)` on line 236 follows immediately after save
+
+- **Top risks:**
+  - None identified for this finding
+
+#### Technical Accuracy Audit
+
+> *`saveWorldInfo(name, data, true)` already emits `WORLDINFO_UPDATED` (documented WI API contract), and this module subscribes to that event via `updateWIChangeDebounced`. Immediately calling `updateWIChange(name, data)` afterwards causes a second reconciliation cycle for the same payload.*
+
+- **Why it may be wrong/speculative:**
+  Not speculative - the WI API documentation in `wi-api.md` confirms `saveWorldInfo` emits `WORLDINFO_UPDATED`, and the code shows both the event subscription and direct call.
+
+- **Validation:**
+  Validated ✅ — Code inspection confirms:
+  1. Line 240: event subscription to `WORLDINFO_UPDATED`
+  2. Line 236: direct `updateWIChange(name, data)` call after save
+
+- **What needs to be done/inspected to successfully validate:**
+  Not applicable - claim is validated.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The fix correctly removes the redundant call and relies on event-driven reconciliation. Stays within module boundary.
+
+- **Behavioral change:**
+  The fix changes event ordering - now only one reconciliation happens (event-driven) instead of two. This is a behavioral change but explicitly labeled as such in the audit requirements. The change reduces work rather than altering user-visible behavior.
+
+- **Ambiguity:**
+  Single solution - remove the direct call.
+
+- **Checklist:**
+  Both items are specific and actionable:
+  - "Delete the direct updateWIChange call" - exact action
+  - "Keep saveWorldInfo unchanged" - specific preservation
+
+- **Dependency integrity:**
+  No cross-finding dependencies.
+
+- **Fix risk calibration:**
+  Low 🟡 rating is appropriate - simply removing a function call with no side effects.
+
+- **Why it's safe to implement:**
+  Claim is specific and verifiable: "Persistence and canonical update event emission still happen through saveWorldInfo" - the event emission is guaranteed by WI API contract.
+
+- **Mitigation:**
+  Not applicable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Delete the direct `updateWIChange(name, data)` call after `saveWorldInfo(...)` in `fillEmptyTitlesWithKeywords()`.
+- [ ] Keep `saveWorldInfo(name, data, true)` unchanged so ST emits the standard WI update event.
 
 ---
 
@@ -170,12 +280,6 @@
   - Return `cleanup` in the public API.
   In `src/drawer.js` (current teardown block), invoke `wiHandlerApi.cleanup?.()` alongside existing cleanup calls.
 
-- **Implementation Checklist:**
-  [ ] Replace inline `eventSource.on(...)` callbacks with named handler variables.
-  [ ] Add `cleanup()` in `src/wiUpdateHandler.js` that removes both listeners.
-  [ ] Export `cleanup` on the returned handler API object.
-  [ ] Call `wiHandlerApi.cleanup?.()` from the extension teardown path in `src/drawer.js`.
-
 - **Fix risk:** Medium 🟡
   If cleanup wiring is missed in callers, listeners may still leak; otherwise behavior is straightforward.
 
@@ -186,7 +290,69 @@
   - Prevents duplicate handlers on re-init.
   - Aligns with documented ST extension listener hygiene.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `initWIUpdateHandler()` subscribes to two events (lines 240-241)
+  - The returned API object contains no cleanup method
+  - PERF-02 in best practices explicitly requires listener cleanup
+
+- **Top risks:**
+  - None identified for this finding
+
+#### Technical Accuracy Audit
+
+> *`initWIUpdateHandler()` subscribes to two global event bus events and returns no cleanup API for removing them.*
+
+- **Why it may be wrong/speculative:**
+  Not speculative - code inspection confirms both subscriptions with no cleanup returned.
+
+- **Validation:**
+  Validated ✅ — Lines 240-241 show event subscriptions; returned object (lines 244-256) contains no cleanup/removal method.
+
+- **What needs to be done/inspected to successfully validate:**
+  Not applicable - claim is validated.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The fix correctly adds named handlers and exposes cleanup. Requires cross-file changes in drawer.js - labeled appropriately.
+
+- **Behavioral change:**
+  No behavioral change to update logic - only adds lifecycle management.
+
+- **Ambiguity:**
+  Single solution with clear steps.
+
+- **Checklist:**
+  All four items are specific and actionable:
+  - Replace inline callbacks with named handlers - specific
+  - Add cleanup function - specific
+  - Export cleanup - specific
+  - Call cleanup from drawer.js - specific with file named
+
+- **Dependency integrity:**
+  The fix declares cross-file dependency: drawer.js must call the cleanup. This is explicitly mentioned in the proposed fix.
+
+- **Fix risk calibration:**
+  Medium 🟡 rating is appropriate - while the fix is straightforward, if drawer.js wiring is missed, listeners still leak.
+
+- **Why it's safe to implement:**
+  Claim is specific: "only affects listener lifecycle management" - verifiable.
+
+- **Mitigation:**
+  Not applicable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Replace inline `eventSource.on(...)` callbacks with named handler variables.
+- [ ] Add `cleanup()` in `src/wiUpdateHandler.js` that removes both listeners.
+- [ ] Export `cleanup` on the returned handler API object.
+- [ ] Call `wiHandlerApi.cleanup?.()` from the extension teardown path in `src/drawer.js`.
 
 ---
 
@@ -230,11 +396,6 @@
   - `const events = ctx.eventTypes ?? ctx.event_types;`
   Then update listener registration/removal calls to use `eventBus` and `events`.
 
-- **Implementation Checklist:**
-  [ ] Remove `event_types` and `eventSource` from top-level imports.
-  [ ] Resolve event bus + event enum from `SillyTavern.getContext()` in `initWIUpdateHandler()`.
-  [ ] Replace listener registration/removal to use the context-derived references.
-
 - **Fix risk:** Low 🟢
   This is a small compatibility refactor on event hookup lines only.
 
@@ -245,4 +406,71 @@
   - Better compatibility with upstream ST internals churn.
   - Aligns with official extension guidance and local best-practice rules.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Line 1 imports directly from `script.js`: `import { event_types, eventSource } from '../../../../../script.js';`
+  - COMPAT-01 recommends `SillyTavern.getContext()` for shared runtime objects
+  - `st-context.js` exposes `eventSource` and `eventTypes`/`event_types`
+
+- **Top risks:**
+  - None identified for this finding
+
+#### Technical Accuracy Audit
+
+> *Importing directly from `script.js` couples this extension to internal module export layout.*
+
+- **Why it may be wrong/speculative:**
+  Not speculative - the import statement is directly visible in the code.
+
+- **Validation:**
+  Validated ✅ — Line 1 shows direct import from script.js.
+
+- **What needs to be done/inspected to successfully validate:**
+  Not applicable - claim is validated.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The fix correctly migrates to context API usage. Small change scope limited to import/usage lines.
+
+- **Behavioral change:**
+  No behavioral change - only API access path changes.
+
+- **Ambiguity:**
+  Single solution.
+
+- **Checklist:**
+  All three items are specific and actionable:
+  - Remove top-level imports - specific
+  - Resolve from getContext() - specific
+  - Replace usage - specific
+
+- **Dependency integrity:**
+  No cross-finding dependencies.
+
+- **Fix risk calibration:**
+  Low 🟢 rating is appropriate - trivial refactor with no side effects.
+
+- **Why it's safe to implement:**
+  Claim is specific: "no change to update logic" - verifiable by code inspection.
+
+- **Mitigation:**
+  Not applicable.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Remove `event_types` and `eventSource` from top-level imports.
+- [ ] Resolve event bus + event enum from `SillyTavern.getContext()` in `initWIUpdateHandler()`.
+- [ ] Replace listener registration/removal to use the context-derived references.
+
+---
+
+### Coverage Note
+
+- **Obvious missed findings:** None identified.
+- **Severity calibration:** F01 (High, Medium confidence) appropriately flags a real data-integrity risk. F02-F04 (Medium/Low) appropriately target performance and compatibility improvements.

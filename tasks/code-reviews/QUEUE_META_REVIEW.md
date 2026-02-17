@@ -6,7 +6,6 @@ Code review files queued for meta-review; entries are added after a `CodeReview_
 
 ## Files Pending Meta-Review
 
-- `tasks/code-reviews/CodeReview_wiUpdateHandler.js.md`
 - `tasks/code-reviews/CodeReview_worldEntry.js.md`
 - `tasks/code-reviews/CodeReview_editorPanel.js.md`
 - `tasks/code-reviews/CodeReview_index.js.md`
