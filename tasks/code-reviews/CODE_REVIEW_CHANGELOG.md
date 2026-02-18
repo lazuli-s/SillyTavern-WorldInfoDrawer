@@ -4,6 +4,15 @@ Changes applied from code review findings across the extension's source files.
 
 ---
 
+## February 18, 2026
+
+### `src/orderHelperRender.utils.js`
+
+- **F01** — `setTooltip()` can throw if `text` is not a string (missing type guard): Split combined guard into `if (!element) return;` + `if (typeof text !== 'string' || text.trim() === '') return;`; added `effectiveAriaLabel` type check so non-string `ariaLabel` values fall back to normalized text.
+- **F02** — `wireMultiselectDropdown()` does not keep `aria-expanded` in sync with open/close state: Added `menuButton?.setAttribute('aria-expanded', 'true')` in `openMenu()` and `menuButton?.setAttribute('aria-expanded', 'false')` in `closeMenu()` so the attribute always reflects the actual menu state.
+
+---
+
 ## February 17, 2026
 
 ### `src/orderHelperRender.tableBody.js`

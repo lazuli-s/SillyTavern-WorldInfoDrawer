@@ -490,21 +490,28 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Can cause hard crashes if tooltip receives non-string values.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Split combined guard into `if (!element) return;` + `if (typeof text !== 'string' || text.trim() === '') return;`; added `effectiveAriaLabel` type check so non-string ariaLabel values fall back to normalized text.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open Order Helper, hover over tooltipped elements (column headers, filter dropdowns, entry links); confirm tooltips appear correctly and no console errors occur.
 
 - **F02** — `wireMultiselectDropdown()` does not keep `aria-expanded` in sync with open/close state
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⬜ — Accessibility issue only; no functional impact.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `menuButton?.setAttribute('aria-expanded', 'true')` in `openMenu()` and `menuButton?.setAttribute('aria-expanded', 'false')` in `closeMenu()`; `closeOpenMultiselectDropdownMenus()` already delegates to the registered close handler, so attribute stays consistent for externally-closed menus.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open a multiselect dropdown in Order Helper, inspect the button element's `aria-expanded` attribute; confirm it reads `"true"` when the menu is open and `"false"` after closing it.
 
 - **F03** — Outside-click `document` listener can leak if a menu is removed while open (no teardown path)
   - Meta-reviewed: [X]
     - Verdict: Implementation plan discarded 🔴
     - Reason: Finding contains a 🚩 flag requiring user input. Per meta-review rules, findings with 🚩 flags must be discarded.
   - **Neglect Risk:** Medium ❗ — Listener leaks can accumulate over repeated Order Helper opens/rerenders, causing performance degradation.
-  - Implemented:
+  - Implemented: ❌ Skipped (🔴 discarded)
+    - Implementation Notes: Skipped — plan discarded; requires user confirmation on whether Order Helper rerender removes dropdown DOM while any menu is open before a cleanup lifecycle can be wired.
 
 ---
 
@@ -519,7 +526,7 @@ Track all code-review findings across the extension's JS files.
   - Implemented: ✅
     - Implementation Notes: Added `createBookSaveSerializer()` module-level helper with per-book in-flight/pending coalescing; replaced all 16 direct `saveWorldInfo` calls in inline-edit handlers and `updateCustomOrderFromDom` with `enqueueSave(book)`.
     - **🟥 MANUAL CHECK**:
-      - [ ] In Order Helper, rapidly change two different fields on the same entry (e.g., change Delay then immediately toggle Ignore Budget). Reload the lorebook. Confirm both changes are persisted.
+      - [x] In Order Helper, rapidly change two different fields on the same entry (e.g., change Delay then immediately toggle Ignore Budget). Reload the lorebook. Confirm both changes are persisted.
 
 - **F02** — `updateCustomOrderFromDom()` can throw on missing book/entry during refresh/desync
   - Meta-reviewed: [X]
@@ -529,7 +536,7 @@ Track all code-review findings across the extension's JS files.
   - Implemented: ✅
     - Implementation Notes: Added early-exit tbody guard, `!bookName || !uid` attribute guard, `!cache[bookName]?.entries` guard, and `!entry` guard; stale rows are skipped and `nextIndex` is computed only for valid rows.
     - **🟥 MANUAL CHECK**:
-      - [ ] Open Order Helper and drag-reorder rows normally; confirm row order saves correctly on reload. Then trigger a World Info refresh while Order Helper is open; confirm no console errors and the table remains usable.
+      - [x] Open Order Helper and drag-reorder rows normally; confirm row order saves correctly on reload. Then trigger a World Info refresh while Order Helper is open; confirm no console errors and the table remains usable.
 
 - **F03** — Comment link can render as the string "undefined" for entries without a comment
   - Meta-reviewed: [X]

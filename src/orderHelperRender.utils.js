@@ -8,9 +8,11 @@
 export const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 
 export const setTooltip = (element, text, { ariaLabel = null } = {})=>{
-    if (!element || !text) return;
+    if (!element) return;
+    if (typeof text !== 'string' || text.trim() === '') return;
     element.title = text;
-    const label = ariaLabel ?? text.replace(/\s*---\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    const effectiveAriaLabel = typeof ariaLabel === 'string' ? ariaLabel : null;
+    const label = effectiveAriaLabel ?? text.replace(/\s*---\s*/g, ' ').replace(/\s+/g, ' ').trim();
     if (label) {
         element.setAttribute('aria-label', label);
     }
@@ -67,12 +69,14 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     const closeMenu = ()=>{
         if (!menu.classList.contains('stwid--active')) return;
         menu.classList.remove('stwid--active');
+        menuButton?.setAttribute('aria-expanded', 'false');
         document.removeEventListener('click', handleOutsideClick);
     };
     const openMenu = ()=>{
         if (menu.classList.contains('stwid--active')) return;
         closeOpenMultiselectDropdownMenus(menu);
         menu.classList.add('stwid--active');
+        menuButton?.setAttribute('aria-expanded', 'true');
         document.addEventListener('click', handleOutsideClick);
     };
     const handleOutsideClick = (event)=>{

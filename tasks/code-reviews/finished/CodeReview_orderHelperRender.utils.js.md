@@ -125,9 +125,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update `setTooltip()` to require `typeof text === 'string'` before calling `.replace(...)`.
-- [ ] Validate `ariaLabel` type (string) when provided; otherwise fall back to the normalized `text`.
-- [ ] Ensure the early-return condition still allows tooltips like `'0'` (string) but rejects `0` (number) per the chosen policy.
+- [x] Update `setTooltip()` to require `typeof text === 'string'` before calling `.replace(...)`.
+- [x] Validate `ariaLabel` type (string) when provided; otherwise fall back to the normalized `text`.
+- [x] Ensure the early-return condition still allows tooltips like `'0'` (string) but rejects `0` (number) per the chosen policy.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelperRender.utils.js`
+  - Split the combined `!element || !text` guard into two explicit checks: `if (!element) return;` then `if (typeof text !== 'string' || text.trim() === '') return;`
+  - Added `effectiveAriaLabel` validation to require `ariaLabel` be a string before using it as the label; non-string values fall back to the normalized `text`
+
+- Risks / Side effects
+  - Valid string tooltips (including `'0'`) continue to work; only non-string `text` values are now rejected (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open Order Helper, hover over tooltipped elements (column headers, filter dropdowns, entry links); confirm tooltips appear correctly and no console errors occur.
 
 ---
 
@@ -255,9 +268,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update `openMenu()` to set `aria-expanded="true"` on `menuButton`.
-- [ ] Update `closeMenu()` to set `aria-expanded="false"` on `menuButton`.
-- [ ] Verify `closeOpenMultiselectDropdownMenus()` closes other menus via their registered close handler so the attribute stays consistent.
+- [x] Update `openMenu()` to set `aria-expanded="true"` on `menuButton`.
+- [x] Update `closeMenu()` to set `aria-expanded="false"` on `menuButton`.
+- [x] Verify `closeOpenMultiselectDropdownMenus()` closes other menus via their registered close handler so the attribute stays consistent.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelperRender.utils.js`
+  - Added `menuButton?.setAttribute('aria-expanded', 'true')` in `openMenu()` so the attribute correctly reflects the open state
+  - Added `menuButton?.setAttribute('aria-expanded', 'false')` in `closeMenu()` so the attribute correctly reflects the closed state
+  - `closeOpenMultiselectDropdownMenus()` already calls the registered `closeMenu` handler (which now sets `aria-expanded`), keeping the attribute in sync for externally-closed menus too
+
+- Risks / Side effects
+  - Attribute-only change; no functional open/close behavior altered (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open a multiselect dropdown in Order Helper, inspect the button element's `aria-expanded` attribute; confirm it reads `"true"` when the menu is open and `"false"` after closing it.
 
 ---
 
@@ -378,6 +405,13 @@
 - **Verdict:** Implementation plan discarded 🔴
 
   Reason: The finding contains a 🚩 flag requiring user input. Per the meta-review rules, findings with 🚩 flags must be discarded.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+❌ Skipped — Implementation plan discarded 🔴
+> Finding contains a 🚩 flag requiring user input to confirm whether Order Helper rerender can remove dropdown DOM while a menu is open. Per meta-review rules, findings with unresolved 🚩 flags are discarded.
 
 ---
 
