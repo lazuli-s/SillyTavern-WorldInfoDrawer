@@ -6,6 +6,20 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/editorPanel.js`
+
+- **F01** — Dirty tracking silently fails for entry UID `0` because of falsy checks: Replaced `!uid` with `uid == null` in `markEditorClean`, `isDirty`, and `markClean` so UID `0` is accepted as a valid entry identifier.
+- **F02** — `openEntryEditor()` marks the new entry clean before async load succeeds: Removed the pre-async `markEditorClean` call so dirty/key state is only committed after successful DOM swap; stale-token and missing-payload aborts now leave prior dirty state intact.
+- **F03** — Dirty state can remain permanently "dirty" after successful saves: Added `editorPanelApi.markClean(name, e)` call in `wiUpdateHandler.js` updated-entry loop's else branch (when current entry is in sync and no re-render was needed).
+- **F04** — Stale open abort can leave active-row highlight inconsistent with editor content: Moved `clearEntryHighlights()` and `entryDom.classList.add('stwid--active')` into the success commit block of `openEntryEditor` so aborts leave the previous highlight intact.
+- **F05** — `clearEntryHighlights()` scans every entry on every open/reset: Added `let activeEntryDom = null` tracker; replaced full-cache nested loop with O(1) targeted removal from the tracked reference; updated `openEntryEditor` success block to record the new active row.
+- **F06** — Pointer-based dirty tracking marks non-editing UI interactions as unsaved edits: Removed `button` and `.checkbox` from the `pointerdown` dirty-marking selector; kept `input`, `textarea`, `select`, and `[contenteditable]` variants only.
+- **F07** — Editor-level event listeners are attached without a teardown path: Extracted named handler constants for all four capture listeners; added `cleanup()` to the returned editor panel API; wired `editorPanelApi?.cleanup?.()` into the `beforeunload` teardown in `src/drawer.js`.
+
+---
+
+## February 18, 2026
+
 ### `src/worldEntry.js`
 
 - **F01** — Clicking status controls on the active row can re-open the editor and discard unsaved text: Changed `status` click handler to call `evt.stopPropagation()` unconditionally, removing the conditional active-row check so status-control clicks never bubble to the entry row click handler.

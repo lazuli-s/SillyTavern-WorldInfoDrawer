@@ -117,49 +117,70 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Direct data-loss path for entry UID 0; users can lose unsaved edits without warning.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Replaced `!uid` with `uid == null` in `markEditorClean`, `isDirty`, and `markClean` guard clauses so UID `0` is accepted as a valid entry identifier.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open the first entry in a book (UID `0`), type unsaved text, then try to open Activation Settings; confirm the dirty warning fires and the editor text is preserved.
 
 - **F02** — `openEntryEditor()` marks the new entry clean before async load succeeds
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Dirty-state desync can cause guards to fail, leading to data loss on abort.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Removed the pre-async `markEditorClean(name, entry.uid)` call in `openEntryEditor`; dirty/key state is now only committed in the success block after DOM swap.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open entry A with unsaved edits, rapidly click entry B while a stale-token abort fires, then click Activation Settings; confirm the dirty warning still appears and the original entry content is not lost.
 
 - **F03** — Dirty state can remain permanently "dirty" after successful saves
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Users repeatedly blocked from Activation Settings/Order Helper despite having no unsaved changes.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `else if (isCurrentEditor(name, e) && editorPanelApi)` branch in `updateWIChange` updated-entry loop to call `editorPanelApi.markClean(name, e)` when the current entry is confirmed in sync and no re-render was needed.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open an entry, type unsaved text, then save it via Order Helper inline edit; confirm the dirty state clears and mode switches are unblocked. Also type in the editor without saving and trigger a WI update for a different book; confirm dirty state is NOT cleared for the open entry.
 
 - **F04** — Stale open abort can leave active-row highlight inconsistent with editor content
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Visual mismatch can lead to accidental edits on wrong entry.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Moved `clearEntryHighlights()` and `entryDom.classList.add('stwid--active')` from the pre-async section to the success commit block in `openEntryEditor`, so aborts leave the previous highlight intact.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Rapidly click several entries and confirm no mismatch between the highlighted row and the editor content shown; the row highlight should update when the editor finishes loading.
 
 - **F05** — `clearEntryHighlights()` scans every entry on every open/reset
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Performance issue; UI lag on large lorebooks.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `let activeEntryDom = null` module-level variable; replaced full-cache nested loop in `clearEntryHighlights()` with O(1) targeted class removal from `activeEntryDom`; set `activeEntryDom = entryDom` in the success commit block of `openEntryEditor`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open several entries in rapid succession; confirm only the most recently opened row is highlighted and the highlight clears when Activation Settings is opened.
 
 - **F06** — Pointer-based dirty tracking marks non-editing UI interactions as unsaved edits
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — False positives cause misleading warnings and blocked actions.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Removed `button` and `.checkbox` from the `pointerdown` dirty-marking selector; kept `input`, `textarea`, `select`, and `[contenteditable]` variants for direct data-entry elements only.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open an entry, click a non-data button inside the editor (e.g., a section collapse toggle), then click Order Helper; confirm no dirty warning appears. Also type text in a field and click Order Helper; confirm the dirty warning does appear.
 
 - **F07** — Editor-level event listeners are attached without a teardown path
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⬜ — Best practice violation; listener leak only affects re-init scenarios.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Extracted named handler constants for all four capture listeners; added `cleanup()` to the returned editor panel API; wired `editorPanelApi?.cleanup?.()` into the `beforeunload` teardown in `src/drawer.js`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Reload the page and open/edit entries; confirm dirty tracking, unsaved-edit warnings, and all mode-switch guards still work normally after the first load.
 
 ---
 

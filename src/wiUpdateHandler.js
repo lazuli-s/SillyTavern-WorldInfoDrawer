@@ -206,6 +206,11 @@ export const initWIUpdateHandler = ({
                     }
                     if (needsEditorRefresh) {
                         cache[name].dom.entry[e].root.click();
+                    } else if (isCurrentEditor(name, e) && editorPanelApi) {
+                        // F03: Current entry is confirmed in sync with incoming data and
+                        // no re-click was needed — clear dirty flag so mode-switch guards
+                        // don't block the user after a successful save cycle.
+                        editorPanelApi.markClean(name, e);
                     }
                 }
                 cache[name].entries = world.entries;

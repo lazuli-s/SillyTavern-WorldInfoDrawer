@@ -119,8 +119,20 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update the three guard clauses in `src/editorPanel.js` to accept UID `0` as valid.
-- [ ] Verify dirty detection works for entries with UID `0` and non-zero UIDs.
+- [x] Update the three guard clauses in `src/editorPanel.js` to accept UID `0` as valid.
+- [x] Verify dirty detection works for entries with UID `0` and non-zero UIDs.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`
+  - Replaced `!uid` with `uid == null` in all three guard clauses: `markEditorClean`, `isDirty`, and `markClean`.
+
+- Risks / Side effects
+  - Entries with UID `0` are now accepted as valid by all dirty-state helpers (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open the first entry in a book (UID `0` if it has not been deleted), type unsaved text, then try to open Activation Settings; confirm the dirty warning fires and the editor text is preserved.
 
 ---
 
@@ -235,9 +247,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Delete the pre-async `markEditorClean(name, entry.uid)` call in `openEntryEditor`.
-- [ ] Keep/retain the final `markEditorClean(name, entry.uid)` after successful DOM swap.
-- [ ] Verify stale-token/missing-payload aborts do not mutate dirty state.
+- [x] Delete the pre-async `markEditorClean(name, entry.uid)` call in `openEntryEditor`.
+- [x] Keep/retain the final `markEditorClean(name, entry.uid)` after successful DOM swap.
+- [x] Verify stale-token/missing-payload aborts do not mutate dirty state.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`
+  - Removed the early `markEditorClean(name, entry.uid)` call in `openEntryEditor` (which ran before async template/entry fetching).
+  - Retained the final `markEditorClean(name, entry.uid)` call in the success commit block after `setCurrentEditor(...)`.
+
+- Risks / Side effects
+  - On stale-token or missing-payload aborts, prior dirty state is now preserved instead of being cleared — this is the intended improvement (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open entry A with unsaved edits, rapidly click entry B while a stale-token abort fires, then click Activation Settings; confirm the dirty warning still appears and the original entry content is not lost.
 
 ---
 
@@ -350,9 +375,21 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] In `src/wiUpdateHandler.js` updated-entry loop, identify the current-editor branch where values are already in sync and no click-refresh is triggered.
-- [ ] Call `editorPanelApi.markClean(name, e)` in that branch.
-- [ ] Verify dirty guards clear after successful same-entry saves without requiring editor reopen.
+- [x] In `src/wiUpdateHandler.js` updated-entry loop, identify the current-editor branch where values are already in sync and no click-refresh is triggered.
+- [x] Call `editorPanelApi.markClean(name, e)` in that branch.
+- [x] Verify dirty guards clear after successful same-entry saves without requiring editor reopen.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`
+  - Added `else if (isCurrentEditor(name, e) && editorPanelApi)` branch after the `needsEditorRefresh` click to call `editorPanelApi.markClean(name, e)` when the update cycle confirms the current entry required no re-render.
+
+- Risks / Side effects
+  - If an in-editor change fires after the update cycle starts but before `markClean` is called, a real edit could be silently cleared (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Open an entry, type unsaved text, then save the entry from another path (e.g., Order Helper inline edit on the same entry); confirm the dirty state clears and mode switches are unblocked. Also type in the editor without saving and trigger a WI update for a *different* book; confirm the dirty state is NOT cleared for the currently open entry.
 
 ---
 
@@ -466,9 +503,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Remove pre-async highlight mutation in `openEntryEditor`.
-- [ ] Add highlight mutation only in the success commit block.
-- [ ] Verify stale-token and missing-payload aborts keep list highlight aligned with the visible editor.
+- [x] Remove pre-async highlight mutation in `openEntryEditor`.
+- [x] Add highlight mutation only in the success commit block.
+- [x] Verify stale-token and missing-payload aborts keep list highlight aligned with the visible editor.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`
+  - Removed `clearEntryHighlights()` and `entryDom.classList.add('stwid--active')` from the pre-async section of `openEntryEditor`.
+  - Added both calls to the success commit block immediately after `clearEditor({ resetCurrent: false })`.
+
+- Risks / Side effects
+  - During async loading the previous row remains highlighted until loading succeeds — this is the intended UX (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Rapidly click several entries and confirm no mismatch between the highlighted row and the editor content shown; the row highlight should update when the editor finishes loading.
 
 ---
 
@@ -582,9 +632,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add `activeEntryDom` module-local state in `src/editorPanel.js`.
-- [ ] Refactor `clearEntryHighlights()` to operate on that single reference.
-- [ ] Update open/reset/toggle flows to keep `activeEntryDom` in sync.
+- [x] Add `activeEntryDom` module-local state in `src/editorPanel.js`.
+- [x] Refactor `clearEntryHighlights()` to operate on that single reference.
+- [x] Update open/reset/toggle flows to keep `activeEntryDom` in sync.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`
+  - Added `let activeEntryDom = null` module-level variable to track the single active entry row.
+  - Replaced the full-cache nested loop in `clearEntryHighlights()` with a targeted `classList.remove` on `activeEntryDom` followed by `activeEntryDom = null` — O(1) instead of O(total entries).
+  - Set `activeEntryDom = entryDom` in the success commit block of `openEntryEditor` after `entryDom.classList.add('stwid--active')`.
+
+- Risks / Side effects
+  - If any code path removes `stwid--active` without calling `clearEntryHighlights()`, `activeEntryDom` becomes stale; the next clear will attempt to remove the class from a no-longer-highlighted element — harmless but imprecise (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open several different entries in rapid succession; confirm only the most recently opened row is highlighted. Open Activation Settings and confirm the row highlight clears. Reload the page and open entries again to confirm consistent highlight behavior.
 
 ---
 
@@ -697,9 +761,21 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Refine the `pointerdown` selector in `src/editorPanel.js` to exclude presentation-only controls.
-- [ ] Keep dirty marking for actual mutable form elements.
-- [ ] Verify unsaved-edit guard still triggers for real edits but not for presentation-only toggles.
+- [x] Refine the `pointerdown` selector in `src/editorPanel.js` to exclude presentation-only controls.
+- [x] Keep dirty marking for actual mutable form elements.
+- [x] Verify unsaved-edit guard still triggers for real edits but not for presentation-only toggles.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`
+  - Removed `button` and `.checkbox` from the `pointerdown` dirty-marking selector; kept `input`, `textarea`, `select`, and `[contenteditable]` variants for direct data-entry elements only.
+
+- Risks / Side effects
+  - Custom ST template widgets that use `<button>` or `.checkbox` DOM to set field values (without also firing `input`/`change`) will no longer trigger dirty marking via `pointerdown` (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Open an entry, click a non-data button inside the editor (e.g., a section collapse toggle), then click Order Helper; confirm no dirty warning appears. Also type text in a field and click Order Helper; confirm the dirty warning does appear.
 
 ---
 
@@ -810,9 +886,24 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Replace inline anonymous `keydown`/`pointerdown` handlers with named function references.
-- [ ] Add `cleanup()` to the returned editor panel API that removes all registered listeners.
-- [ ] Call `editorPanelApi.cleanup()` from the drawer lifecycle teardown path.
+- [x] Replace inline anonymous `keydown`/`pointerdown` handlers with named function references.
+- [x] Add `cleanup()` to the returned editor panel API that removes all registered listeners.
+- [x] Call `editorPanelApi.cleanup()` from the drawer lifecycle teardown path.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`, `src/drawer.js`
+  - Extracted named handler constants (`onEditorInput`, `onEditorChange`, `onEditorKeydown`, `onEditorPointerdown`) to replace all inline anonymous functions registered on the editor.
+  - Added `cleanup()` function that calls `removeEventListener` for each of the four registered capture listeners.
+  - Added `cleanup` to the returned editor panel API object.
+  - Added `editorPanelApi?.cleanup?.()` to the `beforeunload` teardown listener in `src/drawer.js`.
+
+- Risks / Side effects
+  - If `cleanup()` is called while the editor is still in use (e.g., without re-calling `initEditorPanel`), all dirty tracking becomes disabled until re-init (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Reload the page and open/edit entries; confirm dirty tracking, unsaved-edit warnings, and all mode-switch guards still work normally after the first load.
 
 ---
 

@@ -16,9 +16,14 @@ export const initEditorPanel = ({
     let isEditorDirty = false;
     /**@type {{name:string, uid:string}|null}*/
     let currentEditorKey = null;
+    /**@type {HTMLElement|null} */
+    // F05: Track the single active entry row so clearEntryHighlights() can target it
+    // directly instead of scanning every rendered entry in the cache.
+    let activeEntryDom = null;
 
     const markEditorClean = (name, uid)=>{
-        if (!name || !uid) return;
+        // F01: Use uid == null (not !uid) so UID 0 is accepted as valid.
+        if (!name || uid == null) return;
         currentEditorKey = { name, uid };
         isEditorDirty = false;
     };
@@ -30,15 +35,7 @@ export const initEditorPanel = ({
         isEditorDirty = true;
     };
 
-    // Event delegation: any typing in the editor marks it dirty.
-    // (We use capture to catch events early, even if inner templates stopPropagation.)
-    dom.editor?.addEventListener?.('input', markEditorDirtyIfCurrent, true);
-    dom.editor?.addEventListener?.('change', markEditorDirtyIfCurrent, true);
-
-    // Some SillyTavern template controls / widgets may mutate state without emitting
-    // input/change on elements we can easily observe. Make dirty tracking more conservative:
-    // - keydown catches "typing" before an input event (or when value is managed elsewhere)
-    // - pointerdown catches clicking toggles/checkbox-like widgets
+    // Only consider keydown inside typical editable controls.
     const shouldMarkDirtyOnKeydown = (evt)=>{
         // Ignore key combos that are commonly non-editing/navigation.
         if (evt.ctrlKey || evt.metaKey || evt.altKey) return false;
@@ -63,32 +60,47 @@ export const initEditorPanel = ({
         ]);
         if (nonEditingKeys.has(k)) return false;
 
-        // Only consider keydown inside typical editable controls.
         const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
         if (!target) return false;
         return Boolean(target.closest('input, textarea, [contenteditable=""], [contenteditable="true"]'));
     };
 
-    dom.editor?.addEventListener?.('keydown', (evt)=>{
+    // F07: Named handler references so cleanup() can remove them by reference.
+    const onEditorInput = markEditorDirtyIfCurrent;
+    const onEditorChange = markEditorDirtyIfCurrent;
+
+    // Event delegation: any typing in the editor marks it dirty.
+    // (We use capture to catch events early, even if inner templates stopPropagation.)
+    const onEditorKeydown = (evt)=>{
         if (shouldMarkDirtyOnKeydown(evt)) {
             markEditorDirtyIfCurrent();
         }
-    }, true);
+    };
 
-    dom.editor?.addEventListener?.('pointerdown', (evt)=>{
-        // Conservative: any click within the entry editor could change state.
+    const onEditorPointerdown = (evt)=>{
+        // Conservative: any pointer interaction with mutable form elements marks dirty.
         // This reduces the chance of background refreshes discarding edits.
+        // F06: Narrowed to direct data-entry elements only — excludes `button` and
+        // `.checkbox` which can match purely presentational controls and produce
+        // false-positive dirty flags that block mode switches.
         const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
         if (!target) return;
-        if (target.closest('input, textarea, select, button, [contenteditable=""], [contenteditable="true"], .checkbox')) {
+        if (target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) {
             markEditorDirtyIfCurrent();
         }
-    }, true);
+    };
+
+    dom.editor?.addEventListener?.('input', onEditorInput, true);
+    dom.editor?.addEventListener?.('change', onEditorChange, true);
+    dom.editor?.addEventListener?.('keydown', onEditorKeydown, true);
+    dom.editor?.addEventListener?.('pointerdown', onEditorPointerdown, true);
+
+    // F05: Clear only the previously tracked active row rather than iterating every
+    // rendered entry in the cache — O(1) instead of O(total entries).
     const clearEntryHighlights = () => {
-        for (const cb of Object.values(cache)) {
-            for (const ce of Object.values(cb.dom.entry)) {
-                ce.root.classList.remove('stwid--active');
-            }
+        if (activeEntryDom) {
+            activeEntryDom.classList.remove('stwid--active');
+            activeEntryDom = null;
         }
     };
 
@@ -196,16 +208,15 @@ export const initEditorPanel = ({
         // that are no longer the "latest" selection.
         if (!isTokenCurrent?.()) return;
         if (getSelectFrom()) selectEnd();
-        clearEntryHighlights();
-        // Switching entries always re-renders the editor; treat that as clean.
-        markEditorClean(name, entry.uid);
+
+        // F02: Close activation/order panels before async work begins, but do NOT
+        // touch dirty state or row highlights yet — those only commit on success.
         if (dom.activationToggle.classList.contains('stwid--active')) {
             hideActivationSettings();
         }
         if (dom.order.toggle.classList.contains('stwid--active')) {
             dom.order.toggle.click();
         }
-        entryDom.classList.add('stwid--active');
         // Defer clearEditor until new content is ready — keeps the old entry visible
         // during async fetches, eliminating the blank-state flash between entries.
 
@@ -234,6 +245,12 @@ export const initEditorPanel = ({
 
         // Swap atomically: clear old entry and fill with new in one synchronous block.
         clearEditor({ resetCurrent: false });
+        // F04: Apply highlight only after successful async completion — prevents
+        // stale-token and missing-payload aborts from leaving the list highlight
+        // desynced from the editor content currently on screen.
+        clearEntryHighlights();
+        entryDom.classList.add('stwid--active');
+        activeEntryDom = entryDom; // F05: record new active row for O(1) future clears
         appendUnfocusButton();
         if (header) dom.editor.append(header);
         dom.editor.append(editDom);
@@ -247,22 +264,36 @@ export const initEditorPanel = ({
         });
 
         setCurrentEditor({ name, uid: entry.uid });
-        // Editor DOM is now in sync with the underlying entry snapshot.
+        // F02: markEditorClean deferred to here — only committed after the DOM swap
+        // succeeds. Stale-token / missing-payload aborts leave prior dirty state intact.
         markEditorClean(name, entry.uid);
     };
 
     const isDirty = (name, uid)=>{
-        if (!name || !uid) return false;
+        // F01: Use uid == null (not !uid) so UID 0 is accepted as valid.
+        if (!name || uid == null) return false;
         return Boolean(isEditorDirty && currentEditorKey?.name === name && currentEditorKey?.uid === uid);
     };
 
     const markClean = (name, uid)=>{
-        if (!name || !uid) return;
+        // F01: Use uid == null (not !uid) so UID 0 is accepted as valid.
+        if (!name || uid == null) return;
         if (currentEditorKey?.name !== name || currentEditorKey?.uid !== uid) return;
         isEditorDirty = false;
     };
 
+    // F07: Teardown path — removes all four capture listeners registered
+    // during initEditorPanel. Caller (drawer.js) should invoke this on beforeunload
+    // or whenever the editor panel is being disposed/re-initialized.
+    const cleanup = ()=>{
+        dom.editor?.removeEventListener?.('input', onEditorInput, true);
+        dom.editor?.removeEventListener?.('change', onEditorChange, true);
+        dom.editor?.removeEventListener?.('keydown', onEditorKeydown, true);
+        dom.editor?.removeEventListener?.('pointerdown', onEditorPointerdown, true);
+    };
+
     return {
+        cleanup,
         clearEditor,
         clearEntryHighlights,
         hideActivationSettings,
