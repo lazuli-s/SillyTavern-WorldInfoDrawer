@@ -219,7 +219,7 @@ const createOrderHelperRenderer = ({
             getAutomationIdValues,
             getGroupOptions,
             getGroupValues,
-            onFilterChange: ()=>refreshVisibilityRow(),
+            onFilterChange: ()=>{ refreshVisibilityRow(); refreshSelectionCount(); },
         });
 
         // Populate filterIndicatorRefs after tableHeader is built so chip X

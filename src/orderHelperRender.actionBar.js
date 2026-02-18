@@ -565,8 +565,9 @@ export function buildBulkEditRow({
 
     const refreshSelectionCount = ()=>{
         const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
-        const total = rows.length;
-        const selected = rows.filter((r)=>isOrderHelperRowSelected(r)).length;
+        const visible = rows.filter((r)=>!r.classList.contains('stwid--isFiltered'));
+        const total = visible.length;
+        const selected = visible.filter((r)=>isOrderHelperRowSelected(r)).length;
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
     };
 
