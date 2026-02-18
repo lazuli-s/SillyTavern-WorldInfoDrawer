@@ -375,7 +375,7 @@ const runRefreshWorker = async()=>{
             const token = refreshRequestToken;
             state.resetEditor?.();
             captureBookCollapseStatesFromDom(state.cache, listPanelState.setCollapseState);
-            clearCacheBooks(state.cache);
+            clearCacheBooks(state.cache, state.clearToast);
             await listPanelState.loadListDebounced();
             listPanelState.searchInput?.dispatchEvent(new Event('input'));
             refreshCompletedToken = token;

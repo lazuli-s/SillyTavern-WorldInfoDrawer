@@ -679,13 +679,40 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Prototype pollution risk with malicious/accidental book names like `__proto__`; can corrupt state and break iteration.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Replaced state maps with null-prototype maps, added key validation helpers, and updated folder collapse state accessors/callers.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Create or rename a book/folder with normal names and confirm collapse state and folder rendering still behave exactly as before.
+      - [ ] Collapse/expand multiple folders, reload the page, and confirm each folder restores to the same collapsed state.
 
 - **F02** — Selection state can survive list reloads, leaving stale `selectFrom`/`selectList`
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Stale selection can cause delete/drag operations to target wrong entries after refresh.
+  - Implemented: ✅
+    - Implementation Notes: Updated refresh cache clear flow to call `resetSelectionMemory(clearToast)` so stale selections and selection toast are cleared on rebuild.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Select multiple entries, trigger Refresh, and confirm selection highlight/toast clears immediately.
+      - [ ] Select entries, refresh the list, then press Delete or drag; confirm nothing from the old selection is affected.
+
+---
+
+### `src/lorebookFolders.js`
+-> `CodeReview_lorebookFolders.js.md`
+
+- **F01** — `createBookInFolder` assumes `loadWorldInfo()` always succeeds and returns an object
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Null return from loadWorldInfo can cause crash; leaves partially created books without folder metadata.
+  - Implemented:
+
+- **F02** — Folder import can miss the update event if it fires before `waitForWorldInfoUpdate` is registered
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Race condition causes failed folder assignment with misleading warning.
   - Implemented:
 
 ---

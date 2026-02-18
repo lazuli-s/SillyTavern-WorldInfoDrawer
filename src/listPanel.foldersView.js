@@ -77,7 +77,7 @@ const createFoldersViewSlice = ({
         } else if (!folderDom.root.parentElement) {
             insertFolderDomSorted(folderDom, parent);
         }
-        const initialCollapsed = listPanelState.folderCollapseStates[folderName] ?? true;
+        const initialCollapsed = listPanelState.getFolderCollapseState(folderName) ?? true;
         setFolderCollapsed(folderDom, initialCollapsed);
         updateCollapseAllFoldersToggle();
         return folderDom;

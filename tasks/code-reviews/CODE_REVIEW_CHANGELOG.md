@@ -4,6 +4,13 @@ Changes applied from code review findings across the extension's source files.
 
 ---
 
+## February 18, 2026
+
+### `src/listPanel.state.js`
+
+- **F01** — State caches use plain objects with user-controlled keys (prototype pollution / key collisions): Replaced state object maps with null-prototype maps, added key normalization/validation, and updated folder collapse accessors to use validated state APIs.
+- **F02** — Selection state can survive list reloads, leaving stale `selectFrom`/`selectList`: Added selection reset to cache rebuild flow and passed `clearToast` through `refreshList` cache clears so stale selection UI is removed.
+
 ## February 17, 2026
 
 ### `src/listPanel.js`
@@ -58,4 +65,3 @@ Changes applied from code review findings across the extension's source files.
 - **F03** Ã¢â‚¬â€ Delete handler reads live `selectionState` across `await` Ã¢â‚¬â€ can delete wrong entries: Snapshotted `selectFrom` and selected UIDs at keypress time so async delete runs against a stable selection.
 - **F06** Ã¢â‚¬â€ Splitter drag lifecycle missing `pointercancel` Ã¢â‚¬â€ listeners can leak: Added `pointercancel` + `lostpointercapture` termination paths to ensure drag listeners always detach and width is persisted.
 - **F07** Ã¢â‚¬â€ Toggling Activation Settings / Order Helper clears entry editor without dirty-state guard: Added dirty guards + warning toasts to block mode switches that would clear the editor while unsaved edits exist.
-

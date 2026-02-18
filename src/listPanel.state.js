@@ -1,6 +1,15 @@
 import { setFolderCollapsed } from './lorebookFolders.js';
 
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
+const createSafeStateMap = ()=>Object.create(null);
+const normalizeStateKey = (value)=>{
+    if (typeof value !== 'string') return null;
+    return value.length ? value : null;
+};
+const normalizeEntryCacheKey = (value)=>{
+    if (value === null || value === undefined) return null;
+    return String(value);
+};
 
 const state = {
     searchInput: null,
@@ -11,10 +20,10 @@ const state = {
     bookVisibilityChips: null,
     loadListDebounced: null,
     folderImportInput: null,
-    entrySearchCache: {},
-    collapseStates: {},
-    folderCollapseStates: {},
-    folderDoms: {},
+    entrySearchCache: createSafeStateMap(),
+    collapseStates: createSafeStateMap(),
+    folderCollapseStates: createSafeStateMap(),
+    folderDoms: createSafeStateMap(),
     selectLast: null,
     selectFrom: null,
     selectMode: null,
@@ -80,26 +89,45 @@ export const listPanelState = {
         return state.collapseStates;
     },
     getCollapseState(name) {
-        return state.collapseStates[name];
+        const key = normalizeStateKey(name);
+        if (!key) return undefined;
+        return state.collapseStates[key];
     },
     setCollapseState(name, isCollapsed) {
-        state.collapseStates[name] = Boolean(isCollapsed);
+        const key = normalizeStateKey(name);
+        if (!key) return;
+        state.collapseStates[key] = Boolean(isCollapsed);
     },
     get folderCollapseStates() {
         return state.folderCollapseStates;
+    },
+    getFolderCollapseState(name) {
+        const key = normalizeStateKey(name);
+        if (!key) return undefined;
+        return state.folderCollapseStates[key];
+    },
+    setFolderCollapseState(name, isCollapsed) {
+        const key = normalizeStateKey(name);
+        if (!key) return;
+        state.folderCollapseStates[key] = Boolean(isCollapsed);
     },
     get folderDoms() {
         return state.folderDoms;
     },
     getFolderDom(name) {
-        return state.folderDoms[name] ?? null;
+        const key = normalizeStateKey(name);
+        if (!key) return null;
+        return state.folderDoms[key] ?? null;
     },
     setFolderDom(name, value) {
-        if (typeof name !== 'string' || !name) return;
-        state.folderDoms[name] = value;
+        const key = normalizeStateKey(name);
+        if (!key) return;
+        state.folderDoms[key] = value;
     },
     deleteFolderDom(name) {
-        delete state.folderDoms[name];
+        const key = normalizeStateKey(name);
+        if (!key) return;
+        delete state.folderDoms[key];
     },
     clearFolderDoms() {
         clearObjectKeys(state.folderDoms);
@@ -111,15 +139,23 @@ export const listPanelState = {
         return Object.values(state.folderDoms);
     },
     ensureEntrySearchCacheBook(bookName) {
-        state.entrySearchCache[bookName] ??= {};
-        return state.entrySearchCache[bookName];
+        const bookKey = normalizeStateKey(bookName);
+        if (!bookKey) return null;
+        state.entrySearchCache[bookKey] ??= createSafeStateMap();
+        return state.entrySearchCache[bookKey];
     },
     getEntrySearchCacheValue(bookName, uid) {
-        return state.entrySearchCache[bookName]?.[uid];
+        const bookKey = normalizeStateKey(bookName);
+        const entryKey = normalizeEntryCacheKey(uid);
+        if (!bookKey || !entryKey) return undefined;
+        return state.entrySearchCache[bookKey]?.[entryKey];
     },
     setEntrySearchCacheValue(bookName, uid, value) {
-        state.entrySearchCache[bookName] ??= {};
-        state.entrySearchCache[bookName][uid] = value;
+        const bookKey = normalizeStateKey(bookName);
+        const entryKey = normalizeEntryCacheKey(uid);
+        if (!bookKey || !entryKey) return;
+        state.entrySearchCache[bookKey] ??= createSafeStateMap();
+        state.entrySearchCache[bookKey][entryKey] = value;
     },
     get selectLast() {
         return state.selectLast;
@@ -172,15 +208,24 @@ const clearObjectKeys = (target)=>{
 };
 
 const loadFolderCollapseStates = ()=>{
-    if (typeof localStorage === 'undefined') return {};
+    if (typeof localStorage === 'undefined') return createSafeStateMap();
     try {
         const raw = localStorage.getItem(FOLDER_COLLAPSE_STORAGE_KEY);
-        if (!raw) return {};
+        if (!raw) return createSafeStateMap();
         const parsed = JSON.parse(raw);
-        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return createSafeStateMap();
+        }
+        const normalized = createSafeStateMap();
+        for (const [folderName, isCollapsed] of Object.entries(parsed)) {
+            const key = normalizeStateKey(folderName);
+            if (!key) continue;
+            normalized[key] = Boolean(isCollapsed);
+        }
+        return normalized;
     } catch (error) {
         console.warn('[STWID] Failed to load folder collapse states', error);
-        return {};
+        return createSafeStateMap();
     }
 };
 
@@ -201,7 +246,7 @@ export const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transien
         return;
     }
 
-    listPanelState.folderCollapseStates[folderName] = Boolean(isCollapsed);
+    listPanelState.setFolderCollapseState(folderName, isCollapsed);
 
     // "transientExpand" means: show expanded right now, but keep the stored default unchanged.
     if (!transientExpand) {
@@ -223,6 +268,7 @@ export const clearEntrySearchCache = ()=>{
 };
 
 export const hydrateFolderCollapseStates = ()=>{
+    clearObjectKeys(listPanelState.folderCollapseStates);
     Object.assign(listPanelState.folderCollapseStates, loadFolderCollapseStates());
 };
 
@@ -243,8 +289,9 @@ export const captureBookCollapseStatesFromDom = (cache, setCollapseState)=>{
     }
 };
 
-export const clearCacheBooks = (cache)=>{
+export const clearCacheBooks = (cache, clearToast)=>{
     for (const bookName of Object.keys(cache ?? {})) {
         delete cache[bookName];
     }
+    resetSelectionMemory(clearToast);
 };
