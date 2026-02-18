@@ -179,6 +179,10 @@ Needs markup/class changes (second pass):
    - Evaluate adding `.list-group`/`.list-group-item` to dropdown markup and `.interactable` to keyboard-focusable controls.
    - Evaluate using vanilla toggle/disabled class contracts for controls/rows where semantics match.
 
+   Full evaluation: [Refactoring_style.css.Step5.md](Refactoring_style.css.Step5.md)
+
+   **Status:** Evaluation complete on 2026-02-18 — all four candidates formally deferred (see Step 5 file for rationale). No code changes.
+
 6. Validation matrix after each pass.
    - List panel: controls, filters, chips, folder/book/entry interaction states.
    - Menus: multiselect and list dropdown keyboard/mouse interactions.
