@@ -119,9 +119,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a dirty-state check at the top of `jumpToEntry()` before toggling activation/order modes.
-- [ ] Return `false` when dirty state is true, without firing `entryDom.click()`.
-- [ ] Keep existing behavior unchanged for clean editor state.
+- [x] Add a dirty-state check at the top of `jumpToEntry()` before toggling activation/order modes.
+- [x] Return `false` when dirty state is true, without firing `entryDom.click()`.
+- [x] Keep existing behavior unchanged for clean editor state.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `index.js`
+  - Added `isDirty()` guard at the top of `jumpToEntry()`, after the `entryDom` null check, using `editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid)`.
+  - Returns `false` immediately when the current editor is dirty, before any toggle click or `entryDom.click()` is fired.
+  - Clean-editor behavior is unchanged — navigation proceeds exactly as before.
+
+- Risks / Side effects
+  - External callers (e.g., companion extensions) that relied on unconditional navigation now receive `false` when the editor is dirty (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] With an unsaved entry open, call `jumpToEntry(<other book>, <other uid>)` from the browser console; confirm it returns `false` and the editor content is unchanged. Then discard/save edits and call again; confirm navigation succeeds and returns `true`.
 
 ---
 
@@ -229,9 +243,21 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update the startup invocation to `void refreshList().catch((error)=>{ ... })`.
-- [ ] Emit a clear prefixed error message with the caught exception.
-- [ ] Preserve current non-blocking startup order.
+- [x] Update the startup invocation to `void refreshList().catch((error)=>{ ... })`.
+- [x] Emit a clear prefixed error message with the caught exception.
+- [x] Preserve current non-blocking startup order.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `index.js`
+  - Replaced bare `refreshList()` call with `void refreshList().catch((error)=>{ console.error('[STWID] Startup list load failed', error); })`.
+  - Error is logged with `[STWID]` prefix for easy filtering; startup remains non-blocking.
+
+- Risks / Side effects
+  - No behavioral change to the happy path; only adds a rejection handler (probability: ⭕)
 
 ---
 
@@ -340,9 +366,24 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Refactor `watchCss()` to keep a named listener reference and return a cleanup function.
-- [ ] Persist the cleanup handle in module scope.
-- [ ] Invoke cleanup from the extension teardown/re-init path before creating a new watcher.
+- [x] Refactor `watchCss()` to keep a named listener reference and return a cleanup function.
+- [x] Persist the cleanup handle in module scope.
+- [x] Invoke cleanup from the extension teardown/re-init path before creating a new watcher.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `index.js`
+  - Added `let cleanupCssWatch = null` at module scope to store the watcher teardown handle.
+  - Extracted the inline arrow from `ev.addEventListener('message', ...)` into a named `onCssMessage` constant so it can be removed by reference.
+  - `watchCss()` now calls `cleanupCssWatch?.()` at entry, tearing down any previous watcher before creating a new one.
+  - `cleanupCssWatch` is set to a function that calls `ev.removeEventListener('message', onCssMessage)` and removes the injected `<style>` element.
+
+- Risks / Side effects
+  - CSS live-reload may briefly stop working if the cleanup timing causes the new watcher to not receive its first message (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] With FilesPluginApi installed, reload the extension twice in the same session; confirm CSS changes still auto-apply after the second load with no duplicate style elements in the document.
 
 ---
 

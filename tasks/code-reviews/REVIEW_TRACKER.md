@@ -25,21 +25,28 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path via public API; external callers can cause data loss.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `isDirty()` guard in `jumpToEntry()` before any toggle click or `entryDom.click()`, returning `false` immediately when the current editor has unsaved edits.
+    - **🟥 MANUAL CHECK**:
+      - [ ] With an unsaved entry open, call `jumpToEntry(<other book>, <other uid>)` from the browser console; confirm it returns `false` and the editor content is unchanged. Then discard/save edits and call again; confirm navigation succeeds and returns `true`.
 
 - **F02** -- Startup `refreshList()` promise is not handled
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Startup failures become opaque; harder to diagnose issues.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Replaced bare `refreshList()` with `void refreshList().catch(...)` logging a `[STWID]`-prefixed error; startup remains non-blocking.
 
 - **F03** -- Dev CSS watch has no teardown path for watcher/listener lifecycle
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⬜ — Best practice violation; only affects dev workflow.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added module-scope `cleanupCssWatch` handle; `watchCss()` now tears down any previous listener/style before creating a new watcher, using a named `onCssMessage` reference for symmetric removal.
+    - **🟥 MANUAL CHECK**:
+      - [ ] With FilesPluginApi installed, reload the extension twice in the same session; confirm CSS changes still auto-apply after the second load with no duplicate style elements in the document.
 
 ---
 

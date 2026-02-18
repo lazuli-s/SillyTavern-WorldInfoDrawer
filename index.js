@@ -6,7 +6,13 @@ import { initWIUpdateHandler } from './src/wiUpdateHandler.js';
 // Entry point. Initializes runtime modules and exposes jumpToEntry.
 
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
+// F03: Cleanup handle stored at module scope so re-init teardown is symmetric.
+let cleanupCssWatch = null;
+
 const watchCss = async()=>{
+    // Tear down any existing watcher before creating a new one.
+    cleanupCssWatch?.();
+    cleanupCssWatch = null;
     if (new URL(import.meta.url).pathname.split('/').includes('reload')) return;
     try {
         const FilesPluginApi = (await import('../SillyTavern-FilesPluginApi/api.js')).FilesPluginApi;
@@ -20,11 +26,17 @@ const watchCss = async()=>{
             'style.css',
         ].join('/');
         const ev = await FilesPluginApi.watch(path);
-        ev.addEventListener('message', async(/**@type {boolean}*/exists)=>{
+        // F03: Named reference so it can be removed by reference in cleanup.
+        const onCssMessage = async(/**@type {boolean}*/exists)=>{
             if (!exists) return;
             style.innerHTML = await (await FilesPluginApi.get(path)).text();
             document.querySelector(`#third-party_${NAME}-css`)?.remove();
-        });
+        };
+        ev.addEventListener('message', onCssMessage);
+        cleanupCssWatch = ()=>{
+            ev.removeEventListener('message', onCssMessage);
+            style.remove();
+        };
     } catch (error) {
         console.debug('[STWID] CSS watch disabled', error);
     }
@@ -64,11 +76,19 @@ const drawerApi = initDrawer({
 listPanelApi = drawerApi.listPanelApi;
 editorPanelApi = drawerApi.editorPanelApi;
 
-refreshList();
+// F02: Attach explicit rejection handler so startup failures are logged and
+// do not produce unhandled-promise noise.
+void refreshList().catch((error)=>{ console.error('[STWID] Startup list load failed', error); });
 
 export const jumpToEntry = async(name, uid)=>{
     const entryDom = cache[name]?.dom?.entry?.[uid]?.root;
     if (!entryDom) return false;
+
+    // F01: Guard against discarding unsaved editor work. If the current editor
+    // is dirty, abort navigation and let the caller handle the false return.
+    if (currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid)) {
+        return false;
+    }
 
     const activationToggle = drawerApi.getActivationToggle();
     if (activationToggle?.classList.contains('stwid--active')) {

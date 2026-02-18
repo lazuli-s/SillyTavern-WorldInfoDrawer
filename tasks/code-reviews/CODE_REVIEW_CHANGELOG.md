@@ -6,6 +6,16 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `index.js`
+
+- **F01** — `jumpToEntry()` can discard unsaved editor work when switching entries: Added `isDirty()` guard at the top of `jumpToEntry()` returning `false` immediately when the current editor has unsaved edits; clean-editor navigation is unchanged.
+- **F02** — Startup `refreshList()` promise is not handled: Replaced bare `refreshList()` call with `void refreshList().catch(...)` logging a `[STWID]`-prefixed error; startup remains non-blocking.
+- **F03** — Dev CSS watch has no teardown path for watcher/listener lifecycle: Added module-scope `cleanupCssWatch` handle; `watchCss()` now tears down any previous listener/style before creating a new watcher using a named `onCssMessage` reference for symmetric removal.
+
+---
+
+## February 18, 2026
+
 ### `src/editorPanel.js`
 
 - **F01** — Dirty tracking silently fails for entry UID `0` because of falsy checks: Replaced `!uid` with `uid == null` in `markEditorClean`, `isDirty`, and `markClean` so UID `0` is accepted as a valid entry identifier.
