@@ -5,8 +5,6 @@ Code review files whose findings have been meta-reviewed and are ready for imple
 ---
 
 ## Files Pending Implementation
-- `tasks/code-reviews/CodeReview_orderHelperRender.js.md`
-- `tasks/code-reviews/CodeReview_Settings.js.md`
 - `tasks/code-reviews/CodeReview_orderHelperRender.tableBody.js.md`
 - `tasks/code-reviews/CodeReview_orderHelperRender.utils.js.md`
 - `tasks/code-reviews/CodeReview_worldEntry.js.md`

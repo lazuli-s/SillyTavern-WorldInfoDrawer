@@ -461,21 +461,24 @@ Track all code-review findings across the extension's JS files.
     - Reason: Original checklist step 1 is vague ("Inspect getEditorPanelApi() shape") and should verify if `isDirty` is already exposed. Also, the fix should prefer blocking with warning (simpler) over confirmation dialog (more complex).
   - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path; high-severity data loss risk.
   - Routed to: `QUEUE_USER_REVIEW.md`
-  - Implemented:
+  - Implemented: ❌ Skipped (🚩 requires user input)
+    - Implementation Notes: Skipped — routed to QUEUE_USER_REVIEW.md; requires confirmation on whether existing caller-level dirty guards (drawer.js F07, orderHelper.js F01 via openOrderHelper()) are sufficient or whether a guard inside renderOrderHelper() is still needed.
 
 - **F02** — Custom sort persistence uses fire-and-forget saves, risking race conditions and silent failures
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Reliability issue; users can lose ordering work without clear feedback.
-  - Implemented:
+  - Implemented: ❌ Already fixed
+    - Implementation Notes: Already fixed — renderOrderHelper() uses await saveWorldInfo(...) in a try/catch for...of sequential loop (not void) and is async; applied as part of orderHelper.js F05 (CODE_REVIEW_CHANGELOG.md, February 17, 2026).
 
 - **F03** — Renderer mounts new Order Helper DOM without clearing previous content (duplication / leaks)
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Performance issue; can cause progressive slowdown and ghost interactions.
-  - Implemented:
+  - Implemented: ❌ Already fixed
+    - Implementation Notes: Already fixed — resetEditorState() called at the start of renderOrderHelper() invokes clearEditor() → dom.editor.innerHTML = '' in editorPanel.js, clearing all prior content (including any existing .stwid--orderHelper) before the new body is appended.
 
 ---
 
@@ -855,21 +858,25 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Data integrity issue; users can lose their "useBookSorts: false" preference on reload if it gets serialized as a string.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `parseBooleanSetting(value, defaultValue)` to `utils.js` (accepts booleans, `"true"`/`"false"` strings, and `1`/`0` numbers); replaced the `typeof !== 'boolean'` guard in `Settings.constructor()` with the tolerant parser.
+    - 10 unit tests added to `test/utils.test.js`.
 
 - **F02** — `Object.assign` hydrates arbitrary keys into the Settings instance
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⭕ — Coupling/bloat issue; can carry forward stale keys but has no direct user impact.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `KNOWN_SETTINGS_KEYS` allowlist at module level; replaced `Object.assign` with an explicit `for...of` loop that copies only the three known keys when `Object.hasOwn(saved, key)`.
 
 - **F03** — Overwriting `extension_settings.worldInfoDrawer` with a class instance relies on `toJSON` behavior
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Integration fragility; relies on SillyTavern always calling toJSON during serialization.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Hardened via F02's allowlist hydration (no extra own enumerable props can appear); added inline comment documenting that `JSON.stringify` invokes `toJSON()` so only the three declared fields are persisted. No storage-shape change.
 
 ---
 

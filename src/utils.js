@@ -106,6 +106,22 @@ const executeSlashCommand = async(command)=>{
     }
 };
 
+/**
+ * Parses a potentially non-boolean setting value tolerantly.
+ * Accepts native booleans, the strings "true"/"false", and the numbers 1/0.
+ * Returns `defaultValue` for all other unrecognized inputs, ensuring the
+ * caller's intended default is preserved even when serialization coerces types.
+ * @param {*} value
+ * @param {boolean} defaultValue
+ * @returns {boolean}
+ */
+const parseBooleanSetting = (value, defaultValue) => {
+    if (typeof value === 'boolean') return value;
+    if (value === 'true' || value === 1) return true;
+    if (value === 'false' || value === 0) return false;
+    return defaultValue;
+};
+
 const getOutletPositionValue = ()=>document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
 
 const isOutletPosition = (position)=>{
@@ -121,5 +137,6 @@ export {
     getOutletPositionValue,
     getSortLabel,
     isOutletPosition,
+    parseBooleanSetting,
     safeToSorted,
 };

@@ -6,6 +6,24 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 17, 2026
 
+### `src/Settings.js`
+
+- **F01** — `useBookSorts` validation can silently override persisted false when stored as non-boolean: Added `parseBooleanSetting(value, defaultValue)` to `src/utils.js`; replaced `typeof !== 'boolean'` guard with tolerant parser accepting booleans, `"true"`/`"false"` strings, and `1`/`0` numbers; added 10 unit tests to `test/utils.test.js`.
+- **F02** — `Object.assign` hydrates arbitrary keys into the Settings instance: Added `KNOWN_SETTINGS_KEYS` allowlist constant; replaced `Object.assign` with explicit `for...of` loop that copies only the three declared keys using `Object.hasOwn`.
+- **F03** — Overwriting `extension_settings.worldInfoDrawer` with a class instance relies on `toJSON` behavior: Hardened by F02's allowlist hydration (no extra enumerable own props); added inline comment documenting that `JSON.stringify` invokes `toJSON()`. No storage-shape change.
+
+---
+
+## February 17, 2026
+
+### `src/orderHelperRender.js`
+
+*No changes — all findings were skipped or already resolved.*
+
+---
+
+## February 17, 2026
+
 ### `src/orderHelper.js`
 
 - **F01** — Opening Order Helper can clear the entry editor and lose unsaved typing (no "dirty" guard): Added `getCurrentEditor` dep to `initOrderHelper()`; added dirty guard in `openOrderHelper()` — shows warning toast and returns early for all callers including book-menu shortcut.

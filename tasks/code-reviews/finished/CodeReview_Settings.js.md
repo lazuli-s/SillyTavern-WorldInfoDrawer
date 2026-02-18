@@ -99,10 +99,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Identify how SillyTavern persists `extension_settings` and whether it guarantees boolean round-tripping
-- [ ] Implement a small normalization function for `useBookSorts` that accepts string/number representations
-- [ ] Add a unit test covering `"false"` and `0` inputs (if feasible in this repo's test setup)
-- [ ] Verify default remains `true` when the field is absent
+- [x] Identify how SillyTavern persists `extension_settings` and whether it guarantees boolean round-tripping
+- [x] Implement a small normalization function for `useBookSorts` that accepts string/number representations
+- [x] Add a unit test covering `"false"` and `0` inputs (if feasible in this repo's test setup)
+- [x] Verify default remains `true` when the field is absent
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/utils.js`, `src/Settings.js`, `test/utils.test.js`
+  - Added `parseBooleanSetting(value, defaultValue)` to `src/utils.js` (exported): accepts native booleans, `"true"`/`"false"` strings, and `1`/`0` numbers; returns `defaultValue` for all other inputs.
+  - Replaced the `typeof this.useBookSorts !== 'boolean'` guard in `Settings.constructor()` with `this.useBookSorts = parseBooleanSetting(this.useBookSorts, true)`.
+  - Added 10 unit tests for `parseBooleanSetting` in `test/utils.test.js` covering all accepted types, absent field (`undefined`), `null`, and unrecognized inputs.
+
+- Risks / Side effects
+  - `"false"` and `0` now correctly produce `false` instead of `true` — deliberate behavior fix; negligible regression risk since no current serialization path produces these forms (probability: ⭕)
 
 ---
 
@@ -205,10 +218,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Define an allowlist of known settings keys
-- [ ] Replace `Object.assign` with allowlist-based hydration
-- [ ] Confirm `toJSON()` still produces exactly the intended persisted schema
-- [ ] Smoke test settings load/save after toggling sort options
+- [x] Define an allowlist of known settings keys
+- [x] Replace `Object.assign` with allowlist-based hydration
+- [x] Confirm `toJSON()` still produces exactly the intended persisted schema
+- [x] Smoke test settings load/save after toggling sort options
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/Settings.js`
+  - Added `KNOWN_SETTINGS_KEYS` constant (`['sortLogic', 'sortDirection', 'useBookSorts']`) at module level.
+  - Replaced `Object.assign(this, extension_settings.worldInfoDrawer ?? {})` with an explicit allowlist loop: reads `saved`, then for each key in `KNOWN_SETTINGS_KEYS`, copies the value only if `Object.hasOwn(saved, key)`.
+  - `toJSON()` is unchanged and continues to produce exactly `{ sortLogic, sortDirection, useBookSorts }`.
+
+- Risks / Side effects
+  - Stale/extra keys previously hydrated onto the instance (e.g., from legacy saved data) will no longer be present — this is intentional hardening with no expected user-visible behavior change (probability: ⭕)
 
 ---
 
@@ -310,10 +336,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Confirm how SillyTavern persists `extension_settings` (does it use `JSON.stringify`?)
-- [ ] Audit the Settings instance for any additional enumerable props that could appear over time
-- [ ] If changing storage shape, search usages of `extension_settings.worldInfoDrawer` and ensure compatibility
-- [ ] Verify settings save/load across a full reload
+- [x] Confirm how SillyTavern persists `extension_settings` (does it use `JSON.stringify`?)
+- [x] Audit the Settings instance for any additional enumerable props that could appear over time
+- [x] If changing storage shape, search usages of `extension_settings.worldInfoDrawer` and ensure compatibility
+- [x] Verify settings save/load across a full reload
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/Settings.js`
+  - Added inline comment on `extension_settings.worldInfoDrawer = this` documenting that `JSON.stringify` invokes `toJSON()` on the instance, so only the three declared fields are persisted.
+  - Hardening is accomplished by F02's allowlist hydration: after the fix, the only own enumerable properties on the instance are the three class fields (`sortLogic`, `sortDirection`, `useBookSorts`). No plain-object storage shape change was made.
+  - Confirmed: ST's `saveSettingsDebounced()` calls `JSON.stringify(extension_settings)`, which invokes `toJSON()`. The class methods (`save`, `toJSON`, static `instance` getter) live on the prototype and are non-enumerable — they will not be serialized.
+
+- Risks / Side effects
+  - No code logic changes beyond the comment — the hardening is fully provided by F02 (probability: ⭕)
 
 ---
 
