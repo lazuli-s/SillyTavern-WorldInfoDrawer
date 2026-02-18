@@ -311,6 +311,57 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
+### `src/orderHelper.js`
+-> `CodeReview_orderHelper.js.md`
+
+- **F01** — Opening Order Helper can clear the entry editor and lose unsaved typing (no "dirty" guard)
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Checklist Step 1 redundant (dirty-state API confirmed); Step 3 vague about entry points.
+  - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path; users can lose typed content without warning.
+  - Implemented: ✅
+    - Implementation Notes: Added `getCurrentEditor` dep to `initOrderHelper()`; added dirty guard in `openOrderHelper()` using `getCurrentEditor()` + `isDirty()` — shows warning toast and returns early, protecting all callers including book-menu shortcut.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open an entry, type without saving, then open Order Helper via the book-menu shortcut; confirm a warning toast appears and Order Helper does not open. Save or discard changes; confirm Order Helper opens normally.
+
+- **F02** — Order Helper entry collection can throw if cache/DOM desyncs during updates (missing null guards)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Crash during concurrent updates can disrupt user workflow.
+  - Implemented: ✅
+    - Implementation Notes: Added null guards in `getOrderHelperEntries()` `includeDom` path — validates `uid`, `cache[entryBook]`, and `cache[entryBook].entries[uid]`; stale rows filtered via `.filter(Boolean)`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open Order Helper, then delete a book or trigger a refresh while it is open; interact with sort/filter and confirm no console errors appear and valid rows still display correctly.
+
+- **F03** — Scope comparison is order-sensitive and can cause unnecessary full rerenders
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Step 1 is a decision point, not actionable; race condition claim speculative.
+  - **Neglect Risk:** Low ⭕ — Performance only; no data loss risk.
+  - Implemented: ✅
+    - Implementation Notes: Updated `normalizeScope()` to return `[...scope].sort()` (sorted copy); `isSameScope()` unchanged — index-based comparison is now correct since both inputs are always pre-sorted.
+
+- **F04** — `getOrderHelperSourceEntries()` does repeated `includes()` scans and late book filtering (avoidable overhead)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Performance issue; O(books × scopeSize) overhead in hot paths.
+  - Implemented: ✅
+    - Implementation Notes: Replaced `.includes()` with `Set.has()` (scope built once per call); added early-return fast path for single-book requests to bypass full cache iteration.
+
+- **F05** — Custom-order display index assignment mutates cache and triggers background saves with no error handling
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Step 1 is investigation, not implementation; Step 2 presents options.
+  - **Neglect Risk:** Medium ❗ — Silent persistence failure can cause lost ordering work.
+  - Implemented: ✅
+    - Implementation Notes: Made `renderOrderHelper()` async; replaced fire-and-forget `void saveWorldInfo(...)` loop with awaited sequential `for...of` saves in `try/catch`; shows `toastr.error` on failure.
+    - **🟥 MANUAL CHECK**:
+      - [ ] With multiple books open, switch Order Helper to Custom sort; confirm all entries receive display indexes and no console errors appear. Simulate a network failure or server error and confirm a toast error message appears.
+
+---
+
 ### `src/orderHelperRender.actionBar.js`
 -> `CodeReview_orderHelperRender.actionBar.js.md`
 

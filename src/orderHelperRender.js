@@ -72,7 +72,7 @@ const createOrderHelperRenderer = ({
     /** @type {null | (() => void)} */
     let cleanupBulkEditRow = null;
 
-    const renderOrderHelper = (book = null)=>{
+    const renderOrderHelper = async (book = null)=>{
         if (typeof cleanupBulkEditRow === 'function') {
             cleanupBulkEditRow();
             cleanupBulkEditRow = null;
@@ -100,8 +100,13 @@ const createOrderHelperRenderer = ({
 
         if (orderHelperState.sort === SORT.CUSTOM) {
             const updatedBooks = ensureCustomDisplayIndex(book);
-            for (const bookName of updatedBooks) {
-                void saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            try {
+                for (const bookName of updatedBooks) {
+                    await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+                }
+            } catch (err) {
+                console.error('[STWID] Failed to save custom display index:', err);
+                toastr.error('Failed to save custom sort order. Check console for details.');
             }
         }
         const entries = getOrderHelperEntries(book);

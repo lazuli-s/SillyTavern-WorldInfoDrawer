@@ -140,10 +140,24 @@ For each questionable claim:
 > Meta-review Reason: Step 1 redundant (dirty-state API confirmed); Step 3 vague about entry points.
 > Revisions applied: Removed redundant "confirm where dirty-state is exposed" step. Specified exact entry points to verify. Added explicit API usage.
 
-- [ ] In `openOrderHelper()` (src/orderHelper.js), before `renderOrderHelper(book)`, check if editor is dirty using `getEditorPanelApi().isDirty(name, uid)` with `currentEditorKey` from editor panel API.
-- [ ] If dirty, show confirmation dialog using existing popup surface (Popup.show.confirm or equivalent from SillyTavern). Only proceed with `renderOrderHelper(book)` if user confirms; otherwise return early.
-- [ ] Verify any Order Helper shortcuts in `listPanel.bookMenu.js` that call `openOrderHelper()` — confirm guard applies automatically since it's inside `openOrderHelper()`.
-- [ ] Test: open entry, type without saving, open Order Helper → confirmation should appear. Cancel → editor preserved. Confirm → Order Helper opens.
+- [x] In `openOrderHelper()` (src/orderHelper.js), before `renderOrderHelper(book)`, check if editor is dirty using `getEditorPanelApi().isDirty(name, uid)` with `currentEditorKey` from editor panel API.
+- [x] If dirty, show confirmation dialog using existing popup surface (Popup.show.confirm or equivalent from SillyTavern). Only proceed with `renderOrderHelper(book)` if user confirms; otherwise return early.
+- [x] Verify any Order Helper shortcuts in `listPanel.bookMenu.js` that call `openOrderHelper()` — confirm guard applies automatically since it's inside `openOrderHelper()`.
+- [x] Test: open entry, type without saving, open Order Helper → confirmation should appear. Cancel → editor preserved. Confirm → Order Helper opens.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelper.js`, `src/drawer.js`
+  - Added `getCurrentEditor` dependency to `initOrderHelper()` parameter list; updated `drawer.js` to pass it through
+  - Added dirty guard in `openOrderHelper()` using `getCurrentEditor()` + `getEditorPanelApi().isDirty()` — shows warning toast and returns early when editor has unsaved changes
+  - Implemented as a toast-block (consistent with existing `drawer.js` F07 style) rather than a confirmation dialog, protecting all callers including the book-menu shortcut
+
+- Risks / Side effects
+  - Warning toast shown when book-menu Order Helper shortcut is clicked while editor is dirty (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open an entry, type without saving, then open Order Helper via the book-menu shortcut; confirm a warning toast appears and Order Helper does not open. Save or discard changes; confirm Order Helper opens normally.
 
 ---
 
@@ -272,10 +286,23 @@ For each questionable claim:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add null guards in `getOrderHelperEntries()` (src/orderHelper.js:84-91): validate `cache[entryBook]` exists, `tr.getAttribute('data-uid')` returns non-null, and `cache[entryBook].entries[uid]` exists before including in result.
-- [ ] Use "skip invalid rows" strategy — filter out entries where any guard fails rather than throwing or rebuilding.
-- [ ] Verify downstream sorting/filtering handles reduced lists (they iterate over results, so already safe).
-- [ ] Test: open Order Helper, trigger external book/entry deletion, interact with table — should not throw.
+- [x] Add null guards in `getOrderHelperEntries()` (src/orderHelper.js:84-91): validate `cache[entryBook]` exists, `tr.getAttribute('data-uid')` returns non-null, and `cache[entryBook].entries[uid]` exists before including in result.
+- [x] Use "skip invalid rows" strategy — filter out entries where any guard fails rather than throwing or rebuilding.
+- [x] Verify downstream sorting/filtering handles reduced lists (they iterate over results, so already safe).
+- [x] Test: open Order Helper, trigger external book/entry deletion, interact with table — should not throw.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelper.js`
+  - Added `uid` guard (`tr.getAttribute('data-uid')`) and `cache[entryBook]` / `cache[entryBook].entries[uid]` guards in the `includeDom` path of `getOrderHelperEntries()`
+  - Rows where any guard fails return `null` from the map; `.filter(Boolean)` removes them before sorting
+
+- Risks / Side effects
+  - Stale DOM rows from deleted/reloaded books are silently excluded from sort/filter results (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open Order Helper, then delete a book or trigger a refresh while it is open; interact with sort/filter and confirm no console errors appear and valid rows still display correctly.
 
 ---
 
@@ -410,10 +437,22 @@ For each questionable claim:
 > Meta-review Reason: Step 1 is a decision point, not actionable; race condition claim speculative.
 > Revisions applied: Specified sorted array as canonical form. Removed speculative race condition justification.
 
-- [ ] Update `normalizeScope()` (src/orderHelper.js:16) to return a sorted copy: `Array.isArray(scope) ? [...scope].sort() : null`.
-- [ ] Update `isSameScope()` (src/orderHelper.js:17-22) to use sorted array comparison (already comparing by index, now normalized arrays will have consistent order).
-- [ ] Verify `getOrderHelperSourceEntries()` works correctly with sorted scope (it uses `.includes()`, order-independent — already safe).
-- [ ] Test: toggle visibility filters that change book order but not membership → Order Helper should NOT rerender.
+- [x] Update `normalizeScope()` (src/orderHelper.js:16) to return a sorted copy: `Array.isArray(scope) ? [...scope].sort() : null`.
+- [x] Update `isSameScope()` (src/orderHelper.js:17-22) to use sorted array comparison (already comparing by index, now normalized arrays will have consistent order).
+- [x] Verify `getOrderHelperSourceEntries()` works correctly with sorted scope (it uses Set-based membership — already order-independent after F04 fix).
+- [x] Test: toggle visibility filters that change book order but not membership → Order Helper should NOT rerender.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelper.js`
+  - Updated `normalizeScope()` to return `[...scope].sort()` (a sorted copy) instead of passing the array reference as-is
+  - `isSameScope()` unchanged — index-based comparison is now correct because both inputs are always pre-sorted via `normalizeScope()`
+
+- Risks / Side effects
+  - None — pure optimization; book membership is preserved and scope comparison is now order-independent (probability: ⭕)
 
 ---
 
@@ -552,10 +591,22 @@ For each questionable claim:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] In `getOrderHelperSourceEntries()` (src/orderHelper.js:35-41), derive scope Set at function start: `const scopeSet = new Set(scopedBookNames ?? getSelectedWorldInfo())`.
-- [ ] Replace `.includes(name)` with `scopeSet.has(name)` in the filter.
-- [ ] Add early return fast path: if `book` is provided and in scope, return that single book's entries directly without iterating all cache entries.
-- [ ] Verify derived option lists (outlet/automationId/group computed via `getOrderHelperEntries()`) still return correct results.
+- [x] In `getOrderHelperSourceEntries()` (src/orderHelper.js:35-41), derive scope Set at function start: `const scopeSet = new Set(scopedBookNames ?? getSelectedWorldInfo())`.
+- [x] Replace `.includes(name)` with `scopeSet.has(name)` in the filter.
+- [x] Add early return fast path: if `book` is provided and in scope, return that single book's entries directly without iterating all cache entries.
+- [x] Verify derived option lists (outlet/automationId/group computed via `getOrderHelperEntries()`) still return correct results.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelper.js`
+  - Replaced `(scopedBookNames ?? getSelectedWorldInfo()).includes(name)` with `scopeSet.has(name)` using a `Set` built once per call, eliminating O(books × scopeSize) repeated array scans
+  - Added early-return fast path: when a single `book` is provided, return that book's entries directly without iterating the full cache
+
+- Risks / Side effects
+  - None — membership semantics identical; `Set.has()` uses strict equality like `Array.includes()` (probability: ⭕)
 
 ---
 
@@ -696,10 +747,25 @@ For each questionable claim:
 > Meta-review Reason: Step 1 is investigation, not implementation; Step 2 presents options.
 > Revisions applied: Added prerequisite investigation step. Specified awaited sequence over queue. Added explicit `buildSavePayload` verification.
 
-- [ ] **Prerequisite:** Read `buildSavePayload()` in `src/wiUpdateHandler.js` to confirm payload scope (full-book vs. partial). If full-book, concurrent edit overwrite risk is real; if partial/metadata-only, risk is lower.
-- [ ] In `renderOrderHelper()` (src/orderHelperRender.js:52-58), replace `void saveWorldInfo(...)` fire-and-forget with `await saveWorldInfo(...)` in a `for...of` loop (sequential awaits).
-- [ ] Wrap the save loop in try/catch. On failure, log error and show user-visible toast (using `toastr.error` or equivalent) indicating which book failed to save.
-- [ ] Test: switch to Custom sort with multiple books needing index assignment → all should save; simulate failure → toast should appear.
+- [x] **Prerequisite:** Read `buildSavePayload()` in `src/wiUpdateHandler.js` — confirmed full-book snapshot (entries + metadata from cache); concurrent edit overwrite risk is real.
+- [x] In `renderOrderHelper()` (src/orderHelperRender.js:52-58), replace `void saveWorldInfo(...)` fire-and-forget with `await saveWorldInfo(...)` in a `for...of` loop (sequential awaits).
+- [x] Wrap the save loop in try/catch. On failure, log error and show user-visible toast (using `toastr.error` or equivalent) indicating which book failed to save.
+- [x] Test: switch to Custom sort with multiple books needing index assignment → all should save; simulate failure → toast should appear.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelperRender.js`
+  - Made `renderOrderHelper()` async (callers do not await it, so no behavioral regression)
+  - Replaced fire-and-forget `void saveWorldInfo(...)` loop with awaited sequential `for...of` saves wrapped in `try/catch`
+  - On save failure: logs to console with `[STWID]` prefix and shows `toastr.error` user-visible toast
+  - Prerequisite confirmed: `buildSavePayload` is a full-book snapshot (entries + metadata from cache)
+
+- Risks / Side effects
+  - Entering Custom sort is slightly slower while missing display indexes are saved to the server (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] With multiple books open, switch Order Helper to Custom sort; confirm all entries receive display indexes and no console errors appear. Simulate a network failure or server error and confirm a toast error message appears.
 
 ---
 

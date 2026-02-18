@@ -86,6 +86,7 @@ export const initDrawer = ({
             getSelectedWorldInfo: ()=>selected_world_info,
             getListPanelApi: ()=>listPanelApi,
             getEditorPanelApi: ()=>editorPanelApi,
+            getCurrentEditor,
             debounce,
             isTrueBoolean,
             SlashCommandParser,

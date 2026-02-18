@@ -1,8 +1,18 @@
-﻿# Code Review Implementation Changelog
+# Code Review Implementation Changelog
 
 Changes applied from code review findings across the extension's source files.
 
 ---
+
+## February 17, 2026
+
+### `src/orderHelper.js`
+
+- **F01** — Opening Order Helper can clear the entry editor and lose unsaved typing (no "dirty" guard): Added `getCurrentEditor` dep to `initOrderHelper()`; added dirty guard in `openOrderHelper()` — shows warning toast and returns early for all callers including book-menu shortcut.
+- **F02** — Order Helper entry collection can throw if cache/DOM desyncs during updates (missing null guards): Added `uid`, `cache[entryBook]`, and `cache[entryBook].entries[uid]` guards in the `includeDom` path; stale rows filtered via `.filter(Boolean)`.
+- **F03** — Scope comparison is order-sensitive and can cause unnecessary full rerenders: Updated `normalizeScope()` to return `[...scope].sort()` so `isSameScope()` index-based comparison is now order-independent.
+- **F04** — `getOrderHelperSourceEntries()` does repeated `includes()` scans and late book filtering (avoidable overhead): Replaced `.includes()` with `Set.has()` and added early-return fast path for single-book requests.
+- **F05** — Custom-order display index assignment mutates cache and triggers background saves with no error handling: Made `renderOrderHelper()` async and replaced fire-and-forget saves with awaited sequential `for...of` saves in `try/catch` with `toastr.error` on failure.
 
 ## February 18, 2026
 

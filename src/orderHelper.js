@@ -24,6 +24,7 @@ export const initOrderHelper = ({
     getSelectedWorldInfo,
     getListPanelApi,
     getEditorPanelApi,
+    getCurrentEditor,
     debounce,
     isTrueBoolean,
     SlashCommandParser,
@@ -38,7 +39,7 @@ export const initOrderHelper = ({
     const AUTOMATION_ID_NONE_VALUE = '';
     const GROUP_NONE_VALUE = '';
     let scopedBookNames = null;
-    const normalizeScope = (scope)=>Array.isArray(scope) ? scope : null;
+    const normalizeScope = (scope)=>Array.isArray(scope) ? [...scope].sort() : null;
     const isSameScope = (a, b)=>{
         if (a === b) return true;
         if (!Array.isArray(a) || !Array.isArray(b)) return false;
@@ -58,11 +59,17 @@ export const initOrderHelper = ({
         return String(a.uid).localeCompare(String(b.uid));
     };
 
-    const getOrderHelperSourceEntries = (book = orderHelperState.book)=>Object.entries(cache)
-        .filter(([name])=>(scopedBookNames ?? getSelectedWorldInfo()).includes(name))
-        .map(([name,data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
-        .flat()
-        .filter((entry)=>!book || entry.book === book);
+    const getOrderHelperSourceEntries = (book = orderHelperState.book)=>{
+        const scopeSet = new Set(scopedBookNames ?? getSelectedWorldInfo());
+        if (book) {
+            if (!scopeSet.has(book) || !cache[book]) return [];
+            return Object.values(cache[book].entries).map(it=>({ book, data:it }));
+        }
+        return Object.entries(cache)
+            .filter(([name])=>scopeSet.has(name))
+            .map(([name, data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
+            .flat();
+    };
 
     const ensureCustomDisplayIndex = (book = orderHelperState.book)=>{
         const source = getOrderHelperSourceEntries(book);
@@ -99,12 +106,17 @@ export const initOrderHelper = ({
     const getOrderHelperEntries = (book = orderHelperState.book, includeDom = false)=>{
         const source = includeDom && dom.order.entries && dom.order.tbody
             ? Object.entries(dom.order.entries)
-                .map(([entryBook, entries])=>Object.values(entries).map(tr=>({
-                    book: entryBook,
-                    dom: tr,
-                    data: cache[entryBook].entries[tr.getAttribute('data-uid')],
-                })))
+            .map(([entryBook, entries])=>Object.values(entries).map(tr=>{
+                    const uid = tr.getAttribute('data-uid');
+                    if (!uid || !cache[entryBook] || !cache[entryBook].entries[uid]) return null;
+                    return {
+                        book: entryBook,
+                        dom: tr,
+                        data: cache[entryBook].entries[uid],
+                    };
+                }))
                 .flat()
+                .filter(Boolean)
             : getOrderHelperSourceEntries(book);
         return sortEntries(source, orderHelperState.sort, orderHelperState.direction)
             .filter((entry)=>!book || entry.book === book);
@@ -375,6 +387,16 @@ export const initOrderHelper = ({
 
     const openOrderHelper = (book = null, scope = null)=>{
         if (!dom.order.toggle) return;
+
+        // Dirty guard: block opening if the entry editor has unsaved changes.
+        // Protects all callers (toggle button, book-menu shortcut, etc.)
+        // without requiring each call site to implement its own check.
+        const currentEditor = getCurrentEditor?.();
+        const dirty = Boolean(currentEditor && getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
+        if (dirty) {
+            toastr.warning('Unsaved edits detected. Save or discard changes before opening Order Helper.');
+            return;
+        }
 
         // Ensure DOM-derived filter option lists (strategy/position) are loaded
         // at the time Order Helper is opened. These can be empty during early init
