@@ -6,8 +6,4 @@ Code review files queued for meta-review; entries are added after a `CodeReview_
 
 ## Files Pending Meta-Review
 
-- `src/lorebookFolders.js`
-- `src/Settings.js`
-- `src/orderHelper.js`
-- `src/orderHelperRender.js`
-- `src/orderHelperFilters.js`
+*No files pending meta-review.*

@@ -196,12 +196,6 @@ If the list of books/entries changes while Order Helper is open (for example, du
     - If missing, exclude that row from the returned entries list (or fall back to `getOrderHelperSourceEntries()`).
   - Consider also cleaning up `dom.order.entries` for missing books/uids when detected.
 
-- **Implementation Checklist:**
-  - [ ] Add null guards around `cache[entryBook]` and the uid lookup in `getOrderHelperEntries(includeDom=true)`.
-  - [ ] Decide a fallback strategy (skip invalid rows vs. rebuild from source).
-  - [ ] Ensure downstream sorting/filtering functions can handle reduced entry lists without breaking.
-  - [ ] Add a minimal test plan note: "delete an entry/book while Order Helper is open; Order Helper should not crash".
-
 - **Fix risk:** Low 🟢
   - Mostly defensive checks and graceful degradation.
 
@@ -330,12 +324,6 @@ Order Helper can rerender its entire UI even when the set of books in scope is e
     - clone + sort
     - or convert to `Set` and compare membership.
   - Keep `normalizeScope()` responsible for canonicalization, so `isSameScope()` becomes straightforward.
-
-- **Implementation Checklist:**
-  - [ ] Decide on a canonical scope representation (sorted array vs. Set).
-  - [ ] Update `normalizeScope()` to return the canonical form.
-  - [ ] Update `isSameScope()` accordingly.
-  - [ ] Verify `getOrderHelperSourceEntries()` still behaves correctly with the normalized representation.
 
 - **Fix risk:** Low 🟢
   - The behavior (which books are included) stays the same; only avoids unnecessary rerenders.
@@ -474,12 +462,6 @@ Some Order Helper computations repeatedly scan arrays and process more data than
 - **Proposed fix:**
   - Convert the scope list into a `Set` once (per render/scope update) and use `set.has(name)` instead of `.includes`.
   - If `book` is provided, short-circuit to only that book's entries instead of building/flattening everything first.
-
-- **Implementation Checklist:**
-  - [ ] Introduce a canonical "scopeSet" derived from `scopedBookNames` / `getSelectedWorldInfo()`.
-  - [ ] Update `getOrderHelperSourceEntries()` to use `Set.has`.
-  - [ ] Add a fast path: if `book` is non-null, only consider that book's cache data.
-  - [ ] Verify derived option lists (outlet/automationId/group) still reflect the intended scope.
 
 - **Fix risk:** Low 🟢
   - Purely internal performance improvement with no functional change intended.
@@ -628,12 +610,6 @@ When using "Custom" sort, Order Helper may silently write missing display indexe
     - await saves (or queue them through the existing update/wait primitives)
     - add minimal error handling/notification if a save fails
   - Consider ensuring the save payload is narrowly scoped to the minimal needed change (only `extensions.display_index`), if the architecture supports it.
-
-- **Implementation Checklist:**
-  - [ ] Trace `buildSavePayload(bookName)` to confirm whether it's full-book and how it relates to cache state.
-  - [ ] Replace fire-and-forget saves with an awaited sequence or a controlled queue.
-  - [ ] Add failure handling (log + user-visible toast/popup if appropriate).
-  - [ ] Add a regression note: "switching to Custom should not silently fail to persist indices".
 
 - **Fix risk:** Medium 🟡
   - Awaiting saves may change perceived responsiveness when entering Custom sort.
