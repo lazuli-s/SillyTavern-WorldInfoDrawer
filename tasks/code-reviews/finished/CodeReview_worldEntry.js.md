@@ -131,8 +131,20 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update the `status` click handler in `src/worldEntry.js` to stop propagation unconditionally.
-- [ ] Verify row status controls still toggle entry state/strategy without re-triggering `openEntryEditor()`.
+- [x] Update the `status` click handler in `src/worldEntry.js` to stop propagation unconditionally.
+- [x] Verify row status controls still toggle entry state/strategy without re-triggering `openEntryEditor()`.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/worldEntry.js`
+  - Removed the conditional check from the `status` click handler; `evt.stopPropagation()` now fires unconditionally for all status-control clicks, regardless of whether the row is the active editor row.
+
+- Risks / Side effects
+  - Status-container clicks no longer bubble to the row `entry` click handler — this is the intended fix (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Click the enable toggle and strategy selector on the currently-open editor row; confirm `openEntryEditor` is not re-triggered and both controls still change entry state correctly.
 
 ---
 
@@ -254,9 +266,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a local `isSavingState` flag for each rendered entry row.
-- [ ] In both handlers, return early when `isSavingState` is true.
-- [ ] Set `isSavingState=true` before `saveWorldInfo(...)`, disable controls, then restore in `finally`.
+- [x] Add a local `isSavingState` flag for each rendered entry row.
+- [x] In both handlers, return early when `isSavingState` is true.
+- [x] Set `isSavingState=true` before `saveWorldInfo(...)`, disable controls, then restore in `finally`.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/worldEntry.js`
+  - Added `let isSavingState = false` per-row guard shared by both `isEnabled` and `strat` handlers.
+  - Both handlers return early if `isSavingState` is `true`; each sets `isSavingState = true` and disables the control before the awaited save, then restores both in `finally`.
+
+- Risks / Side effects
+  - Controls are briefly disabled during save; rapid successive clicks are silently dropped rather than queued (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Click the enable toggle twice in rapid succession; confirm only one save fires and the final visual state matches the last committed toggle.
 
 ---
 
@@ -374,10 +399,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Snapshot previous entry values before mutation in both handlers.
-- [ ] Wrap each `saveWorldInfo(...)` call in `try/catch`.
-- [ ] On catch, restore previous cache values and row-control UI (`applyEnabledIcon`, `strat.value`).
-- [ ] Emit a user-visible error toast on save failure.
+- [x] Snapshot previous entry values before mutation in both handlers.
+- [x] Wrap each `saveWorldInfo(...)` call in `try/catch`.
+- [x] On catch, restore previous cache values and row-control UI (`applyEnabledIcon`, `strat.value`).
+- [x] Emit a user-visible error toast on save failure.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/worldEntry.js`
+  - `isEnabled` handler: snapshots `prevDisabled` before mutation; on `catch`, restores `cache[name].entries[e.uid].disable` and calls `applyEnabledIcon(prevDisabled)`, then shows `toastr.error('Failed to save entry state...')`.
+  - `strat` handler: snapshots `prevConstant`/`prevVectorized` before mutation; on `catch`, restores both cache fields and resets `strat.value` via `entryState({ constant: prevConstant, vectorized: prevVectorized })`, then shows `toastr.error('Failed to save entry strategy...')`.
+
+- Risks / Side effects
+  - If a `WORLDINFO_UPDATED` event fires between a failed save and the rollback, the cache may already reflect the correct server state; the rollback would then re-apply stale pre-mutation values (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Simulate a save failure (e.g., interrupt the network), then toggle an entry's enable state; confirm the control visually reverts to its pre-toggle value and a red error toast appears.
 
 ---
 
@@ -498,9 +536,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Remove early returns tied to `!isEnabled` and `!strat`.
-- [ ] Guard control creation blocks so row construction continues when either template is missing.
-- [ ] Ensure final insertion (`before...` / `entryList.append`) and click handlers always run.
+- [x] Remove early returns tied to `!isEnabled` and `!strat`.
+- [x] Guard control creation blocks so row construction continues when either template is missing.
+- [x] Ensure final insertion (`before...` / `entryList.append`) and click handlers always run.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/worldEntry.js`
+  - Replaced `if (!isEnabled) return entry` with an `if (isEnabled) { … }` guard block; replaced `if (!strat) return entry` with an `if (strat) { … }` guard block.
+  - Row insertion (`world.dom.entryList.append(entry)` / `before.insertAdjacentElement`) and the entry `click` handler now always execute regardless of template availability.
+
+- Risks / Side effects
+  - If both templates are absent, rows render without enable/strategy controls; callers reading `world.dom.entry[e.uid].isEnabled` or `.strategy` will see `undefined` (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Open a book with normal templates in place; confirm all entry rows render with enable toggles and strategy selectors visible, and that clicking them behaves as before.
 
 ---
 

@@ -6,6 +6,17 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/worldEntry.js`
+
+- **F01** — Clicking status controls on the active row can re-open the editor and discard unsaved text: Changed `status` click handler to call `evt.stopPropagation()` unconditionally, removing the conditional active-row check so status-control clicks never bubble to the entry row click handler.
+- **F02** — Rapid toggle/strategy changes can race and persist stale state out of order: Added `let isSavingState = false` per-row guard shared by `isEnabled` and `strat` handlers; both handlers return early when a save is in-flight, disable the control before save, and restore in `finally`.
+- **F03** — Save failures leave optimistic UI/cache mutations without rollback: Added try/catch with snapshot-based rollback to both handlers — `isEnabled` restores `prevDisabled` + icon; `strat` restores `prevConstant`/`prevVectorized` + `strat.value` via `entryState`; both emit `toastr.error` on failure.
+- **F04** — Missing template controls cause early return with a partially initialized, non-inserted row: Replaced `if (!isEnabled) return entry` and `if (!strat) return entry` with `if (isEnabled) { … }` and `if (strat) { … }` guard blocks so row insertion and click handlers always run.
+
+---
+
+## February 18, 2026
+
 ### `src/orderHelperRender.utils.js`
 
 - **F01** — `setTooltip()` can throw if `text` is not a string (missing type guard): Split combined guard into `if (!element) return;` + `if (typeof text !== 'string' || text.trim() === '') return;`; added `effectiveAriaLabel` type check so non-string `ariaLabel` values fall back to normalized text.

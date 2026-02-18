@@ -672,28 +672,40 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path on common interaction; users can lose typed content without warning.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Changed `status` click handler to call `evt.stopPropagation()` unconditionally, preventing status-control clicks from bubbling to the entry row click handler in all cases.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Click the enable toggle and strategy selector on the currently-open editor row; confirm `openEntryEditor` is not re-triggered and both controls still change entry state correctly.
 
 - **F02** -- Rapid toggle/strategy changes can race and persist stale state out of order
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Race condition can cause user-visible state inconsistency where controls show one value but persisted state reverts.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `let isSavingState = false` per-row guard; both `isEnabled` and `strat` handlers return early when `isSavingState` is `true`, disable the control before save, and restore in `finally`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Click the enable toggle twice in rapid succession; confirm only one save fires and the final visual state matches the last committed toggle.
 
 - **F03** -- Save failures leave optimistic UI/cache mutations without rollback
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Failed saves leave confusing UI state; users may think changes were saved when they weren't.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added try/catch with snapshot-based rollback to both handlers — `isEnabled` restores `prevDisabled` + icon; `strat` restores `prevConstant`/`prevVectorized` + `strat.value` via `entryState`; both show `toastr.error` on failure.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Simulate a save failure (e.g., interrupt the network), then toggle an entry's enable state; confirm the control visually reverts to its pre-toggle value and a red error toast appears.
 
 - **F04** -- Missing template controls cause early return with a partially initialized, non-inserted row
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⬜ — Edge case failure mode; template availability is generally stable.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Replaced `if (!isEnabled) return entry` and `if (!strat) return entry` with `if (isEnabled) { … }` and `if (strat) { … }` guards; row insertion and entry click handler now always execute regardless of template availability.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open a book with normal templates in place; confirm all entry rows render with enable toggles and strategy selectors visible, and that clicking them behaves as before.
 
 ---
 

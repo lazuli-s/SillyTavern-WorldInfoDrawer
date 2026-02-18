@@ -122,12 +122,16 @@ export const renderEntry = async(e, name, before = null)=>{
         }
         const status = document.createElement('div'); {
             status.classList.add('stwid--status');
+            // F01: always stop propagation so status-control clicks never re-open the editor
             status.addEventListener('click', (evt)=>{
-                if (context.currentEditor?.name != name || context.currentEditor?.uid != e.uid) evt.stopPropagation();
+                evt.stopPropagation();
             });
+            // F02: per-row in-flight save guard — prevents concurrent saves from racing
+            let isSavingState = false;
             const isEnabledTemplate = document.querySelector('#entry_edit_template [name="entryKillSwitch"]');
-            const isEnabled = /**@type {HTMLSelectElement}*/(isEnabledTemplate?.cloneNode(true)); {
-                if (!isEnabled) return entry;
+            const isEnabled = /**@type {HTMLSelectElement}*/(isEnabledTemplate?.cloneNode(true));
+            // F04: guard instead of early return — row construction continues if template is missing
+            if (isEnabled) {
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
                 isEnabled.title = 'Enable/disable this entry';
@@ -140,22 +144,44 @@ export const renderEntry = async(e, name, before = null)=>{
 
                 applyEnabledIcon(e.disable);
                 isEnabled.addEventListener('click', async()=>{
-                    const nextDisabled = !context.cache[name].entries[e.uid].disable;
+                    // F02: skip if a save is already in-flight for this row
+                    if (isSavingState) return;
+                    // F03: snapshot previous state for rollback on save failure
+                    const prevDisabled = context.cache[name].entries[e.uid].disable;
+                    const nextDisabled = !prevDisabled;
                     context.cache[name].entries[e.uid].disable = nextDisabled;
                     applyEnabledIcon(nextDisabled);
-                    await context.saveWorldInfo(name, context.buildSavePayload(name), true);
+                    isSavingState = true;
+                    isEnabled.disabled = true;
+                    try {
+                        await context.saveWorldInfo(name, context.buildSavePayload(name), true);
+                    } catch (err) {
+                        // F03: rollback cache and UI on save failure
+                        context.cache[name].entries[e.uid].disable = prevDisabled;
+                        applyEnabledIcon(prevDisabled);
+                        toastr.error('Failed to save entry state. Changes were not persisted.');
+                    } finally {
+                        isSavingState = false;
+                        isEnabled.disabled = false;
+                    }
                 });
                 status.append(isEnabled);
             }
             const stratTemplate = document.querySelector('#entry_edit_template [name="entryStateSelector"]');
-            const strat = /**@type {HTMLSelectElement}*/(stratTemplate?.cloneNode(true)); {
-                if (!strat) return entry;
+            const strat = /**@type {HTMLSelectElement}*/(stratTemplate?.cloneNode(true));
+            // F04: guard instead of early return — row construction continues if template is missing
+            if (strat) {
                 world.dom.entry[e.uid].strategy = strat;
                 strat.classList.add('stwid--strategy');
                 strat.title = 'Entry strategy';
                 strat.setAttribute('aria-label', 'Entry strategy');
                 strat.value = entryState(e);
                 strat.addEventListener('change', async()=>{
+                    // F02: skip if a save is already in-flight for this row
+                    if (isSavingState) return;
+                    // F03: snapshot previous state for rollback on save failure
+                    const prevConstant = context.cache[name].entries[e.uid].constant;
+                    const prevVectorized = context.cache[name].entries[e.uid].vectorized;
                     const value = strat.value;
                     switch (value) {
                         case 'constant': {
@@ -174,7 +200,20 @@ export const renderEntry = async(e, name, before = null)=>{
                             break;
                         }
                     }
-                    await context.saveWorldInfo(name, context.buildSavePayload(name), true);
+                    isSavingState = true;
+                    strat.disabled = true;
+                    try {
+                        await context.saveWorldInfo(name, context.buildSavePayload(name), true);
+                    } catch (err) {
+                        // F03: rollback cache and UI on save failure
+                        context.cache[name].entries[e.uid].constant = prevConstant;
+                        context.cache[name].entries[e.uid].vectorized = prevVectorized;
+                        strat.value = entryState({ constant: prevConstant, vectorized: prevVectorized });
+                        toastr.error('Failed to save entry strategy. Changes were not persisted.');
+                    } finally {
+                        isSavingState = false;
+                        strat.disabled = false;
+                    }
                 });
                 status.append(strat);
             }
