@@ -6,6 +6,13 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/lorebookFolders.js`
+
+- **F01** — `createBookInFolder` assumes `loadWorldInfo()` always succeeds and returns an object: Added a null/object guard after book creation load, warning toast/logging on failure, and a safe early return that preserves the created book for manual reassignment.
+- **F02** — Folder import can miss the update event if it fires before `waitForWorldInfoUpdate` is registered: Moved update-wait registration before import start, kept timeout fallback behavior, and added timeout warning logs for troubleshooting.
+
+## February 18, 2026
+
 ### `src/listPanel.state.js`
 
 - **F01** — State caches use plain objects with user-controlled keys (prototype pollution / key collisions): Replaced state object maps with null-prototype maps, added key normalization/validation, and updated folder collapse accessors to use validated state APIs.

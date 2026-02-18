@@ -356,6 +356,33 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
+### `src/orderHelperRender.js`
+-> `CodeReview_orderHelperRender.js.md`
+
+- **F01** — Opening Order Helper can silently wipe unsaved editor work (forced editor reset)
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Original checklist step 1 is vague ("Inspect getEditorPanelApi() shape") and should verify if `isDirty` is already exposed. Also, the fix should prefer blocking with warning (simpler) over confirmation dialog (more complex).
+  - **Neglect Risk:** High ❗❗ — Direct unsaved-edit loss path; high-severity data loss risk.
+  - Routed to: `QUEUE_USER_REVIEW.md`
+  - Implemented:
+
+- **F02** — Custom sort persistence uses fire-and-forget saves, risking race conditions and silent failures
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Reliability issue; users can lose ordering work without clear feedback.
+  - Implemented:
+
+- **F03** — Renderer mounts new Order Helper DOM without clearing previous content (duplication / leaks)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Performance issue; can cause progressive slowdown and ghost interactions.
+  - Implemented:
+
+---
+
 ### `src/orderHelperRender.utils.js`
 -> `CodeReview_orderHelperRender.utils.js.md`
 
@@ -706,13 +733,46 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Null return from loadWorldInfo can cause crash; leaves partially created books without folder metadata.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added a null/object guard in `createBookInFolder`, warned/logged on load failure, and kept the newly created book unchanged for manual folder assignment.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Create a new book in a folder while `loadWorldInfo` is failing (or temporarily forced to return `null`); confirm a warning appears, the new book still exists, and no console exception is thrown.
 
 - **F02** — Folder import can miss the update event if it fires before `waitForWorldInfoUpdate` is registered
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Race condition causes failed folder assignment with misleading warning.
+  - Implemented: ✅
+    - Implementation Notes: Registered `waitForWorldInfoUpdate()` before `openImportDialog()`, kept timeout fallback behavior, and added timeout logging.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Import a folder and confirm books are auto-assigned to the folder without the timeout warning when import succeeds.
+      - [ ] Cancel the import dialog, then perform another WI update (for example, save any book); confirm no unexpected folder moves or console errors occur.
+
+---
+
+### `src/Settings.js`
+-> `CodeReview_Settings.js.md`
+
+- **F01** — `useBookSorts` validation can silently override persisted false when stored as non-boolean
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Data integrity issue; users can lose their "useBookSorts: false" preference on reload if it gets serialized as a string.
+  - Implemented:
+
+- **F02** — `Object.assign` hydrates arbitrary keys into the Settings instance
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⭕ — Coupling/bloat issue; can carry forward stale keys but has no direct user impact.
+  - Implemented:
+
+- **F03** — Overwriting `extension_settings.worldInfoDrawer` with a class instance relies on `toJSON` behavior
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Integration fragility; relies on SillyTavern always calling toJSON during serialization.
   - Implemented:
 
 ---

@@ -166,6 +166,12 @@ const createBookInFolder = async({
     const created = await createNewWorldInfo(finalName, { interactive: true });
     if (!created) return null;
     const data = await loadWorldInfo(finalName);
+    if (!data || typeof data !== 'object') {
+        console.warn(`[STWID] Failed to load newly created book "${finalName}" for folder assignment.`);
+        toastr.warning(`Created "${finalName}", but it could not be placed into folder "${folderName}". You can move it manually.`);
+        await refreshList?.();
+        return finalName;
+    }
     const metadata = data.metadata ?? {};
     const updated = setFolderInMetadata(metadata, folderName);
     if (!updated.ok) return null;
@@ -416,6 +422,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             // Prefer an import-specific identifier: the JSON file's declared
                                             // book names. This lets us only assign imported books to the folder.
                                             const beforeNames = new Set(menuActions.getWorldNames());
+                                            const updatePromise = menuActions.waitForWorldInfoUpdate?.();
                                             const importPayload = await menuActions.openImportDialog();
                                             if (!importPayload) return;
                                             const expectedBookNames = getFolderImportBookNames(importPayload);
@@ -423,13 +430,12 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                                 toastr.warning('This import format cannot be attributed safely. New books will not be auto-moved into the folder.');
                                                 return;
                                             }
-
-                                            const updatePromise = menuActions.waitForWorldInfoUpdate?.();
                                             const hasUpdate = await Promise.race([
                                                 updatePromise ? updatePromise.then(()=>true) : Promise.resolve(false),
                                                 new Promise((resolve)=>setTimeout(()=>resolve(false), 15000)),
                                             ]);
                                             if (!hasUpdate) {
+                                                console.warn(`[STWID] Folder import timed out waiting for WORLDINFO_UPDATED for folder "${folderName}".`);
                                                 toastr.warning('Import did not complete in time. No books were moved into the folder.');
                                                 return;
                                             }
