@@ -6,6 +6,16 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 17, 2026
 
+### `src/listPanel.js`
+
+- **F01** — Race: `setBookSortPreference()` can crash or reorder stale DOM after an awaited save: Added refresh-token stale-continuation guard, sortable DOM validation, and skip-with-warning handling for stale post-save sort paths.
+- **F02** — Data integrity: `setBookSortPreference()` writes via `buildSavePayload()` from cache (risk of overwriting newer book data): Switched sort preference persistence to load-latest/clone/metadata-patch/save and synced cache metadata after save.
+- **F03** — Async ordering: `refreshList()` awaits a debounced loader, which can drop/merge refresh requests and produce stale UI: Added refresh worker token sequencing so callers await the newest completed refresh before resolving.
+- **F04** — Potential memory leak / duplicate handlers if `initListPanel()` runs more than once: Added `teardownListPanel()` cleanup, idempotent init guard, and `destroyListPanel` API exposure for safe re-init behavior.
+- **F05** — UI correctness edge case: `renderBookSourceLinks()` clears container with `innerHTML = ''` (focus/selection can be lost): Replaced full container reset with keyed icon diffing that preserves nodes and updates tooltip/aria text in place.
+
+## February 17, 2026
+
 ### `src/constants.js`
 
 - **F01** â€” `SORT_DIRECTION` docstrings are incorrect/misaligned with actual meaning: Corrected ascending/descending docstrings to direction semantics without changing runtime values.
@@ -48,5 +58,4 @@ Changes applied from code review findings across the extension's source files.
 - **F03** Ã¢â‚¬â€ Delete handler reads live `selectionState` across `await` Ã¢â‚¬â€ can delete wrong entries: Snapshotted `selectFrom` and selected UIDs at keypress time so async delete runs against a stable selection.
 - **F06** Ã¢â‚¬â€ Splitter drag lifecycle missing `pointercancel` Ã¢â‚¬â€ listeners can leak: Added `pointercancel` + `lostpointercapture` termination paths to ensure drag listeners always detach and width is persisted.
 - **F07** Ã¢â‚¬â€ Toggling Activation Settings / Order Helper clears entry editor without dirty-state guard: Added dirty guards + warning toasts to block mode switches that would clear the editor while unsaved edits exist.
-
 

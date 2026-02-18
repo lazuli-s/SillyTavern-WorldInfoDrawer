@@ -7,7 +7,7 @@ Track all code-review findings across the extension's JS files.
 - **Meta-reviewed**: Has this finding already been meta-reviewed by a second LLM? [ ] or [X]
 - **Verdict**: Ready to implement 🟢 / Implementation plan needs revision 🟡 / Implementation plan is not usable 🔴
 - **Reason**: If rejected, why
-- **Implemented**: Has the implementation plan been implemented? ❌ or ✔
+- **Implemented**: Has the implementation plan been implemented? ❌ or ✅
   - **Implementation Notes**:
   - **🧪 MANUAL CHECK**: [] checklist for the user
 
@@ -38,13 +38,13 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Best practice violation; only affects dev workflow.
+  - **Neglect Risk:** Low ⬜ — Best practice violation; only affects dev workflow.
   - Implemented:
 
 ---
 
 ### `src/drawer.js`
-→ `CodeReview_drawer.js.md`
+-> `CodeReview_drawer.js.md`
 
 - **F01** — New-book creation awaits non-specific "update started" promise — race with cache init
   - Meta-reviewed: [X]
@@ -158,7 +158,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Best practice violation; listener leak only affects re-init scenarios.
+  - **Neglect Risk:** Low ⬜ — Best practice violation; listener leak only affects re-init scenarios.
   - Implemented:
 
 ---
@@ -218,7 +218,7 @@ Track all code-review findings across the extension's JS files.
 ---
 
 ### `src/bookSourceLinks.js`
-→ `CodeReview_bookSourceLinks.js.md`
+-> `CodeReview_bookSourceLinks.js.md`
 
 - **F01** — `cleanup()` does not unsubscribe `eventSource` listeners (leak / duplicate refresh on re-init)
   - Meta-reviewed: [X]
@@ -265,7 +265,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ -- Documentation-only mismatch; leaving it unfixed mainly risks developer confusion.
+  - **Neglect Risk:** Low ⬜ -- Documentation-only mismatch; leaving it unfixed mainly risks developer confusion.
   - Implemented: ✅
     - Implementation Notes: Corrected `SORT_DIRECTION` docstrings to describe ascending/descending semantics without changing runtime values.
     - **🧪 MANUAL CHECK**:
@@ -295,7 +295,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Implementation plan discarded 🔴
     - Reason: Requires extensive analysis to validate absence of runtime mutation paths; freezing could introduce runtime exceptions.
-  - **Neglect Risk:** Low ⚪ -- No evidence of current mutation; risk is mostly hypothetical unless future code mutates shared schema.
+  - **Neglect Risk:** Low ⬜ -- No evidence of current mutation; risk is mostly hypothetical unless future code mutates shared schema.
   - Implemented: ❌ Skipped (🔴 discarded)
     - Implementation Notes: Skipped -- requires extensive analysis to prove no runtime mutation paths before introducing freezing behavior.
 
@@ -303,14 +303,16 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Step 1 fix references UI label mapping without evidence the option is exposed, and misses the concrete doc mismatch vs `sortEntries()` behavior.
-  - **Neglect Risk:** Low ⚪ -- Primarily a maintainability/docs clarity issue; limited immediate user impact.
+  - **Neglect Risk:** Low ⬜ -- Primarily a maintainability/docs clarity issue; limited immediate user impact.
   - Implemented: ✅
     - Implementation Notes: Updated `SORT.TITLE`/`SORT.ALPHABETICAL` docs and marked `ALPHABETICAL` as a legacy compatibility alias while keeping UI options unchanged.
     - **🧪 MANUAL CHECK**:
       - [ ] Open sort dropdowns and confirm the same options as before are shown (no new `ALPHABETICAL` option added).
 
----### `src/orderHelperRender.actionBar.js`
-→ `CodeReview_orderHelperRender.actionBar.js.md`
+---
+
+### `src/orderHelperRender.actionBar.js`
+-> `CodeReview_orderHelperRender.actionBar.js.md`
 
 - **F01** — Bulk-apply actions can throw if table DOM/cache is not ready (missing null guards)
   - Meta-reviewed: [X]
@@ -326,7 +328,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Needs research step to validate existing cleanup coverage via MULTISELECT_DROPDOWN_CLOSE_HANDLER and exact lifecycle before implementation.
-  - **Neglect Risk:** Low ⭕ — Listener leak only affects repeated opens without page reload; speculative severity.
+  - **Neglect Risk:** Low ⬜ — Listener leak only affects repeated opens without page reload; speculative severity.
   - Implemented: ✅
     - Implementation Notes: Added bulk-row cleanup plus renderer rerender cleanup invocation to always remove outlet outside-click listeners.
     - **🧪 MANUAL CHECK**:
@@ -336,7 +338,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Async yielding introduces behavioral changes (user interaction during gaps) that require button-disabling mitigation.
-  - **Neglect Risk:** Low ⭕ — Performance-only issue; only affects users with large lorebooks and no data loss risk.
+  - **Neglect Risk:** Low ⬜ — Performance-only issue; only affects users with large lorebooks and no data loss risk.
   - Implemented: ✅
     - Implementation Notes: Refactored State/Strategy/Order bulk applies to precompute targets, lock Apply buttons, and yield every 200 rows.
     - **🧪 MANUAL CHECK**:
@@ -346,7 +348,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⭕ — Accessibility/maintenance concern only; mouse behavior works correctly.
+  - **Neglect Risk:** Low ⬜ — Accessibility/maintenance concern only; mouse behavior works correctly.
   - Implemented: ✅
     - Implementation Notes: Grouped direction radios with a shared name and switched persistence to change handlers with native exclusivity.
     - **🧪 MANUAL CHECK**:
@@ -355,7 +357,7 @@ Track all code-review findings across the extension's JS files.
 ---
 
 ### `src/orderHelperRender.utils.js`
-→ `CodeReview_orderHelperRender.utils.js.md`
+-> `CodeReview_orderHelperRender.utils.js.md`
 
 - **F01** — `setTooltip()` can throw if `text` is not a string (missing type guard)
   - Meta-reviewed: [X]
@@ -368,7 +370,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⭕ — Accessibility issue only; no functional impact.
+  - **Neglect Risk:** Low ⬜ — Accessibility issue only; no functional impact.
   - Implemented:
 
 - **F03** — Outside-click `document` listener can leak if a menu is removed while open (no teardown path)
@@ -381,7 +383,7 @@ Track all code-review findings across the extension's JS files.
 ---
 
 ### `src/orderHelperRender.tableBody.js`
-→ `CodeReview_orderHelperRender.tableBody.js.md`
+-> `CodeReview_orderHelperRender.tableBody.js.md`
 
 - **F01** — Concurrent `saveWorldInfo(..., true)` calls can persist stale snapshots (last-write-wins race)
   - Meta-reviewed: [X]
@@ -401,7 +403,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⭕ — Cosmetic issue only; no data integrity or functionality impact.
+  - **Neglect Risk:** Low ⬜ — Cosmetic issue only; no data integrity or functionality impact.
   - Implemented:
 
 ---
@@ -420,14 +422,14 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Already addressed in current code; no action needed.
+  - **Neglect Risk:** Low ⬜ — Already addressed in current code; no action needed.
   - Implemented:
 
 - **F03** -- Multiple DOM scrapes for strategy/position lists can create inconsistent snapshots and unnecessary work
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Performance optimization; limited user-visible impact.
+  - **Neglect Risk:** Low ⬜ — Performance optimization; limited user-visible impact.
   - Implemented:
 
 ---
@@ -439,7 +441,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⭕ — Performance optimization; impact depends on dataset size and is cosmetic when small.
+  - **Neglect Risk:** Low ⬜ — Performance optimization; impact depends on dataset size and is cosmetic when small.
   - Implemented:
 
 - **F02** — Metadata parser drops valid per-book sort preferences when legacy data omits direction
@@ -514,7 +516,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Compatibility improvement; no runtime impact unless ST internal APIs change.
+  - **Neglect Risk:** Low ⬜ — Compatibility improvement; no runtime impact unless ST internal APIs change.
   - Implemented: ✅
     - Implementation Notes: Migrated event bus access from direct `script.js` imports to `SillyTavern.getContext()` (`eventSource` + `eventTypes`/`event_types`) for listener wiring.
     - **🧪 MANUAL CHECK**:
@@ -550,7 +552,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Edge case failure mode; template availability is generally stable.
+  - **Neglect Risk:** Low ⬜ — Edge case failure mode; template availability is generally stable.
   - Implemented:
 
 ---
@@ -583,7 +585,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⚪ — Performance issue with large folder counts; straightforward batching optimization.
+  - **Neglect Risk:** Low ⬜ — Performance issue with large folder counts; straightforward batching optimization.
   - Implemented:
 
 ---
@@ -596,35 +598,50 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Real race condition that can crash or desync UI state; high-severity data-integrity issue.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added refresh-token stale continuation guard, cache/DOM sort guards, and `[STWID]` warnings to skip unsafe post-save sort work.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Change a book sort, trigger Refresh immediately, and confirm no console crash occurs and the final order is correct after refresh.
 
 - **F02** — Data integrity: `setBookSortPreference()` writes via `buildSavePayload()` from cache (risk of overwriting newer book data)
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Silent overwrite bug can cause users to lose edits made through other paths.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Replaced cache-derived sort-preference save with load-latest/clone/metadata-patch/save and refreshed cache metadata after save.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Edit an entry in one UI surface, then set/clear per-book sort in another, and confirm both changes persist after reload.
 
 - **F03** — Async ordering: `refreshList()` awaits a debounced loader, which can drop/merge refresh requests and produce stale UI
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Debounce semantics can cause visual glitches and inconsistent UI state.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added refresh worker token sequencing and a documented refresh contract so callers await the newest completed refresh before resolving.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Click Refresh repeatedly while typing in search and confirm spinner behavior is stable and final list/filter state is correct with no console errors.
 
 - **F04** — Potential memory leak / duplicate handlers if `initListPanel()` runs more than once
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Duplicate handlers can cause subtle bugs; listener stacking is a correctness issue.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `teardownListPanel()` cleanup for list listeners/state, idempotent init guard with warning, and exposed `destroyListPanel` in API.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Reopen/reinitialize the drawer and verify drag/drop and filters trigger once (no duplicate actions).
 
 - **F05** — UI correctness edge case: `renderBookSourceLinks()` clears container with `innerHTML = ''` (focus/selection can be lost)
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Checklist needs to specify handling of tooltip changes when the same source key exists with a different display name.
   - **Neglect Risk:** Low ⭕ — Accessibility edge case; cosmetic impact only.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Switched source-link rendering to keyed node diffing that preserves existing icons and updates tooltip/aria text only when values change.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Switch chat/persona/character links and confirm source icons update correctly and tooltip text changes when attribution names change.
 
 ---
 
@@ -642,7 +659,7 @@ Track all code-review findings across the extension's JS files.
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⭕ — Edge case crash; recoverable via refresh.
+  - **Neglect Risk:** Low ⬜ — Edge case crash; recoverable via refresh.
   - Implemented:
 
 - **F03** — Move operation can create duplicates on partial delete failures
@@ -650,6 +667,25 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Ambiguous policy step - checklist revised to pick single approach (skip destination save on delete failure).
   - **Neglect Risk:** Medium ❗ — Data integrity issue; can silently create duplicates.
+  - Implemented:
+
+---
+
+### `src/listPanel.state.js`
+-> `CodeReview_listPanel.state.js.md`
+
+- **F01** — State caches use plain objects with user-controlled keys (prototype pollution / key collisions)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Prototype pollution risk with malicious/accidental book names like `__proto__`; can corrupt state and break iteration.
+  - Implemented:
+
+- **F02** — Selection state can survive list reloads, leaving stale `selectFrom`/`selectList`
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ — Stale selection can cause delete/drag operations to target wrong entries after refresh.
   - Implemented:
 
 ---
@@ -663,8 +699,3 @@ The live work queues have been moved to dedicated files:
 | Pending first-pass review | [`QUEUE_REVIEW.md`](QUEUE_REVIEW.md) |
 | Pending meta-review (step 2) | [`QUEUE_META_REVIEW.md`](QUEUE_META_REVIEW.md) |
 | Pending implementation | [`QUEUE_IMPLEMENTATION.md`](QUEUE_IMPLEMENTATION.md) |
-
-
-
-
-

@@ -138,6 +138,7 @@ When implementing or modifying behavior, follow the ownership boundary document:
 - Do NOT modify `vendor/SillyTavern`
 - Do NOT introduce frameworks (React, Vue, etc.)
 - Do NOT change public APIs unintentionally
+- Do NOT use Bash `echo`, `printf`, or heredoc to write file content — always use the Write or Edit tools. Shell output on Windows can corrupt multi-byte characters (emojis, special Unicode) inside files.
 
 ## 10. Git Commits
 

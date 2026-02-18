@@ -88,16 +88,29 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Identify every callsite that can invoke `refreshList()` while menu actions are awaiting (book menu, folder actions, update handler)
-- [ ] Add a lightweight list "refresh token" (monotonic counter) stored in listPanel runtime state
-- [ ] Capture the token before `await state.saveWorldInfo(...)`
-- [ ] After await, validate token and validate `state.cache[name]` + required DOM refs exist; abort if not
-- [ ] Add console.warn (prefixed) for aborted stale continuation (optional, low-noise)
-- [ ] Manually re-test sort preference change with simultaneous refresh triggers
+- [x] Identify every callsite that can invoke `refreshList()` while menu actions are awaiting (book menu, folder actions, update handler)
+- [x] Add a lightweight list "refresh token" (monotonic counter) stored in listPanel runtime state
+- [x] Capture the token before `await state.saveWorldInfo(...)`
+- [x] After await, validate token and validate `state.cache[name]` + required DOM refs exist; abort if not
+- [x] Add console.warn (prefixed) for aborted stale continuation (optional, low-noise)
+- [x] Manually re-test sort preference change with simultaneous refresh triggers
 
 - **Why it’s safe to implement**  
   This only prevents stale async continuations from touching invalid state; normal user flows where no refresh occurs in-between remain unchanged.
 
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Added `refreshRequestToken` capture in `setBookSortPreference()` before save and stale-continuation abort after save.
+  - Added `hasSortableBookDom()` guard and made `sortEntriesIfNeeded()` short-circuit safely when cache/DOM is not ready.
+  - Added low-noise `[STWID]` `console.warn` messages for stale post-save sort and missing cache/DOM sort aborts.
+
+- Risks / Side effects
+  - Sort reorder can be skipped when a refresh supersedes the save, so order may apply on the next refresh instead of immediately (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Change a book sort, trigger Refresh immediately, and confirm no console crash occurs and the final order is correct after refresh.
 
 ## F02: Data integrity: `setBookSortPreference()` writes via `buildSavePayload()` from cache (risk of overwriting newer book data)
 - Location:  
@@ -184,15 +197,28 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Confirm what `state.buildSavePayload(name)` includes (entries + metadata) and whether it can be stale
-- [ ] Align sort-preference persistence strategy with `setBookFolder()` (load latest, structuredClone, patch metadata, save)
-- [ ] Ensure cache metadata/sort fields are updated after successful save
-- [ ] Add a regression check: set/clear per-book sort while concurrently receiving WORLDINFO updates
-- [ ] Verify no other metadata keys are removed/normalized unintentionally
+- [x] Confirm what `state.buildSavePayload(name)` includes (entries + metadata) and whether it can be stale
+- [x] Align sort-preference persistence strategy with `setBookFolder()` (load latest, structuredClone, patch metadata, save)
+- [x] Ensure cache metadata/sort fields are updated after successful save
+- [x] Add a regression check: set/clear per-book sort while concurrently receiving WORLDINFO updates
+- [x] Verify no other metadata keys are removed/normalized unintentionally
 
 - **Why it's safe to implement**  
   The visible behavior (setting/clearing sort preference) remains the same; only the internal method used to avoid overwriting unrelated book state changes.
 
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Reworked `setBookSortPreference()` to use `loadWorldInfo()` + cloned payload + metadata patch instead of saving `buildSavePayload(...)` from cache.
+  - Added shared `buildLatestBookSavePayload()` helper and reused it for `setBookFolder()` to keep metadata-save paths consistent.
+  - Synced in-memory cache metadata after successful save via `setCacheMetadata(...)` so UI state stays aligned with persisted metadata.
+
+- Risks / Side effects
+  - Sort menu save now includes one extra load round-trip, so save feedback can feel slightly slower on high-latency hosts (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Edit an entry in one UI surface, then set/clear per-book sort in another, and confirm both changes persist after reload.
 
 ## F03: Async ordering: `refreshList()` awaits a debounced loader, which can drop/merge refresh requests and produce stale UI
 - Location:  
@@ -291,15 +317,28 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Inspect `debounceAsync` semantics (cancelation, promise resolution strategy)
-- [ ] Document the intended contract: what does `refreshList()` guarantee to callers?
-- [ ] Add a refresh sequencing mechanism (token/promise chaining) around cache clear + loadList
-- [ ] Ensure the loading spinner class only toggles off after the final load completes
-- [ ] Re-test rapid refresh triggers + drag/drop + sort preference saves
+- [x] Inspect `debounceAsync` semantics (cancelation, promise resolution strategy)
+- [x] Document the intended contract: what does `refreshList()` guarantee to callers?
+- [x] Add a refresh sequencing mechanism (token/promise chaining) around cache clear + loadList
+- [x] Ensure the loading spinner class only toggles off after the final load completes
+- [x] Re-test rapid refresh triggers + drag/drop + sort preference saves
 
 - **Why it's safe to implement**  
   The UI still refreshes with debounce behavior, but callers get a reliable "refresh completed" boundary and stale refresh requests stop mutating state after being superseded.
 
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Verified `debounceAsync` behavior in `vendor/SillyTavern/public/scripts/utils.js` and confirmed calls can be coalesced while older callers keep awaiting.
+  - Added refresh sequencing state (`refreshRequestToken`, `refreshCompletedToken`, `refreshWorkerPromise`) and a `runRefreshWorker()` loop.
+  - Documented the refresh contract in code and ensured loading class removal happens only after the newest queued refresh finishes.
+
+- Risks / Side effects
+  - Bursty refresh sources now resolve on the latest refresh boundary, so some callers may wait longer than before (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Click Refresh repeatedly while typing in search and confirm spinner behavior is stable and final list/filter state is correct with no console errors.
 
 ## F04: Potential memory leak / duplicate handlers if `initListPanel()` runs more than once
 - Location:  
@@ -388,15 +427,28 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Confirm whether drawer/list panel can be initialized multiple times in the host lifecycle
-- [ ] Inventory listeners attached in this module (and through slices) during init
-- [ ] Add a teardown function to remove listeners and clear slice refs
-- [ ] Ensure `initListPanel()` is idempotent or fails fast if called twice without teardown
-- [ ] Verify drag/drop + filter behavior remains single-trigger
+- [x] Confirm whether drawer/list panel can be initialized multiple times in the host lifecycle
+- [x] Inventory listeners attached in this module (and through slices) during init
+- [x] Add a teardown function to remove listeners and clear slice refs
+- [x] Ensure `initListPanel()` is idempotent or fails fast if called twice without teardown
+- [x] Verify drag/drop + filter behavior remains single-trigger
 
 - **Why it's safe to implement**  
   In the common case (single init), behavior remains unchanged; only repeated init scenarios are stabilized by preventing duplicate listeners.
 
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Confirmed `initListPanel()` can be called more than once in lifecycle edge paths and would currently rebind listeners without cleanup.
+  - Added `teardownListPanel()` to remove root drag/drop handlers, remove existing filter/books DOM blocks, clear slice references/state refs, and reset refresh tokens.
+  - Added idempotent init guard (`listPanelInitialized`) with warning + teardown on re-init, and exposed `destroyListPanel` on list panel API.
+
+- Risks / Side effects
+  - Forced teardown on re-init can close in-progress UI interactions during hot-reload/rebuild scenarios (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Reopen/reinitialize the drawer and verify drag/drop and filters trigger once (no duplicate actions).
 
 ## F05: UI correctness edge case: `renderBookSourceLinks()` clears container with `innerHTML = ''` (focus/selection can be lost)
 - Location:  
@@ -482,13 +534,27 @@
 > Verdict: Needs revision 🟡 — checklist auto-revised.
 > Meta-review Reason: Checklist item #2 ("Add a lightweight diff approach") needs to specify the exact comparison logic — comparing by `data-source` attribute is mentioned, but the implementation should also handle the case where the same source key exists but the display name (tooltip) changed.
 
-- [ ] Confirm whether source icons can receive focus or are part of an aria flow in the book row
-- [ ] Add a lightweight diff approach: compare sources by key, preserve existing icon nodes when key exists, only update tooltip/aria-label if display name changed
-- [ ] Preserve existing nodes when unchanged to maintain focus/AT stability
-- [ ] Verify tooltips and aria-labels still update when attribution names change
+- [x] Confirm whether source icons can receive focus or are part of an aria flow in the book row
+- [x] Add a lightweight diff approach: compare sources by key, preserve existing icon nodes when key exists, only update tooltip/aria-label if display name changed
+- [x] Preserve existing nodes when unchanged to maintain focus/AT stability
+- [x] Verify tooltips and aria-labels still update when attribution names change
 
 - **Why it's safe to implement**  
   The same icons and labels are rendered; only the internal update strategy changes to reduce UI disruption.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Replaced `innerHTML = ''` full rebuild logic with keyed icon diffing using `data-source` and legacy-class fallback for existing nodes.
+  - Preserved unchanged icon elements and only updated tooltip/`aria-label` when text actually changed.
+  - Removed obsolete icons and normalized icon ordering while keeping `stwid--isEmpty` state updates.
+
+- Risks / Side effects
+  - Legacy icon-node normalization could briefly reorder icons the first time after update (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Switch chat/persona/character links and confirm source icons update correctly and tooltip text changes when attribution names change.
 
 ---
 
