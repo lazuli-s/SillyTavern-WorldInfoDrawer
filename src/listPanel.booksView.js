@@ -18,6 +18,10 @@ const createBooksViewSlice = ({
 })=>{
     const renderBook = async(name, before = null, bookData = null, parent = null)=>{
         const data = bookData ?? await runtime.loadWorldInfo(name);
+        if (!data || typeof data !== 'object') {
+            console.warn(`[STWID] renderBook: skipping "${name}" — invalid or missing book payload.`);
+            return null;
+        }
         const world = { entries:{}, metadata: cloneMetadata(data.metadata), sort:runtime.getSortFromMetadata(data.metadata) };
         for (const [k,v] of Object.entries(data.entries)) {
             world.entries[k] = structuredClone(v);
@@ -123,10 +127,32 @@ const createBooksViewSlice = ({
                         add.addEventListener('click', async()=>{
                             const saveData = runtime.buildSavePayload(name);
                             const newEntry = runtime.createWorldInfoEntry(name, saveData);
-                            runtime.cache[name].entries[newEntry.uid] = structuredClone(newEntry);
-                            await runtime.renderEntry(newEntry, name);
-                            runtime.cache[name].dom.entry[newEntry.uid].root.click();
-                            await runtime.saveWorldInfo(name, saveData, true);
+                            let entryRendered = false;
+                            let editorOpened = false;
+                            try {
+                                runtime.cache[name].entries[newEntry.uid] = structuredClone(newEntry);
+                                await runtime.renderEntry(newEntry, name);
+                                entryRendered = true;
+                                runtime.cache[name].dom.entry[newEntry.uid].root.click();
+                                editorOpened = true;
+                                await runtime.saveWorldInfo(name, saveData, true);
+                            } catch (err) {
+                                console.error('[STWID] add-entry: save failed, rolling back optimistic state.', err);
+                                delete runtime.cache[name]?.entries?.[newEntry.uid];
+                                if (entryRendered) {
+                                    const entryDom = runtime.cache[name]?.dom?.entry?.[newEntry.uid];
+                                    if (entryDom?.root?.parentElement) {
+                                        entryDom.root.remove();
+                                    }
+                                    if (runtime.cache[name]?.dom?.entry) {
+                                        delete runtime.cache[name].dom.entry[newEntry.uid];
+                                    }
+                                }
+                                if (editorOpened) {
+                                    runtime.resetEditor?.();
+                                }
+                                toastr.error('Failed to create new entry. Please try again.');
+                            }
                         });
                         actions.append(add);
                     }
@@ -198,7 +224,12 @@ const createBooksViewSlice = ({
         const books = [];
         for (let i = 0; i < sortedNames.length; i++) {
             const name = sortedNames[i];
-            books.push({ name, data: await runtime.loadWorldInfo(name) });
+            const data = await runtime.loadWorldInfo(name);
+            if (!data || typeof data !== 'object') {
+                console.warn(`[STWID] loadList: skipping book with invalid payload — "${name}"`);
+            } else {
+                books.push({ name, data });
+            }
             if (i > 0 && i % 5 === 0) {
                 await yieldToUi();
             }

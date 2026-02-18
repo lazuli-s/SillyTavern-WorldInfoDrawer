@@ -115,9 +115,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add an object-shape guard in `renderBook()` immediately after loading `data`.
-- [ ] Return `null` from `renderBook()` when payload shape is invalid, before cache/DOM writes.
-- [ ] In `loadList()`, skip pushing books with invalid load payloads.
+- [x] Add an object-shape guard in `renderBook()` immediately after loading `data`.
+- [x] Return `null` from `renderBook()` when payload shape is invalid, before cache/DOM writes.
+- [x] In `loadList()`, skip pushing books with invalid load payloads.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.booksView.js`
+  - Added `if (!data || typeof data !== 'object') return null` guard in `renderBook()` immediately after `const data = bookData ?? await runtime.loadWorldInfo(name)`.
+  - In `loadList()`, restructured the book-loading loop to load `data` first, then skip `books.push()` with a `console.warn` when the payload is null or non-object.
+
+- Risks / Side effects
+  - Books deleted or renamed mid-refresh are now silently skipped rather than crashing the list (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open the drawer with several lorebooks. While the list is loading (trigger via Refresh), rename or delete one book in a separate SillyTavern tab. Confirm the drawer finishes loading without a console error and shows all remaining valid books correctly.
 
 ## F02: New-entry flow applies optimistic UI/cache mutation without rollback on save failure
 
@@ -232,11 +245,25 @@
 > Meta-review Reason: Checklist missing editor cleanup step — if the editor was opened via `.click()` before save fails, the editor panel may remain open with unsaved entry content, leaving confusing state.
 > Revisions applied: Added explicit editor clear/close step to rollback logic.
 
-- [ ] Add `try/catch` around the add-entry click handler mutation/render/save sequence.
-- [ ] On failure, remove the optimistic entry from `runtime.cache[name].entries`.
-- [ ] On failure, remove the rendered row and clear `runtime.cache[name].dom.entry[newEntry.uid]`.
-- [ ] On failure, clear the editor panel and close it if it was opened for the new entry (check if `runtime.currentEditor` matches the new entry's UID, and if so, call the editor reset/close function).
-- [ ] Emit a clear error toast for failed entry creation persistence.
+- [x] Add `try/catch` around the add-entry click handler mutation/render/save sequence.
+- [x] On failure, remove the optimistic entry from `runtime.cache[name].entries`.
+- [x] On failure, remove the rendered row and clear `runtime.cache[name].dom.entry[newEntry.uid]`.
+- [x] On failure, clear the editor panel and close it if it was opened for the new entry (check if `runtime.currentEditor` matches the new entry's UID, and if so, call the editor reset/close function).
+- [x] Emit a clear error toast for failed entry creation persistence.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.booksView.js`
+  - Added `let entryRendered = false` and `let editorOpened = false` step-tracking flags before the mutation sequence.
+  - Wrapped the full mutation/render/click/save sequence in `try/catch`; flags are set after each completed step to scope rollback precisely.
+  - On catch: deletes `runtime.cache[name].entries[newEntry.uid]`; removes the rendered DOM row and deletes `runtime.cache[name].dom.entry[newEntry.uid]` when `entryRendered` is true; calls `runtime.resetEditor?.()` when `editorOpened` is true; emits `toastr.error`.
+
+- Risks / Side effects
+  - Calling `runtime.resetEditor?.()` clears the editor panel; if the user had a different entry open before clicking add, that entry was already replaced by the click, so clearing is correct (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Click the add-entry (+) button on a book. Confirm a new entry row appears and the editor opens normally on success. Then simulate a save failure (e.g., temporarily break `saveWorldInfo` via a DevTools override) and click add again; confirm the new row disappears, the editor closes, and a red error toast appears with no orphaned cache state.
 
 ---
 

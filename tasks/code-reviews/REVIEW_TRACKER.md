@@ -199,14 +199,20 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Crash is disruptive but recoverable via refresh; defensive fix adds robustness.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `if (!data || typeof data !== 'object') return null` guard in `renderBook()` after the load call; restructured `loadList()` book-loading loop to skip books with invalid payloads with a `console.warn` before grouping.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open the drawer with several lorebooks. Trigger Refresh while deleting or renaming a book in a separate SillyTavern tab. Confirm the drawer finishes loading without a console error and shows all remaining valid books correctly.
 
 - **F02** -- New-entry flow applies optimistic UI/cache mutation without rollback on save failure
   - Meta-reviewed: [X]
     - Verdict: Implementation plan needs revision 🟡
     - Reason: Checklist missing editor cleanup step — if editor was opened via `.click()` before save fails, editor panel may remain open with unsaved content.
   - **Neglect Risk:** Medium ❗ — Data integrity issue but requires specific failure conditions to manifest.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Wrapped add-entry mutation/render/click/save sequence in `try/catch` with step-tracking flags (`entryRendered`, `editorOpened`); rollback deletes cache entry, removes DOM row, and calls `runtime.resetEditor?.()` if editor was opened; emits `toastr.error` on failure.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Click the add-entry (+) button on a book; confirm a new entry row appears and the editor opens normally. Then simulate a save failure (DevTools override of `saveWorldInfo`) and click add again; confirm the new row disappears, the editor closes, and a red error toast appears with no orphaned row or cache state.
 
 ---
 

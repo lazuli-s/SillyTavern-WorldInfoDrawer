@@ -6,6 +6,15 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/listPanel.booksView.js`
+
+- **F01** — Missing null guard for loaded book data can crash full list rendering: Added `if (!data || typeof data !== 'object') return null` guard in `renderBook()` after the load call; restructured `loadList()` book-loading loop to skip books with invalid payloads (with `console.warn`) before grouping.
+- **F02** — New-entry flow applies optimistic UI/cache mutation without rollback on save failure: Wrapped add-entry mutation/render/click/save sequence in `try/catch` with `entryRendered`/`editorOpened` step flags; rollback deletes cache entry, removes DOM row, calls `runtime.resetEditor?.()` if editor was opened, and emits `toastr.error`.
+
+---
+
+## February 18, 2026
+
 ### `index.js`
 
 - **F01** — `jumpToEntry()` can discard unsaved editor work when switching entries: Added `isDirty()` guard at the top of `jumpToEntry()` returning `false` immediately when the current editor has unsaved edits; clean-editor navigation is unchanged.

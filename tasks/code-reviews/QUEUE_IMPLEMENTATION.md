@@ -5,7 +5,6 @@ Code review files whose findings have been meta-reviewed and are ready for imple
 ---
 
 ## Files Pending Implementation
-- `tasks/code-reviews/CodeReview_listPanel.booksView.js.md`
 - `tasks/code-reviews/CodeReview_listPanel.bookMenu.js.md`
 - `tasks/code-reviews/CodeReview_listPanel.filterBar.js.md`
 - `tasks/code-reviews/CodeReview_orderHelperRender.filterPanel.js.md`
