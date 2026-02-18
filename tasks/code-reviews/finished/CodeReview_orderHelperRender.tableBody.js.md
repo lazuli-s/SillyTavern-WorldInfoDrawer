@@ -113,7 +113,21 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a per-book serialized "save worker" helper (coalescing multiple requests into a final save) and use it for all Order Helper inline-edit save calls in the table-body builder.
+- [x] Add a per-book serialized "save worker" helper (coalescing multiple requests into a final save) and use it for all Order Helper inline-edit save calls in the table-body builder.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelperRender.tableBody.js`
+  - Added `createBookSaveSerializer()` module-level helper maintaining per-book `inFlightByBook` and `pendingByBook` state; the `do/while` loop in `runSave` coalesces any additional requests into at most one queued follow-up save with a fresh payload.
+  - Created `enqueueSave` from the serializer inside `buildTableBody`, scoped to each table render lifecycle.
+  - Replaced all 16 direct `await saveWorldInfo(e.book, buildSavePayload(e.book), true)` calls across all inline-edit handlers and `updateCustomOrderFromDom` with `await enqueueSave(e.book)`.
+
+- Risks / Side effects
+  - Under rapid back-to-back edits, the awaiting caller may wait for one extra save cycle before resolving (probability: ⭕ — only adds latency for rapid edits, not normal usage).
+      - **🟥 MANUAL CHECK**: [ ] In Order Helper, rapidly change two different fields on the same entry (e.g., change Delay then immediately toggle Ignore Budget). Reload the lorebook. Confirm both changes are persisted.
 
 ---
 
@@ -221,7 +235,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add null/undefined guards in `updateCustomOrderFromDom()` around `data-book`/`data-uid` and cache dereferences; skip stale rows and return early when the book no longer exists.
+- [x] Add null/undefined guards in `updateCustomOrderFromDom()` around `data-book`/`data-uid` and cache dereferences; skip stale rows and return early when the book no longer exists.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelperRender.tableBody.js`
+  - Added `if (!dom.order.tbody) return;` early-exit guard at the top of `updateCustomOrderFromDom()`.
+  - Added `!bookName || !uid` check to skip rows with missing data attributes.
+  - Added `!cache[bookName]?.entries` check to skip rows from books no longer in cache.
+  - Added `!cache[bookName].entries[uid]` check to skip entries no longer in cache; moved `nextIndex` computation after all guards so only valid rows count toward display index assignment.
+
+- Risks / Side effects
+  - Stale rows silently skipped: during a concurrent WORLDINFO_UPDATED while reordering, entries removed from cache receive no display_index update; the saved order may not match the visible DOM order for those entries (probability: ⭕ — only manifests during concurrent cache removal, which was previously a hard crash).
+      - **🟥 MANUAL CHECK**: [ ] Open Order Helper and drag-reorder rows normally; confirm row order saves correctly on reload. Then trigger a World Info refresh while Order Helper is open; confirm no console errors and the table remains usable.
 
 ---
 
@@ -312,7 +341,18 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update the comment-link render to coalesce falsy/undefined comments to `''` so the UI never displays "undefined".
+- [x] Update the comment-link render to coalesce falsy/undefined comments to `''` so the UI never displays "undefined".
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/orderHelperRender.tableBody.js`
+  - Changed `comment.textContent = e.data.comment` to `comment.textContent = e.data.comment ?? ''` so entries with `undefined` or `null` comment render as blank text instead of the string `"undefined"`.
+
+- Risks / Side effects
+  - None — purely presentational; no data written or read differently (probability: ⭕).
 
 ---
 

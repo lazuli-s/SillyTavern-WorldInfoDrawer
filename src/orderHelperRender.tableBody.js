@@ -2,6 +2,61 @@ import { setTooltip, formatCharacterFilter } from './orderHelperRender.utils.js'
 import { ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
 
 /**
+ * Creates a per-book save serializer that coalesces concurrent save requests.
+ *
+ * When a save is in progress for a book, any additional save requests are
+ * coalesced into a single follow-up save using a fresh `buildSavePayload`
+ * snapshot taken after the in-flight save completes. This prevents
+ * last-write-wins races when multiple inline-edit handlers fire in quick
+ * succession on the same book.
+ *
+ * Usage: `const enqueueSave = createBookSaveSerializer(saveWorldInfo, buildSavePayload);`
+ * Replace direct `await saveWorldInfo(book, buildSavePayload(book), true)` calls
+ * with `await enqueueSave(book)`.
+ *
+ * @param {function} saveWorldInfo
+ * @param {function} buildSavePayload
+ * @returns {function(string): Promise<void>} enqueueSave(bookName)
+ */
+function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
+    /** @type {Map<string, Promise<void>>} */
+    const inFlightByBook = new Map();
+    /** @type {Set<string>} */
+    const pendingByBook = new Set();
+
+    async function runSave(bookName) {
+        do {
+            pendingByBook.delete(bookName);
+            try {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            } catch (err) {
+                console.error('[WorldInfoDrawer] Order Helper save failed for book:', bookName, err);
+            }
+        } while (pendingByBook.has(bookName));
+        inFlightByBook.delete(bookName);
+    }
+
+    /**
+     * Enqueue a save for the given book. If a save is already in progress,
+     * marks the book as pending and awaits the current run (which will
+     * perform one additional save with a fresh payload after it completes).
+     *
+     * @param {string} bookName
+     * @returns {Promise<void>}
+     */
+    return async function enqueueSave(bookName) {
+        if (inFlightByBook.has(bookName)) {
+            pendingByBook.add(bookName);
+            await inFlightByBook.get(bookName);
+        } else {
+            const p = runSave(bookName);
+            inFlightByBook.set(bookName, p);
+            await p;
+        }
+    };
+}
+
+/**
  * Builds the Order Helper table body (`<tbody>`) with one row per entry.
  * Also wires jQuery sortable drag reordering and runs all structured filters
  * at the end so the initial view is correctly filtered.
@@ -85,6 +140,10 @@ export function buildTableBody({
     const tbody = document.createElement('tbody');
     dom.order.tbody = tbody;
 
+    // F01: Per-book serialized save worker — coalesces concurrent inline-edit saves to
+    // prevent last-write-wins races when multiple handlers fire in quick succession.
+    const enqueueSave = createBookSaveSerializer(saveWorldInfo, buildSavePayload);
+
     // Phase 4 – Invariant: these three template controls must exist in the host DOM
     // (#entry_edit_template) before Order Helper renders. If any is missing, a later
     // cloneNode call would silently produce a broken element; fail fast here instead.
@@ -102,15 +161,23 @@ export function buildTableBody({
     };
 
     const updateCustomOrderFromDom = async()=>{
+        // F02: Early exit if tbody is gone (e.g. Order Helper was closed mid-operation).
+        if (!dom.order.tbody) return;
         setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
-        const rows = [...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
+        const rows = [...dom.order.tbody.querySelectorAll('tr')];
         const booksUpdated = new Set();
         const nextIndexByBook = new Map();
         for (const row of rows) {
             const bookName = row.getAttribute('data-book');
             const uid = row.getAttribute('data-uid');
-            const nextIndex = nextIndexByBook.get(bookName) ?? 0;
+            // F02: Skip rows with missing/empty data-book or data-uid attributes.
+            if (!bookName || !uid) continue;
+            // F02: Skip rows whose book or entry have been removed from cache
+            // (e.g. concurrent WORLDINFO_UPDATED while Order Helper is open).
+            if (!cache[bookName]?.entries) continue;
             const entry = cache[bookName].entries[uid];
+            if (!entry) continue;
+            const nextIndex = nextIndexByBook.get(bookName) ?? 0;
             entry.extensions ??= {};
             if (entry.extensions.display_index !== nextIndex) {
                 entry.extensions.display_index = nextIndex;
@@ -119,7 +186,7 @@ export function buildTableBody({
             nextIndexByBook.set(bookName, nextIndex + 1);
         }
         for (const bookName of booksUpdated) {
-            await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            await enqueueSave(bookName);
         }
     };
 
@@ -283,7 +350,7 @@ export function buildTableBody({
                             applyEnabledIcon(listToggle, nextDisabled);
                         }
 
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     active.append(isEnabled);
                 }
@@ -311,7 +378,9 @@ export function buildTableBody({
                     const comment = document.createElement('a'); {
                         comment.classList.add('stwid--comment', 'stwid--commentLink');
                         comment.href = `#world_entry/${encodeURIComponent(e.data.uid)}`;
-                        comment.textContent = e.data.comment;
+                        // F03: Coalesce undefined/null comment to empty string to avoid
+                        // the browser rendering "undefined" as a visible text label.
+                        comment.textContent = e.data.comment ?? '';
                         comment.addEventListener('click', (evt)=>{
                             evt.preventDefault();
                             focusWorldEntry(e.book, e.data.uid);
@@ -357,7 +426,7 @@ export function buildTableBody({
                             }
                         }
                         applyOrderHelperStrategyFilterToRow(tr, cache[e.book].entries[e.data.uid]);
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     strategy.append(strat);
                 }
@@ -383,7 +452,7 @@ export function buildTableBody({
                     e.data.position = value;
                     applyOrderHelperPositionFilterToRow(tr, cache[e.book].entries[e.data.uid]);
                     updateOutlet?.();
-                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                    await enqueueSave(e.book);
                 });
                 position.append(pos);
                 tr.append(position);
@@ -405,7 +474,7 @@ export function buildTableBody({
                     inp.addEventListener('change', async()=>{
                         const depth = parseInt(inp.value);
                         cache[e.book].entries[e.data.uid].depth = Number.isFinite(depth) ? depth : undefined;
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     depth.append(inp);
                 }
@@ -443,7 +512,7 @@ export function buildTableBody({
                             syncOrderHelperOutletFilters();
                             refreshOutletFilterIndicator();
                             applyOrderHelperOutletFilters();
-                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                            await enqueueSave(e.book);
                             updateOutlet();
                         });
                         wrap.append(input);
@@ -478,7 +547,7 @@ export function buildTableBody({
                             syncOrderHelperGroupFilters();
                             refreshGroupFilterIndicator();
                             applyOrderHelperGroupFilters();
-                            await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                            await enqueueSave(e.book);
                         });
                         wrap.append(input);
                     }
@@ -494,7 +563,7 @@ export function buildTableBody({
                                 const entryData = cache[e.book].entries[e.data.uid];
                                 entryData.groupOverride = input.checked;
                                 e.data.groupOverride = input.checked;
-                                await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                await enqueueSave(e.book);
                             });
                             row.append(input);
                         }
@@ -522,7 +591,7 @@ export function buildTableBody({
                     inp.addEventListener('change', async()=>{
                         const order = parseInt(inp.value);
                         cache[e.book].entries[e.data.uid].order = Number.isFinite(order) ? order : undefined;
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     order.append(inp);
                 }
@@ -545,7 +614,7 @@ export function buildTableBody({
                     inp.addEventListener('change', async()=>{
                         const value = parseInt(inp.value);
                         cache[e.book].entries[e.data.uid].sticky = Number.isFinite(value) ? value : undefined;
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     sticky.append(inp);
                 }
@@ -568,7 +637,7 @@ export function buildTableBody({
                     inp.addEventListener('change', async()=>{
                         const value = parseInt(inp.value);
                         cache[e.book].entries[e.data.uid].cooldown = Number.isFinite(value) ? value : undefined;
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     cooldown.append(inp);
                 }
@@ -591,7 +660,7 @@ export function buildTableBody({
                     inp.addEventListener('change', async()=>{
                         const value = parseInt(inp.value);
                         cache[e.book].entries[e.data.uid].delay = Number.isFinite(value) ? value : undefined;
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     delay.append(inp);
                 }
@@ -619,7 +688,7 @@ export function buildTableBody({
                         syncOrderHelperAutomationIdFilters();
                         refreshAutomationIdFilterIndicator();
                         applyOrderHelperAutomationIdFilters();
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     automationId.append(inp);
                 }
@@ -642,7 +711,7 @@ export function buildTableBody({
                     inp.addEventListener('change', async()=>{
                         const probability = parseInt(inp.value);
                         cache[e.book].entries[e.data.uid].selective_probability = Number.isFinite(probability) ? probability : undefined;
-                        await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                        await enqueueSave(e.book);
                     });
                     probability.append(inp);
                 }
@@ -667,7 +736,7 @@ export function buildTableBody({
                                     entryData[key] = input.checked;
                                     e.data[key] = input.checked;
                                     applyOrderHelperRecursionFilterToRow(tr, entryData);
-                                    await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                    await enqueueSave(e.book);
                                 });
                                 row.append(input);
                             }
@@ -699,7 +768,7 @@ export function buildTableBody({
                                 const entryData = cache[e.book].entries[e.data.uid];
                                 entryData.ignoreBudget = input.checked;
                                 e.data.ignoreBudget = input.checked;
-                                await saveWorldInfo(e.book, buildSavePayload(e.book), true);
+                                await enqueueSave(e.book);
                             });
                             row.append(input);
                         }

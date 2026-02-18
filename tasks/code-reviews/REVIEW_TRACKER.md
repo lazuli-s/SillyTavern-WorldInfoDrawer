@@ -516,21 +516,28 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** High ❗❗ — Real data integrity risk; users can lose edits when making rapid changes in Order Helper.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added `createBookSaveSerializer()` module-level helper with per-book in-flight/pending coalescing; replaced all 16 direct `saveWorldInfo` calls in inline-edit handlers and `updateCustomOrderFromDom` with `enqueueSave(book)`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] In Order Helper, rapidly change two different fields on the same entry (e.g., change Delay then immediately toggle Ignore Budget). Reload the lorebook. Confirm both changes are persisted.
 
 - **F02** — `updateCustomOrderFromDom()` can throw on missing book/entry during refresh/desync
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Crash during concurrent updates can disrupt user workflow.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added early-exit tbody guard, `!bookName || !uid` attribute guard, `!cache[bookName]?.entries` guard, and `!entry` guard; stale rows are skipped and `nextIndex` is computed only for valid rows.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open Order Helper and drag-reorder rows normally; confirm row order saves correctly on reload. Then trigger a World Info refresh while Order Helper is open; confirm no console errors and the table remains usable.
 
 - **F03** — Comment link can render as the string "undefined" for entries without a comment
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Low ⬜ — Cosmetic issue only; no data integrity or functionality impact.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Changed `comment.textContent = e.data.comment` to `comment.textContent = e.data.comment ?? ''` so entries without a comment render as blank text.
 
 ---
 
