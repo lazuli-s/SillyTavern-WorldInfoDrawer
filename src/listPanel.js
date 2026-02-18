@@ -45,6 +45,12 @@ let selectionDnDSlice = null;
 let bookMenuSlice = null;
 let foldersViewSlice = null;
 let booksViewSlice = null;
+let listPanelInitialized = false;
+let booksRootDragOverHandler = null;
+let booksRootDropHandler = null;
+let refreshRequestToken = 0;
+let refreshCompletedToken = 0;
+let refreshWorkerPromise = null;
 
 // Source-link UI constants.
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
@@ -141,18 +147,50 @@ const getBookVisibilityScope = (selectedNames = null)=>filterBarSlice?.getBookVi
 
 const renderBookSourceLinks = (sourceLinksContainer, links = null)=>{
     if (!sourceLinksContainer) return;
-    sourceLinksContainer.innerHTML = '';
     const normalized = normalizeBookSourceLinks(links);
     const details = normalizeBookSourceLinkDetails(links);
-    for (const def of SOURCE_ICON_DEFINITIONS) {
-        if (!normalized[def.key]) continue;
-        const icon = document.createElement('i');
-        icon.classList.add('stwid--sourceIcon', 'fa-solid', 'fa-fw', def.icon);
-        const tooltip = getSourceIconTooltip(def.key, def.label, details);
-        icon.title = tooltip;
-        icon.setAttribute('aria-label', tooltip);
-        sourceLinksContainer.append(icon);
+    const nextDefs = SOURCE_ICON_DEFINITIONS.filter((def)=>normalized[def.key]);
+    const nextKeys = new Set(nextDefs.map((def)=>def.key));
+    const existingIconsByKey = new Map();
+
+    for (const child of Array.from(sourceLinksContainer.children)) {
+        if (!(child instanceof HTMLElement)) continue;
+        if (!child.classList.contains('stwid--sourceIcon')) continue;
+        const sourceKey = child.dataset.source
+            || SOURCE_ICON_DEFINITIONS.find((def)=>child.classList.contains(def.icon))?.key;
+        if (!sourceKey || existingIconsByKey.has(sourceKey)) {
+            child.remove();
+            continue;
+        }
+        child.dataset.source = sourceKey;
+        existingIconsByKey.set(sourceKey, child);
     }
+
+    for (const [key, icon] of existingIconsByKey.entries()) {
+        if (!nextKeys.has(key)) {
+            icon.remove();
+            existingIconsByKey.delete(key);
+        }
+    }
+
+    for (let i = 0; i < nextDefs.length; i++) {
+        const def = nextDefs[i];
+        const icon = existingIconsByKey.get(def.key) ?? document.createElement('i');
+        icon.dataset.source = def.key;
+        icon.className = `stwid--sourceIcon fa-solid fa-fw ${def.icon}`;
+        const tooltip = getSourceIconTooltip(def.key, def.label, details);
+        if (icon.title !== tooltip) {
+            icon.title = tooltip;
+        }
+        if (icon.getAttribute('aria-label') !== tooltip) {
+            icon.setAttribute('aria-label', tooltip);
+        }
+        const currentChild = sourceLinksContainer.children[i];
+        if (currentChild !== icon) {
+            sourceLinksContainer.insertBefore(icon, currentChild ?? null);
+        }
+    }
+
     sourceLinksContainer.classList.toggle('stwid--isEmpty', sourceLinksContainer.childElementCount === 0);
 };
 
@@ -171,12 +209,16 @@ const updateAllBookSourceLinks = (linksByBook = null)=>{
 
 // Book metadata + sort preference helpers.
 const sortEntriesIfNeeded = (name)=>{
+    if (!hasSortableBookDom(name)) {
+        return false;
+    }
+    const world = state.cache[name];
     const { sort, direction } = getBookSortChoice(name);
-    const sorted = state.sortEntries(Object.values(state.cache[name].entries), sort, direction);
+    const sorted = state.sortEntries(Object.values(world.entries), sort, direction);
     let needsSort = false;
     let i = 0;
     for (const e of sorted) {
-        if (state.cache[name].dom.entryList.children[i] != state.cache[name].dom.entry[e.uid].root) {
+        if (world.dom.entryList.children[i] != world.dom.entry[e.uid].root) {
             needsSort = true;
             break;
         }
@@ -184,9 +226,10 @@ const sortEntriesIfNeeded = (name)=>{
     }
     if (needsSort) {
         for (const e of sorted) {
-            state.cache[name].dom.entryList.append(state.cache[name].dom.entry[e.uid].root);
+            world.dom.entryList.append(world.dom.entry[e.uid].root);
         }
     }
+    return true;
 };
 
 const setCacheMetadata = (name, metadata = {})=>{
@@ -195,25 +238,61 @@ const setCacheMetadata = (name, metadata = {})=>{
     sanitizeFolderMetadata(state.cache[name].metadata);
 };
 
+const buildLatestBookSavePayload = (latest)=>({
+    entries: structuredClone(latest?.entries ?? {}),
+    metadata: latest?.metadata && typeof latest.metadata === 'object'
+        ? structuredClone(latest.metadata)
+        : {},
+});
+
+const hasSortableBookDom = (name)=>{
+    const world = state.cache[name];
+    if (!world || !world.entries || !world.dom?.entryList || !world.dom?.entry) {
+        return false;
+    }
+    for (const entry of Object.values(world.entries)) {
+        if (!world.dom.entry[entry.uid]?.root) {
+            return false;
+        }
+    }
+    return true;
+};
+
 const setBookSortPreference = async(name, sort = null, direction = null)=>{
     const hasSort = Boolean(sort && direction);
-    state.cache[name].metadata ??= {};
-    state.cache[name].metadata[state.METADATA_NAMESPACE] ??= {};
-    if (hasSort) {
-        state.cache[name].metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY] = { sort, direction };
-        state.cache[name].sort = { sort, direction };
-    } else {
-        delete state.cache[name].metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY];
-        if (Object.keys(state.cache[name].metadata[state.METADATA_NAMESPACE]).length === 0) {
-            delete state.cache[name].metadata[state.METADATA_NAMESPACE];
-        }
-        if (Object.keys(state.cache[name].metadata).length === 0) {
-            state.cache[name].metadata = {};
-        }
-        state.cache[name].sort = null;
+    const latest = await state.loadWorldInfo(name);
+    if (!latest || typeof latest !== 'object') {
+        return false;
     }
-    await state.saveWorldInfo(name, state.buildSavePayload(name), true);
+    const nextPayload = buildLatestBookSavePayload(latest);
+    nextPayload.metadata[state.METADATA_NAMESPACE] ??= {};
+    if (hasSort) {
+        nextPayload.metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY] = { sort, direction };
+    } else {
+        delete nextPayload.metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY];
+        if (Object.keys(nextPayload.metadata[state.METADATA_NAMESPACE]).length === 0) {
+            delete nextPayload.metadata[state.METADATA_NAMESPACE];
+        }
+        if (Object.keys(nextPayload.metadata).length === 0) {
+            nextPayload.metadata = {};
+        }
+    }
+    // Any refresh request while save is in-flight invalidates post-save DOM sorting.
+    const refreshTokenBeforeSave = refreshRequestToken;
+    await state.saveWorldInfo(name, nextPayload, true);
+    if (state.cache[name]) {
+        setCacheMetadata(name, nextPayload.metadata);
+    }
+    if (refreshTokenBeforeSave !== refreshRequestToken) {
+        console.warn('[STWID] Skipping stale post-save sort after refresh.', { name });
+        return true;
+    }
+    if (!hasSortableBookDom(name)) {
+        console.warn('[STWID] Skipping post-save sort: book cache/DOM not ready.', { name });
+        return true;
+    }
     sortEntriesIfNeeded(name);
+    return true;
 };
 
 const clearBookSortPreferences = async()=>{
@@ -229,12 +308,7 @@ const setBookFolder = async(name, folderName)=>{
     const latest = await state.loadWorldInfo(name);
     if (!latest || typeof latest !== 'object') return false;
 
-    const nextPayload = {
-        entries: structuredClone(latest.entries ?? {}),
-        metadata: latest.metadata && typeof latest.metadata === 'object'
-            ? structuredClone(latest.metadata)
-            : {},
-    };
+    const nextPayload = buildLatestBookSavePayload(latest);
     const result = setFolderInMetadata(nextPayload.metadata, folderName);
     if (!result.ok) return false;
     if (result.folder) {
@@ -294,16 +368,35 @@ const clickCoreUiAction = (possibleSelectors, options = {})=>clickCoreUiActionBr
 const renderBook = async(...args)=>booksViewSlice?.renderBook(...args);
 const loadList = async()=>booksViewSlice?.loadList();
 
-const refreshList = async()=>{
+const runRefreshWorker = async()=>{
     state.dom.drawer.body.classList.add('stwid--isLoading');
-    state.resetEditor?.();
-    captureBookCollapseStatesFromDom(state.cache, listPanelState.setCollapseState);
-    clearCacheBooks(state.cache);
     try {
-        await listPanelState.loadListDebounced();
-        listPanelState.searchInput?.dispatchEvent(new Event('input'));
+        while (refreshCompletedToken < refreshRequestToken) {
+            const token = refreshRequestToken;
+            state.resetEditor?.();
+            captureBookCollapseStatesFromDom(state.cache, listPanelState.setCollapseState);
+            clearCacheBooks(state.cache);
+            await listPanelState.loadListDebounced();
+            listPanelState.searchInput?.dispatchEvent(new Event('input'));
+            refreshCompletedToken = token;
+        }
     } finally {
         state.dom.drawer.body.classList.remove('stwid--isLoading');
+        refreshWorkerPromise = null;
+    }
+};
+
+// Contract: `refreshList()` resolves only after the newest pending refresh finished.
+const refreshList = async()=>{
+    refreshRequestToken += 1;
+    if (!refreshWorkerPromise) {
+        refreshWorkerPromise = runRefreshWorker();
+    }
+    while (refreshCompletedToken < refreshRequestToken) {
+        if (!refreshWorkerPromise) {
+            refreshWorkerPromise = runRefreshWorker();
+        }
+        await refreshWorkerPromise;
     }
 };
 
@@ -318,10 +411,49 @@ const setupBooks = (list)=>{
     const books = document.createElement('div'); {
         state.dom.books = books;
         books.classList.add('stwid--books');
-        books.addEventListener('dragover', (evt)=>selectionDnDSlice.onRootDropTargetDragOver(evt));
-        books.addEventListener('drop', async(evt)=>selectionDnDSlice.onRootDropTargetDrop(evt));
+        booksRootDragOverHandler = (evt)=>selectionDnDSlice?.onRootDropTargetDragOver(evt);
+        booksRootDropHandler = async(evt)=>selectionDnDSlice?.onRootDropTargetDrop(evt);
+        books.addEventListener('dragover', booksRootDragOverHandler);
+        books.addEventListener('drop', booksRootDropHandler);
         list.append(books);
     }
+};
+
+const teardownListPanel = ()=>{
+    if (state.dom?.books) {
+        if (booksRootDragOverHandler) {
+            state.dom.books.removeEventListener('dragover', booksRootDragOverHandler);
+        }
+        if (booksRootDropHandler) {
+            state.dom.books.removeEventListener('drop', booksRootDropHandler);
+        }
+    }
+    booksRootDragOverHandler = null;
+    booksRootDropHandler = null;
+
+    foldersViewSlice?.resetFolderDoms?.();
+    for (const filter of state.list?.querySelectorAll?.('.stwid--filter') ?? []) {
+        filter.remove();
+    }
+    for (const books of state.list?.querySelectorAll?.('.stwid--books') ?? []) {
+        books.remove();
+    }
+
+    listPanelState.searchInput = null;
+    listPanelState.searchEntriesInput = null;
+    listPanelState.loadListDebounced = null;
+    listPanelState.folderMenuActions = null;
+
+    filterBarSlice = null;
+    selectionDnDSlice = null;
+    bookMenuSlice = null;
+    foldersViewSlice = null;
+    booksViewSlice = null;
+
+    refreshRequestToken = 0;
+    refreshCompletedToken = 0;
+    refreshWorkerPromise = null;
+    listPanelInitialized = false;
 };
 
 // Panel bootstrap helpers.
@@ -390,6 +522,7 @@ const wireSlices = ()=>{
 const getListPanelApi = ()=>({
     applyActiveFilter: state.applyActiveFilter,
     clearBookSortPreferences,
+    destroyListPanel: teardownListPanel,
     getBookVisibilityScope,
     getSelectionState: selectionDnDSlice.getSelectionState,
     hasExpandedBooks,
@@ -416,6 +549,10 @@ const getListPanelApi = ()=>({
 
 // Public module initialization + returned API surface.
 const initListPanel = (options)=>{
+    if (listPanelInitialized) {
+        console.warn('[STWID] initListPanel called more than once; resetting previous list panel instance.');
+        teardownListPanel();
+    }
     state = options;
     wireSlices();
     resetBookVisibilityState(BOOK_VISIBILITY_MODES);
@@ -454,6 +591,7 @@ const initListPanel = (options)=>{
         waitForWorldInfoUpdate: state.waitForWorldInfoUpdate,
     };
     setupListPanel(state.list);
+    listPanelInitialized = true;
     return getListPanelApi();
 };
 
