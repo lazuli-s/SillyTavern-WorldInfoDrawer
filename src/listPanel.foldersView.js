@@ -1,11 +1,13 @@
-import { createFolderDom, setFolderCollapsed } from './lorebookFolders.js';
-import { setFolderCollapsedAndPersist } from './listPanel.state.js';
+import { createFolderDom, getFolderFromMetadata, setFolderCollapsed } from './lorebookFolders.js';
+import { persistFolderCollapseStates, setFolderCollapsedAndPersist } from './listPanel.state.js';
 
 const createFoldersViewSlice = ({
     listPanelState,
     runtime,
     selectionDnDSlice,
 })=>{
+    let bulkFolderCollapsedIntent = null;
+
     const hasExpandedFolders = ()=>listPanelState.getFolderDomValues().some((folderDom)=>{
         const books = folderDom?.books;
         return books && !books.classList.contains('stwid--isCollapsed');
@@ -25,9 +27,17 @@ const createFoldersViewSlice = ({
     };
 
     const setAllFoldersCollapsed = (isCollapsed)=>{
+        const nextCollapsed = Boolean(isCollapsed);
+        bulkFolderCollapsedIntent = nextCollapsed;
         const folderNames = listPanelState.getFolderDomNames();
         for (const folderName of folderNames) {
-            setFolderCollapsedAndPersist(folderName, isCollapsed, { transientExpand: !isCollapsed });
+            setFolderCollapsedAndPersist(folderName, nextCollapsed, {
+                transientExpand: !nextCollapsed,
+                persist: false,
+            });
+        }
+        if (nextCollapsed) {
+            persistFolderCollapseStates();
         }
         updateCollapseAllFoldersToggle();
     };
@@ -36,7 +46,11 @@ const createFoldersViewSlice = ({
         const folderDom = createFolderDom({
             folderName,
             onToggle: ()=>{
-                const isCollapsed = !listPanelState.getFolderDom(folderName)?.books.classList.contains('stwid--isCollapsed');
+                const folderDom = listPanelState.getFolderDom(folderName);
+                const books = folderDom?.books;
+                if (!books) return;
+                bulkFolderCollapsedIntent = null;
+                const isCollapsed = !books.classList.contains('stwid--isCollapsed');
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
                 updateCollapseAllFoldersToggle();
             },
@@ -77,13 +91,16 @@ const createFoldersViewSlice = ({
         } else if (!folderDom.root.parentElement) {
             insertFolderDomSorted(folderDom, parent);
         }
-        const initialCollapsed = listPanelState.getFolderCollapseState(folderName) ?? true;
+        const initialCollapsed = bulkFolderCollapsedIntent
+            ?? listPanelState.getFolderCollapseState(folderName)
+            ?? true;
         setFolderCollapsed(folderDom, initialCollapsed);
         updateCollapseAllFoldersToggle();
         return folderDom;
     };
 
     const resetFolderDoms = ()=>{
+        bulkFolderCollapsedIntent = null;
         for (const folderDom of listPanelState.getFolderDomValues()) {
             folderDom.observer?.disconnect();
         }
@@ -101,9 +118,24 @@ const createFoldersViewSlice = ({
         }
     };
 
+    const getVisibleFolderBooks = ({ isBookDomFilteredOut })=>{
+        const visibleBooksByFolder = Object.create(null);
+        for (const [bookName, bookData] of Object.entries(runtime.cache ?? {})) {
+            const folderName = getFolderFromMetadata(bookData?.metadata);
+            if (!folderName) continue;
+            const bookRoot = bookData?.dom?.root;
+            if (!bookRoot || isBookDomFilteredOut(bookRoot)) continue;
+            visibleBooksByFolder[folderName] ??= [];
+            visibleBooksByFolder[folderName].push(bookName);
+        }
+        return visibleBooksByFolder;
+    };
+
     const updateFolderActiveToggles = ({ isBookDomFilteredOut })=>{
+        const visibleBooksByFolder = getVisibleFolderBooks({ isBookDomFilteredOut });
         for (const folderDom of listPanelState.getFolderDomValues()) {
-            folderDom.updateActiveToggle?.();
+            const folderName = folderDom?.root?.dataset?.folder ?? '';
+            folderDom.updateActiveToggle?.(visibleBooksByFolder[folderName] ?? []);
         }
         updateFolderVisibility({ isBookDomFilteredOut });
     };

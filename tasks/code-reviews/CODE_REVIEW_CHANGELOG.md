@@ -6,6 +6,17 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/listPanel.foldersView.js`
+
+- **F01** — Folder header toggle can throw when folder DOM is missing: Added a live `folderDom?.books` guard in `onToggle` so stale refresh-time clicks safely no-op instead of throwing.
+- **F02** — Expand-all misses folders created after the action during in-progress loads: Added transient `bulkFolderCollapsedIntent` and applied it in `ensureFolderDom(...)` so later-created folders follow the latest global expand/collapse action.
+- **F03** — Folder active-toggle refresh was O(Folders × Books): Replaced per-folder cache rescans with a single-pass visible-books-by-folder map and passed those lists into `updateActiveToggle(...)`.
+- **F04** — Collapse-all repeatedly wrote `localStorage`: Added batched collapse persistence (`persist: false` per folder + one explicit flush) while preserving expand-all transient behavior.
+
+---
+
+## February 18, 2026
+
 ### `src/orderHelperRender.filterPanel.js`
 
 *No changes — all findings were skipped or already resolved.*

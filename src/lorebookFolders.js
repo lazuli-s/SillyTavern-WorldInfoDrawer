@@ -645,9 +645,11 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     });
     observer.observe(books, { childList: true });
     updateFolderCount(count, books.childElementCount);
-    const updateActiveToggle = ()=>{
+    const updateActiveToggle = (visibleBookNamesOverride = null)=>{
         if (!activeToggle || !menuActions?.cache || !menuActions?.getSelectedWorldInfo) return;
-        const visibleBookNames = getVisibleFolderBookNames(menuActions.cache, folderName);
+        const visibleBookNames = Array.isArray(visibleBookNamesOverride)
+            ? visibleBookNamesOverride
+            : getVisibleFolderBookNames(menuActions.cache, folderName);
         const state = getFolderActiveState(
             menuActions.cache,
             menuActions.getSelectedWorldInfo(),

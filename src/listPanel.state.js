@@ -246,7 +246,11 @@ const saveFolderCollapseStates = ()=>{
     }
 };
 
-export const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transientExpand = false } = {})=>{
+export const setFolderCollapsedAndPersist = (
+    folderName,
+    isCollapsed,
+    { transientExpand = false, persist = true } = {},
+)=>{
     const folderDom = listPanelState.getFolderDom(folderName);
     if (transientExpand && !isCollapsed) {
         // View-only expand: do not mutate persisted defaults.
@@ -257,11 +261,15 @@ export const setFolderCollapsedAndPersist = (folderName, isCollapsed, { transien
     listPanelState.setFolderCollapseState(folderName, isCollapsed);
 
     // "transientExpand" means: show expanded right now, but keep the stored default unchanged.
-    if (!transientExpand) {
+    if (!transientExpand && persist) {
         saveFolderCollapseStates();
     }
 
     setFolderCollapsed(folderDom, Boolean(isCollapsed));
+};
+
+export const persistFolderCollapseStates = ()=>{
+    saveFolderCollapseStates();
 };
 
 export const resetBookVisibilityState = (bookVisibilityModes)=>{

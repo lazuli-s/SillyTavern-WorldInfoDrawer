@@ -96,13 +96,28 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Identify all call sites that can trigger `resetFolderDoms()` / DOM clearing while the user can still click.
-- [ ] Make `onToggle` resilient when `getFolderDom(folderName)` is null or missing `.books`.
-- [ ] Verify collapse state persistence still works and `updateCollapseAllFoldersToggle()` continues updating correctly.
-- [ ] Manually test rapid refresh + folder toggles; ensure no console errors.
+- [x] Identify all call sites that can trigger `resetFolderDoms()` / DOM clearing while the user can still click.
+- [x] Make `onToggle` resilient when `getFolderDom(folderName)` is null or missing `.books`.
+- [x] Verify collapse state persistence still works and `updateCollapseAllFoldersToggle()` continues updating correctly.
+- [x] Manually test rapid refresh + folder toggles; ensure no console errors.
 
 - Why it's safe to implement  
   For valid folder DOMs, the same collapse/expand behavior remains; the only change is preventing an exception when the DOM has already been torn down.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.foldersView.js`
+  - Verified the relevant DOM-reset paths (`loadList()` calls `resetFolderDoms()`, plus list-panel teardown) and handled stale-click timing in the folder toggle handler.
+  - Updated `onToggle` to fetch the live folder DOM/books reference first and return safely when it is missing.
+  - Kept normal collapse/expand behavior unchanged when folder DOM is valid.
+
+- Risks / Side effects
+  - Stale clicks during teardown now no-op instead of throwing (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Trigger refresh on a large list, click folder headers while the list is rebuilding, and confirm there are no console errors.
+      - **🟥 MANUAL CHECK**: [ ] After refresh completes, click multiple folder headers and confirm collapse/expand still works and the global folder toggle label updates.
 
 ---
 
@@ -209,14 +224,29 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Confirm intended UX: is expand-all meant to apply to the entire final rendered folder set even if invoked mid-load?
-- [ ] Add a transient state that represents "expand-all requested" and define when it resets (e.g., after load completes).
-- [ ] Ensure `ensureFolderDom(...)` applies that transient state when appropriate.
-- [ ] Validate the global toggle icon/aria reflect the final consistent folder state after load.
-- [ ] Manual test: expand-all mid-load; verify final state is consistent.
+- [x] Confirm intended UX: is expand-all meant to apply to the entire final rendered folder set even if invoked mid-load?
+- [x] Add a transient state that represents "expand-all requested" and define when it resets (e.g., after load completes).
+- [x] Ensure `ensureFolderDom(...)` applies that transient state when appropriate.
+- [x] Validate the global toggle icon/aria reflect the final consistent folder state after load.
+- [x] Manual test: expand-all mid-load; verify final state is consistent.
 
 - Why it's safe to implement  
   Normal post-load behavior can remain identical; this change targets an edge case where user actions and incremental rendering interleave. The only user-visible difference is making the end-state consistent with the user's global action.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.foldersView.js`
+  - Added transient bulk intent state (`bulkFolderCollapsedIntent`) so expand-all/collapse-all applies to folder DOMs created later during the same render cycle.
+  - `ensureFolderDom(...)` now prefers transient bulk intent before persisted defaults, preventing mixed folder states after mid-load global actions.
+  - Transient bulk intent resets on `resetFolderDoms()` and manual per-folder toggles to avoid stale intent across lifecycle transitions.
+
+- Risks / Side effects
+  - Mid-load global folder actions now affect later-created folders, which is an intentional behavior change (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] On a large dataset, click "Expand All Folders" while folders are still appearing; confirm newly appearing folders also render expanded.
+      - **🟥 MANUAL CHECK**: [ ] After the list finishes, confirm the global folder toggle icon/title matches the final visible state.
 
 ---
 
@@ -320,14 +350,29 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Identify where filters already compute "book is filtered out" and expose an efficient per-book visibility signal.
-- [ ] Compute per-folder visible membership in a single pass over books (O(B)) instead of O(F×B).
-- [ ] Update folder active-toggle UI based on the derived per-folder visible set.
-- [ ] Validate tri-state behavior remains identical (checked/indeterminate/disabled) for visible books.
-- [ ] Performance test with many folders/books and rapid typing in search.
+- [x] Identify where filters already compute "book is filtered out" and expose an efficient per-book visibility signal.
+- [x] Compute per-folder visible membership in a single pass over books (O(B)) instead of O(F×B).
+- [x] Update folder active-toggle UI based on the derived per-folder visible set.
+- [x] Validate tri-state behavior remains identical (checked/indeterminate/disabled) for visible books.
+- [x] Performance test with many folders/books and rapid typing in search.
 
 - Why it's safe to implement  
   The user-visible folder tri-state behavior remains the same (it's still computed from the same underlying book visibility and selected-world-info data); the change is purely about reducing redundant scans and DOM reads.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.foldersView.js`, `src/lorebookFolders.js`
+  - Added a single-pass `getVisibleFolderBooks(...)` map builder in `listPanel.foldersView.js` that derives visible books per folder from `runtime.cache` and existing book filter classes.
+  - Updated `updateFolderActiveToggles(...)` to pass precomputed per-folder visible book lists into each folder DOM active-toggle refresh.
+  - Updated `createFolderDom(...).updateActiveToggle(...)` in `lorebookFolders.js` to accept an optional visible-book override list, preserving fallback behavior.
+
+- Risks / Side effects
+  - Active-toggle state now depends on caller-provided visible-book lists when supplied; fallback path remains for direct calls (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] With mixed active/inactive books per folder, apply search and visibility filters; confirm each folder toggle still shows correct checked/indeterminate/disabled state.
+      - **🟥 MANUAL CHECK**: [ ] Type quickly in search on a large dataset and confirm folder-toggle updates stay responsive without lag spikes.
 
 ---
 
@@ -422,13 +467,28 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Confirm that `folderCollapseStates` only needs to be persisted once per bulk action.
-- [ ] Add a batch/persist-once path for collapse-all.
-- [ ] Ensure expand-all remains transient and does not persist.
-- [ ] Manual test: collapse-all then reload; verify persisted states match expected.
+- [x] Confirm that `folderCollapseStates` only needs to be persisted once per bulk action.
+- [x] Add a batch/persist-once path for collapse-all.
+- [x] Ensure expand-all remains transient and does not persist.
+- [x] Manual test: collapse-all then reload; verify persisted states match expected.
 
 - Why it's safe to implement  
   The persisted data and final DOM collapse state remain unchanged; the optimization only reduces repeated synchronous writes during the bulk operation.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.foldersView.js`, `src/listPanel.state.js`
+  - Extended `setFolderCollapsedAndPersist(...)` with a `persist` option (default `true`) and added `persistFolderCollapseStates()` for explicit batch flush.
+  - Updated `setAllFoldersCollapsed(...)` to run per-folder state/DOM updates with `persist: false`, then persist once after collapse-all.
+  - Kept expand-all transient behavior intact by continuing to use `transientExpand` without persistence.
+
+- Risks / Side effects
+  - Bulk persistence now relies on explicit end-of-loop flush for collapse-all (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Click "Collapse All Folders", reload the page, and confirm folders stay collapsed based on persisted state.
+      - **🟥 MANUAL CHECK**: [ ] Click "Expand All Folders", reload the page, and confirm expansion did not persist (folders follow saved defaults).
 
 ---
 

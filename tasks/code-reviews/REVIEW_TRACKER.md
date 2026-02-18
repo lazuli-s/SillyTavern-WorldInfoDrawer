@@ -799,28 +799,44 @@ Track all code-review findings across the extension's JS files.
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Crash in event handler during refresh/click race; defensive fix adds robustness.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added a live folder DOM/books guard in `onToggle` so stale clicks during refresh teardown safely no-op instead of throwing.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Trigger refresh on a large list, click folder headers while the list is rebuilding, and confirm there are no console errors.
+      - [ ] After refresh completes, click multiple folder headers and confirm collapse/expand still works and the global folder toggle label updates.
 
 - **F02** — "Expand All Folders" is transient and does not apply to folders created after the action, causing inconsistent UI state during in-progress list loads
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — UI consistency issue during incremental list loads; user expectation mismatch.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added transient `bulkFolderCollapsedIntent` and applied it in `ensureFolderDom(...)` so folders created mid-load follow the latest global expand/collapse action.
+    - **🟥 MANUAL CHECK**:
+      - [ ] On a large dataset, click "Expand All Folders" while folders are still appearing; confirm newly appearing folders also render expanded.
+      - [ ] After the list finishes, confirm the global folder toggle icon/title matches the final visible state.
 
 - **F03** — Folder active-toggle refresh is potentially O(Folders × Books) on every filter update, causing input lag on large collections
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
   - **Neglect Risk:** Medium ❗ — Performance issue affecting input latency; algorithmic optimization available.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Replaced per-folder full-cache scans with a single-pass visible-books-by-folder map and passed those lists into `updateActiveToggle(...)`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] With mixed active/inactive books per folder, apply search and visibility filters; confirm each folder toggle still shows correct checked/indeterminate/disabled state.
+      - [ ] Type quickly in search on a large dataset and confirm folder-toggle updates stay responsive without lag spikes.
 
 - **F04** — "Collapse All Folders" can write `localStorage` repeatedly (once per folder), causing avoidable synchronous overhead on large folder counts
   - Meta-reviewed: [X]
     - Verdict: Ready to implement 🟢
     - Reason: N/A
-  - **Neglect Risk:** Low ⬜ — Performance issue with large folder counts; straightforward batching optimization.
-  - Implemented:
+  - **Neglect Risk:** Low ⭕ — Performance issue with large folder counts; straightforward batching optimization.
+  - Implemented: ✅
+    - Implementation Notes: Added batched collapse-state persistence (`persist: false` per folder + one explicit flush) while keeping expand-all transient.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Click "Collapse All Folders", reload the page, and confirm folders stay collapsed based on persisted state.
+      - [ ] Click "Expand All Folders", reload the page, and confirm expansion did not persist (folders follow saved defaults).
 
 ---
 
