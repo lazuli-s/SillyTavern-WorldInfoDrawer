@@ -597,6 +597,39 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
+### `src/orderHelperRender.filterPanel.js`
+-> `CodeReview_orderHelperRender.filterPanel.js.md`
+
+- **F01** — Script filter is read from localStorage but never persisted back
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ❌ Already fixed
+    - Implementation Notes: Already fixed — `saveFilterDebounced = debounce(()=>localStorage.setItem(orderFilterStorageKey, inp.value), 200)` is declared and called inside the `input` handler; default value seeded via `if (storedFilter == null)` at initialization.
+
+- **F02** — Missing null guards when resolving rows can throw during refresh/desync
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ❌ Already fixed
+    - Implementation Notes: Already fixed — both row-resolution sites use `dom.order.entries?.[e.book]?.[e.data.uid]` optional chaining and `if (!row) continue;` guards in both loops; `catch` block calls `showFilterError(msg)` without re-throwing.
+
+- **F03** — In-flight async filter execution can apply stale results after filter panel is no longer active
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ❌ Already fixed
+    - Implementation Notes: Already fixed — `isActive()` helper is declared and re-checked after `await closure.compile(script)` and at the start of each per-entry loop iteration, returning early when the filter panel is inactive.
+
+- **F04** — Syntax highlighting runs on every keystroke and may cause input lag for long scripts
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ❌ Already fixed
+    - Implementation Notes: Already fixed — `updateHighlight()` is extracted and wrapped in `updateHighlightDebounced = debounce(()=>updateHighlight(), 100)`; the `input` handler calls the debounced version rather than the immediate function.
+
+---
+
 ### `src/orderHelperState.js`
 -> `CodeReview_orderHelperState.js.md`
 

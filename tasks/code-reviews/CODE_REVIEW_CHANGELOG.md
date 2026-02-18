@@ -6,6 +6,14 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/orderHelperRender.filterPanel.js`
+
+*No changes — all findings were skipped or already resolved.*
+
+---
+
+## February 18, 2026
+
 ### `src/listPanel.filterBar.js`
 
 - **F01** — Search filter can throw during list load (partially built `dom.entry[uid]` map): Added `?.root` optional chaining on all `dom.entry[e.uid]` accesses in `applySearchFilter()`; `setQueryFiltered()` already guards `!element`, so mid-render missing nodes are silently skipped with no crash.
