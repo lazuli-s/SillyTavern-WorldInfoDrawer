@@ -125,6 +125,29 @@ export const initDrawer = ({
                     const selectedUids = [...(selectionState.selectList ?? [])];
                     if (selectFrom === null || !selectedUids.length) return;
 
+                    // Guard: if the source book or selected entries are hidden by active filters,
+                    // require explicit confirmation before deleting invisible entries.
+                    const isSelectionVisible = ()=>{
+                        const bookRoot = cache[selectFrom]?.dom?.root;
+                        if (!bookRoot) return false;
+                        if (
+                            bookRoot.classList.contains('stwid--filter-visibility') ||
+                            bookRoot.classList.contains('stwid--filter-query')
+                        ) return false;
+                        return selectedUids.every((uid)=>{
+                            const entryRoot = cache[selectFrom]?.dom?.entry?.[uid]?.root;
+                            return entryRoot && !entryRoot.classList.contains('stwid--filter-query');
+                        });
+                    };
+                    if (!isSelectionVisible()) {
+                        const count = selectedUids.length;
+                        const noun = count === 1 ? 'entry is' : 'entries are';
+                        const confirmed = await Popup.show.confirm(
+                            `${count} selected ${noun} currently hidden by filters. Delete anyway?`,
+                        );
+                        if (!confirmed) return;
+                    }
+
                     const srcBook = await loadWorldInfo(selectFrom);
                     if (!srcBook) return;
 

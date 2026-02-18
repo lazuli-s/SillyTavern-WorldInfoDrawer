@@ -101,6 +101,7 @@ const createFilterBarSlice = ({
         });
     };
 
+    let docClickHandler = null;
     const setupFilter = (list)=>{
         const filter = document.createElement('div'); {
             const searchRow = document.createElement('div');
@@ -149,6 +150,9 @@ const createFilterBarSlice = ({
                 const entryMatchesQuery = (bookName, entry, normalizedQuery)=>getEntrySearchText(bookName, entry).includes(normalizedQuery);
 
                 const applySearchFilter = ()=>{
+                    // Prune stale book keys from entry search cache (deleted/renamed books).
+                    listPanelState.pruneEntrySearchCacheStaleBooks(Object.keys(runtime.cache));
+
                     const query = search.value.toLowerCase();
                     const searchEntries = listPanelState.searchEntriesInput.checked;
                     const shouldScanEntries = searchEntries && query.length >= 2;
@@ -156,23 +160,34 @@ const createFilterBarSlice = ({
                     for (const b of Object.keys(runtime.cache)) {
                         if (query.length) {
                             const bookMatch = b.toLowerCase().includes(query);
-                            const entryMatch = shouldScanEntries
-                                && Object.values(runtime.cache[b].entries).find((e)=>entryMatchesQuery(b, e, query));
-                            setQueryFiltered(runtime.cache[b].dom.root, !(bookMatch || entryMatch));
-
                             if (shouldScanEntries) {
-                                for (const e of Object.values(runtime.cache[b].entries)) {
-                                    setQueryFiltered(runtime.cache[b].dom.entry[e.uid].root, !(bookMatch || entryMatchesQuery(b, e, query)));
+                                if (bookMatch) {
+                                    // Book name matches — no per-entry query needed; clear all entry filters.
+                                    setQueryFiltered(runtime.cache[b].dom.root, false);
+                                    for (const e of Object.values(runtime.cache[b].entries)) {
+                                        setQueryFiltered(runtime.cache[b].dom.entry[e.uid]?.root, false);
+                                    }
+                                } else {
+                                    // No book match — single-pass entry scan (eliminates .find() + full loop).
+                                    let anyEntryMatch = false;
+                                    for (const e of Object.values(runtime.cache[b].entries)) {
+                                        const entryMatch = entryMatchesQuery(b, e, query);
+                                        if (entryMatch) anyEntryMatch = true;
+                                        setQueryFiltered(runtime.cache[b].dom.entry[e.uid]?.root, !entryMatch);
+                                    }
+                                    setQueryFiltered(runtime.cache[b].dom.root, !anyEntryMatch);
                                 }
                             } else {
+                                // Not scanning entries — book-level filter only; clear stale entry filters.
+                                setQueryFiltered(runtime.cache[b].dom.root, !bookMatch);
                                 for (const e of Object.values(runtime.cache[b].entries)) {
-                                    setQueryFiltered(runtime.cache[b].dom.entry[e.uid].root, false);
+                                    setQueryFiltered(runtime.cache[b].dom.entry[e.uid]?.root, false);
                                 }
                             }
                         } else {
                             setQueryFiltered(runtime.cache[b].dom.root, false);
                             for (const e of Object.values(runtime.cache[b].entries)) {
-                                setQueryFiltered(runtime.cache[b].dom.entry[e.uid].root, false);
+                                setQueryFiltered(runtime.cache[b].dom.entry[e.uid]?.root, false);
                             }
                         }
                     }
@@ -412,12 +427,14 @@ const createFilterBarSlice = ({
                 bookVisibility.append(menuWrap);
                 bookVisibility.append(chips);
 
-                document.addEventListener('click', (evt)=>{
+                const onDocClickCloseMenu = (evt)=>{
                     if (!menu.classList.contains('stwid--active')) return;
                     const target = evt.target instanceof HTMLElement ? evt.target : null;
                     if (target?.closest('.stwid--bookVisibility')) return;
                     closeBookVisibilityMenu();
-                });
+                };
+                docClickHandler = onDocClickCloseMenu;
+                document.addEventListener('click', onDocClickCloseMenu);
             }
             filter.append(searchRow, visibilityRow);
             applyActiveFilter();
@@ -426,6 +443,12 @@ const createFilterBarSlice = ({
     };
 
     return {
+        cleanup: ()=>{
+            if (docClickHandler) {
+                document.removeEventListener('click', docClickHandler);
+                docClickHandler = null;
+            }
+        },
         getBookVisibilityScope,
         setupFilter,
     };

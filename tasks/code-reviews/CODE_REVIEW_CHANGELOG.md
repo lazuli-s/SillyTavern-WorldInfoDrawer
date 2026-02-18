@@ -6,6 +6,18 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/listPanel.filterBar.js`
+
+- **F01** — Search filter can throw during list load (partially built `dom.entry[uid]` map): Added `?.root` optional chaining on all `dom.entry[e.uid]` accesses in `applySearchFilter()`; `setQueryFiltered()` already guards `!element`, so mid-render missing nodes are silently skipped with no crash.
+- **F02** — Filtering can hide active selection, making Delete silently destructive: Added `isSelectionVisible()` local helper in `drawer.js` Delete handler; shows `Popup.show.confirm()` count-aware dialog before any destructive call when the source book or selected entries are hidden by active filters; cancelling preserves selection intact.
+- **F03** — Full DOM toggling every keystroke (double-traversal overhead): Eliminated separate `.find()` + full-loop double-traversal in `applySearchFilter()`; when book name matches and scanning is on, skips per-entry `entryMatchesQuery()`; when book doesn't match, uses single-pass `anyEntryMatch` tracking; not-scanning path is an explicit branch with no query computation.
+- **F04** — Entry search cache grows unbounded across session: Added `pruneEntrySearchCacheStaleBooks(activeBookNames)` to `listPanelState`; called at the start of each `applySearchFilter()` run to delete cache keys for deleted/renamed books.
+- **F05** — Global document click handler has no cleanup path (listener leak on re-init): Stored handler in `docClickHandler` slice-scoped variable; added `cleanup()` to `createFilterBarSlice` return; wired `filterBarSlice?.cleanup?.()` into `teardownListPanel()` in `listPanel.js`.
+
+---
+
+## February 18, 2026
+
 ### `src/listPanel.bookMenu.js`
 
 - **F01** — Duplicate-book detection can pick the wrong new book under concurrent creates: Replaced `currentNames.find(...)` (first-match) with `currentNames.filter(...)` + `addedNames.length === 1` cardinality check in `findNewName()`; returns `null` when 0 or 2+ books were added to avoid wrong-book moves.

@@ -444,6 +444,7 @@ const teardownListPanel = ()=>{
     listPanelState.loadListDebounced = null;
     listPanelState.folderMenuActions = null;
 
+    filterBarSlice?.cleanup?.();
     filterBarSlice = null;
     selectionDnDSlice = null;
     bookMenuSlice = null;

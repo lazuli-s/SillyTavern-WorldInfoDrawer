@@ -157,6 +157,14 @@ export const listPanelState = {
         state.entrySearchCache[bookKey] ??= createSafeStateMap();
         state.entrySearchCache[bookKey][entryKey] = value;
     },
+    pruneEntrySearchCacheStaleBooks(activeBookNames) {
+        const activeSet = new Set(activeBookNames);
+        for (const bookKey of Object.keys(state.entrySearchCache)) {
+            if (!activeSet.has(bookKey)) {
+                delete state.entrySearchCache[bookKey];
+            }
+        }
+    },
     get selectLast() {
         return state.selectLast;
     },

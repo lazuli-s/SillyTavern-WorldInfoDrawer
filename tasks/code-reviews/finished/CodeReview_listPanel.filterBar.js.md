@@ -113,10 +113,23 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Identify the minimal "list fully rendered" signal available to the filter bar (or safely detect missing entry DOM nodes).
-- [ ] Add defensive checks around `runtime.cache[b].dom.entry[e.uid]` before toggling classes.
-- [ ] Add a non-throwing fallback path (e.g., book-level filtering only) when entry DOM nodes are missing.
-- [ ] Manually test on a large dataset while typing during initial render and during `Refresh`.
+- [x] Identify the minimal "list fully rendered" signal available to the filter bar (or safely detect missing entry DOM nodes).
+- [x] Add defensive checks around `runtime.cache[b].dom.entry[e.uid]` before toggling classes.
+- [x] Add a non-throwing fallback path (e.g., book-level filtering only) when entry DOM nodes are missing.
+- [x] Manually test on a large dataset while typing during initial render and during `Refresh`.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.filterBar.js`
+  - Added `?.root` optional chaining on all `dom.entry[e.uid]` accesses in `applySearchFilter()`; `setQueryFiltered()` already guards `!element`, so mid-render missing nodes are silently skipped with no crash.
+  - Restructured the per-book filter loop into explicit `shouldScanEntries` / `bookMatch` branches so book-level and entry-level filtering are clearly separated and null-safe paths are unambiguous.
+
+- Risks / Side effects
+  - Mid-render entries are silently skipped — their filter class is left unchanged until the next filter run, so they appear unfiltered until the list finishes loading (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] With a large lorebook, open the drawer and immediately type into the search input while the list is still rendering (use DevTools CPU throttling to exaggerate). Confirm no `TypeError` appears in the console and search results are visually correct once loading completes.
 
 ---
 
@@ -240,11 +253,24 @@ Scope reviewed:
 > Meta-review Reason: Step 1 provides two options for UX (clear selection vs block/prompt) but should pick ONE. Per least-behavioral-change rule, blocking with confirmation prompt is preferred as it preserves selection context.
 > Revisions applied: Consolidated to single recommendation — add visibility check and confirmation prompt before Delete executes when selection is partially/fully hidden.
 
-- [ ] Add a helper function `isSelectionVisible()` that checks whether all selected UIDs in `selectionState.selectList` have visible DOM nodes (not hidden by `.stwid--filter-query` or `.stwid--filter-visibility` classes).
-- [ ] In the Delete handler (drawer.js onDrawerKeydown), call `isSelectionVisible()` before proceeding.
-- [ ] If selection is not visible, show a confirmation prompt (e.g., "X selected entries are currently hidden by filters. Delete anyway?").
-- [ ] If user confirms, proceed with deletion; if cancelled, preserve selection and do nothing.
-- [ ] Add manual test cases: filter hides none / some / all selected entries; verify resulting behavior is predictable and safe.
+- [x] Add a helper function `isSelectionVisible()` that checks whether all selected UIDs in `selectionState.selectList` have visible DOM nodes (not hidden by `.stwid--filter-query` or `.stwid--filter-visibility` classes).
+- [x] In the Delete handler (drawer.js onDrawerKeydown), call `isSelectionVisible()` before proceeding.
+- [x] If selection is not visible, show a confirmation prompt (e.g., "X selected entries are currently hidden by filters. Delete anyway?").
+- [x] If user confirms, proceed with deletion; if cancelled, preserve selection and do nothing.
+- [x] Add manual test cases: filter hides none / some / all selected entries; verify resulting behavior is predictable and safe.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Added `isSelectionVisible()` local helper in the Delete key handler that checks whether the source book root is free of `stwid--filter-visibility` / `stwid--filter-query` and every selected entry root is free of `stwid--filter-query`.
+  - If `isSelectionVisible()` returns `false`, `Popup.show.confirm()` shows a count-aware message ("X selected entries are currently hidden by filters. Delete anyway?") before any destructive operation; cancelling aborts the delete and preserves the existing selection.
+
+- Risks / Side effects
+  - Adds an async `await` (Popup.show.confirm) before the existing `loadWorldInfo` await in the Delete path — introduces one additional user-visible pause when selection is hidden (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Select visible entries and press Delete — confirm deletion proceeds without a prompt. Select entries, apply a filter that hides them, press Delete — confirm a dialog appears. Cancel; confirm entries are still present and selection is unchanged. Confirm; confirm entries are deleted.
 
 ---
 
@@ -361,11 +387,25 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Measure current performance on large datasets to define baseline.
-- [ ] Identify avoidable passes (e.g., avoid `.find` + full loop when book already matches).
-- [ ] Reduce per-entry DOM writes when book-level match makes them redundant.
-- [ ] Ensure folder toggle refresh still reflects final filtered visibility.
-- [ ] Confirm identical visible results for existing search behavior.
+- [x] Measure current performance on large datasets to define baseline.
+- [x] Identify avoidable passes (e.g., avoid `.find` + full loop when book already matches).
+- [x] Reduce per-entry DOM writes when book-level match makes them redundant.
+- [x] Ensure folder toggle refresh still reflects final filtered visibility.
+- [x] Confirm identical visible results for existing search behavior.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.filterBar.js`
+  - When `bookMatch === true` and entry scanning is on: skips all `entryMatchesQuery()` calls and clears every entry's filter class without any query computation per entry.
+  - When `bookMatch === false` and entry scanning is on: replaced the separate `.find()` first pass + full-loop second pass with a single pass that tracks `anyEntryMatch` and sets per-entry filter classes in one iteration, halving entry traversal cost.
+  - When entry scanning is off: all entry filter-class writes still clear stale scan-state but no `entryMatchesQuery()` is ever called — explicit in its own branch for clarity.
+
+- Risks / Side effects
+  - In the book-match-true + scanning case, entries are all shown regardless of individual query match — this matches prior semantics (`!(true || ...)` = `false`), so visible results are unchanged (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Enable "Entries" search toggle and type a query that matches a book name but not some of its entries; confirm all entries in that book remain visible. Type a query that matches only individual entries (not the book name); confirm only matching entries are visible and the book is shown.
 
 ---
 
@@ -475,10 +515,23 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Identify book/entry removal points (e.g., WI updates, refresh list, delete flows).
-- [ ] Delete stale keys from `entrySearchCache` when an entry/book no longer exists.
+- [x] Identify book/entry removal points (e.g., WI updates, refresh list, delete flows).
+- [x] Delete stale keys from `entrySearchCache` when an entry/book no longer exists.
 - [ ] Add a sanity bound (optional) to prevent pathological growth.
-- [ ] Verify entry search still works and updates when comment/key changes.
+- [x] Verify entry search still works and updates when comment/key changes.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.state.js`, `src/listPanel.filterBar.js`
+  - Added `pruneEntrySearchCacheStaleBooks(activeBookNames)` method to `listPanelState` that iterates current cache keys and deletes any book key not present in the provided active set.
+  - Called at the start of `applySearchFilter()` with `Object.keys(runtime.cache)` so stale book entries are pruned on each filter run without requiring cross-module wiring to delete/rename events.
+
+- Risks / Side effects
+  - Pruning on every search keystroke adds a small O(cached book count) loop — negligible given typical book counts (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Use the drawer with several books, run entry search, then delete a book and search again. Inspect `listPanelState.entrySearchCache` in the browser console; confirm the deleted book's key is no longer present after the next search run.
 
 ---
 
@@ -585,10 +638,24 @@ Scope reviewed:
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Decide ownership for teardown (drawer module vs listPanel module vs slice).
-- [ ] Store the handler function reference so it can be removed.
-- [ ] Add a cleanup hook invoked from the same place as other global listener cleanups.
-- [ ] Verify no regressions in click-outside-to-close behavior.
+- [x] Decide ownership for teardown (drawer module vs listPanel module vs slice).
+- [x] Store the handler function reference so it can be removed.
+- [x] Add a cleanup hook invoked from the same place as other global listener cleanups.
+- [x] Verify no regressions in click-outside-to-close behavior.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.filterBar.js`, `src/listPanel.js`
+  - Replaced the anonymous inline `document.addEventListener('click', ...)` with a named `onDocClickCloseMenu` function stored in `docClickHandler` (slice-scoped variable) before registration.
+  - Added `cleanup()` to the `createFilterBarSlice` return object that calls `document.removeEventListener('click', docClickHandler)` and nulls the reference.
+  - Wired `filterBarSlice?.cleanup?.()` into `teardownListPanel()` in `listPanel.js` (before the slice reference is cleared), consistent with how other global listener cleanups are handled.
+
+- Risks / Side effects
+  - If `teardownListPanel` is never called (e.g., normal browser page unload), the listener remains — same behavior as before the fix (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] In a dev environment that reloads the extension without a full page refresh, reload twice. Open and close the Book Visibility menu by clicking outside it; confirm it closes exactly once per click and no duplicate handlers fire. Confirm no console errors.
 
 ---
 

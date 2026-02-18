@@ -846,6 +846,56 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
+### `src/listPanel.filterBar.js`
+-> `CodeReview_listPanel.filterBar.js.md`
+
+- **F01** — Search filter can throw during list load due to partially built `dom.entry[uid]` map (race during async render)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Added `?.root` optional chaining on all `dom.entry[e.uid]` accesses in `applySearchFilter()`; `setQueryFiltered()` already guards `!element`, so mid-render missing nodes are silently skipped with no crash.
+    - **🟥 MANUAL CHECK**:
+      - [ ] With a large lorebook, open the drawer and immediately type into the search input while the list is still rendering (use DevTools CPU throttling to exaggerate). Confirm no `TypeError` appears in the console and search results are visually correct once loading completes.
+
+- **F02** — Data integrity risk — filtering can hide an active multi-entry selection, making Delete key operations unintentionally destructive
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: Revised to single recommendation — confirmation prompt before Delete when selection is hidden by active filters.
+  - Implemented: ✅
+    - Implementation Notes: Added `isSelectionVisible()` local helper in drawer.js Delete handler; shows `Popup.show.confirm()` count-aware dialog before any destructive call when book or entries are filter-hidden; cancelling preserves selection intact.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Select visible entries and press Delete — confirm deletion proceeds without a prompt. Select entries, apply a filter that hides them, press Delete — confirm a dialog appears. Cancel; confirm entries are still present and selection is unchanged. Confirm; confirm entries are deleted.
+
+- **F03** — Search filtering does full DOM toggling across all books and all entries every keystroke (input latency risk on large datasets)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Eliminated separate `.find()` + full-loop double-traversal; when book name matches and scanning is on, skips `entryMatchesQuery()` per entry; when book doesn't match, uses single-pass tracking of `anyEntryMatch`; not-scanning path is explicit branch with no query computation.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Enable "Entries" search toggle and type a query that matches a book name but not some of its entries; confirm all entries in that book remain visible. Type a query that matches only individual entries (not the book name); confirm only matching entries are visible and the book is shown.
+
+- **F04** — Entry search cache can grow unbounded across session (memory/perf degradation over time)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Added `pruneEntrySearchCacheStaleBooks(activeBookNames)` to `listPanelState`; called at the start of each `applySearchFilter()` run so deleted/renamed book cache entries are pruned without requiring event wiring.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Use the drawer with several books, run entry search, then delete a book and search again. Inspect `listPanelState.entrySearchCache` in the browser console; confirm the deleted book's key is no longer present after the next search run.
+
+- **F05** — Global document click handler for menu close has no cleanup path (listener leak on re-init)
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Stored document click handler in `docClickHandler` slice-scoped variable; added `cleanup()` to `createFilterBarSlice` return; wired `filterBarSlice?.cleanup?.()` into `teardownListPanel()` in `listPanel.js`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] In a dev environment that reloads the extension without a full page refresh, reload twice. Open and close the Book Visibility menu by clicking outside it; confirm it closes exactly once per click and no duplicate handlers fire. Confirm no console errors.
+
+---
+
 ### `src/listPanel.selectionDnD.js`
 -> `CodeReview_listPanel.selectionDnD.js.md`
 
