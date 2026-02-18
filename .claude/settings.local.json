@@ -15,7 +15,9 @@
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(python:*)",
-      "Bash(PYTHONIOENCODING=utf-8 python:*)"
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(python3:*)"
     ]
   },
   "hooks": {

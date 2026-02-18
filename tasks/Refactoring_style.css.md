@@ -171,6 +171,10 @@ Needs markup/class changes (second pass):
    - Preserve `body.stwid-- #WorldInfo` boundary but reduce repeated full chains via grouped selectors.
    - Avoid brittle structural selectors where a stable class-based selector can be used.
 
+   Full checklist: [Refactoring_style.css.Step4.md](Refactoring_style.css.Step4.md)
+
+   **Status:** Not started
+
 5. Optional markup/class harmonization pass.
    - Evaluate adding `.list-group`/`.list-group-item` to dropdown markup and `.interactable` to keyboard-focusable controls.
    - Evaluate using vanilla toggle/disabled class contracts for controls/rows where semantics match.
@@ -270,4 +274,3 @@ Full checklist: [Refactoring_style.css.Step3.md](Refactoring_style.css.Step3.md)
 | 3a | `.menu_button` in Move Book dialog — remove 2 duplicate declarations + add override comments |
 | 3b | Editor-section vanilla-class rules (8 blocks) — add explanatory comments only |
 | 3c | Remaining scattered vanilla-class rules (4 blocks) — add explanatory comments only |
-
