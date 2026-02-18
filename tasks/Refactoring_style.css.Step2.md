@@ -41,10 +41,10 @@
 
 **Reload check:** Drawer layout, editor panel height, and Order Helper table all render identically to before.
 
-- [ ] New shared section header added
-- [ ] Grouped rule created with both selectors
-- [ ] 6 properties removed from `.stwid--editor` rule; empty rule removed
-- [ ] 6 properties removed from `.stwid--orderHelper` rule; empty rule removed
+- [x] New shared section header added
+- [x] Grouped rule created with both selectors
+- [x] 6 properties removed from `.stwid--editor` rule; empty rule removed
+- [x] 6 properties removed from `.stwid--orderHelper` rule; empty rule removed
 - [ ] Browser reloaded — no visual change
 
 ---
@@ -73,9 +73,9 @@
 
 **Reload check:** The book list scrolls correctly when there are many books. The Order Helper table scrolls correctly when there are many rows.
 
-- [ ] Grouped rule added to shared section
-- [ ] 3 properties removed from `.stwid--books`; empty rule removed
-- [ ] 3 properties removed from `.stwid--orderTableWrap`; empty rule removed
+- [x] Grouped rule added to shared section
+- [x] 3 properties removed from `.stwid--books`; empty rule removed
+- [x] 3 properties removed from `.stwid--orderTableWrap`; empty rule removed
 - [ ] Browser reloaded — list and table both still scroll
 
 ---
@@ -117,12 +117,12 @@
 
 **Reload check:** Hover over folder action icons — opacity fades in correctly. Hover over book action icons — same. Folder actions still have no extra padding. Book actions remain unchanged visually.
 
-- [ ] Shared base rule created with both selectors
-- [ ] Folder action rule reduced to `padding:0` only
-- [ ] Book action rule deleted entirely
-- [ ] Shared hover rule created with both selectors
-- [ ] Original folder hover rule deleted
-- [ ] Original book hover rule deleted
+- [x] Shared base rule created with both selectors
+- [x] Folder action rule reduced to `padding:0` only
+- [x] Book action rule deleted entirely
+- [x] Shared hover rule created with both selectors
+- [x] Original folder hover rule deleted
+- [x] Original book hover rule deleted
 - [ ] Browser reloaded — both icon hover effects unchanged
 
 ---
@@ -164,10 +164,10 @@
 
 **Reload check:** Tab through the UI. All of the following must show a visible focus ring: multiselect dropdown options, context menu items, folder action icons, folder toggle, order filter buttons, and order table controls.
 
-- [ ] Consolidated block at line 863 extended with 2 new selectors
-- [ ] Standalone `.stwid--multiselectDropdownOption:focus-visible` rule removed
-- [ ] Standalone `.stwid--listDropdownItem:focus-visible` rule removed
-- [ ] Lines 431 and 1614–1619 left unchanged
+- [x] Consolidated block at line 863 extended with 2 new selectors
+- [x] Standalone `.stwid--multiselectDropdownOption:focus-visible` rule removed
+- [x] Standalone `.stwid--listDropdownItem:focus-visible` rule removed
+- [x] Lines 431 and 1614–1619 left unchanged
 - [ ] Browser reloaded — all focus rings still visible when tabbing
 
 ---
@@ -204,9 +204,9 @@
 
 **Reload check:** Long comment text in the entry list truncates with an ellipsis. Long key text also truncates, and key text is still italic, smaller, and muted in color.
 
-- [ ] Grouped truncation rule created (both selectors)
-- [ ] `.stwid--key` override rule created (3 typography properties only)
-- [ ] Original `.stwid--key` standalone rule removed
+- [x] Grouped truncation rule created (both selectors)
+- [x] `.stwid--key` override rule created (3 typography properties only)
+- [x] Original `.stwid--key` standalone rule removed
 - [ ] Browser reloaded — truncation and key typography unchanged
 
 ---
@@ -235,8 +235,8 @@
 
 **Reload check:** Open the Order Helper. The filter row (with input controls and the column visibility button) still displays and aligns correctly.
 
-- [ ] Grouped rule created for both selectors
-- [ ] `.stwid--columnVisibility` rule reduced to `position:relative` only
+- [x] Grouped rule created for both selectors
+- [x] `.stwid--columnVisibility` rule reduced to `position:relative` only
 - [ ] Browser reloaded — Order Helper filter row unchanged
 
 ---
@@ -244,7 +244,7 @@
 ### Step 2 Final Checks
 
 - [ ] All 6 sub-tasks complete and browser verified after each
-- [ ] Record new line count after Step 2: **___ lines** (was 1,729 at baseline)
+- [x] Record new line count after Step 2: **1,682 lines** (was 1,729 at baseline — reduced by 47)
 - [ ] Full validation matrix pass:
   - [ ] List panel: controls row, filter row, chips, folder collapse/expand, book collapse/expand, entry selection/hover/disabled
   - [ ] Menus: multiselect dropdown open/close/select, context menu open/close/hover, Move Book modal
