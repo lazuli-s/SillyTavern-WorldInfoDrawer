@@ -153,6 +153,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
   flex-wrap: nowrap;
 }
 
+/* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
 body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .text_pole {
   height: var(--stwid-control-height);
   padding: 0.35em;
@@ -302,6 +303,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption.stwid--active .stwid--
   color: var(--SmartThemeQuoteColor);
 }
 
+/* note: no body.stwid-- scope guard - this selector is tightly scoped by the unique .stwid--multiselectDropdownOption class */
 .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
   color: var(--SmartThemeQuoteColor);
 }
@@ -711,11 +713,13 @@ body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings {
   flex-wrap: nowrap;
 }
 
+/* override: vanilla #wiCheckboxes sets width:100%; unset here so it shrinks to content in the flex activation row */
 body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings #wiCheckboxes {
   flex: 0 0 auto;
   width: unset;
 }
 
+/* focus mode: hides all WI entry controls except the content field and stwim-- micromenu elements */
 body.stwid-- #WorldInfo .stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
 body.stwid--
   #WorldInfo
@@ -751,23 +755,27 @@ body.stwid-- #WorldInfo .stwid--editor .stwid--focusToggle {
   margin-left: 1em;
 }
 
+/* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
 body.stwid-- #WorldInfo .stwid--editor .world_entry,
 body.stwid-- #WorldInfo .stwid--editor .world_entry_form,
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   height: 100%;
 }
 
+/* override: vanilla inline-drawer uses block layout; drawer needs flex-column so the content area can scroll */
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
+/* override: hide the vanilla drag handle and collapse toggle - the drawer provides no use for them */
 body.stwid-- #WorldInfo .stwid--editor .drag-handle,
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-toggle {
   display: none;
 }
 
+/* override: !important required - vanilla sets display on .inline-drawer-content; flex-column needed for scrollable layout */
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
   flex: 1 1 auto;
   display: flex !important;
@@ -775,6 +783,7 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
   min-height: 0;
 }
 
+/* override: vanilla world_entry_edit has display:contents; replaced with flex-column so the entry form fills and scrolls inside the drawer */
 body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit {
   flex: 1 1 auto;
   display: flex;
@@ -790,6 +799,7 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
   min-height: 0;
 }
 
+/* override: hide the nested "User Settings" inline-drawer that appears inside the WI entry - not needed in the drawer UI */
 body.stwid--
   #WorldInfo
   .stwid--editor
@@ -860,6 +870,8 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   gap: 0.5em;
 }
 
+/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with the quick-action buttons */
+/* note: no body.stwid-- scope guard - Move Book popup renders outside #WorldInfo */
 .stwid--moveBookContent .stwid--moveBookRow .text_pole {
   flex: 1 1 auto;
   min-width: 0;
@@ -873,11 +885,10 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   gap: 0.35em;
 }
 
+/* override: vanilla menu_button uses block flex; inline-flex keeps buttons inline in the Move Book row */
 .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
-  min-width: 2.35em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 2.35em; /* override: ensures icon-only buttons have a minimum click target */
+  display: inline-flex; /* override: vanilla is display:flex (block-level); inline here for compact row */
 }
 
 /* Context menu container */
@@ -1510,6 +1521,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   color: var(--SmartThemeErrorColor, #e57373);
 }
 
+/* override: FA icon checkbox defaults are too large for the compact recursion options row */
 .stwid--orderHelper .stwid--recursionRow .checkbox {
   width: 0.85em;
   height: 0.85em;

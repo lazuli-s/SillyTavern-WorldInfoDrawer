@@ -254,3 +254,20 @@ Full checklist: [Refactoring_style.css.Step2.md](Refactoring_style.css.Step2.md)
 | 2d | Focus ring outline — extend existing consolidated block with 2 orphan rules |
 | 2e | `.stwid--comment` + `.stwid--key` — 4-property truncation stack |
 | 2f | `.stwid--inputWrap` + `.stwid--columnVisibility` — 5 shared flex/color properties |
+
+---
+
+## Step 3 — CSS-only Vanilla-first pass
+
+Full checklist: [Refactoring_style.css.Step3.md](Refactoring_style.css.Step3.md)
+
+**Status:** Implemented in code on 2026-02-18 (manual browser checks pending)
+
+**Summary of sub-tasks:**
+
+| Sub-task | What changes |
+| --- | --- |
+| 3a | `.menu_button` in Move Book dialog — remove 2 duplicate declarations + add override comments |
+| 3b | Editor-section vanilla-class rules (8 blocks) — add explanatory comments only |
+| 3c | Remaining scattered vanilla-class rules (4 blocks) — add explanatory comments only |
+
