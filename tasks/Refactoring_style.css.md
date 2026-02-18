@@ -173,7 +173,7 @@ Needs markup/class changes (second pass):
 
    Full checklist: [Refactoring_style.css.Step4.md](Refactoring_style.css.Step4.md)
 
-   **Status:** Not started
+   **Status:** Implemented in code on 2026-02-18 (manual browser checks pending)
 
 5. Optional markup/class harmonization pass.
    - Evaluate adding `.list-group`/`.list-group-item` to dropdown markup and `.interactable` to keyboard-focusable controls.

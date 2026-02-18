@@ -133,14 +133,14 @@ body.stwid-- #WorldInfo .stwid--list {
 }
 
 /* Top controls (new book/folder, import/export, search, etc.) */
-body.stwid-- #WorldInfo .stwid--list .stwid--controls {
+body.stwid-- #WorldInfo .stwid--controls {
   display: flex;
   flex-direction: column;
   gap: 0.25em;
   align-items: stretch;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow {
+body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow {
   --stwid-control-height: 2.35em;
 
   display: flex;
@@ -149,12 +149,12 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow {
   flex-wrap: wrap;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls {
+body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls {
   flex-wrap: nowrap;
 }
 
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
-body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .text_pole {
+body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .text_pole {
   height: var(--stwid-control-height);
   padding: 0.35em;
   display: inline-flex;
@@ -162,8 +162,8 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--orderControls .tex
   box-sizing: border-box;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid--bookSortToggle,
-body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid--clearBookSorts {
+body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow .stwid--bookSortToggle,
+body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow .stwid--clearBookSorts {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -171,7 +171,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--controlsRow .stwid
   height: var(--stwid-control-height);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--controls .stwid--active {
+body.stwid-- #WorldInfo .stwid--controls .stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
@@ -199,13 +199,13 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--filterRow--search .s
   min-width: 10em;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--searchEntries {
+body.stwid-- #WorldInfo .stwid--searchEntries {
   display: flex;
   gap: 0.5em;
   align-items: center;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility {
+body.stwid-- #WorldInfo .stwid--bookVisibility {
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -317,13 +317,13 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOptionInput {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--bookVisibility .stwid--bookVisibilityHelp {
+body.stwid-- #WorldInfo .stwid--bookVisibilityHelp {
   opacity: 0.7;
   cursor: help;
   color: var(--SmartThemeEmColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChips {
+body.stwid-- #WorldInfo .stwid--visibilityChips {
   display: flex;
   align-items: center;
   align-content: flex-start;
@@ -334,7 +334,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChips {
   align-self: center;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip {
+body.stwid-- #WorldInfo .stwid--visibilityChip {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
@@ -345,20 +345,20 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip {
   background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--visibilityChip .stwid--icon {
+body.stwid-- #WorldInfo .stwid--visibilityChip .stwid--icon {
   color: var(--SmartThemeQuoteColor);
 }
 
 /* Scrollable book list — see shared section 1.5 */
 
 /* Folders */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder {
+body.stwid-- #WorldInfo .stwid--folder {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
   border-radius: 8px;
   margin: 0.35em 0;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -371,20 +371,20 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   line-height: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder.stwid--isTarget .stwid--folderHeader {
+body.stwid-- #WorldInfo .stwid--folder.stwid--isTarget .stwid--folderHeader {
   background-color: var(--stwid-state-target-bg);
   box-shadow: var(--stwid-state-target-outline);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderIcon {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder:not(:has(.stwid--folderBooks.stwid--isCollapsed)) .stwid--folderIcon::before {
+body.stwid-- #WorldInfo .stwid--folder:not(:has(.stwid--folderBooks.stwid--isCollapsed)) .stwid--folderIcon::before {
   content: '\f07c';
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderLabel {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderLabel {
   font-weight: bold;
   font-size: 1.05em;
   overflow: hidden;
@@ -393,7 +393,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   line-height: 1.2;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderCount {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderCount {
   opacity: 0.85;
   background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 12%, transparent);
   border-radius: 999px;
@@ -402,26 +402,26 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
   line-height: 1.2;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions {
   display: flex;
   gap: 0.25em;
   align-items: center;
   margin-left: auto;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderIcon,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderIcon,
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle {
   display: inline-flex;
   align-items: center;
   line-height: 1;
   vertical-align: middle;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle {
   cursor: pointer;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderActiveToggle[data-state='partial']::before {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle[data-state='partial']::before {
   content: '';
   transform: scale(1);
   width: 0.65em;
@@ -433,59 +433,54 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folder
 }
 
 /* Action icon affordance — dim until hovered */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action,
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
   cursor: pointer;
   opacity: 0.5;
   transition: 200ms;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover,
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
   opacity: 1;
 }
 
 /* Folder header buttons */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
   /* Folder actions also need zero padding (book actions do not) */
   padding: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
+body.stwid-- #WorldInfo .stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder .stwid--folderBooks.stwid--isCollapsed {
+body.stwid-- #WorldInfo .stwid--folder .stwid--folderBooks.stwid--isCollapsed {
   display: none;
 }
 
 /* Books */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book {
+body.stwid-- #WorldInfo .stwid--books .stwid--book {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--isTarget .stwid--head {
+body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--isTarget,
+body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--isTarget .stwid--head {
   background-color: var(--stwid-state-selected-bg);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-visibility,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book.stwid--filter-query {
+body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--filter-visibility,
+body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--filter-query {
   display: none;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active)
-  .stwid--head {
+body.stwid-- #WorldInfo .stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active) .stwid--head {
   background-color: var(--white20a);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head {
   display: flex;
   gap: 0.5em;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
@@ -494,7 +489,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head {
   z-index: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--title {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--title {
   flex: 1 1 auto;
   cursor: pointer;
   font-weight: bold;
@@ -503,38 +498,33 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .st
   white-space: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions {
   display: flex;
   gap: 0.25em;
   align-items: center;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
   display: inline-flex;
   gap: 0.1em;
   align-items: center;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--isEmpty {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--isEmpty {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
   opacity: 0.75;
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entryList.stwid--isCollapsed {
+body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--entryList.stwid--isCollapsed {
   display: none;
 }
 
 /* Entries */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry {
   display: flex;
   gap: 0.5em;
   border-bottom: 2px solid var(--SmartThemeBorderColor);
@@ -543,75 +533,43 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry {
   transition: 200ms;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--isSelected {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected {
   background-color: var(--stwid-state-selected-bg);
   cursor: grab;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry.stwid--isSelected:hover,
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry.stwid--isSelected.stwid--active {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected:hover,
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected.stwid--active {
   background-color: var(--stwid-state-selected-bg-strong);
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry.stwid--isSelected
-  *:not(:is(.stwid--selector)) {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected *:not(:is(.stwid--selector)) {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--filter-query {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--filter-query {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry.stwid--active {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry:hover,
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--active {
   background-color: var(--stwid-state-hover-bg);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry:hover .stwid--status,
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry.stwid--active
-  .stwid--status {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry:hover .stwid--status,
+body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--active .stwid--status {
   opacity: 1;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
   opacity: var(--stwid-state-disabled-opacity);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--selector {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--selector {
   display: flex;
   align-items: center;
   opacity: 0.25;
@@ -619,38 +577,32 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   cursor: pointer;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry
-  .stwid--selector:hover {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--selector:hover {
   opacity: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body {
   flex: 1 1 auto;
   cursor: pointer;
   overflow: hidden;
 }
 
 /* Entry text truncation — one line, ellipsis if overflow */
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--comment,
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--key {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body .stwid--comment,
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body .stwid--key {
   height: 1lh;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--key {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
   font-style: italic;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--status {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--status {
   align-self: center;
   display: flex;
   gap: 0.5em;
@@ -659,14 +611,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .s
   transition: 200ms;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--list
-  .stwid--books
-  .stwid--book
-  .stwid--entry
-  .stwid--status
-  .stwid--enabled {
+body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--status .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
@@ -792,7 +737,8 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
   min-height: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > :nth-child(1) {
+/* override: first child of world_entry_edit - the outer keywords/overrides/content wrapper; flex:1 lets it fill drawer height */
+body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter {
   flex: 1 1 auto;
   flex-direction: column;
   align-items: stretch;
@@ -870,8 +816,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   gap: 0.5em;
 }
 
-/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with the quick-action buttons */
-/* note: no body.stwid-- scope guard - Move Book popup renders outside #WorldInfo */
+/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside #WorldInfo */
 .stwid--moveBookContent .stwid--moveBookRow .text_pole {
   flex: 1 1 auto;
   min-width: 0;

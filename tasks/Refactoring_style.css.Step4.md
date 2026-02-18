@@ -71,8 +71,8 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
 
 **Reload check:** Open the drawer and load an entry. The editor panel should fill the full available height with keyword fields, content textarea, and settings all visible.
 
-- [ ] `:nth-child(1)` replaced with `.flex-container.alignitemscenter`
-- [ ] Explanatory comment added before the rule
+- [x] `:nth-child(1)` replaced with `.flex-container.alignitemscenter`
+- [x] Explanatory comment added before the rule
 - [ ] Browser reloaded — editor panel fills height correctly
 
 ---
@@ -116,9 +116,9 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--folder...
 
 **Reload check:** Open the drawer. Expand and collapse folders. Click folder action buttons. Verify the tri-state active toggle on folders works. Folder active/hover/focus states should look unchanged.
 
-- [ ] All 17 folder selector instances updated
-- [ ] Multi-line selectors reformatted where appropriate
-- [ ] Grouped action rule (line ~436) has its folder half updated
+- [x] All 17 folder selector instances updated
+- [x] Multi-line selectors reformatted where appropriate
+- [x] Grouped action rule (line ~436) has its folder half updated
 - [ ] Browser reloaded — folder UI looks identical
 
 ---
@@ -159,9 +159,9 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book...
 
 **Reload check:** Open the drawer. Expand and collapse books. Click book head to navigate. Verify target highlight, filter-hidden state, source links visibility, and action buttons. All should be visually unchanged.
 
-- [ ] All 13 book selector instances updated
-- [ ] Multi-line selectors reformatted where appropriate
-- [ ] Grouped action rule (line ~436) has its book half updated
+- [x] All 13 book selector instances updated
+- [x] Multi-line selectors reformatted where appropriate
+- [x] Grouped action rule (line ~436) has its book half updated
 - [ ] Browser reloaded — book UI looks identical
 
 ---
@@ -212,8 +212,8 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry...
 - Comment and key text truncate correctly with ellipsis.
 - Status icons appear at correct opacity.
 
-- [ ] All 16 entry selector instances updated
-- [ ] Multi-line selectors reformatted where appropriate
+- [x] All 16 entry selector instances updated
+- [x] Multi-line selectors reformatted where appropriate
 - [ ] Browser reloaded — entry list row states look identical
 
 ---
@@ -273,16 +273,17 @@ body.stwid-- #WorldInfo .stwid--list .stwid--filter .<leaf-class>
 - The book visibility filter menu and chips display correctly.
 - Chip borders, background tint, and icon color are unchanged.
 
-- [ ] 6 controls selector instances updated
-- [ ] 6 filter leaf selector instances updated
+- [x] 6 controls selector instances updated
+- [x] 6 filter leaf selector instances updated
 - [ ] Browser reloaded — controls row and filter chip UI look identical
 
 ---
 
 ## Step 4 Final Checks
 
+- Agent note: code changes are applied; manual browser reload checks are still pending.
 - [ ] All 5 sub-tasks complete and browser verified after each
-- [ ] Record new line count after Step 4: actual \_\_\_\_ lines in `style.css`
+- [x] Record new line count after Step 4: actual **1,639 lines** in `style.css`
 - [ ] Full validation matrix pass:
   - [ ] List panel: controls row, filter row, chips, folder collapse/expand, book collapse/expand, entry selection/hover/disabled
   - [ ] Menus: multiselect dropdown open/close/select, context menu open/close/hover, Move Book modal
