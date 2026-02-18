@@ -115,9 +115,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Replace first-match duplicate detection in `duplicateBook` with exact-cardinality (`addedNames.length === 1`) detection.
-- [ ] Preserve timeout behavior and return `null` when the new name is ambiguous.
-- [ ] Keep `duplicateBookIntoFolder` early-return behavior for null duplicate names.
+- [x] Replace first-match duplicate detection in `duplicateBook` with exact-cardinality (`addedNames.length === 1`) detection.
+- [x] Preserve timeout behavior and return `null` when the new name is ambiguous.
+- [x] Keep `duplicateBookIntoFolder` early-return behavior for null duplicate names.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.bookMenu.js`
+  - Replaced `currentNames.find(...)` (first-match) with `currentNames.filter(...)` + cardinality check in `findNewName()`.
+  - Returns the new name only when `addedNames.length === 1`; returns `null` for 0 or 2+ additions so detection times out safely.
+
+- Risks / Side effects
+  - In the concurrent-create edge case, detection times out and returns `null` (no-op folder move) instead of moving the wrong book — safe trade-off (⭕).
+      - **🟥 MANUAL CHECK**: [ ] Duplicate a book normally and confirm the duplicate appears in the list. If using Ctrl-drag to a folder, confirm the duplicate lands in the correct folder with no console errors.
 
 ---
 
@@ -224,9 +237,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Extend list-panel wiring (`drawer.js` -> `src/listPanel.js` -> `src/listPanel.bookMenu.js`) with a dirty-safe refresh guard callback.
-- [ ] Gate all three folder-change handlers in `buildMoveBookMenuItem` before `applyBookFolderChange`.
-- [ ] Keep existing folder-change persistence logic unchanged when the guard passes.
+- [x] Extend list-panel wiring (`drawer.js` -> `src/listPanel.js` -> `src/listPanel.bookMenu.js`) with a dirty-safe refresh guard callback.
+- [x] Gate all three folder-change handlers in `buildMoveBookMenuItem` before `applyBookFolderChange`.
+- [x] Keep existing folder-change persistence logic unchanged when the guard passes.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.bookMenu.js`, `src/drawer.js`
+  - Added `isDirtyCheck` lambda to `initListPanel` options in `drawer.js`; closes over `getCurrentEditor()` and `editorPanelApi.isDirty()`.
+  - All three folder-change handlers (New Folder, No Folder, Save) in `buildMoveBookMenuItem` call `state.isDirtyCheck?.()` before `applyBookFolderChange` and show a warning toast + return early when dirty.
+  - Verified: `runRefreshWorker()` calls `state.resetEditor?.()` unconditionally — dirty guard is the correct fix.
+
+- Risks / Side effects
+  - New blocking behavior: users with unsaved edits can no longer move books to folders without saving/discarding first (❗).
+      - **🟥 MANUAL CHECK**: [ ] Open an entry, type without saving, then open "Move Book to Folder" and try all three actions (Save, New Folder, No Folder); confirm a warning toast appears and the list does not refresh. Save or discard edits, retry all three; confirm the move succeeds normally.
 
 ---
 
@@ -335,10 +362,24 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add per-book `try/catch` in `importFolderFile` for `createNewWorldInfo` and `saveWorldInfo`.
-- [ ] Track successes/failures and continue loop on per-book errors.
-- [ ] Attempt rollback with `deleteWorldInfo` when save fails after create.
-- [ ] Emit final summary toast reporting counts.
+- [x] Add per-book `try/catch` in `importFolderFile` for `createNewWorldInfo` and `saveWorldInfo`.
+- [x] Track successes/failures and continue loop on per-book errors.
+- [x] Attempt rollback with `deleteWorldInfo` when save fails after create.
+- [x] Emit final summary toast reporting counts.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.bookMenu.js`
+  - Added `failedBooks = []` array before the import loop.
+  - Wrapped each book's create/save sequence in `try/catch`; `bookCreated` flag tracks whether creation succeeded before a save failure so rollback only deletes books created in this import pass.
+  - Post-loop: `refreshList()` called only when ≥1 book succeeded; separate error and success toasts emitted; returns `false` only if zero books succeeded.
+
+- Risks / Side effects
+  - Rollback via `deleteWorldInfo` runs only on names created in this import pass (after collision-suffix logic), so pre-existing same-named books cannot be accidentally deleted (⭕).
+      - **🟥 MANUAL CHECK**: [ ] Import a folder with 3 books; force a save failure on book 2 (DevTools `saveWorldInfo` override). Confirm book 1 imported, book 2 rolled back (absent from list), book 3 imported, and an error toast plus a success toast both appear.
 
 ---
 
@@ -445,9 +486,22 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update export handler payload to include `metadata`.
-- [ ] Clone exported objects before serialization to avoid accidental live-reference mutation.
-- [ ] Keep filename and MIME type behavior unchanged.
+- [x] Update export handler payload to include `metadata`.
+- [x] Clone exported objects before serialization to avoid accidental live-reference mutation.
+- [x] Keep filename and MIME type behavior unchanged.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.bookMenu.js`
+  - Export payload changed from `{ entries: state.cache[name].entries }` to `{ entries: structuredClone(...), metadata: structuredClone(state.cache[name].metadata ?? {}) }`.
+  - Both `entries` and `metadata` are now deep-cloned before serialization.
+
+- Risks / Side effects
+  - Exported JSON files are now larger (include metadata); older import paths that only read `entries` ignore the extra key silently — backward compatible (⭕).
+      - **🟥 MANUAL CHECK**: [ ] Export a book that has a folder assignment and per-book sort preference. Import the exported file. Confirm the re-imported book appears in the correct folder with the same sort preference applied.
 
 ---
 
@@ -556,9 +610,23 @@
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Convert the External Editor click handler to `await fetch` with `response.ok` validation.
-- [ ] Add `try/catch` and show user-visible error feedback.
-- [ ] Keep request URL, headers, and payload schema unchanged.
+- [x] Convert the External Editor click handler to `await fetch` with `response.ok` validation.
+- [x] Add `try/catch` and show user-visible error feedback.
+- [x] Keep request URL, headers, and payload schema unchanged.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.bookMenu.js`
+  - External Editor click handler now `await`s `fetch` inside a `try/catch`.
+  - Shows `toastr.error` with HTTP status when `response.ok` is `false`; shows generic error toast + `console.warn` on network failure.
+  - Request URL, headers, and body payload are unchanged.
+
+- Risks / Side effects
+  - Handler is now async but runs inside an event listener — the UI remains unblocked (⭕).
+      - **🟥 MANUAL CHECK**: [ ] With the External Editor plugin running, click External Editor; confirm no error toast appears. Disable the plugin endpoint and click again; confirm an error toast appears with the HTTP failure status or a network error message.
 
 ---
 

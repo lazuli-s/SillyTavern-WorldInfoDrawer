@@ -86,6 +86,7 @@ const createBookMenuSlice = ({
         }
         const currentNames = new Set(state.getWorldNames ? state.getWorldNames() : state.world_names);
         const createdNames = [];
+        const failedBooks = [];
         for (const [rawName, bookData] of Object.entries(books)) {
             if (!bookData || typeof bookData !== 'object') continue;
             const entries = bookData.entries;
@@ -100,24 +101,45 @@ const createBookMenuSlice = ({
                     index += 1;
                 }
             }
-            const created = await state.createNewWorldInfo(name, { interactive: false });
-            if (!created) continue;
-            const nextPayload = {
-                entries: structuredClone(entries),
-                metadata: structuredClone(metadata),
-            };
-            folderDeps.sanitizeFolderMetadata(nextPayload.metadata);
-            await state.saveWorldInfo(name, nextPayload, true);
-            currentNames.add(name);
-            createdNames.push(name);
+            let bookCreated = false;
+            try {
+                const created = await state.createNewWorldInfo(name, { interactive: false });
+                if (!created) continue;
+                bookCreated = true;
+                const nextPayload = {
+                    entries: structuredClone(entries),
+                    metadata: structuredClone(metadata),
+                };
+                folderDeps.sanitizeFolderMetadata(nextPayload.metadata);
+                await state.saveWorldInfo(name, nextPayload, true);
+                currentNames.add(name);
+                createdNames.push(name);
+            } catch (error) {
+                console.warn('[STWID] Failed to import book:', name, error);
+                failedBooks.push(rawName);
+                if (bookCreated) {
+                    try {
+                        await state.deleteWorldInfo?.(name);
+                    } catch (rollbackError) {
+                        console.warn('[STWID] Rollback failed for book:', name, rollbackError);
+                    }
+                }
+            }
         }
-        if (!createdNames.length) {
+        if (!createdNames.length && !failedBooks.length) {
             toastr.warning('Folder import finished with no new books.');
             return false;
         }
-        await refreshList();
-        toastr.success(`Imported ${createdNames.length} book${createdNames.length === 1 ? '' : 's'}.`);
-        return true;
+        if (createdNames.length) {
+            await refreshList();
+        }
+        if (failedBooks.length) {
+            toastr.error(`Import failed for ${failedBooks.length} book${failedBooks.length === 1 ? '' : 's'}: ${failedBooks.slice(0, 3).join(', ')}${failedBooks.length > 3 ? '\u2026' : ''}`);
+        }
+        if (createdNames.length) {
+            toastr.success(`Imported ${createdNames.length} book${createdNames.length === 1 ? '' : 's'}.`);
+        }
+        return createdNames.length > 0;
     };
 
     const openFolderImportDialog = ()=>{
@@ -155,7 +177,9 @@ const createBookMenuSlice = ({
         // Avoid hard-coded "sleep then hope".
         const findNewName = ()=>{
             const currentNames = getNames() ?? [];
-            return currentNames.find((entry)=>!initialNameSet.has(entry)) ?? null;
+            const addedNames = currentNames.filter((entry)=>!initialNameSet.has(entry));
+            // Only return a name when exactly one new book appeared; reject ambiguous results.
+            return addedNames.length === 1 ? addedNames[0] : null;
         };
 
         // Fast path: if ST immediately updated world_names synchronously.
@@ -284,6 +308,11 @@ const createBookMenuSlice = ({
                         return;
                     }
 
+                    // Guard: block folder move when editor has unsaved changes.
+                    if (state.isDirtyCheck?.()) {
+                        toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
+                        return;
+                    }
                     // Requirement: immediately add the book to the new folder.
                     await applyBookFolderChange(name, reg.folder, { centerAfterRefresh: true });
                     modal.close();
@@ -302,6 +331,11 @@ const createBookMenuSlice = ({
                     e.stopPropagation();
                     if (!currentFolder) {
                         toastr.info('Book is already not in a folder.');
+                        return;
+                    }
+                    // Guard: block folder move when editor has unsaved changes.
+                    if (state.isDirtyCheck?.()) {
+                        toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
                         return;
                     }
                     await applyBookFolderChange(name, null, { centerAfterRefresh: true });
@@ -332,6 +366,11 @@ const createBookMenuSlice = ({
                         return;
                     }
 
+                    // Guard: block folder move when editor has unsaved changes.
+                    if (state.isDirtyCheck?.()) {
+                        toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
+                        return;
+                    }
                     await applyBookFolderChange(name, selectedFolder, { centerAfterRefresh: true });
                     modal.close();
                 });
@@ -450,15 +489,23 @@ const createBookMenuSlice = ({
                                 editor.classList.add('stwid--listDropdownItem');
                                 editor.classList.add('stwid--externalEditor');
                                 editor.addEventListener('click', async()=>{
-                                    fetch('/api/plugins/wiee/editor', {
-                                        method: 'POST',
-                                        headers: state.getRequestHeaders(),
-                                        body: JSON.stringify({
-                                            book: name,
-                                            command: 'code',
-                                            commandArguments: ['.'],
-                                        }),
-                                    });
+                                    try {
+                                        const response = await fetch('/api/plugins/wiee/editor', {
+                                            method: 'POST',
+                                            headers: state.getRequestHeaders(),
+                                            body: JSON.stringify({
+                                                book: name,
+                                                command: 'code',
+                                                commandArguments: ['.'],
+                                            }),
+                                        });
+                                        if (!response.ok) {
+                                            toastr.error(`External Editor request failed (${response.status}).`);
+                                        }
+                                    } catch (error) {
+                                        console.warn('[STWID] External Editor request failed.', error);
+                                        toastr.error('External Editor request failed. Check the browser console for details.');
+                                    }
                                 });
                                 const i = document.createElement('i'); {
                                     i.classList.add('stwid--icon');
@@ -592,7 +639,10 @@ const createBookMenuSlice = ({
                             exp.classList.add('stwid--listDropdownItem');
                             exp.classList.add('stwid--export');
                             exp.addEventListener('click', async()=>{
-                                state.download(JSON.stringify({ entries:state.cache[name].entries }), name, 'application/json');
+                                state.download(JSON.stringify({
+                                    entries: structuredClone(state.cache[name].entries),
+                                    metadata: structuredClone(state.cache[name].metadata ?? {}),
+                                }), name, 'application/json');
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');

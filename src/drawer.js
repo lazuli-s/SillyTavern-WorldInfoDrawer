@@ -470,6 +470,10 @@ export const initDrawer = ({
                         createNewWorldInfo,
                         createWorldInfoEntry,
                         getFreeWorldName,
+                        isDirtyCheck: ()=>{
+                            const currentEditor = getCurrentEditor();
+                            return Boolean(currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid));
+                        },
                     });
                     bookSourceLinksApi.refreshBookSourceLinks('list_panel_init');
                     selectionState = listPanelApi.getSelectionState();

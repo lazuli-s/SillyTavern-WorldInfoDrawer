@@ -220,34 +220,49 @@ Track all code-review findings across the extension's JS files.
 -> `CodeReview_listPanel.bookMenu.js.md`
 
 - **F01** -- Duplicate-book detection can pick the wrong new book under concurrent creates
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Replaced first-match `find(...)` with `filter(...)` + cardinality check in `findNewName()`; returns a name only when exactly one new book appeared, `null` otherwise.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Duplicate a book normally and confirm the duplicate appears in the list. If using Ctrl-drag to a folder, confirm the duplicate lands in the correct folder with no console errors.
 
 - **F02** -- Move-to-folder actions can discard unsaved editor edits via forced list refresh
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Added `isDirtyCheck` lambda to `initListPanel` options in `drawer.js`; all three folder-change handlers (New Folder, No Folder, Save) in `buildMoveBookMenuItem` check dirty state and show a warning toast + return early before calling `applyBookFolderChange`.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open an entry, type without saving, open "Move Book to Folder" and try all three actions (Save, New Folder, No Folder); confirm a warning toast appears and the list does not refresh. Save or discard edits, retry all three; confirm the move succeeds normally.
 
 - **F03** -- Folder import can abort mid-run and leave partial/empty books without clear recovery
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Wrapped each book's create/save sequence in `try/catch` with a `bookCreated` flag; save failures attempt `deleteWorldInfo` rollback for books created in this import pass; post-loop emits separate error and success toasts and calls `refreshList` only on partial/full success.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Import a folder with 3 books; force a save failure on book 2 (DevTools `saveWorldInfo` override). Confirm book 1 imported, book 2 rolled back (absent from list), book 3 imported, and an error toast plus a success toast both appear.
 
 - **F04** -- Exported book payload drops metadata needed for folder/sort restoration
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: Export payload now includes `entries: structuredClone(...)` and `metadata: structuredClone(state.cache[name].metadata ?? {})`; both objects are deep-cloned before serialization.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Export a book that has a folder assignment and per-book sort preference. Import the exported file. Confirm the re-imported book appears in the correct folder with the same sort preference applied.
 
 - **F05** -- External Editor integration suppresses request failures and user feedback
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - Implemented: ✅
+    - Implementation Notes: External Editor click handler now `await`s `fetch` inside a `try/catch`; shows `toastr.error` with HTTP status on non-ok response and a generic error toast with `console.warn` on network failure.
+    - **🟥 MANUAL CHECK**:
+      - [ ] With the External Editor plugin running, click External Editor; confirm no error toast. Disable the plugin endpoint and click again; confirm an error toast appears with the HTTP failure status or a network error message.
 
 ---
 

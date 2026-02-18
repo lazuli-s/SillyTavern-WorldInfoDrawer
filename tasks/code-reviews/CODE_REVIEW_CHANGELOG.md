@@ -6,6 +6,18 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/listPanel.bookMenu.js`
+
+- **F01** — Duplicate-book detection can pick the wrong new book under concurrent creates: Replaced `currentNames.find(...)` (first-match) with `currentNames.filter(...)` + `addedNames.length === 1` cardinality check in `findNewName()`; returns `null` when 0 or 2+ books were added to avoid wrong-book moves.
+- **F02** — Move-to-folder actions can discard unsaved editor edits via forced list refresh: Added `isDirtyCheck` lambda to `initListPanel` options in `drawer.js`; all three folder-change handlers (New Folder, No Folder, Save) in `buildMoveBookMenuItem` call `state.isDirtyCheck?.()` and return early with a warning toast when the editor is dirty.
+- **F03** — Folder import can abort mid-run and leave partial/empty books without clear recovery: Wrapped each book's create/save sequence in `try/catch` with a `bookCreated` flag for targeted rollback via `deleteWorldInfo`; emits separate error and success toasts; calls `refreshList` only on partial/full success.
+- **F04** — Exported book payload drops metadata needed for folder/sort restoration: Export payload now includes both `entries: structuredClone(...)` and `metadata: structuredClone(state.cache[name].metadata ?? {})`; both objects are deep-cloned before serialization.
+- **F05** — External Editor integration suppresses request failures and user feedback: External Editor click handler now `await`s `fetch` inside `try/catch`; shows `toastr.error` with HTTP status on non-ok response and a generic error toast with `console.warn` on network failure.
+
+---
+
+## February 18, 2026
+
 ### `src/listPanel.booksView.js`
 
 - **F01** — Missing null guard for loaded book data can crash full list rendering: Added `if (!data || typeof data !== 'object') return null` guard in `renderBook()` after the load call; restructured `loadList()` book-loading loop to skip books with invalid payloads (with `console.warn`) before grouping.
