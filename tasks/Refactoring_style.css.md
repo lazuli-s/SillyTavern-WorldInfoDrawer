@@ -1,9 +1,9 @@
 # Code Review: style.css Safe Dedup + Vanilla Reuse Plan
 
 ## Review Inputs
+
 - `AGENTS.md`
 - `STYLE_GUIDE.md`
-- `docs/SillyTavernExtensionsDocumentation.md`
 - `FEATURE_MAP.md`
 - `ARCHITECTURE.md`
 - `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
@@ -14,6 +14,7 @@
 ## A) CSS Component Inventory
 
 ### A1. Extension DOM Class Inventory (from extension JS)
+
 Runtime class names emitted by extension modules (intersection of JS usage and styled selectors):
 
 `stwid--action`, `stwid--actions`, `stwid--actionsDivider`, `stwid--actionsRight`, `stwid--active`, `stwid--applySelected`, `stwid--blocker`, `stwid--body`, `stwid--book`, `stwid--bookSort`, `stwid--bookSortToggle`, `stwid--bookVisibility`, `stwid--bookVisibilityHelp`, `stwid--books`, `stwid--characterFilterOptions`, `stwid--characterFilterRow`, `stwid--clearBookSorts`, `stwid--columnFilter`, `stwid--columnHeader`, `stwid--columnVisibility`, `stwid--columnVisibilityLabel`, `stwid--columnVisibilityText`, `stwid--comment`, `stwid--commentLink`, `stwid--controls`, `stwid--controlsRow`, `stwid--ctxAnchor`, `stwid--editor`, `stwid--enabled`, `stwid--entry`, `stwid--entryList`, `stwid--filter`, `stwid--filter-query`, `stwid--filter-visibility`, `stwid--filterRow`, `stwid--filterRow--search`, `stwid--filterRow--visibility`, `stwid--focus`, `stwid--focusToggle`, `stwid--folder`, `stwid--folderAction`, `stwid--folderActiveToggle`, `stwid--folderBooks`, `stwid--folderCount`, `stwid--folderHeader`, `stwid--folderIcon`, `stwid--folderLabel`, `stwid--folderMenu`, `stwid--folderToggle`, `stwid--head`, `stwid--helpToast`, `stwid--hideKeys`, `stwid--hint`, `stwid--icon`, `stwid--input`, `stwid--inputWrap`, `stwid--isCollapsed`, `stwid--isDragging`, `stwid--isEmpty`, `stwid--isFiltered`, `stwid--isLoading`, `stwid--isSelected`, `stwid--isTarget`, `stwid--key`, `stwid--label`, `stwid--list`, `stwid--listDropdownItem`, `stwid--listDropdownMenu`, `stwid--listDropdownTrigger`, `stwid--main`, `stwid--moveBookContent`, `stwid--moveBookQuickActions`, `stwid--moveBookRow`, `stwid--multiselectDropdownButton`, `stwid--multiselectDropdownMenu`, `stwid--multiselectDropdownOption`, `stwid--multiselectDropdownOptionCheckbox`, `stwid--multiselectDropdownOptionIcon`, `stwid--multiselectDropdownOptionInput`, `stwid--multiselectDropdownWrap`, `stwid--orderControls`, `stwid--orderFilterButton`, `stwid--orderHelper`, `stwid--orderInputTight`, `stwid--orderMove`, `stwid--orderMoveButton`, `stwid--orderSelect`, `stwid--orderTable`, `stwid--orderTable--NumberColumns`, `stwid--orderTableWrap`, `stwid--outlet`, `stwid--position`, `stwid--preview`, `stwid--recursionOptions`, `stwid--recursionRow`, `stwid--script`, `stwid--search`, `stwid--searchEntries`, `stwid--selector`, `stwid--sortableHandle`, `stwid--sourceIcon`, `stwid--sourceLinks`, `stwid--splitter`, `stwid--status`, `stwid--syntax`, `stwid--title`, `stwid--unfocusToggle`, `stwid--visibilityChip`, `stwid--visibilityChips`.
@@ -21,8 +22,9 @@ Runtime class names emitted by extension modules (intersection of JS usage and s
 Non-`stwid--` classes intentionally reused from Vanilla ST: `menu_button`, `text_pole`, `popup`, `popup-body`, `popup-content`, `popup-controls`, `popup-button-ok`, `popup-button-cancel`, `checkbox`, `interactable`, plus Font Awesome utility classes.
 
 ### A2. CSS Components and Patterns
+
 | Component | Main Selectors | UI Controlled | Repeated Patterns |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Drawer shell | `style.css:15`, `style.css:20`, `style.css:69`, `style.css:79` | Replaces vanilla WI drawer body, root layout sizing, loading overlay | `display:flex`, `flex:1 1 auto`, `overflow:hidden`, `min-width:0`, `min-height:0` repeated in list/editor/order helper roots |
 | List panel controls/filter | `style.css:100`, `style.css:111`, `style.css:153`, `style.css:182` | Primary controls row, sort controls, search row, visibility UI | Shared control sizing and inline-flex alignment repeated across toggle buttons and text inputs |
 | Multiselect dropdowns + visibility chips | `style.css:192`, `style.css:199`, `style.css:211`, `style.css:237`, `style.css:304`, `style.css:315` | Book visibility menu and chips; also reused by Order Helper filters | Menu container/item structure close to context list dropdown styles |
@@ -38,89 +40,93 @@ Non-`stwid--` classes intentionally reused from Vanilla ST: `menu_button`, `text
 ## B) Redundancy Report
 
 ### B1. Exact Duplicate Declarations
+
 1. Full-block duplicate layout shell:
-- `style.css:713` (`body.stwid-- #WorldInfo .stwid--editor`)
-- `style.css:991` (`.stwid--orderHelper`)
-- Same declaration set: `display:flex; flex-direction:column; flex:1 1 auto; overflow:hidden; min-width:0; min-height:0`.
+   - `style.css:713` (`body.stwid-- #WorldInfo .stwid--editor`)
+   - `style.css:991` (`.stwid--orderHelper`)
+   - Same declaration set: `display:flex; flex-direction:column; flex:1 1 auto; overflow:hidden; min-width:0; min-height:0`.
 
 2. Full-block duplicate scroll wrapper:
-- `style.css:331` (`body.stwid-- #WorldInfo .stwid--list .stwid--books`)
-- `style.css:1241` (`.stwid--orderTableWrap`)
-- Same declaration set: `flex:1 1 auto; min-height:0; overflow:auto`.
+   - `style.css:331` (`body.stwid-- #WorldInfo .stwid--list .stwid--books`)
+   - `style.css:1241` (`.stwid--orderTableWrap`)
+   - Same declaration set: `flex:1 1 auto; min-height:0; overflow:auto`.
 
 3. Repeated focus outline declaration:
-- `style.css:261`, `style.css:426`, `style.css:859`, `style.css:946`, `style.css:1457`
-- Repeated: `outline: var(--stwid-focus-ring)` plus offset.
+   - `style.css:261`, `style.css:426`, `style.css:859`, `style.css:946`, `style.css:1457`
+   - Repeated: `outline: var(--stwid-focus-ring)` plus offset.
 
 4. Repeated border radius token declaration:
-- `style.css:204`, `style.css:208`, `style.css:217`, `style.css:856`, `style.css:917`, `style.css:939`
-- Repeated: `border-radius: var(--stwid-radius-m)`.
+   - `style.css:204`, `style.css:208`, `style.css:217`, `style.css:856`, `style.css:917`, `style.css:939`
+   - Repeated: `border-radius: var(--stwid-radius-m)`.
 
 5. Repeated icon-action affordance declaration:
-- `style.css:415`, `style.css:506`, `style.css:1417`
-- Repeated base behavior: `cursor:pointer`, `opacity:0.5`, `transition:200ms`, with matching hover-to-1 behavior.
+   - `style.css:415`, `style.css:506`, `style.css:1417`
+   - Repeated base behavior: `cursor:pointer`, `opacity:0.5`, `transition:200ms`, with matching hover-to-1 behavior.
 
 6. Repeated quote accent color declaration:
-- Example selectors: `style.css:148`, `style.css:257`, `style.css:326`, `style.css:682`, `style.css:1151`, `style.css:1465`, `style.css:1557`
-- Repeated: `color: var(--SmartThemeQuoteColor)`.
+   - Example selectors: `style.css:148`, `style.css:257`, `style.css:326`, `style.css:682`, `style.css:1151`, `style.css:1465`, `style.css:1557`
+   - Repeated: `color: var(--SmartThemeQuoteColor)`.
 
 ### B2. Near-Duplicates (same groups with minor variation)
+
 1. Folder action buttons vs book action buttons:
-- Folder: `style.css:415`, `style.css:422`
-- Book: `style.css:506`, `style.css:519`
-- Shared properties are almost identical; only selector depth differs.
+   - Folder: `style.css:415`, `style.css:422`
+   - Book: `style.css:506`, `style.css:519`
+   - Shared properties are almost identical; only selector depth differs.
 
 2. Dropdown menu containers:
-- Multiselect: `style.css:211`, active variant `style.css:226`
-- Context list menu: `style.css:905`
-- Both define border, radius, background tint, flex-column layout, and popup-like layering; differences are position model and active state mechanics.
+   - Multiselect: `style.css:211`, active variant `style.css:226`
+   - Context list menu: `style.css:905`
+   - Both define border, radius, background tint, flex-column layout, and popup-like layering; differences are position model and active state mechanics.
 
 3. Dropdown menu items:
-- Multiselect option: `style.css:237`
-- List dropdown item: `style.css:925`
-- Shared row/flex alignment, gap, cursor, rounding, hover/focus interactions with slight typography/height differences.
+   - Multiselect option: `style.css:237`
+   - List dropdown item: `style.css:925`
+   - Shared row/flex alignment, gap, cursor, rounding, hover/focus interactions with slight typography/height differences.
 
 4. Flex-column container shells:
-- List root `style.css:100`, editor root `style.css:713`, order helper root `style.css:991`, filter panes `style.css:1167`.
-- Same structural declarations repeated across many selectors.
+   - List root `style.css:100`, editor root `style.css:713`, order helper root `style.css:991`, filter panes `style.css:1167`.
+   - Same structural declarations repeated across many selectors.
 
 5. Entry text truncation blocks:
-- Comment `style.css:640`
-- Key `style.css:654`
-- Shared truncation stack (`overflow`, `text-overflow`, `white-space`, `height`) with only typography differences.
+   - Comment `style.css:640`
+   - Key `style.css:654`
+   - Shared truncation stack (`overflow`, `text-overflow`, `white-space`, `height`) with only typography differences.
 
 6. Order Helper action label groups:
-- `.stwid--inputWrap` at `style.css:1079`
-- `.stwid--columnVisibility` at `style.css:1092`
-- Shared `display:flex`, `align-items:center`, `gap`, muted color, smaller font.
+   - `.stwid--inputWrap` at `style.css:1079`
+   - `.stwid--columnVisibility` at `style.css:1092`
+   - Shared `display:flex`, `align-items:center`, `gap`, muted color, smaller font.
 
 7. State highlighting rules repeated across list rows and table rows:
-- List entries/books: `style.css:441`, `style.css:551`, `style.css:585`
-- Order table rows: `style.css:1275`, `style.css:1284`, `style.css:1271`
-- Parallel state patterns (target/selected/hover) implemented separately.
+   - List entries/books: `style.css:441`, `style.css:551`, `style.css:585`
+   - Order table rows: `style.css:1275`, `style.css:1284`, `style.css:1271`
+   - Parallel state patterns (target/selected/hover) implemented separately.
 
 ### B3. Over-Specific Selectors
+
 1. Deep book-entry chains are repeated and fragile:
-- Example: `style.css:648` (`body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--key`)
-- Same visual outcome can be scoped with shorter extension-local selectors (for example `#WorldInfo .stwid--entry .stwid--key`) without behavior change.
+   - Example: `style.css:648` (`body.stwid-- #WorldInfo .stwid--list .stwid--books .stwid--book .stwid--entry .stwid--body .stwid--key`)
+   - Same visual outcome can be scoped with shorter extension-local selectors (for example `#WorldInfo .stwid--entry .stwid--key`) without behavior change.
 
 2. Repeated `body.stwid-- #WorldInfo` prefix on almost all selectors:
-- Present throughout `style.css` (for example `style.css:100`, `style.css:533`, `style.css:713`)
-- Can be reduced via grouped base scope selectors while retaining drawer-only scoping.
+   - Present throughout `style.css` (for example `style.css:100`, `style.css:533`, `style.css:713`)
+   - Can be reduced via grouped base scope selectors while retaining drawer-only scoping.
 
 3. Contextual chains include unnecessary intermediates:
-- Example: `style.css:298` (`... .stwid--bookVisibility .stwid--bookVisibilityHelp`)
-- `stwid--` names are unique enough to avoid full ancestor chains in many cases.
+   - Example: `style.css:298` (`... .stwid--bookVisibility .stwid--bookVisibilityHelp`)
+   - `stwid--` names are unique enough to avoid full ancestor chains in many cases.
 
 4. Editor internals use brittle structural selectors:
-- Example: `style.css:809` (`> :nth-child(1)`)
-- Works currently but high maintenance risk if core template ordering changes.
+   - Example: `style.css:809` (`> :nth-child(1)`)
+   - Works currently but high maintenance risk if core template ordering changes.
 
 ## C) Vanilla Reuse Map
 
 ### C1. Reuse Opportunities by Component
+
 | Component | Vanilla Selectors/Files | CSS-only reuse (no markup/class changes) | Needs markup/class changes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Buttons and icon controls | `.menu_button` and hover/active/disabled in `vendor/SillyTavern/public/style.css:3755`, `vendor/SillyTavern/public/style.css:3777`, `vendor/SillyTavern/public/style.css:3025` | Remove extension declarations that restate default button color/border/background/hover behavior where element already has `menu_button` | Add `.interactable` and/or `.menu_button.toggleable`/`.toggled` (`vendor/SillyTavern/public/style.css:292`, `vendor/SillyTavern/public/style.css:3033`) to custom toggle-like controls for built-in focus/toggle styling |
 | Inputs/selects | `.text_pole` in `vendor/SillyTavern/public/style.css:2606` and focus rules in `vendor/SillyTavern/public/style.css:307` | Keep only extension-specific sizing constraints; avoid re-declaring base border, radius, background, typography for `text_pole` | Optional: normalize more controls to `text_pole` if currently plain inputs/div controls |
 | Popups/dialogs (Move Book modal) | `.popup`, `.popup-body`, `.popup-content`, `.popup-controls`, `.popup-button-ok` in `vendor/SillyTavern/public/css/popup.css:9`, `vendor/SillyTavern/public/css/popup.css:49`, `vendor/SillyTavern/public/css/popup.css:62`, `vendor/SillyTavern/public/css/popup.css:171`, `vendor/SillyTavern/public/css/popup.css:182` | Keep extension CSS to modal-specific layout only (`.stwid--moveBookContent` block); rely on vanilla dialog skinning | Add optional dialogue variant classes (`wide_dialogue_popup`, etc.) for consistent host sizing behaviors |
@@ -130,12 +136,15 @@ Non-`stwid--` classes intentionally reused from Vanilla ST: `menu_button`, `text
 | Focus handling | `.interactable:focus-visible`, native field focus in `vendor/SillyTavern/public/style.css:297`, `vendor/SillyTavern/public/style.css:307` | For native controls, rely on vanilla focus rules; reduce custom focus declarations where redundant | Add `.interactable` to non-native focusable controls for consistent keyboard focus |
 
 ### C2. Summary by Reuse Type
+
 CSS-only reuse candidates (safe first pass):
+
 - Consolidate extension shared layout rules and keep only deltas from `menu_button`, `text_pole`, `popup`, `world_entry` defaults.
 - Merge repeated extension-local style clusters (focus ring, action icon affordances, shell flex stacks, truncation blocks).
 - Align custom menu tokens with Vanilla menu/list values to reduce declaration count.
 
 Needs markup/class changes (second pass):
+
 - Adopt `.list-group`/`.list-group-item` for context/action dropdown menus.
 - Use `.interactable` and `menu_button` toggle classes for more built-in hover/focus/toggle states.
 - Optionally reuse vanilla disabled-row class semantics where equivalent.
@@ -143,39 +152,105 @@ Needs markup/class changes (second pass):
 ## Refactor Plan (No Code Changes Yet)
 
 1. Baseline and safety checks.
-- Snapshot current UI states before edits: drawer open, folder/book actions, visibility menu, editor focus mode, order helper table/filter.
-- Keep all changes extension-local; do not modify `vendor/SillyTavern`.
+   - Snapshot current UI states before edits: drawer open, folder/book actions, visibility menu, editor focus mode, order helper table/filter.
+   - Keep all changes extension-local; do not modify `vendor/SillyTavern`.
 
 2. CSS-only dedup pass (behavior-preserving).
-- Create shared grouped selectors for repeated shell layouts:
-  - `display:flex`, `flex-direction:column`, `flex:1 1 auto`, `overflow:hidden`, `min-width:0`, `min-height:0`.
-- Create shared grouped selectors for action-icon micro-controls:
-  - `cursor:pointer`, `opacity:0.5`, `transition:200ms` and hover behavior.
-- Consolidate repeated focus outline declarations into one grouped rule for extension controls.
-- Merge identical truncation stacks for entry text rows; keep typography differences in minimal override rules.
+   - Create shared grouped selectors for repeated shell layouts: `display:flex`, `flex-direction:column`, `flex:1 1 auto`, `overflow:hidden`, `min-width:0`, `min-height:0`.
+   - Create shared grouped selectors for action-icon micro-controls: `cursor:pointer`, `opacity:0.5`, `transition:200ms` and hover behavior.
+   - Consolidate repeated focus outline declarations into one grouped rule for extension controls.
+   - Merge identical truncation stacks for entry text rows; keep typography differences in minimal override rules.
 
 3. CSS-only Vanilla-first pass.
-- Audit every rule touching elements already carrying `menu_button`, `text_pole`, popup classes, and inline-drawer/world-entry classes.
-- Remove declarations that duplicate vanilla defaults unless they intentionally differ for extension behavior.
-- Keep a short comments log for each retained non-vanilla declaration explaining why it cannot be removed.
+   - Audit every rule touching elements already carrying `menu_button`, `text_pole`, popup classes, and inline-drawer/world-entry classes.
+   - Remove declarations that duplicate vanilla defaults unless they intentionally differ for extension behavior.
+   - Keep a short comments log for each retained non-vanilla declaration explaining why it cannot be removed.
 
 4. Over-specific selector reduction.
-- Shorten deeply nested selectors where `stwid--` uniqueness already guarantees scope.
-- Preserve `body.stwid-- #WorldInfo` boundary but reduce repeated full chains via grouped selectors.
-- Avoid brittle structural selectors where a stable class-based selector can be used.
+   - Shorten deeply nested selectors where `stwid--` uniqueness already guarantees scope.
+   - Preserve `body.stwid-- #WorldInfo` boundary but reduce repeated full chains via grouped selectors.
+   - Avoid brittle structural selectors where a stable class-based selector can be used.
 
 5. Optional markup/class harmonization pass.
-- Evaluate adding `.list-group`/`.list-group-item` to dropdown markup and `.interactable` to keyboard-focusable controls.
-- Evaluate using vanilla toggle/disabled class contracts for controls/rows where semantics match.
+   - Evaluate adding `.list-group`/`.list-group-item` to dropdown markup and `.interactable` to keyboard-focusable controls.
+   - Evaluate using vanilla toggle/disabled class contracts for controls/rows where semantics match.
 
 6. Validation matrix after each pass.
-- List panel: controls, filters, chips, folder/book/entry interaction states.
-- Menus: multiselect and list dropdown keyboard/mouse interactions.
-- Editor: focus mode, inline drawer behavior, activation settings layout.
-- Order Helper: action bar, filter menus, column visibility, row selection/drag states.
-- Theme sanity: SmartTheme colors, blur, border, focus visibility.
+   - List panel: controls, filters, chips, folder/book/entry interaction states.
+   - Menus: multiselect and list dropdown keyboard/mouse interactions.
+   - Editor: focus mode, inline drawer behavior, activation settings layout.
+   - Order Helper: action bar, filter menus, column visibility, row selection/drag states.
+   - Theme sanity: SmartTheme colors, blur, border, focus visibility.
 
 ## Expected Outcome
+
 - Smaller `style.css` footprint with fewer repeated declarations and flatter selector complexity.
 - Higher consistency with Vanilla SillyTavern visual system and focus behavior.
 - Lower maintenance risk for future upstream ST UI changes.
+
+---
+
+## Decisions (from user interview — 2026-02-17)
+
+### Why this refactor
+
+All four reasons apply: hard to maintain, preparing for future UI work, reduce file size/performance overhead, and this is a code-review follow-up.
+
+### Scope
+
+- **Steps 1–4 are confirmed in scope.**
+- **Step 5 (markup/class harmonization):** Evaluate per component as we reach it. Some markup changes may be low-risk and worth including inline; others will be deferred. No blanket include or exclude.
+
+### Testing approach
+
+- **One sub-task at a time.** Implement a single step, then manually verify before proceeding to the next.
+- No specific UI area is treated as higher-risk than any other — validate everything equally using the validation matrix in section 6 of the Refactor Plan.
+
+### Technical preferences
+
+| Decision | Choice |
+| --- | --- |
+| Problem priority | All three types equally (duplication, fragile selectors, redundant vanilla overrides) |
+| Grouped selectors | Yes — group identical repeated declarations into shared selector blocks |
+| Explanatory CSS comments | Yes — add a comment for **every** retained non-vanilla declaration explaining why it can't be removed |
+| Fix `> :nth-child(1)` brittle selector | Yes — replace with a stable class-based selector during step 4 |
+| Selector shortening depth | Shorten where safe; always keep `body.stwid-- #WorldInfo` as the root boundary |
+| Section headers in CSS | Yes — add clear named section headers (e.g. `/* === DRAWER SHELL === */`) to aid navigation |
+| Additional changes | None — stick exactly to the plan, no new styles or features |
+
+### Implementation order
+
+Follow the plan's numbered sequence: **Step 2 → Step 3 → Step 4 → (Step 5 per-component evaluation)**
+(Step 1 is the baseline/snapshot phase, not a code change.)
+
+---
+
+## Step 1 — Baseline & Safety Checks
+
+Full checklist: [Refactoring_style.css.Step1.md](Refactoring_style.css.Step1.md)
+
+**Status:** Complete (checked 2026-02-18)
+
+**Pre-existing bugs confirmed (do not attribute to the refactor):**
+
+- Visibility dropdown does not close on outside click
+- Escape key closes the entire drawer instead of just an open menu
+
+---
+
+## Step 2 — CSS-only dedup pass (behavior-preserving)
+
+Full checklist: [Refactoring_style.css.Step2.md](Refactoring_style.css.Step2.md)
+
+**Status:** Not started
+
+**Summary of sub-tasks:**
+
+| Sub-task | What gets grouped |
+| --- | --- |
+| 2a | `.stwid--editor` + `.stwid--orderHelper` — 6-property flex-column shell |
+| 2b | `.stwid--books` + `.stwid--orderTableWrap` — 3-property scroll wrapper |
+| 2c | Folder actions + book head actions — cursor/opacity/transition + hover |
+| 2d | Focus ring outline — extend existing consolidated block with 2 orphan rules |
+| 2e | `.stwid--comment` + `.stwid--key` — 4-property truncation stack |
+| 2f | `.stwid--inputWrap` + `.stwid--columnVisibility` — 5 shared flex/color properties |
