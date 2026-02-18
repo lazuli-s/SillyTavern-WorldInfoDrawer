@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   appendSortOptions,
   createDeferred,
+  parseBooleanSetting,
   safeToSorted,
 } from "../src/utils.js";
 import { SORT, SORT_DIRECTION } from "../src/constants.js";
@@ -89,6 +90,49 @@ describe("safeToSorted", () => {
 
     expect(result).toEqual([1, 2, 3]);
     expect(arr).toEqual([3, 2, 1]);
+  });
+});
+
+describe("parseBooleanSetting", () => {
+  it("returns native boolean true as-is", () => {
+    expect(parseBooleanSetting(true, false)).toBe(true);
+  });
+
+  it("returns native boolean false as-is", () => {
+    expect(parseBooleanSetting(false, true)).toBe(false);
+  });
+
+  it('parses string "true" as true', () => {
+    expect(parseBooleanSetting("true", false)).toBe(true);
+  });
+
+  it('parses string "false" as false', () => {
+    expect(parseBooleanSetting("false", true)).toBe(false);
+  });
+
+  it("parses number 1 as true", () => {
+    expect(parseBooleanSetting(1, false)).toBe(true);
+  });
+
+  it("parses number 0 as false", () => {
+    expect(parseBooleanSetting(0, true)).toBe(false);
+  });
+
+  it("returns defaultValue for undefined (absent field)", () => {
+    expect(parseBooleanSetting(undefined, true)).toBe(true);
+    expect(parseBooleanSetting(undefined, false)).toBe(false);
+  });
+
+  it("returns defaultValue for null", () => {
+    expect(parseBooleanSetting(null, true)).toBe(true);
+  });
+
+  it('returns defaultValue for unrecognized string like "yes"', () => {
+    expect(parseBooleanSetting("yes", false)).toBe(false);
+  });
+
+  it("returns defaultValue for unrecognized number like 2", () => {
+    expect(parseBooleanSetting(2, true)).toBe(true);
   });
 });
 

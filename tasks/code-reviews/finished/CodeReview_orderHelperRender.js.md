@@ -118,6 +118,13 @@ When you open the Order Helper, the code forcibly resets/clears the normal entry
 - **Fix risk:** Medium 🟡  
   This touches a high-traffic UX path. If the editor dirty-state detection is imperfect, it could either block Order Helper too often or still allow data loss.
 
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+❌ Skipped — Requires user input 🚩
+> Routed to `QUEUE_USER_REVIEW.md` — requires user confirmation on whether existing caller-level dirty guards (added in `drawer.js` F07 and `orderHelper.js` F01 via `openOrderHelper()`) are sufficient, or whether an additional guard inside `renderOrderHelper()` itself is still needed.
+
 ---
 
 ## F02: Custom sort persistence uses fire-and-forget saves, risking race conditions and silent failures
@@ -234,13 +241,15 @@ When using "Custom" sorting, the code tries to ensure entries have a stored disp
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Already fixed — not implemented.
+> Evidence: `src/orderHelperRender.js` `renderOrderHelper()` uses `await saveWorldInfo(...)` inside a `try/catch` `for...of` loop (not `void`) and the function is `async`; fix applied as part of `orderHelper.js` F05 (CODE_REVIEW_CHANGELOG.md, February 17, 2026).
 
-- [ ] Change the `void saveWorldInfo(...)` loop to an awaited flow
-- [ ] Decide sequential vs. parallel saves (prefer sequential unless proven too slow)
-- [ ] Add try/catch around save(s) and log + toast warning on failure
-- [ ] Verify `getOrderHelperEntries()` and subsequent rendering still behaves correctly during/after saves
-- [ ] Manually test: open Order Helper with Custom sort on large sets; reopen after reload
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+❌ Skipped — Already fixed
+> The `void saveWorldInfo(...)` fire-and-forget loop was replaced with `await saveWorldInfo(...)` inside a sequential `try/catch` `for...of` loop and `renderOrderHelper()` was made `async`, with `toastr.error` on failure. Implemented as part of `orderHelper.js` F05 (CODE_REVIEW_CHANGELOG.md, February 17, 2026).
 
 ---
 
@@ -352,12 +361,15 @@ Each time the Order Helper is rendered, the code creates a new big DOM tree and 
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Already fixed — not implemented.
+> Evidence: `renderOrderHelper()` calls `editorPanelApi.resetEditorState()` at the start, which invokes `clearEditor()` in `editorPanel.js` — `dom.editor.innerHTML = ''` — removing any existing `.stwid--orderHelper` before the new body is appended.
 
-- [ ] Identify what else lives under `dom.editor` when Order Helper is open (verify in `drawer.js` / editor panel integration)
-- [ ] Before mounting, remove existing `dom.editor.querySelector('.stwid--orderHelper')` if present
-- [ ] If subcomponents attach document-level listeners, add teardown hooks (or ensure they already have cleanup paths)
-- [ ] Manually test repeated open/close cycles for duplication and multi-fire behavior
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+❌ Skipped — Already fixed
+> `renderOrderHelper()` calls `editorPanelApi.resetEditorState()` before appending, which calls `clearEditor()` → `dom.editor.innerHTML = ''` in `editorPanel.js`, clearing all existing content (including any prior `.stwid--orderHelper`) before the new body is mounted. DOM duplication cannot occur in normal use.
 
 ---
 
