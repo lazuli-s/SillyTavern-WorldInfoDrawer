@@ -356,6 +356,51 @@ Track all code-review findings across the extension's JS files.
 
 ---
 
+### `src/orderHelperFilters.js`
+-> `CodeReview_orderHelperFilters.js.md`
+
+- **F01** -- Applying filters mutates filter state (auto-selects "all") and can override user intent
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Medium ❗ -- Real UX/state-consistency issue that can override user filter intent.
+  - Implemented: ✅
+    - Implementation Notes: Removed apply-time auto-fill state mutation so empty selections remain intentional and filtering no longer rewrites user state.
+    - **🟥 MANUAL CHECK**:
+      - [ ] In Order Helper, clear all values in Strategy and Position filters; confirm all rows hide and selections are not auto-restored by refresh/reopen.
+
+- **F02** -- Group filter can throw if `getGroupValue()` returns null/undefined (assumes array)
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: The finding incorrectly claims `getGroupValue` can return null/undefined, but code inspection shows it always returns an array. The fix is unnecessary but harmless.
+  - **Neglect Risk:** Low ⬜ -- Defensive-only hardening; current code path is already safe.
+  - Implemented: ✅
+    - Implementation Notes: Added defensive group-value normalization before matching so non-array shapes no longer risk runtime method errors.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open Group filter and confirm entries with no group still match `(none)` and no console errors appear during filter toggles.
+
+- **F03** -- Recursion "delayUntilRecursion" flag detection is overly permissive and may misclassify values
+  - Meta-reviewed: [X]
+    - Verdict: Implementation plan needs revision 🟡
+    - Reason: The finding correctly identifies the numeric vs boolean mismatch, but the "Requires user input" flag should be replaced with a concrete recommendation based on WI API evidence (the field is numeric).
+  - **Neglect Risk:** Medium ❗ -- Misclassification can produce incorrect row sets for bulk operations.
+  - Implemented: ✅
+    - Implementation Notes: Replaced permissive delay flag logic with numeric semantics (`Number(delayUntilRecursion) > 0`) to match WI entry schema.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Verify Recursion filter only marks delay-flag rows when `delayUntilRecursion` is greater than 0.
+
+- **F04** -- Filter application is more expensive than necessary (repeated Set creation per row), risking lag on large tables
+  - Meta-reviewed: [X]
+    - Verdict: Ready to implement 🟢
+    - Reason: N/A
+  - **Neglect Risk:** Low ⬜ -- Performance optimization issue that grows with larger entry tables.
+  - Implemented: ✅
+    - Implementation Notes: Moved allowed-set construction into outer filter-application loops and passed precomputed data into row helpers.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Toggle multiple Order Helper filters on a large table and confirm behavior is unchanged with no noticeable lag spikes.
+
+---
+
 ### `src/orderHelperRender.js`
 -> `CodeReview_orderHelperRender.js.md`
 

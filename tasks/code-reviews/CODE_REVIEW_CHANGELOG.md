@@ -6,6 +6,15 @@ Changes applied from code review findings across the extension's source files.
 
 ## February 18, 2026
 
+### `src/orderHelperFilters.js`
+
+- **F01** — Applying filters mutates filter state (auto-selects "all") and can override user intent: Removed apply-time auto-fill state mutation so empty filter selections remain intentional and no longer rewrite user state during row filtering.
+- **F02** — Group filter can throw if `getGroupValue()` returns null/undefined (assumes array): Added defensive group-value normalization before matching so non-array values are safely coerced without runtime errors.
+- **F03** — Recursion "delayUntilRecursion" flag detection is overly permissive and may misclassify values: Updated delay-recursion detection to numeric semantics (`Number(delayUntilRecursion) > 0`) so `0` is treated as disabled.
+- **F04** — Filter application is more expensive than necessary (repeated Set creation per row), risking lag on large tables: Refactored outer apply loops to precompute allowed sets and pass precomputed context into row-level filter functions.
+
+## February 18, 2026
+
 ### `src/lorebookFolders.js`
 
 - **F01** — `createBookInFolder` assumes `loadWorldInfo()` always succeeds and returns an object: Added a null/object guard after book creation load, warning toast/logging on failure, and a safe early return that preserves the created book for manual reassignment.
