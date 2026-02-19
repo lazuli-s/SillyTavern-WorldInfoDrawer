@@ -1153,6 +1153,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   padding: 0 0.25em;
   color: var(--SmartThemeEmColor);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .stwid--orderHelper .stwid--bulkEditRow .stwid--inputWrap {
@@ -1197,6 +1198,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 .stwid--orderStartSpacingPair {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.1em;
 }
 
