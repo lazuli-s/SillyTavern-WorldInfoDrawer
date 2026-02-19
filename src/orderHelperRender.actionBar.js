@@ -1114,8 +1114,7 @@ export function buildBulkEditRow({
         startLbl.append('Start: ');
         const start = document.createElement('input'); {
             dom.order.start = start;
-            start.classList.add('stwid--input');
-            start.classList.add('text_pole');
+            start.classList.add('stwid-compactInput', 'text_pole');
             start.type = 'number';
             start.min = '1';
             start.max = '10000';
@@ -1134,8 +1133,7 @@ export function buildBulkEditRow({
         stepLbl.append('Spacing: ');
         const step = document.createElement('input'); {
             dom.order.step = step;
-            step.classList.add('stwid--input');
-            step.classList.add('text_pole');
+            step.classList.add('stwid-compactInput', 'text_pole');
             step.type = 'number';
             step.min = '1';
             step.max = '10000';

@@ -1197,7 +1197,11 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 .stwid--orderStartSpacingPair {
   display: flex;
   flex-direction: column;
-  gap: 0.25em;
+  gap: 0.1em;
+}
+
+.stwid--orderHelper .stwid--bulkEditContainer[data-field="applyAll"] {
+  min-width: 5em;
 }
 
 /* Feature 2: Dirty indicator — Apply button turns warm amber when inputs changed */
