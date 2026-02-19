@@ -113,3 +113,74 @@ A new container is added at the very end of the Bulk Editor content — always t
 - Persisting dirty state across page reloads.
 - Adding dirty indicators to the Visibility row (Row 1) — only the Bulk Editor row is affected.
 - Changing what any existing Apply button does — only the visual state and the "Apply All" orchestration are new.
+
+---
+
+## Implementation Plan
+
+### Open Question Resolutions
+
+- **Dirty indicator color**: `var(--warning-color, #e8a97f)` — this is SillyTavern's warm amber used in `.info-block.warning`, matching the "warm non-error" spec requirement.
+- **`withApplyButtonLock` usage**: Only containers that already use it keep it. `applyPosition`, `applyDepth`, `applyOutlet`, `applyRecursion`, `applyBudget`, `applyProbability`, `applySticky`, `applyCooldown`, `applyBulkDelay` do not currently use it — no lock added (out of scope).
+- **Apply All busy lock**: The "Apply All Changes" button uses `withApplyButtonLock` on its own button to prevent double-clicks.
+- **Dirty state on validation failure**: Early `return;` before `saveUpdatedBooks` means `classList.remove('stwid--applyDirty')` is NOT called — dirty indicator correctly persists on validation failure.
+
+### CSS changes — `style.css`
+
+- [x] After `.stwid--orderHelper .stwid--bulkEditContainer[data-field="outlet"] .stwid--input` (line ~1191): add `.stwid--orderStartSpacingPair` rule (`display: flex; flex-direction: column; gap: 0.25em`) for Feature 1.
+- [x] After that: add `.stwid--orderHelper .stwid--bulkEditContainer .stwid--applyDirty` rule (`color: var(--warning-color, #e8a97f)`) for Feature 2.
+
+### JS changes — `src/orderHelperRender.actionBar.js`
+
+- [x] After `withApplyButtonLock` definition (~line 630): add `const applyRegistry = [];` to hold `{ isDirty, runApply }` entries for "Apply All Changes".
+
+**Feature 1 — Order container layout:**
+- [x] Wrap `startLbl` and `stepLbl` in a new `div.stwid--orderStartSpacingPair` before appending to `orderContainer`, replacing the two direct `orderContainer.append(startLbl)` / `orderContainer.append(stepLbl)` calls.
+
+**Feature 2 — Dirty tracking (12 containers):**
+
+For each container: extract the anonymous click handler to a named `runApplyXxx` async function, add `applyXxx.classList.remove('stwid--applyDirty')` at the end of the success path (last line before the closing `}` of the save block), push `{ isDirty: () => applyXxx.classList.contains('stwid--applyDirty'), runApply: runApplyXxx }` to `applyRegistry`, and add input dirty-wiring listeners as noted.
+
+- [x] **State** (`applyActiveState`): extract `runApplyActiveState`, add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `activeToggle.addEventListener('click', () => applyActiveState.classList.add('stwid--applyDirty'))`.
+- [x] **Strategy** (`applyStrategy`): extract `runApplyStrategy`, add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `strategySelect.addEventListener('change', () => applyStrategy.classList.add('stwid--applyDirty'))`.
+- [x] **Position** (`applyPosition`): extract `runApplyPosition` (no `withApplyButtonLock`), add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `positionSelect.addEventListener('change', () => applyPosition.classList.add('stwid--applyDirty'))`.
+- [x] **Depth** (`applyDepth`): extract `runApplyDepth` (no lock), add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `depthInput.addEventListener('change', () => applyDepth.classList.add('stwid--applyDirty'))`.
+- [x] **Outlet** (`applyOutlet`): extract `runApplyOutlet` (no lock), add `classList.remove` after `filterIndicatorRefs.outlet?.()`, push registry. After block: add `outletInput.addEventListener('input', () => applyOutlet.classList.add('stwid--applyDirty'))`.
+- [x] **Order** (`apply`): extract `runApplyOrder`, add `classList.remove` after `saveUpdatedBooks`, push registry. After `apply` block: add dirty listeners for `dom.order.start` change, `dom.order.step` change, and both direction radio `change` events (inside their respective blocks, referencing `apply`).
+- [x] **Recursion** (`applyRecursion`): extract `runApplyRecursion`, add `classList.remove` after `saveUpdatedBooks`, push registry. After block: iterate `recursionCheckboxes.values()` and add `change` dirty listener on each.
+- [x] **Budget** (`applyBudget`): extract `runApplyBudget`, add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add('stwid--applyDirty'))`.
+- [x] **Probability** (`applyProbability`): extract `runApplyProbability` (no lock), add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `probabilityInput.addEventListener('change', () => applyProbability.classList.add('stwid--applyDirty'))`.
+- [x] **Sticky** (`applySticky`): extract `runApplySticky` (no lock), add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `stickyInput.addEventListener('change', () => applySticky.classList.add('stwid--applyDirty'))`.
+- [x] **Cooldown** (`applyCooldown`): extract `runApplyCooldown` (no lock), add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `cooldownInput.addEventListener('change', () => applyCooldown.classList.add('stwid--applyDirty'))`.
+- [x] **Delay** (`applyBulkDelay`): extract `runApplyBulkDelay` (no lock), add `classList.remove` after `saveUpdatedBooks`, push registry. After block: add `bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add('stwid--applyDirty'))`.
+
+**Feature 3 — Apply All Changes container:**
+- [x] After `row.append(bulkDelayContainer)` and before the collapsible-wrapper code: add a new `applyAllContainer` (`data-field="applyAll"`) with label "Apply All Changes", hint tooltip, and one Apply button. Button click uses `withApplyButtonLock`; iterates `applyRegistry`, collects dirty entries, runs each `runApply` in sequence with `await`, shows `toastr.info` if none dirty.
+
+---
+
+## After Implementation
+
+### What changed
+
+- Files changed: `src/orderHelperRender.actionBar.js`, `style.css`, `FEATURE_MAP.md`
+  - `buildBulkEditRow()` (actionBar.js) — three sets of changes:
+    - **Feature 1**: `startLbl` and `stepLbl` are now wrapped in a `div.stwid--orderStartSpacingPair` that stacks them vertically, instead of both sitting in the outer flex row.
+    - **Feature 2**: All 12 Apply buttons (State, Strategy, Position, Depth, Outlet, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay) now turn amber when their inputs are changed and return to normal after a successful apply. Each click handler was extracted into a named `runApplyXxx` async function and registered in a new `applyRegistry` array.
+    - **Feature 3**: A new "Apply All Changes" container was added at the end of the Bulk Editor. Its single Apply button runs every dirty container's apply action in order, then shows a `toastr.info` if nothing was dirty.
+  - `style.css` — two new rules: `.stwid--orderStartSpacingPair` (flex column layout) and `.stwid--applyDirty` (warm amber color via `var(--warning-color, #e8a97f)`).
+  - `FEATURE_MAP.md` — updated bulk edit row entry to list all containers and the two new features.
+
+### Risks / What might break
+
+- The dirty indicator relies on `classList.remove('stwid--applyDirty')` being called at the end of each success path. If a container's apply logic has multiple exit points (early `return` before save), the dirty state correctly persists — but if a new exit path is added in the future after the save, it might accidentally skip the `remove` call.
+- "Apply All Changes" calls each `runApply` in sequence using `await`. Containers without `withApplyButtonLock` (Position, Depth, Outlet, Recursion, Budget, Probability, Sticky, Cooldown, Delay) don't guard against concurrent calls, but since "Apply All" is serial and its own button has `withApplyButtonLock`, double-triggering should not occur in practice.
+- The `stwid--orderStartSpacingPair` wrapper changes the flex layout of the Order container. If any CSS rule previously targeted `startLbl` or `stepLbl` as direct children of `orderContainer`, it may need updating — but no such rule exists currently.
+
+### Manual checks
+
+- [ ] Open the Order Helper Bulk Editor. Inside the Order container, confirm "Start" and "Spacing" labels appear stacked top/bottom (not side by side). (Success: vertical pair.)
+- [ ] Change the value in the Strategy dropdown. Confirm the Strategy Apply button turns amber. Click Apply. Confirm the button returns to its normal color. (Success: dirty indicator lights and clears correctly.)
+- [ ] Change values in two different containers (e.g., Strategy and Depth). Click "Apply All Changes". Confirm both changes are applied to selected entries and both Apply buttons return to normal. (Success: Apply All runs both in sequence.)
+- [ ] Click "Apply All Changes" without changing anything. Confirm a `toastr.info` toast says "No changes to apply." (Success: nothing fires when nothing is dirty.)
+- [ ] Change Strategy dropdown, then click the Strategy Apply button directly. Confirm only that container's dirty state clears; other containers are unaffected. (Success: per-container dirty tracking is isolated.)

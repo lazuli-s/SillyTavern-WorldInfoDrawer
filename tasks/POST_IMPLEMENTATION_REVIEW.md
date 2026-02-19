@@ -10,6 +10,7 @@ documents the findings in the task file, then moves the file to `tasks/finished/
 
 - `tasks/Issue_OrderHelperBulkEditHidesEntries.md`
 - `tasks/Issue_OrderHelperSelectCountStaleOnFilter.md`
+- `tasks/Rework_BulkEditorUXImprovements.md`
 
 ---
 

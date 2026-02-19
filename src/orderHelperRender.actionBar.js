@@ -629,6 +629,10 @@ export function buildBulkEditRow({
         }
     };
 
+    // Registry used by "Apply All Changes" to iterate dirty containers.
+    // Each entry: { isDirty: () => boolean, runApply: async () => void }
+    const applyRegistry = [];
+
     // ── Toggle Active State container ─────────────────────────────────────
     const activeStateContainer = document.createElement('div');
     activeStateContainer.classList.add('stwid--bulkEditContainer');
@@ -662,7 +666,7 @@ export function buildBulkEditRow({
     const applyActiveState = document.createElement('div'); {
         applyActiveState.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyActiveState, 'Apply the active state to all selected entries');
-        applyActiveState.addEventListener('click', async()=>{
+        const runApplyActiveState = async () => {
             await withApplyButtonLock(applyActiveState, async()=>{
                 const rows = getSafeTbodyRows();
                 if (!rows) return;
@@ -689,10 +693,14 @@ export function buildBulkEditRow({
                     }
                 }
                 await saveUpdatedBooks(books);
+                applyActiveState.classList.remove('stwid--applyDirty');
             });
-        });
+        };
+        applyActiveState.addEventListener('click', runApplyActiveState);
+        applyRegistry.push({ isDirty: () => applyActiveState.classList.contains('stwid--applyDirty'), runApply: runApplyActiveState });
         activeStateContainer.append(applyActiveState);
     }
+    activeToggle.addEventListener('click', () => applyActiveState.classList.add('stwid--applyDirty'));
 
     row.append(activeStateContainer);
 
@@ -732,7 +740,7 @@ export function buildBulkEditRow({
     const applyStrategy = document.createElement('div'); {
         applyStrategy.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyStrategy, 'Apply selected strategy to all selected entries');
-        applyStrategy.addEventListener('click', async()=>{
+        const runApplyStrategy = async () => {
             await withApplyButtonLock(applyStrategy, async()=>{
                 const value = strategySelect.value;
                 if (!value) {
@@ -759,10 +767,14 @@ export function buildBulkEditRow({
                     }
                 }
                 await saveUpdatedBooks(books);
+                applyStrategy.classList.remove('stwid--applyDirty');
             });
-        });
+        };
+        applyStrategy.addEventListener('click', runApplyStrategy);
+        applyRegistry.push({ isDirty: () => applyStrategy.classList.contains('stwid--applyDirty'), runApply: runApplyStrategy });
         strategyContainer.append(applyStrategy);
     }
+    strategySelect.addEventListener('change', () => applyStrategy.classList.add('stwid--applyDirty'));
 
     row.append(strategyContainer);
 
@@ -802,7 +814,7 @@ export function buildBulkEditRow({
     const applyPosition = document.createElement('div'); {
         applyPosition.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyPosition, 'Apply selected position to all selected entries');
-        applyPosition.addEventListener('click', async()=>{
+        const runApplyPosition = async () => {
             const value = positionSelect.value;
             if (!value) {
                 toastr.warning('No position selected.');
@@ -820,9 +832,13 @@ export function buildBulkEditRow({
                 applyOrderHelperPositionFilterToRow(tr, entryData);
             }
             await saveUpdatedBooks(books);
-        });
+            applyPosition.classList.remove('stwid--applyDirty');
+        };
+        applyPosition.addEventListener('click', runApplyPosition);
+        applyRegistry.push({ isDirty: () => applyPosition.classList.contains('stwid--applyDirty'), runApply: runApplyPosition });
         positionContainer.append(applyPosition);
     }
+    positionSelect.addEventListener('change', () => applyPosition.classList.add('stwid--applyDirty'));
 
     row.append(positionContainer);
 
@@ -858,7 +874,7 @@ export function buildBulkEditRow({
     const applyDepth = document.createElement('div'); {
         applyDepth.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyDepth, 'Apply depth value to all selected entries');
-        applyDepth.addEventListener('click', async()=>{
+        const runApplyDepth = async () => {
             const rawValue = depthInput.value.trim();
             const parsedDepth = rawValue === '' ? undefined : parseInt(rawValue, 10);
             if (rawValue !== '' && (!Number.isInteger(parsedDepth) || parsedDepth < 0)) {
@@ -876,9 +892,13 @@ export function buildBulkEditRow({
                 if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
             }
             await saveUpdatedBooks(books);
-        });
+            applyDepth.classList.remove('stwid--applyDirty');
+        };
+        applyDepth.addEventListener('click', runApplyDepth);
+        applyRegistry.push({ isDirty: () => applyDepth.classList.contains('stwid--applyDirty'), runApply: runApplyDepth });
         depthContainer.append(applyDepth);
     }
+    depthInput.addEventListener('change', () => applyDepth.classList.add('stwid--applyDirty'));
 
     row.append(depthContainer);
 
@@ -986,7 +1006,7 @@ export function buildBulkEditRow({
     const applyOutlet = document.createElement('div'); {
         applyOutlet.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyOutlet, 'Apply outlet name to all selected entries');
-        applyOutlet.addEventListener('click', async()=>{
+        const runApplyOutlet = async () => {
             const value = outletInput.value.trim();
             const rows = getSafeTbodyRows();
             if (!rows) return;
@@ -1007,9 +1027,13 @@ export function buildBulkEditRow({
             }
             filterIndicatorRefs.outlet?.();
             await saveUpdatedBooks(books);
-        });
+            applyOutlet.classList.remove('stwid--applyDirty');
+        };
+        applyOutlet.addEventListener('click', runApplyOutlet);
+        applyRegistry.push({ isDirty: () => applyOutlet.classList.contains('stwid--applyDirty'), runApply: runApplyOutlet });
         outletContainer.append(applyOutlet);
     }
+    outletInput.addEventListener('input', () => applyOutlet.classList.add('stwid--applyDirty'));
 
     row.append(outletContainer);
 
@@ -1042,7 +1066,7 @@ export function buildBulkEditRow({
         apply.classList.add('menu_button', 'interactable');
         apply.classList.add('fa-solid', 'fa-fw', 'fa-check');
         setTooltip(apply, 'Apply current row order to the Order field');
-        apply.addEventListener('click', async()=>{
+        const runApplyOrder = async () => {
             await withApplyButtonLock(apply, async()=>{
                 const start = Number.parseInt(dom.order.start.value, 10);
                 const step = Number.parseInt(dom.order.step.value, 10);
@@ -1073,9 +1097,16 @@ export function buildBulkEditRow({
                     }
                 }
                 await saveUpdatedBooks(books);
+                apply.classList.remove('stwid--applyDirty');
             });
-        });
+        };
+        apply.addEventListener('click', runApplyOrder);
+        applyRegistry.push({ isDirty: () => apply.classList.contains('stwid--applyDirty'), runApply: runApplyOrder });
     }
+
+    // Start + Spacing are stacked vertically inside a sub-wrapper (Feature 1).
+    const startSpacingPair = document.createElement('div');
+    startSpacingPair.classList.add('stwid--orderStartSpacingPair');
 
     const startLbl = document.createElement('label'); {
         startLbl.classList.add('stwid--inputWrap');
@@ -1094,7 +1125,7 @@ export function buildBulkEditRow({
             });
             startLbl.append(start);
         }
-        orderContainer.append(startLbl);
+        startSpacingPair.append(startLbl);
     }
 
     const stepLbl = document.createElement('label'); {
@@ -1114,8 +1145,12 @@ export function buildBulkEditRow({
             });
             stepLbl.append(step);
         }
-        orderContainer.append(stepLbl);
+        startSpacingPair.append(stepLbl);
     }
+
+    orderContainer.append(startSpacingPair);
+    dom.order.start.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
+    dom.order.step.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
 
     const dir = document.createElement('div'); {
         dir.classList.add('stwid--inputWrap');
@@ -1136,6 +1171,7 @@ export function buildBulkEditRow({
                         if (!inp.checked) return;
                         localStorage.setItem('stwid--order-direction', 'up');
                     });
+                    inp.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
                     up.append(inp);
                 }
                 up.append('up');
@@ -1153,6 +1189,7 @@ export function buildBulkEditRow({
                         if (!inp.checked) return;
                         localStorage.setItem('stwid--order-direction', 'down');
                     });
+                    inp.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
                     down.append(inp);
                 }
                 down.append('down');
@@ -1203,7 +1240,7 @@ export function buildBulkEditRow({
     const applyRecursion = document.createElement('div'); {
         applyRecursion.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyRecursion, 'Apply recursion flags to all selected entries, overwriting their current values');
-        applyRecursion.addEventListener('click', async()=>{
+        const runApplyRecursion = async () => {
             const rows = getSafeTbodyRows();
             if (!rows) return;
             const targets = getBulkTargets(rows);
@@ -1221,8 +1258,14 @@ export function buildBulkEditRow({
                 applyOrderHelperRecursionFilterToRow(tr, entryData);
             }
             await saveUpdatedBooks(books);
-        });
+            applyRecursion.classList.remove('stwid--applyDirty');
+        };
+        applyRecursion.addEventListener('click', runApplyRecursion);
+        applyRegistry.push({ isDirty: () => applyRecursion.classList.contains('stwid--applyDirty'), runApply: runApplyRecursion });
         recursionContainer.append(applyRecursion);
+    }
+    for (const input of recursionCheckboxes.values()) {
+        input.addEventListener('change', () => applyRecursion.classList.add('stwid--applyDirty'));
     }
 
     row.append(recursionContainer);
@@ -1262,7 +1305,7 @@ export function buildBulkEditRow({
     const applyBudget = document.createElement('div'); {
         applyBudget.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyBudget, 'Apply Ignore Budget to all selected entries, overwriting their current values');
-        applyBudget.addEventListener('click', async()=>{
+        const runApplyBudget = async () => {
             const checked = budgetIgnoreCheckbox.checked;
             const rows = getSafeTbodyRows();
             if (!rows) return;
@@ -1275,9 +1318,13 @@ export function buildBulkEditRow({
                 if (domInput) domInput.checked = checked;
             }
             await saveUpdatedBooks(books);
-        });
+            applyBudget.classList.remove('stwid--applyDirty');
+        };
+        applyBudget.addEventListener('click', runApplyBudget);
+        applyRegistry.push({ isDirty: () => applyBudget.classList.contains('stwid--applyDirty'), runApply: runApplyBudget });
         budgetContainer.append(applyBudget);
     }
+    budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add('stwid--applyDirty'));
 
     row.append(budgetContainer);
 
@@ -1313,7 +1360,7 @@ export function buildBulkEditRow({
     const applyProbability = document.createElement('div'); {
         applyProbability.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyProbability, 'Apply this probability to all selected entries');
-        applyProbability.addEventListener('click', async()=>{
+        const runApplyProbability = async () => {
             const rawValue = probabilityInput.value.trim();
             if (rawValue === '') {
                 toastr.warning('Enter a probability value (0–100).');
@@ -1335,9 +1382,13 @@ export function buildBulkEditRow({
                 if (rowInp) rowInp.value = String(parsed);
             }
             await saveUpdatedBooks(books);
-        });
+            applyProbability.classList.remove('stwid--applyDirty');
+        };
+        applyProbability.addEventListener('click', runApplyProbability);
+        applyRegistry.push({ isDirty: () => applyProbability.classList.contains('stwid--applyDirty'), runApply: runApplyProbability });
         probabilityContainer.append(applyProbability);
     }
+    probabilityInput.addEventListener('change', () => applyProbability.classList.add('stwid--applyDirty'));
 
     row.append(probabilityContainer);
 
@@ -1372,7 +1423,7 @@ export function buildBulkEditRow({
     const applySticky = document.createElement('div'); {
         applySticky.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applySticky, 'Apply this sticky value to all selected entries');
-        applySticky.addEventListener('click', async()=>{
+        const runApplySticky = async () => {
             const rawValue = stickyInput.value.trim();
             if (rawValue === '') {
                 toastr.warning('Enter a sticky value (0 or more).');
@@ -1394,9 +1445,13 @@ export function buildBulkEditRow({
                 if (rowInp) rowInp.value = String(parsed);
             }
             await saveUpdatedBooks(books);
-        });
+            applySticky.classList.remove('stwid--applyDirty');
+        };
+        applySticky.addEventListener('click', runApplySticky);
+        applyRegistry.push({ isDirty: () => applySticky.classList.contains('stwid--applyDirty'), runApply: runApplySticky });
         stickyContainer.append(applySticky);
     }
+    stickyInput.addEventListener('change', () => applySticky.classList.add('stwid--applyDirty'));
 
     row.append(stickyContainer);
 
@@ -1431,7 +1486,7 @@ export function buildBulkEditRow({
     const applyCooldown = document.createElement('div'); {
         applyCooldown.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyCooldown, 'Apply this cooldown value to all selected entries');
-        applyCooldown.addEventListener('click', async()=>{
+        const runApplyCooldown = async () => {
             const rawValue = cooldownInput.value.trim();
             if (rawValue === '') {
                 toastr.warning('Enter a cooldown value (0 or more).');
@@ -1453,9 +1508,13 @@ export function buildBulkEditRow({
                 if (rowInp) rowInp.value = String(parsed);
             }
             await saveUpdatedBooks(books);
-        });
+            applyCooldown.classList.remove('stwid--applyDirty');
+        };
+        applyCooldown.addEventListener('click', runApplyCooldown);
+        applyRegistry.push({ isDirty: () => applyCooldown.classList.contains('stwid--applyDirty'), runApply: runApplyCooldown });
         cooldownContainer.append(applyCooldown);
     }
+    cooldownInput.addEventListener('change', () => applyCooldown.classList.add('stwid--applyDirty'));
 
     row.append(cooldownContainer);
 
@@ -1490,7 +1549,7 @@ export function buildBulkEditRow({
     const applyBulkDelay = document.createElement('div'); {
         applyBulkDelay.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
         setTooltip(applyBulkDelay, 'Apply this delay value to all selected entries');
-        applyBulkDelay.addEventListener('click', async()=>{
+        const runApplyBulkDelay = async () => {
             const rawValue = bulkDelayInput.value.trim();
             if (rawValue === '') {
                 toastr.warning('Enter a delay value (0 or more).');
@@ -1512,11 +1571,49 @@ export function buildBulkEditRow({
                 if (rowInp) rowInp.value = String(parsed);
             }
             await saveUpdatedBooks(books);
-        });
+            applyBulkDelay.classList.remove('stwid--applyDirty');
+        };
+        applyBulkDelay.addEventListener('click', runApplyBulkDelay);
+        applyRegistry.push({ isDirty: () => applyBulkDelay.classList.contains('stwid--applyDirty'), runApply: runApplyBulkDelay });
         bulkDelayContainer.append(applyBulkDelay);
     }
+    bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add('stwid--applyDirty'));
 
     row.append(bulkDelayContainer);
+
+    // ── Apply All Changes container ────────────────────────────────────────
+    const applyAllContainer = document.createElement('div');
+    applyAllContainer.classList.add('stwid--bulkEditContainer');
+    applyAllContainer.dataset.field = 'applyAll';
+
+    const applyAllLabel = document.createElement('span');
+    applyAllLabel.classList.add('stwid--bulkEditLabel');
+    applyAllLabel.textContent = 'Apply All Changes';
+    const applyAllLabelHint = document.createElement('i');
+    applyAllLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(applyAllLabelHint, 'Applies all containers that have unsaved changes. Skips containers that have not been modified.');
+    applyAllLabel.append(applyAllLabelHint);
+    applyAllContainer.append(applyAllLabel);
+
+    const applyAll = document.createElement('div'); {
+        applyAll.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+        setTooltip(applyAll, 'Apply all containers with unsaved changes');
+        applyAll.addEventListener('click', async () => {
+            await withApplyButtonLock(applyAll, async () => {
+                const dirty = applyRegistry.filter(({ isDirty }) => isDirty());
+                if (!dirty.length) {
+                    toastr.info('No changes to apply.');
+                    return;
+                }
+                for (const { runApply } of dirty) {
+                    await runApply();
+                }
+            });
+        });
+        applyAllContainer.append(applyAll);
+    }
+
+    row.append(applyAllContainer);
 
     // Gather all content after rowTitle into a collapsible wrapper
     const contentWrap = document.createElement('div');

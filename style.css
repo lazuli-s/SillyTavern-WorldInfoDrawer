@@ -1193,6 +1193,18 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   font-size: 0.85em;
 }
 
+/* Feature 1: Order container — stack Start and Spacing vertically */
+.stwid--orderStartSpacingPair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+/* Feature 2: Dirty indicator — Apply button turns warm amber when inputs changed */
+.stwid--orderHelper .stwid--bulkEditContainer .stwid--applyDirty {
+  color: var(--warning-color, #e8a97f);
+}
+
 .stwid--orderHelper .stwid--columnVisibilityLabel {
   padding: 2px 4px;
   border-radius: var(--stwid-radius-s);
