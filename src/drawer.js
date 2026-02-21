@@ -190,6 +190,13 @@ export const initDrawer = ({
                         controls.classList.add('stwid--controls');
                         const controlsPrimary = document.createElement('div');
                         controlsPrimary.classList.add('stwid--controlsRow');
+                        const lorebooksGroup = document.createElement('div');
+                        lorebooksGroup.classList.add('stwid-thin-container');
+                        const lorebooksGroupLabel = document.createElement('span');
+                        lorebooksGroupLabel.classList.add('stwid-thin-container-label');
+                        lorebooksGroupLabel.textContent = 'Lorebooks';
+                        lorebooksGroup.append(lorebooksGroupLabel);
+                        controlsPrimary.append(lorebooksGroup);
                         const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
@@ -219,7 +226,7 @@ export const initDrawer = ({
 
                                 cache[finalName]?.dom?.root?.scrollIntoView({ block:'center', inline:'center' });
                             });
-                            controlsPrimary.append(add);
+                            lorebooksGroup.append(add);
                         }
                         const addFolder = document.createElement('div'); {
                             addFolder.classList.add('menu_button');
@@ -250,7 +257,7 @@ export const initDrawer = ({
                             imp.addEventListener('click', ()=>{
                                 /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file')).click();
                             });
-                            controlsPrimary.append(imp);
+                            lorebooksGroup.append(imp);
                         }
                         const impFolder = document.createElement('div'); {
                             impFolder.classList.add('menu_button');
@@ -350,7 +357,7 @@ export const initDrawer = ({
                                 }
                                 listPanelApi.updateCollapseAllToggle();
                             });
-                            controlsPrimary.append(collapseAllToggle);
+                            lorebooksGroup.append(collapseAllToggle);
                         }
                         const collapseAllFoldersToggle = document.createElement('button'); {
                             dom.collapseAllFoldersToggle = collapseAllFoldersToggle;
