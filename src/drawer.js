@@ -197,6 +197,24 @@ export const initDrawer = ({
                         lorebooksGroupLabel.textContent = 'Lorebooks';
                         lorebooksGroup.append(lorebooksGroupLabel);
                         controlsPrimary.append(lorebooksGroup);
+                        const foldersGroup = document.createElement('div');
+                        foldersGroup.classList.add('stwid-thin-container');
+                        const foldersGroupLabel = document.createElement('span');
+                        foldersGroupLabel.classList.add('stwid-thin-container-label');
+                        foldersGroupLabel.textContent = 'Folders';
+                        const foldersGroupHint = document.createElement('i');
+                        foldersGroupHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid-thin-container-label-hint');
+                        foldersGroupHint.title = 'Create, import, or collapse folders';
+                        foldersGroupLabel.append(foldersGroupHint);
+                        foldersGroup.append(foldersGroupLabel);
+                        controlsPrimary.append(foldersGroup);
+                        const settingsGroup = document.createElement('div');
+                        settingsGroup.classList.add('stwid-thin-container');
+                        const settingsGroupLabel = document.createElement('span');
+                        settingsGroupLabel.classList.add('stwid-thin-container-label');
+                        settingsGroupLabel.textContent = 'Settings';
+                        settingsGroup.append(settingsGroupLabel);
+                        controlsPrimary.append(settingsGroup);
                         const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
@@ -247,7 +265,7 @@ export const initDrawer = ({
                                 }
                                 await listPanelApi.refreshList();
                             });
-                            controlsPrimary.append(addFolder);
+                            foldersGroup.append(addFolder);
                         }
                         const imp = document.createElement('div'); {
                             imp.classList.add('menu_button');
@@ -267,17 +285,7 @@ export const initDrawer = ({
                             impFolder.addEventListener('click', ()=>{
                                 listPanelApi?.openFolderImportDialog?.();
                             });
-                            controlsPrimary.append(impFolder);
-                        }
-                        const refresh = document.createElement('div'); {
-                            refresh.classList.add('menu_button');
-                            refresh.classList.add('fa-solid', 'fa-fw', 'fa-arrows-rotate');
-                            refresh.title = 'Refresh';
-                            refresh.setAttribute('aria-label', 'Refresh');
-                            refresh.addEventListener('click', async()=>{
-                                await listPanelApi.refreshList();
-                            });
-                            controlsPrimary.append(refresh);
+                            foldersGroup.append(impFolder);
                         }
                         const settings = document.createElement('div'); {
                             dom.activationToggle = settings;
@@ -301,7 +309,17 @@ export const initDrawer = ({
 
                                 editorPanelApi.toggleActivationSettings();
                             });
-                            controlsPrimary.append(settings);
+                            settingsGroup.append(settings);
+                        }
+                        const refresh = document.createElement('div'); {
+                            refresh.classList.add('menu_button');
+                            refresh.classList.add('fa-solid', 'fa-fw', 'fa-arrows-rotate');
+                            refresh.title = 'Refresh';
+                            refresh.setAttribute('aria-label', 'Refresh');
+                            refresh.addEventListener('click', async()=>{
+                                await listPanelApi.refreshList();
+                            });
+                            settingsGroup.append(refresh);
                         }
                         const order = document.createElement('div'); {
                             dom.order.toggle = order;
@@ -373,7 +391,7 @@ export const initDrawer = ({
                                 listPanelApi.setAllFoldersCollapsed(shouldCollapse);
                                 listPanelApi.updateCollapseAllFoldersToggle();
                             });
-                            controlsPrimary.append(collapseAllFoldersToggle);
+                            foldersGroup.append(collapseAllFoldersToggle);
                         }
                         const controlsSecondary = document.createElement('div');
                         controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');

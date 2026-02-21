@@ -12,6 +12,7 @@ documents the findings in the task file, then moves the file to `tasks/finished/
 - `tasks/Issue_OrderHelperSelectCountStaleOnFilter.md`
 - `tasks/Rework_BulkEditorUXImprovements.md`
 - `tasks/NewFeature_ThinContainerLorebooksGroup.md`
+- `tasks/NewFeature_ThinContainerFoldersAndSettingsGroups.md`
 
 ---
 
