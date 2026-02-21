@@ -186,6 +186,25 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls {
   flex-wrap: nowrap;
 }
 
+body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-thin-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+  row-gap: 0.55em;
+}
+
+body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-sort-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-sort-label {
+  font-size: 0.78em;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
 body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .text_pole {
   height: var(--stwid-control-height);
@@ -193,6 +212,11 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .text_pole {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
+}
+
+body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-thin-container .stwid-sort-field .text_pole {
+  width: 11.5em;
+  max-width: 11.5em;
 }
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow .stwid--bookSortToggle,

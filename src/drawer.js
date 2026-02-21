@@ -395,6 +395,36 @@ export const initDrawer = ({
                         }
                         const controlsSecondary = document.createElement('div');
                         controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');
+                        const sortingGroup = document.createElement('div');
+                        sortingGroup.classList.add('stwid-thin-container');
+                        const sortingGroupLabel = document.createElement('span');
+                        sortingGroupLabel.classList.add('stwid-thin-container-label');
+                        sortingGroupLabel.textContent = 'Sorting';
+                        sortingGroup.append(sortingGroupLabel);
+                        const globalSortField = document.createElement('div');
+                        globalSortField.classList.add('stwid-sort-field');
+                        const globalSortLabel = document.createElement('span');
+                        globalSortLabel.classList.add('stwid-sort-label');
+                        globalSortLabel.textContent = 'Global Sorting:';
+                        globalSortField.append(globalSortLabel);
+                        const toggleSortField = document.createElement('div');
+                        toggleSortField.classList.add('stwid-sort-field');
+                        const toggleSortLabel = document.createElement('span');
+                        toggleSortLabel.classList.add('stwid-sort-label');
+                        toggleSortLabel.textContent = 'Toggle per book sorting:';
+                        const toggleSortHint = document.createElement('i');
+                        toggleSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid-thin-container-label-hint');
+                        toggleSortHint.title = 'When enabled, individual books can use their own sort order instead of the global one';
+                        toggleSortField.append(toggleSortLabel, toggleSortHint);
+                        const clearSortField = document.createElement('div');
+                        clearSortField.classList.add('stwid-sort-field');
+                        const clearSortLabel = document.createElement('span');
+                        clearSortLabel.classList.add('stwid-sort-label');
+                        clearSortLabel.textContent = 'Clear sorting preferences:';
+                        const clearSortHint = document.createElement('i');
+                        clearSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid-thin-container-label-hint');
+                        clearSortHint.title = 'Remove all saved per-book sort preferences and revert all books to the global sort';
+                        clearSortField.append(clearSortLabel, clearSortHint);
                         const sortSel = document.createElement('select'); {
                             sortSel.classList.add('text_pole');
                             sortSel.title = 'Global entry sort for the list panel';
@@ -409,7 +439,7 @@ export const initDrawer = ({
                                 Settings.instance.save();
                             });
                             appendSortOptions(sortSel, Settings.instance.sortLogic, Settings.instance.sortDirection);
-                            controlsSecondary.append(sortSel);
+                            globalSortField.append(sortSel);
                         }
                         const bookSortToggle = document.createElement('button'); {
                             bookSortToggle.type = 'button';
@@ -438,7 +468,7 @@ export const initDrawer = ({
                                     listPanelApi.sortEntriesIfNeeded(name);
                                 }
                             });
-                            controlsSecondary.append(bookSortToggle);
+                            toggleSortField.append(bookSortToggle);
                         }
                         const clearBookSorts = document.createElement('button'); {
                             clearBookSorts.type = 'button';
@@ -458,8 +488,10 @@ export const initDrawer = ({
                                     clearBookSorts.disabled = false;
                                 }
                             });
-                            controlsSecondary.append(clearBookSorts);
+                            clearSortField.append(clearBookSorts);
                         }
+                        sortingGroup.append(globalSortField, toggleSortField, clearSortField);
+                        controlsSecondary.append(sortingGroup);
                         controls.append(controlsPrimary, controlsSecondary);
                         list.append(controls);
                     }

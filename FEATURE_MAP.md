@@ -76,6 +76,7 @@ Where each feature or behavior is implemented in the codebase.
 - Global sort settings and persistence bridge (`extension_settings.worldInfoDrawer`) → src/Settings.js
 - Entry sort implementations (title, trigger, prompt, position, depth, order, uid, length, custom) → src/sortHelpers.js
 - Sort option labels/options for dropdowns → src/utils.js
+- Secondary sorting controls row (`stwid--orderControls`) grouped into a labeled `Sorting` thin-container with `Global Sorting`, `Toggle per book sorting`, and `Clear sorting preferences` fields → src/drawer.js, style.css
 - Book-level sort choice resolution and DOM reorder application → src/listPanel.js, src/listPanel.booksView.js
 - Per-book metadata sort read/write (`stwid.sort`) → src/sortHelpers.js, src/listPanel.js
 
