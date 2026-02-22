@@ -1,6 +1,3 @@
 [submodule "vendor/SillyTavern"]
 	path = vendor/SillyTavern
 	url = https://github.com/SillyTavern/SillyTavern.git
-[submodule "vendor/SillyTavern-CSSCheatSheet"]
-	path = vendor/SillyTavern-CSSCheatSheet
-	url = https://github.com/lazuli-s/SillyTavern-CSSCheatSheet
