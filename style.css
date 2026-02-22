@@ -224,6 +224,9 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--individualSo
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--globalSorting {
   align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5em 1em 0em 0.1em;
 }
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--individualSorting {

@@ -22,3 +22,6 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
 - **Added** `.stwid--thinContainerSectionTitle > i`: `font-size: 0.78em; opacity: 0.75;` — matches icon size/opacity to the title text.
 - **Added** `stwid--individualSorting` override: `flex-wrap: wrap; align-items: center;` — allows the section title to occupy its own full-width row.
 - **Added** `stwid--individualSorting > .stwid--thinContainerSectionTitle`: `flex: 0 0 100%;` — forces the title to wrap onto its own line above the buttons.
+## Follow-up Adjustment
+
+- Updated `stwid--globalSorting` spacing and layout to: `align-items: center; display: flex; flex-direction: column; padding: 0.5em 1em 0em 0.1em;`
