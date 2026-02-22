@@ -415,15 +415,6 @@ export const initDrawer = ({
                         globalSortingWrapper.append(globalSortingWrapperLabel);
                         const globalSortingGroup = document.createElement('div');
                         globalSortingGroup.classList.add('stwid--globalSorting');
-                        const globalSortSectionTitle = document.createElement('div');
-                        globalSortSectionTitle.classList.add('stwid--thinContainerSectionTitle');
-                        const globalSortIcon = document.createElement('i');
-                        globalSortIcon.classList.add('fa-solid', 'fa-fw', 'fa-globe');
-                        const globalSortLabel = document.createElement('span');
-                        globalSortLabel.classList.add('stwid--thinContainerSmallTitle');
-                        globalSortLabel.textContent = 'Global Sorting:';
-                        globalSortSectionTitle.append(globalSortIcon, globalSortLabel);
-                        globalSortingGroup.append(globalSortSectionTitle);
                         const sortSel = document.createElement('select'); {
                             sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
                             sortSel.title = 'Global entry sort for the list panel';
@@ -499,18 +490,10 @@ export const initDrawer = ({
                         perBookSortingWrapper.append(perBookSortingWrapperLabel);
                         const perBookSortingGroup = document.createElement('div');
                         perBookSortingGroup.classList.add('stwid--individualSorting');
-                        const perBookTitle = document.createElement('div');
-                        perBookTitle.classList.add('stwid--thinContainerSectionTitle');
-                        const perBookIcon = document.createElement('i');
-                        perBookIcon.classList.add('fa-solid', 'fa-fw', 'fa-book');
-                        const perBookLabel = document.createElement('span');
-                        perBookLabel.classList.add('stwid--thinContainerSmallTitle');
-                        perBookLabel.textContent = 'Per-book Sorting:';
-                        perBookTitle.append(perBookIcon, perBookLabel);
                         const perBookButtons = document.createElement('div');
                         perBookButtons.classList.add('stwid--perBookSortButtons');
                         perBookButtons.append(bookSortToggle, clearBookSorts);
-                        perBookSortingGroup.append(perBookTitle, perBookButtons);
+                        perBookSortingGroup.append(perBookButtons);
                         globalSortingWrapper.append(globalSortingGroup);
                         perBookSortingWrapper.append(perBookSortingGroup);
                         controlsSecondary.append(globalSortingWrapper, perBookSortingWrapper);

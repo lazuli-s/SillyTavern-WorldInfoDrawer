@@ -115,3 +115,11 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
   - Added a `stwid--thinContainerLabelHint` question-mark icon with user-facing guidance that:
     - Enabling per-book sorting lets each lorebook use its own saved sorting.
     - Disabling per-book sorting makes all lorebooks follow Global Sorting.
+
+## Follow-up Adjustment 9
+
+- Updated `src/drawer.js` sorting controls by removing the two section-title rows inside tab content:
+  - Removed the `Global Sorting:` icon/title row (`stwid--thinContainerSectionTitle`) from `stwid--globalSorting`.
+  - Removed the `Per-book Sorting:` icon/title row (`stwid--thinContainerSectionTitle`) from `stwid--individualSorting`.
+- Updated `style.css`:
+  - Removed `font-size: 0.95em` from `.stwid--iconTabContent`.

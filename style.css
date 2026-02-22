@@ -352,7 +352,6 @@ body.stwid-- #WorldInfo .stwid--iconTabButton.active {
 
 body.stwid-- #WorldInfo .stwid--iconTabContent {
   display: none;
-  font-size: 0.95em;
 }
 
 body.stwid-- #WorldInfo .stwid--iconTabContent.active {
