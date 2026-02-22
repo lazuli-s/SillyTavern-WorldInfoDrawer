@@ -25,3 +25,11 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
 ## Follow-up Adjustment
 
 - Updated `stwid--globalSorting` spacing and layout to: `align-items: center; display: flex; flex-direction: column; padding: 0.5em 1em 0em 0.1em;`
+
+## Follow-up Adjustment 2
+
+- Updated `.stwid--sortingRow .stwid--thinContainer` by removing `flex: 1 1 auto` and adding `padding-top: 0.7em`.
+- Updated `.stwid--globalSorting` to remove custom padding and set `gap: 0em`.
+- Updated `.stwid--individualSorting` to explicitly use `display: flex; flex-direction: column; flex-wrap: wrap; align-items: center; gap: 0em;`.
+- Updated `.stwid--perBookSortButtons` to use `display: flex; gap: 0.5em;`.
+- Updated `.stwid--thinContainerSectionTitle` alignment to `align-items: baseline`.
