@@ -105,14 +105,14 @@ const createFilterBarSlice = ({
     const setupFilter = (list)=>{
         const filter = document.createElement('div'); {
             const searchRow = document.createElement('div');
-            searchRow.classList.add('stwid--filterRow', 'stwid--filterRow--search');
+            searchRow.classList.add('stwid--searchRow');
             const visibilityRow = document.createElement('div');
-            visibilityRow.classList.add('stwid--filterRow', 'stwid--filterRow--visibility');
-            const visibilityRowHost = runtime?.dom?.visibilityAndSettingsRow instanceof HTMLElement
-                ? runtime.dom.visibilityAndSettingsRow
-                : visibilityRow;
-            if (visibilityRowHost !== visibilityRow) {
-                visibilityRowHost.querySelector('.stwid--bookVisibility')?.remove();
+            visibilityRow.classList.add('stwid--visibilityRow');
+            const sortingRow = runtime?.dom?.sortingRow instanceof HTMLElement
+                ? runtime.dom.sortingRow
+                : document.createElement('div');
+            if (!sortingRow.classList.contains('stwid--sortingRow')) {
+                sortingRow.classList.add('stwid--sortingRow');
             }
             const setQueryFiltered = (element, isFiltered)=>{
                 if (!element) return;
@@ -227,13 +227,14 @@ const createFilterBarSlice = ({
                 iconTabBar.classList.add('stwid--iconTabBar');
                 iconTabBar.setAttribute('role', 'tablist');
                 iconTabBar.setAttribute('aria-label', 'List panel tabs');
-                const placeholderTabs = [
-                    { id:'visibility', icon:'fa-eye', label:'Visibility', placeholder:'Visibility placeholder tab content.' },
-                    { id:'sorting', icon:'fa-arrow-down-wide-short', label:'Sorting', placeholder:'Sorting placeholder tab content.' },
-                    { id:'search', icon:'fa-magnifying-glass', label:'Search', placeholder:'Search placeholder tab content.' },
+                const panelTabs = [
+                    { id:'visibility', icon:'fa-eye', label:'Visibility' },
+                    { id:'sorting', icon:'fa-arrow-down-wide-short', label:'Sorting' },
+                    { id:'search', icon:'fa-magnifying-glass', label:'Search' },
                 ];
                 const tabButtons = [];
                 const tabContents = [];
+                const tabContentsById = new Map();
                 const setActivePlaceholderTab = (tabId)=>{
                     for (const button of tabButtons) {
                         const isActive = button.dataset.tabId === tabId;
@@ -245,7 +246,7 @@ const createFilterBarSlice = ({
                         content.classList.toggle('active', isActive);
                     }
                 };
-                for (const tab of placeholderTabs) {
+                for (const tab of panelTabs) {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.classList.add('stwid--iconTabButton');
@@ -266,14 +267,26 @@ const createFilterBarSlice = ({
                     content.classList.add('stwid--iconTabContent');
                     content.dataset.tabId = tab.id;
                     content.setAttribute('role', 'tabpanel');
-                    content.textContent = tab.placeholder;
                     tabContents.push(content);
+                    tabContentsById.set(tab.id, content);
                     iconTab.append(content);
 
                     button.addEventListener('click', ()=>setActivePlaceholderTab(tab.id));
                 }
+                const visibilityTabContent = tabContentsById.get('visibility');
+                if (visibilityTabContent) {
+                    visibilityTabContent.append(visibilityRow);
+                }
+                const sortingTabContent = tabContentsById.get('sorting');
+                if (sortingTabContent) {
+                    sortingTabContent.append(sortingRow);
+                }
+                const searchTabContent = tabContentsById.get('search');
+                if (searchTabContent) {
+                    searchTabContent.append(searchRow);
+                }
                 iconTab.prepend(iconTabBar);
-                setActivePlaceholderTab(placeholderTabs[0].id);
+                setActivePlaceholderTab(panelTabs[0].id);
             }
             const getBookVisibilityOption = (mode)=>
                 BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
@@ -397,9 +410,7 @@ const createFilterBarSlice = ({
                 updateFolderActiveToggles();
             };
             setApplyActiveFilter(applyActiveFilter);
-            const bookVisibility = document.createElement('div'); {
-                bookVisibility.classList.add('stwid--bookVisibility');
-
+            {
                 const menuWrap = document.createElement('div');
                 menuWrap.classList.add('stwid--multiselectDropdownWrap');
 
@@ -469,38 +480,25 @@ const createFilterBarSlice = ({
                         trigger.setAttribute('aria-expanded', 'true');
                     }
                 });
-                visibilityRowHost.append(bookVisibility);
-
-                const visibilityControls = document.createElement('div');
-                visibilityControls.classList.add('stwid--thinContainer');
-                const visibilityLabel = document.createElement('span');
-                visibilityLabel.classList.add('stwid--thinContainerLabel');
-                visibilityLabel.textContent = 'Visibility';
-                visibilityControls.append(visibilityLabel);
                 const chips = document.createElement('div');
                 chips.classList.add('stwid--visibilityChips');
                 listPanelState.bookVisibilityChips = chips;
                 const orderHelperToggle = runtime?.dom?.order?.toggle;
                 if (orderHelperToggle instanceof HTMLElement) {
-                    visibilityControls.append(orderHelperToggle);
+                    visibilityRow.append(orderHelperToggle);
                 }
-                visibilityControls.append(menuWrap, chips);
-                bookVisibility.append(visibilityControls);
+                visibilityRow.append(menuWrap, chips);
 
                 const onDocClickCloseMenu = (evt)=>{
                     if (!menu.classList.contains('stwid--active')) return;
                     const target = evt.target instanceof HTMLElement ? evt.target : null;
-                    if (target?.closest('.stwid--bookVisibility')) return;
+                    if (target?.closest('.stwid--visibilityRow')) return;
                     closeBookVisibilityMenu();
                 };
                 docClickHandler = onDocClickCloseMenu;
                 document.addEventListener('click', onDocClickCloseMenu);
             }
-            if (visibilityRowHost === visibilityRow) {
-                filter.append(searchRow, iconTab, visibilityRow);
-            } else {
-                filter.append(searchRow, iconTab);
-            }
+            filter.append(iconTab);
             applyActiveFilter();
             list.append(filter);
         }

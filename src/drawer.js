@@ -38,6 +38,8 @@ export const initDrawer = ({
         activationToggle: undefined,
         /**@type {HTMLElement} */
         visibilityAndSettingsRow: undefined,
+        /**@type {HTMLElement} */
+        sortingRow: undefined,
         order: {
             /**@type {HTMLElement} */
             toggle: undefined,
@@ -400,6 +402,7 @@ export const initDrawer = ({
                         }
                         const controlsSecondary = document.createElement('div');
                         controlsSecondary.classList.add('stwid--sortingRow');
+                        dom.sortingRow = controlsSecondary;
                         const sortingWrapper = document.createElement('div');
                         sortingWrapper.classList.add('stwid--thinContainer');
                         const sortingWrapperLabel = document.createElement('span');

@@ -73,3 +73,20 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
     - Removed the `Book Visibility` text span.
     - Switched trigger icon from `fa-filter` to `fa-eye`.
     - Kept existing dropdown behavior unchanged.
+
+## Follow-up Adjustment 6
+
+- Reworked list panel tab content in `src/listPanel.filterBar.js`:
+  - Renamed search row class from `stwid--filterRow--search` to `stwid--searchRow`.
+  - Moved `stwid--searchRow` into icon tab 3 (`Search`).
+  - Moved existing `stwid--sortingRow` (with `stwid--globalSorting` and `stwid--individualSorting`) into icon tab 2 (`Sorting`) by reusing the DOM node created in `src/drawer.js`.
+  - Created a dedicated `stwid--visibilityRow` in icon tab 1 (`Visibility`).
+  - Populated `stwid--visibilityRow` with:
+    - Order Helper toggle button (`fa-arrow-down-wide-short`)
+    - Visibility dropdown wrapper (`stwid--multiselectDropdownWrap`)
+    - Active visibility chips (`stwid--visibilityChips`)
+- Updated `src/drawer.js` to expose `dom.sortingRow` so the filter/tab slice can mount the sorting row in the sorting tab.
+- Updated `style.css` selectors to support the new row class names and moved tab layout:
+  - Search row selector now targets `stwid--searchRow`.
+  - Visibility row selector now targets `stwid--visibilityRow`.
+  - Sorting row styles no longer depend on being inside `.stwid--controls`.

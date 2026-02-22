@@ -67,10 +67,10 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/listPanel.selectionDnD.js
 - Delete selected entries (Del key) with save/update propagation → src/drawer.js, src/wiUpdateHandler.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
-- Placeholder list-panel icon tabs under search (`Books`, `Folders`, `Entries`) with local active-state switching and placeholder content → src/listPanel.filterBar.js, style.css
+- List-panel icon tabs (`Visibility`, `Sorting`, `Search`) with active-state switching and real control rows mounted per tab → src/listPanel.filterBar.js, style.css
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
 - Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
-- Visibility + settings row groups Book Visibility trigger + chips + Order Helper toggle alongside Settings actions (global activation settings, refresh) → src/listPanel.filterBar.js, src/drawer.js, style.css
+- Visibility tab row (`stwid--visibilityRow`) groups Book Visibility trigger + chips + Order Helper toggle, while the drawer settings row keeps activation/refresh actions → src/listPanel.filterBar.js, src/drawer.js, style.css
 
 ## Sorting & ordering
 
@@ -78,7 +78,7 @@ Where each feature or behavior is implemented in the codebase.
 - Global sort settings and persistence bridge (`extension_settings.worldInfoDrawer`) → src/Settings.js
 - Entry sort implementations (title, trigger, prompt, position, depth, order, uid, length, custom) → src/sortHelpers.js
 - Sort option labels/options for dropdowns → src/utils.js
-- Secondary sorting controls row (`stwid--orderControls`) grouped into a labeled `Sorting` thin-container with `Global Sorting`, `Toggle per book sorting`, and `Clear sorting preferences` fields → src/drawer.js, style.css
+- Sorting controls row (`stwid--sortingRow`) grouped into a labeled `Sorting` thin-container with `Global Sorting`, `Toggle per book sorting`, and `Clear sorting preferences` fields; mounted in icon tab 2 (`Sorting`) → src/drawer.js, src/listPanel.filterBar.js, style.css
 - Book-level sort choice resolution and DOM reorder application → src/listPanel.js, src/listPanel.booksView.js
 - Per-book metadata sort read/write (`stwid.sort`) → src/sortHelpers.js, src/listPanel.js
 

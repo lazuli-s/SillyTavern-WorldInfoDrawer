@@ -63,7 +63,7 @@
 - `drawer.js`
   - Owns drawer DOM map (`dom`) and the full `addDrawer` bootstrap flow
   - Wires top control row actions (new/import/sort/collapse toggles)
-  - Wires visibility + settings row actions (visibility scope controls, Order Helper toggle, activation settings, refresh)
+  - Wires settings row actions (activation settings, refresh) and exposes shared control DOM nodes consumed by list-panel tabs (sorting row, Order Helper toggle)
   - Wires global drawer interactions:
     - Delete-key handling for selected entries
     - Splitter drag/resize + persistence
@@ -118,9 +118,10 @@
 
 - `listPanel.filterBar.js`
   - Owns list search bar and entry-text search toggle behavior
-  - Owns placeholder icon-tab strip mounted below the list search row
+  - Owns icon-tab strip (`Visibility`, `Sorting`, `Search`) and mounts each control row into its tab panel
   - Owns Book Visibility constants/options/menu/chip rendering
-  - Owns visibility control layout (thin-container grouping of visibility trigger, chips, and Order Helper toggle) and mounts it into the drawer-provided visibility/settings host row
+  - Owns visibility control row layout (`stwid--visibilityRow`) including visibility trigger, chips, and Order Helper toggle
+  - Re-mounts the drawer-provided sorting row (`stwid--sortingRow`) into the Sorting tab panel
   - Owns visibility scope computation and active-filter application wiring
   - Calls back into composition for folder toggle refresh and scope-change notifications
 
