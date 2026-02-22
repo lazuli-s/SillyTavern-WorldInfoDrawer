@@ -425,7 +425,8 @@ body.stwid-- #WorldInfo .stwid--visibilityChips {
   display: flex;
   align-items: center;
   align-content: flex-start;
-  gap: 0.35em;
+  row-gap: 0.2em;
+  column-gap: 0.2em;
   flex-wrap: wrap;
   flex: 1 1 auto;
   min-width: 0;
@@ -435,12 +436,12 @@ body.stwid-- #WorldInfo .stwid--visibilityChips {
 body.stwid-- #WorldInfo .stwid--visibilityChip {
   display: inline-flex;
   align-items: center;
-  gap: 0.25em;
+  gap: 0.5em;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 999px;
   padding: 0.1em 0.45em;
   font-size: 0.8em;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
+  background-color: var(--SmartThemeBlurTintColor);
 }
 
 body.stwid-- #WorldInfo .stwid--visibilityChip .stwid--icon {

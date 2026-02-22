@@ -417,20 +417,14 @@ const createFilterBarSlice = ({
                 visibilityLabel.classList.add('stwid--thinContainerLabel');
                 visibilityLabel.textContent = 'Visibility';
                 visibilityControls.append(visibilityLabel);
-                const helper = document.createElement('i');
-                helper.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-                helper.title = 'This only affects which books are shown in the list panel and Order Helper. It does not change which books are added to the prompt/context.';
-                helper.setAttribute('aria-label', helper.title);
-                helper.tabIndex = 0;
-                visibilityControls.append(helper);
                 const chips = document.createElement('div');
                 chips.classList.add('stwid--visibilityChips');
                 listPanelState.bookVisibilityChips = chips;
-                visibilityControls.append(menuWrap, chips);
                 const orderHelperToggle = runtime?.dom?.order?.toggle;
                 if (orderHelperToggle instanceof HTMLElement) {
                     visibilityControls.append(orderHelperToggle);
                 }
+                visibilityControls.append(menuWrap, chips);
                 bookVisibility.append(visibilityControls);
 
                 const onDocClickCloseMenu = (evt)=>{
