@@ -61,3 +61,15 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
   - Added `gap: 1.1em` to `.stwid--sortingRow .stwid--thinContainer`.
   - Added `.stwid--bookVisibility > .stwid--thinContainer { width: 100%; }` so the grouped row fills available width.
   - Removed unused `.stwid--bookVisibilityHelp` style rule after switching to `stwid--thinContainerLabelHint`.
+
+## Follow-up Adjustment 5
+
+- Updated visibility controls in `src/listPanel.filterBar.js`:
+  - Added a thin-container section label using existing class `stwid--thinContainerLabel` with text `Visibility`.
+  - Updated the hint tooltip (`stwid--thinContainerLabelHint`) to clarify scope:
+    - It only affects which books are shown in the list panel and in Order Helper.
+    - It does not change which books are added to prompt/context.
+  - Changed the visibility dropdown trigger button from text+icon to icon-only:
+    - Removed the `Book Visibility` text span.
+    - Switched trigger icon from `fa-filter` to `fa-eye`.
+    - Kept existing dropdown behavior unchanged.

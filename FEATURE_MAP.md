@@ -67,7 +67,7 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/listPanel.selectionDnD.js
 - Delete selected entries (Del key) with save/update propagation → src/drawer.js, src/wiUpdateHandler.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
-- Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
+- Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
 - Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
 - Visibility thin-container row groups Book Visibility trigger + chips + Order Helper toggle in one place → src/listPanel.filterBar.js, src/drawer.js, style.css
 

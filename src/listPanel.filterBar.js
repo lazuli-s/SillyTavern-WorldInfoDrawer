@@ -346,24 +346,14 @@ const createFilterBarSlice = ({
                 const trigger = document.createElement('button');
                 trigger.type = 'button';
                 trigger.classList.add('menu_button', 'stwid--multiselectDropdownButton');
-                trigger.title = 'Select which book sources are visible in the list.';
-                trigger.setAttribute('aria-label', 'Book visibility mode');
+                trigger.title = 'Select which book sources are visible in the list and Order Helper.';
+                trigger.setAttribute('aria-label', 'Visibility filters');
                 trigger.setAttribute('aria-expanded', 'false');
                 trigger.setAttribute('aria-haspopup', 'true');
                 const triggerIcon = document.createElement('i');
-                triggerIcon.classList.add('fa-solid', 'fa-fw', 'fa-filter');
+                triggerIcon.classList.add('fa-solid', 'fa-fw', 'fa-eye');
                 trigger.append(triggerIcon);
-                const triggerLabel = document.createElement('span');
-                triggerLabel.classList.add('stwid--bookVisibilityButtonLabel');
-                triggerLabel.textContent = 'Book Visibility';
-                trigger.append(triggerLabel);
                 menuWrap.append(trigger);
-                const helper = document.createElement('i');
-                helper.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-                helper.title = 'This only affects which books are shown in the list panel. It does not change which books are added to the prompt/context.';
-                helper.setAttribute('aria-label', helper.title);
-                helper.tabIndex = 0;
-                menuWrap.append(helper);
 
                 const menu = document.createElement('div');
                 menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu');
@@ -423,6 +413,16 @@ const createFilterBarSlice = ({
 
                 const visibilityControls = document.createElement('div');
                 visibilityControls.classList.add('stwid--thinContainer');
+                const visibilityLabel = document.createElement('span');
+                visibilityLabel.classList.add('stwid--thinContainerLabel');
+                visibilityLabel.textContent = 'Visibility';
+                visibilityControls.append(visibilityLabel);
+                const helper = document.createElement('i');
+                helper.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                helper.title = 'This only affects which books are shown in the list panel and Order Helper. It does not change which books are added to the prompt/context.';
+                helper.setAttribute('aria-label', helper.title);
+                helper.tabIndex = 0;
+                visibilityControls.append(helper);
                 const chips = document.createElement('div');
                 chips.classList.add('stwid--visibilityChips');
                 listPanelState.bookVisibilityChips = chips;
