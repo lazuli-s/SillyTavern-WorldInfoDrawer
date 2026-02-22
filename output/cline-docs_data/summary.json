@@ -1,0 +1,8 @@
+{
+  "name": "cline-docs",
+  "total_pages": 0,
+  "base_url": "configs/cline-docs.json",
+  "llms_txt_detected": false,
+  "llms_txt_variant": null,
+  "pages": []
+}
