@@ -403,8 +403,6 @@ export const initDrawer = ({
                         sortingWrapper.append(sortingWrapperLabel);
                         const globalSortingGroup = document.createElement('div');
                         globalSortingGroup.classList.add('stwid--globalSorting');
-                        const globalSortField = document.createElement('div');
-                        globalSortField.classList.add('stwid-sort-field');
                         const globalSortSectionTitle = document.createElement('div');
                         globalSortSectionTitle.classList.add('stwid--thinContainerSectionTitle');
                         const globalSortIcon = document.createElement('i');
@@ -413,7 +411,7 @@ export const initDrawer = ({
                         globalSortLabel.classList.add('stwid--thinContainerSmallTitle');
                         globalSortLabel.textContent = 'Global Sorting:';
                         globalSortSectionTitle.append(globalSortIcon, globalSortLabel);
-                        globalSortField.append(globalSortSectionTitle);
+                        globalSortingGroup.append(globalSortSectionTitle);
                         const sortSel = document.createElement('select'); {
                             sortSel.classList.add('text_pole');
                             sortSel.title = 'Global entry sort for the list panel';
@@ -428,7 +426,7 @@ export const initDrawer = ({
                                 Settings.instance.save();
                             });
                             appendSortOptions(sortSel, Settings.instance.sortLogic, Settings.instance.sortDirection);
-                            globalSortField.append(sortSel);
+                            globalSortingGroup.append(sortSel);
                         }
                         const bookSortToggle = document.createElement('button'); {
                             bookSortToggle.type = 'button';
@@ -477,7 +475,6 @@ export const initDrawer = ({
                                 }
                             });
                         }
-                        globalSortingGroup.append(globalSortField);
                         const perBookSortingGroup = document.createElement('div');
                         perBookSortingGroup.classList.add('stwid--individualSorting');
                         const perBookTitle = document.createElement('div');
