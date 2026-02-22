@@ -185,7 +185,7 @@ body.stwid-- #WorldInfo .stwid--thinContainerSmallTitle {
 
 body.stwid-- #WorldInfo .stwid--thinContainerSectionTitle {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.25em;
 }
 
@@ -209,10 +209,10 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow {
 }
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--thinContainer {
-  flex: 1 1 auto;
   min-width: 0;
   flex-wrap: wrap;
   row-gap: 0.55em;
+  padding-top: 0.7em;
 }
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--globalSorting,
@@ -226,12 +226,15 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--globalSortin
   align-items: center;
   display: flex;
   flex-direction: column;
-  padding: 0.5em 1em 0em 0.1em;
+  gap: 0em;
 }
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--individualSorting {
   flex-wrap: wrap;
   align-items: center;
+  gap: 0em;
+  display: flex;
+  flex-direction: column;
 }
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
@@ -240,6 +243,7 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--individualSo
 
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--perBookSortButtons {
   display: flex;
+  gap: 0.5em;
 }
 
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
