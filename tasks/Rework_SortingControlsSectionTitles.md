@@ -47,3 +47,17 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
   to:
   - `.stwid--globalSorting .stwid--smallSelectTextPole`
 - Updated the top-row **Import Folder** icon to match **Import Book** (`fa-file-import`) for visual consistency.
+
+## Follow-up Adjustment 4
+
+- Updated visibility row composition in `src/listPanel.filterBar.js`:
+  - Added a `stwid--thinContainer` wrapper inside `stwid--bookVisibility`.
+  - Grouped these controls inside that thin container:
+    - Book Visibility dropdown button (`stwid--multiselectDropdownWrap > button`)
+    - Visibility chips (`stwid--visibilityChips`)
+    - Existing Order Helper toggle (`fa-arrow-down-wide-short`) moved into this group.
+- Updated the Book Visibility helper icon classes to use `stwid--thinContainerLabelHint` (with `fa-fw`) so it reuses the existing thin-container hint styling.
+- Updated `style.css`:
+  - Added `gap: 1.1em` to `.stwid--sortingRow .stwid--thinContainer`.
+  - Added `.stwid--bookVisibility > .stwid--thinContainer { width: 100%; }` so the grouped row fills available width.
+  - Removed unused `.stwid--bookVisibilityHelp` style rule after switching to `stwid--thinContainerLabelHint`.

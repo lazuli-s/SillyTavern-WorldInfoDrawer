@@ -20,7 +20,7 @@ Where each feature or behavior is implemented in the codebase.
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/listPanel.booksView.js
-- Top control row (new book, new folder, import book, import folder, refresh, global activation settings, order helper, collapse/expand all books, collapse/expand all folders), including thin-container groups: Lorebooks (new/import/collapse-all-books), Folders (new/import/collapse-all-folders), and Settings (global activation settings/refresh) → src/drawer.js, src/listPanel.js
+- Top control row (new book, new folder, import book, import folder, refresh, global activation settings, collapse/expand all books, collapse/expand all folders), including thin-container groups: Lorebooks (new/import/collapse-all-books), Folders (new/import/collapse-all-folders), and Settings (global activation settings/refresh) → src/drawer.js, src/listPanel.js
 - Book active toggle (global active status) → src/listPanel.booksView.js
 - Book collapse/expand and collapse-all behavior → src/listPanel.booksView.js, src/listPanel.js, src/drawer.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.booksView.js, src/listPanel.selectionDnD.js, src/listPanel.js
@@ -69,6 +69,7 @@ Where each feature or behavior is implemented in the codebase.
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with static trigger label, list-only helper tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
 - Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
+- Visibility thin-container row groups Book Visibility trigger + chips + Order Helper toggle in one place → src/listPanel.filterBar.js, src/drawer.js, style.css
 
 ## Sorting & ordering
 

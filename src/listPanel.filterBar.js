@@ -359,7 +359,7 @@ const createFilterBarSlice = ({
                 trigger.append(triggerLabel);
                 menuWrap.append(trigger);
                 const helper = document.createElement('i');
-                helper.classList.add('fa-solid', 'fa-circle-question', 'stwid--bookVisibilityHelp');
+                helper.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
                 helper.title = 'This only affects which books are shown in the list panel. It does not change which books are added to the prompt/context.';
                 helper.setAttribute('aria-label', helper.title);
                 helper.tabIndex = 0;
@@ -421,11 +421,17 @@ const createFilterBarSlice = ({
                 });
                 visibilityRow.append(bookVisibility);
 
+                const visibilityControls = document.createElement('div');
+                visibilityControls.classList.add('stwid--thinContainer');
                 const chips = document.createElement('div');
                 chips.classList.add('stwid--visibilityChips');
                 listPanelState.bookVisibilityChips = chips;
-                bookVisibility.append(menuWrap);
-                bookVisibility.append(chips);
+                visibilityControls.append(menuWrap, chips);
+                const orderHelperToggle = runtime?.dom?.order?.toggle;
+                if (orderHelperToggle instanceof HTMLElement) {
+                    visibilityControls.append(orderHelperToggle);
+                }
+                bookVisibility.append(visibilityControls);
 
                 const onDocClickCloseMenu = (evt)=>{
                     if (!menu.classList.contains('stwid--active')) return;
