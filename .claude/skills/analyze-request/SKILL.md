@@ -25,19 +25,6 @@ extension. Prioritize clarity and shared understanding over solutions.
 
 ---
 
-## Mandatory Preparation (Do This First)
-
-Before asking any questions, read these three files in full:
-
-1. `CLAUDE.md` — agent rules, naming conventions, commit style, and task file format
-2. `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
-3. `FEATURE_MAP.md` — where each feature/behavior is implemented in the codebase
-
-Use this context to ground the interview. The goal is to understand not just *what* the user wants,
-but *where in the existing system* it would live.
-
----
-
 ## Strict Constraints
 
 - Do NOT modify any code during this skill.
@@ -47,11 +34,26 @@ but *where in the existing system* it would live.
 
 ---
 
-## Interview Process
+## Step 1: Load Authoritative Documentation (Do This First)
+
+Before asking any questions, read these files in full:
+
+1. `AGENTS.md` — agent rules, naming conventions, commit style, and task file format
+2. `FEATURE_MAP.md` — where each feature/behavior is implemented in the codebase
+3. `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
+4. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — what ST owns vs. what this extension owns
+5. `.claude/skills/st-js-best-practices/references/patterns.md` — JS best practices rules
+6. `.claude/skills/st-world-info-api/references/wi-api.md` — WI API reference
+
+Use this context to ground the interview. The goal is to understand not just *what* the user wants,
+but *where in the existing system* it would live.
+
+---
+
+## Step 2: Interview the User
 
 Use the `AskUserQuestion` tool to interview the user. Follow these rules:
 
-- Ask a maximum of 3-4 questions per round to avoid overwhelming the user.
 - Start with the most important questions first.
 - Keep interviewing until all of the following are clearly established:
 
@@ -63,34 +65,35 @@ Use the `AskUserQuestion` tool to interview the user. Follow these rules:
 | **Scope** | "Should this affect all entries, or only certain ones?" |
 | **Edge cases** | "What should happen if [unusual situation]?" |
 
+Add any other questions you think are necessary to properly identify the issue or feature.
+
 After each round of answers, explicitly tell the user:
 
-- Any **assumptions** you are making about current or expected behavior
-- If information is missing, propose **2-3 plausible interpretations** and explain in plain
-  language how each one would change the feature or fix
+- Any **assumptions** you are making about current or expected behavior.
+- If information is missing, propose **2–3 plausible interpretations** and explain in plain
+  language how each one would change the feature or fix. Clarify before documenting.
 
 ---
 
-## Codebase Grounding
+## Step 3: Ground the Analysis in the Codebase
 
 After the interview is complete, use what you read from `FEATURE_MAP.md` and `ARCHITECTURE.md`
 to identify:
 
-- Which module(s) currently own the behavior being changed
-- Whether this is a new feature, a bug fix, a rework, or a refactor
-- Any related behavior that might be affected by the change
+- Which module(s) currently own the behavior being changed.
+- Any related behavior that might be affected by the change.
 
 Explain these findings to the user in plain language before writing the task file.
 
 ---
 
-## End of Interview: Draft Task File
+## Step 4: Draft the Task File
 
 When the interview is complete and a precise understanding has been agreed on:
 
-### Step 1: Choose the file name
+### 4a: Choose the file name
 
-Use the naming conventions from `CLAUDE.md`:
+Use the naming conventions from `AGENTS.md`:
 
 | Type of work | File path |
 |---|---|
@@ -102,16 +105,23 @@ Use the naming conventions from `CLAUDE.md`:
 Check the `tasks/` folder first — if a relevant task file already exists, update it rather than
 creating a new one.
 
-### Step 2: Write the task file
+### 4b: Write the task file
 
-Use this template:
+Use the following markdown structure:
 
 ```markdown
-# [Task title in plain language]
+# TASK: Task Title
+*Created: <Month D, YYYY>*
+
+**Type:** ISSUE / NEW_FEATURE / REWORK / REFACTORING
+**Status:** DOCUMENTED
+
+---
 
 ## Summary
 
-[1-3 sentences in plain language describing what this task is about and why it matters.]
+[1–3 sentences in plain language describing what this task is about and why it matters.
+Explain as if the reader has no programming background.]
 
 ## Current Behavior
 
@@ -128,46 +138,31 @@ Use this template:
 [List the modules or files likely to be affected, based on FEATURE_MAP.md findings.
 Example: "The entry list module owns this behavior — src/entryList.js"]
 
-## Open Questions / Assumptions
-
-[Any remaining unknowns, or assumptions that need to be validated during implementation.
-If there are none, write "None — all questions resolved during interview."]
-
 ## Out of Scope
 
 [Explicitly list anything that was discussed but excluded from this task.
-If nothing was excluded, write "None identified."]
+If nothing was excluded, omit this section entirely.]
+
+## Implementation Plan
+
+[Incremental, self-contained steps for an LLM to implement. Do not include any step that
+requires user input or manual verification. Any doubts about implementation that depend on
+user input must be clarified before this section is written.
+
+Rules for checklist items:
+- Each item is **concrete**: name the exact function, variable, and file.
+- Each item is **self-contained**: an LLM can execute it without human input.
+- Steps are **ordered** to satisfy dependencies (e.g., export before calling).]
+
+- [ ] Detailed, incremental task to implement this change
 ```
 
-### Step 3: Update TASKS_PENDING_IMPLEMENTATION.md
+### 4c: Tell the user
 
-After writing the task file, always create or update `tasks/TASKS_PENDING_IMPLEMENTATION.md`.
-
-- If the file does not exist, create it using this template:
-
-```markdown
-# Queue: Tasks Pending Implementation
-
-Task files that have been analyzed and are ready for implementation.
-
----
-
-## Tasks Pending Implementation
-```
-
-- Then append the new task file path as a list item:
-
-```markdown
-- `tasks/<filename>.md`
-```
-
-Never remove existing entries from the list. Only append.
-
-### Step 4: Tell the user
-
-After creating the task file and updating the queue, tell the user:
+After creating the task file, tell the user:
 
 - Where the task file was saved
-- That `tasks/TASKS_PENDING_IMPLEMENTATION.md` was updated with the new entry
-- That both files are ready to hand off to a coding agent
+- That the file is ready to hand off to a coding agent
 - A one-sentence plain-language summary of what was agreed
+
+Then stop. Do NOT write any code.

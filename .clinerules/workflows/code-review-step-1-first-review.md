@@ -124,9 +124,6 @@ Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the fi
 
     - **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice — pick the single best-fit category
 
-    - **Reproducing the issue:**
-      Minimal reproduction steps in plain language. Write `N/A` if the issue cannot be triggered through the UI.
-
     #### ADDRESSING THE ISSUE
 
     - **Suggested direction:**

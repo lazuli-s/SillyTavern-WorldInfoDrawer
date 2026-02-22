@@ -95,8 +95,8 @@ For each **fixable** PIR, working in order:
 2. Apply each step in the Fix Plan using targeted edits. Prefer `Edit` over `Write` unless changes are too scattered to apply as targeted edits.
 3. After each successful change: mark the Fix Plan checklist item as `- [x]` inside the PIR finding immediately. Do not batch updates.
 4. After the full PIR is resolved: create a commit using Conventional Commits format from `AGENTS.md`.
-   - Use type `fix` and scope `code-review`.
-   - Example: `fix(code-review): address null-check issue found in review`
+   - Use type `tasks` and scope `code-review`.
+   - Example: `tasks(code-review): address null-check issue found in review`
 
 ---
 

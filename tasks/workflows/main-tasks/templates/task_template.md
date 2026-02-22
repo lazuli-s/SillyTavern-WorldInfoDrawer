@@ -25,8 +25,6 @@
 [List the modules or files likely to be affected, based on FEATURE_MAP.md findings.
 Example: "The entry list module owns this behavior — src/entryList.js"]
 
-## Assumptions
-
 
 ## Out of Scope
 
