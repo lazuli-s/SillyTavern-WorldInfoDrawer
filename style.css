@@ -311,6 +311,51 @@ body.stwid-- #WorldInfo .stwid--searchEntries {
   align-items: center;
 }
 
+body.stwid-- #WorldInfo .stwid--iconTab {
+  margin-bottom: 20px;
+}
+
+body.stwid-- #WorldInfo .stwid--iconTabBar {
+  display: flex;
+  border-bottom: 1px solid var(--SmartThemeBorderColor);
+  margin-bottom: 15px;
+}
+
+body.stwid-- #WorldInfo .stwid--iconTabButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  cursor: pointer;
+  color: var(--SmartThemeBodyColor);
+  opacity: 0.55;
+  font-size: inherit;
+  transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+body.stwid-- #WorldInfo .stwid--iconTabButton:hover {
+  opacity: 0.8;
+}
+
+body.stwid-- #WorldInfo .stwid--iconTabButton.active {
+  opacity: 1;
+  border-bottom-color: var(--SmartThemeBodyColor);
+}
+
+body.stwid-- #WorldInfo .stwid--iconTabContent {
+  display: none;
+}
+
+body.stwid-- #WorldInfo .stwid--iconTabContent.active {
+  display: block;
+}
+
 body.stwid-- #WorldInfo .stwid--bookVisibility {
   position: relative;
   display: flex;

@@ -118,6 +118,7 @@
 
 - `listPanel.filterBar.js`
   - Owns list search bar and entry-text search toggle behavior
+  - Owns placeholder icon-tab strip mounted below the list search row
   - Owns Book Visibility constants/options/menu/chip rendering
   - Owns visibility control layout (thin-container grouping of visibility trigger, chips, and Order Helper toggle) and mounts it into the drawer-provided visibility/settings host row
   - Owns visibility scope computation and active-filter application wiring

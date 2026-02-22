@@ -221,6 +221,60 @@ const createFilterBarSlice = ({
                 searchEntries.append('Entries');
                 searchRow.append(searchEntries);
             }
+            const iconTab = document.createElement('div'); {
+                iconTab.classList.add('stwid--iconTab');
+                const iconTabBar = document.createElement('div');
+                iconTabBar.classList.add('stwid--iconTabBar');
+                iconTabBar.setAttribute('role', 'tablist');
+                iconTabBar.setAttribute('aria-label', 'List panel tabs');
+                const placeholderTabs = [
+                    { id:'books', icon:'fa-book-open', label:'Books', placeholder:'Books placeholder tab content.' },
+                    { id:'folders', icon:'fa-folder-open', label:'Folders', placeholder:'Folders placeholder tab content.' },
+                    { id:'entries', icon:'fa-list-ul', label:'Entries', placeholder:'Entries placeholder tab content.' },
+                ];
+                const tabButtons = [];
+                const tabContents = [];
+                const setActivePlaceholderTab = (tabId)=>{
+                    for (const button of tabButtons) {
+                        const isActive = button.dataset.tabId === tabId;
+                        button.classList.toggle('active', isActive);
+                        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    }
+                    for (const content of tabContents) {
+                        const isActive = content.dataset.tabId === tabId;
+                        content.classList.toggle('active', isActive);
+                    }
+                };
+                for (const tab of placeholderTabs) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.classList.add('stwid--iconTabButton');
+                    button.dataset.tabId = tab.id;
+                    button.setAttribute('role', 'tab');
+                    button.setAttribute('aria-selected', 'false');
+                    button.title = `${tab.label} tab`;
+                    const icon = document.createElement('i');
+                    icon.classList.add('fa-solid', 'fa-fw', tab.icon);
+                    button.append(icon);
+                    const text = document.createElement('span');
+                    text.textContent = tab.label;
+                    button.append(text);
+                    tabButtons.push(button);
+                    iconTabBar.append(button);
+
+                    const content = document.createElement('div');
+                    content.classList.add('stwid--iconTabContent');
+                    content.dataset.tabId = tab.id;
+                    content.setAttribute('role', 'tabpanel');
+                    content.textContent = tab.placeholder;
+                    tabContents.push(content);
+                    iconTab.append(content);
+
+                    button.addEventListener('click', ()=>setActivePlaceholderTab(tab.id));
+                }
+                iconTab.prepend(iconTabBar);
+                setActivePlaceholderTab(placeholderTabs[0].id);
+            }
             const getBookVisibilityOption = (mode)=>
                 BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
 
@@ -443,9 +497,9 @@ const createFilterBarSlice = ({
                 document.addEventListener('click', onDocClickCloseMenu);
             }
             if (visibilityRowHost === visibilityRow) {
-                filter.append(searchRow, visibilityRow);
+                filter.append(searchRow, iconTab, visibilityRow);
             } else {
-                filter.append(searchRow);
+                filter.append(searchRow, iconTab);
             }
             applyActiveFilter();
             list.append(filter);
