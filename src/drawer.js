@@ -279,7 +279,7 @@ export const initDrawer = ({
                         }
                         const impFolder = document.createElement('div'); {
                             impFolder.classList.add('menu_button');
-                            impFolder.classList.add('fa-solid', 'fa-fw', 'fa-folder-open');
+                            impFolder.classList.add('fa-solid', 'fa-fw', 'fa-file-import');
                             impFolder.title = 'Import Folder';
                             impFolder.setAttribute('aria-label', 'Import Folder');
                             impFolder.addEventListener('click', ()=>{
@@ -413,7 +413,7 @@ export const initDrawer = ({
                         globalSortSectionTitle.append(globalSortIcon, globalSortLabel);
                         globalSortingGroup.append(globalSortSectionTitle);
                         const sortSel = document.createElement('select'); {
-                            sortSel.classList.add('text_pole');
+                            sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
                             sortSel.title = 'Global entry sort for the list panel';
                             sortSel.setAttribute('aria-label', 'Global entry sort');
                             sortSel.addEventListener('change', ()=>{

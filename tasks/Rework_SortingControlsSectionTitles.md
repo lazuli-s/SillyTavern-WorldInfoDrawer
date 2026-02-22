@@ -33,3 +33,17 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
 - Updated `.stwid--individualSorting` to explicitly use `display: flex; flex-direction: column; flex-wrap: wrap; align-items: center; gap: 0em;`.
 - Updated `.stwid--perBookSortButtons` to use `display: flex; gap: 0.5em;`.
 - Updated `.stwid--thinContainerSectionTitle` alignment to `align-items: baseline`.
+
+## Follow-up Adjustment 3
+
+- Added a new compact select style class, `stwid--smallSelectTextPole`, for the Global Sorting dropdown only.
+- Kept the base SillyTavern `.text_pole` styling and applied only targeted overrides:
+  - `width: 9em`
+  - `max-width: 9em`
+  - `font-size: 0.9em`
+- Updated `src/drawer.js` to add `stwid--smallSelectTextPole` to the Global Sorting `<select>` class list.
+- Replaced the CSS selector target from:
+  - `.stwid--globalSorting .text_pole`
+  to:
+  - `.stwid--globalSorting .stwid--smallSelectTextPole`
+- Updated the top-row **Import Folder** icon to match **Import Book** (`fa-file-import`) for visual consistency.
