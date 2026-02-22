@@ -140,13 +140,19 @@ body.stwid-- #WorldInfo .stwid--controls {
   align-items: stretch;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow {
+body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow,
+body.stwid-- #WorldInfo .stwid--controls .stwid--visibilityAndSettingsRow {
   --stwid-control-height: 2.35em;
   display: flex;
   gap: 0.7em;
   margin-top: 1.1em;
   align-items: center;
   flex-wrap: wrap;
+}
+
+body.stwid-- #WorldInfo .stwid--controls .stwid--visibilityAndSettingsRow .stwid--bookVisibility {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 body.stwid-- #WorldInfo .stwid--thinContainer {

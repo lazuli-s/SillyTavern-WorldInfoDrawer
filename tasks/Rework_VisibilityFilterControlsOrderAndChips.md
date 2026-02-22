@@ -27,3 +27,12 @@
 ## Notes
 - No changes were made to `vendor/SillyTavern`.
 - No architecture ownership boundaries were changed.
+
+## Follow-up Adjustment 6
+
+- Updated list panel row placement so Visibility and Settings share a dedicated controls row:
+  - Added `stwid--visibilityAndSettingsRow` in `src/drawer.js`.
+  - Moved the existing `Settings` thin container (global activation settings + refresh) from `stwid--controlsRow` into `stwid--visibilityAndSettingsRow`.
+  - Updated `src/listPanel.filterBar.js` so the visibility control block (`stwid--bookVisibility`) mounts into `stwid--visibilityAndSettingsRow` instead of `stwid--filterRow--visibility`.
+  - Kept a safe fallback to the old filter row if the new host row is unavailable.
+- Updated `style.css` to style `stwid--visibilityAndSettingsRow` with the same control-row layout rules used by `stwid--controlsRow`, plus a flex rule for `stwid--bookVisibility`.

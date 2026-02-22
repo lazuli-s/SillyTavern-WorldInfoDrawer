@@ -108,6 +108,12 @@ const createFilterBarSlice = ({
             searchRow.classList.add('stwid--filterRow', 'stwid--filterRow--search');
             const visibilityRow = document.createElement('div');
             visibilityRow.classList.add('stwid--filterRow', 'stwid--filterRow--visibility');
+            const visibilityRowHost = runtime?.dom?.visibilityAndSettingsRow instanceof HTMLElement
+                ? runtime.dom.visibilityAndSettingsRow
+                : visibilityRow;
+            if (visibilityRowHost !== visibilityRow) {
+                visibilityRowHost.querySelector('.stwid--bookVisibility')?.remove();
+            }
             const setQueryFiltered = (element, isFiltered)=>{
                 if (!element) return;
                 if (isFiltered) {
@@ -409,7 +415,7 @@ const createFilterBarSlice = ({
                         trigger.setAttribute('aria-expanded', 'true');
                     }
                 });
-                visibilityRow.append(bookVisibility);
+                visibilityRowHost.append(bookVisibility);
 
                 const visibilityControls = document.createElement('div');
                 visibilityControls.classList.add('stwid--thinContainer');
@@ -436,7 +442,11 @@ const createFilterBarSlice = ({
                 docClickHandler = onDocClickCloseMenu;
                 document.addEventListener('click', onDocClickCloseMenu);
             }
-            filter.append(searchRow, visibilityRow);
+            if (visibilityRowHost === visibilityRow) {
+                filter.append(searchRow, visibilityRow);
+            } else {
+                filter.append(searchRow);
+            }
             applyActiveFilter();
             list.append(filter);
         }

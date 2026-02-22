@@ -36,6 +36,8 @@ export const initDrawer = ({
         collapseAllFoldersToggle: undefined,
         /**@type {HTMLElement} */
         activationToggle: undefined,
+        /**@type {HTMLElement} */
+        visibilityAndSettingsRow: undefined,
         order: {
             /**@type {HTMLElement} */
             toggle: undefined,
@@ -190,6 +192,9 @@ export const initDrawer = ({
                         controls.classList.add('stwid--controls');
                         const controlsPrimary = document.createElement('div');
                         controlsPrimary.classList.add('stwid--controlsRow');
+                        const visibilityAndSettingsRow = document.createElement('div');
+                        visibilityAndSettingsRow.classList.add('stwid--visibilityAndSettingsRow');
+                        dom.visibilityAndSettingsRow = visibilityAndSettingsRow;
                         const lorebooksGroup = document.createElement('div');
                         lorebooksGroup.classList.add('stwid--thinContainer');
                         const lorebooksGroupLabel = document.createElement('span');
@@ -214,7 +219,7 @@ export const initDrawer = ({
                         settingsGroupLabel.classList.add('stwid--thinContainerLabel');
                         settingsGroupLabel.textContent = 'Settings';
                         settingsGroup.append(settingsGroupLabel);
-                        controlsPrimary.append(settingsGroup);
+                        visibilityAndSettingsRow.append(settingsGroup);
                         const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
@@ -491,7 +496,7 @@ export const initDrawer = ({
                         perBookSortingGroup.append(perBookTitle, perBookButtons);
                         sortingWrapper.append(globalSortingGroup, perBookSortingGroup);
                         controlsSecondary.append(sortingWrapper);
-                        controls.append(controlsPrimary, controlsSecondary);
+                        controls.append(controlsPrimary, visibilityAndSettingsRow, controlsSecondary);
                         list.append(controls);
                     }
                     editorPanelApi = initEditorPanel({
