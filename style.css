@@ -182,31 +182,36 @@ body.stwid-- #WorldInfo .stwid-thin-container.is-disabled {
     pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls {
+  --stwid-control-height: 2.35em;
+  display: flex;
+  gap: 0.7em;
+  margin-top: 1.1em;
+  align-items: center;
   flex-wrap: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-thin-container {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .stwid-thin-container {
   flex: 1 1 auto;
   min-width: 0;
   flex-wrap: wrap;
   row-gap: 0.55em;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-sort-field {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .stwid-sort-field {
   display: flex;
-  align-items: center;
-  gap: 0.4em;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-sort-label {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .stwid-sort-label {
   font-size: 0.78em;
   opacity: 0.75;
   white-space: nowrap;
 }
 
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
-body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .text_pole {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .text_pole {
   height: var(--stwid-control-height);
   padding: 0.35em;
   display: inline-flex;
@@ -214,13 +219,13 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .text_pole {
   box-sizing: border-box;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--orderControls .stwid-thin-container .stwid-sort-field .text_pole {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .stwid--globalSorting .stwid-sort-field .text_pole {
   width: 11.5em;
   max-width: 11.5em;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow .stwid--bookSortToggle,
-body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow .stwid--clearBookSorts {
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .stwid--bookSortToggle,
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingControls .stwid--clearBookSorts {
   display: inline-flex;
   align-items: center;
   justify-content: center;

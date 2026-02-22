@@ -394,13 +394,13 @@ export const initDrawer = ({
                             foldersGroup.append(collapseAllFoldersToggle);
                         }
                         const controlsSecondary = document.createElement('div');
-                        controlsSecondary.classList.add('stwid--controlsRow', 'stwid--orderControls');
-                        const sortingGroup = document.createElement('div');
-                        sortingGroup.classList.add('stwid-thin-container');
-                        const sortingGroupLabel = document.createElement('span');
-                        sortingGroupLabel.classList.add('stwid-thin-container-label');
-                        sortingGroupLabel.textContent = 'Sorting';
-                        sortingGroup.append(sortingGroupLabel);
+                        controlsSecondary.classList.add('stwid--sortingControls');
+                        const globalSortingGroup = document.createElement('div');
+                        globalSortingGroup.classList.add('stwid-thin-container', 'stwid--globalSorting');
+                        const globalSortingGroupLabel = document.createElement('span');
+                        globalSortingGroupLabel.classList.add('stwid-thin-container-label');
+                        globalSortingGroupLabel.textContent = 'Global Sorting';
+                        globalSortingGroup.append(globalSortingGroupLabel);
                         const globalSortField = document.createElement('div');
                         globalSortField.classList.add('stwid-sort-field');
                         const globalSortLabel = document.createElement('span');
@@ -490,8 +490,14 @@ export const initDrawer = ({
                             });
                             clearSortField.append(clearBookSorts);
                         }
-                        sortingGroup.append(globalSortField, toggleSortField, clearSortField);
-                        controlsSecondary.append(sortingGroup);
+                        globalSortingGroup.append(globalSortField);
+                        const perBookSortingGroup = document.createElement('div');
+                        perBookSortingGroup.classList.add('stwid-thin-container', 'stwid--individualSorting');
+                        const perBookSortingGroupLabel = document.createElement('span');
+                        perBookSortingGroupLabel.classList.add('stwid-thin-container-label');
+                        perBookSortingGroupLabel.textContent = 'Per-book Sorting';
+                        perBookSortingGroup.append(perBookSortingGroupLabel, toggleSortField, clearSortField);
+                        controlsSecondary.append(globalSortingGroup, perBookSortingGroup);
                         controls.append(controlsPrimary, controlsSecondary);
                         list.append(controls);
                     }
