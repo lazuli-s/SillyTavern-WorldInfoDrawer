@@ -403,12 +403,8 @@ export const initDrawer = ({
                         const controlsSecondary = document.createElement('div');
                         controlsSecondary.classList.add('stwid--sortingRow');
                         dom.sortingRow = controlsSecondary;
-                        const sortingWrapper = document.createElement('div');
-                        sortingWrapper.classList.add('stwid--thinContainer');
-                        const sortingWrapperLabel = document.createElement('span');
-                        sortingWrapperLabel.classList.add('stwid--thinContainerLabel');
-                        sortingWrapperLabel.textContent = 'Sorting';
-                        sortingWrapper.append(sortingWrapperLabel);
+                        const globalSortingWrapper = document.createElement('div');
+                        globalSortingWrapper.classList.add('stwid--thinContainer');
                         const globalSortingGroup = document.createElement('div');
                         globalSortingGroup.classList.add('stwid--globalSorting');
                         const globalSortSectionTitle = document.createElement('div');
@@ -483,6 +479,8 @@ export const initDrawer = ({
                                 }
                             });
                         }
+                        const perBookSortingWrapper = document.createElement('div');
+                        perBookSortingWrapper.classList.add('stwid--thinContainer');
                         const perBookSortingGroup = document.createElement('div');
                         perBookSortingGroup.classList.add('stwid--individualSorting');
                         const perBookTitle = document.createElement('div');
@@ -497,8 +495,9 @@ export const initDrawer = ({
                         perBookButtons.classList.add('stwid--perBookSortButtons');
                         perBookButtons.append(bookSortToggle, clearBookSorts);
                         perBookSortingGroup.append(perBookTitle, perBookButtons);
-                        sortingWrapper.append(globalSortingGroup, perBookSortingGroup);
-                        controlsSecondary.append(sortingWrapper);
+                        globalSortingWrapper.append(globalSortingGroup);
+                        perBookSortingWrapper.append(perBookSortingGroup);
+                        controlsSecondary.append(globalSortingWrapper, perBookSortingWrapper);
                         controls.append(controlsPrimary, visibilityAndSettingsRow, controlsSecondary);
                         list.append(controls);
                     }

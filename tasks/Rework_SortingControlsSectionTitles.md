@@ -90,3 +90,16 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
   - Search row selector now targets `stwid--searchRow`.
   - Visibility row selector now targets `stwid--visibilityRow`.
   - Sorting row styles no longer depend on being inside `.stwid--controls`.
+
+## Follow-up Adjustment 7
+
+- Updated sorting row structure in `src/drawer.js`:
+  - Removed the single outer `Sorting` thin container wrapper.
+  - Added one `stwid--thinContainer` wrapper for `stwid--globalSorting`.
+  - Added a second `stwid--thinContainer` wrapper for `stwid--individualSorting`.
+  - Kept both wrappers inside the same `stwid--sortingRow`.
+- Updated list panel tab styling in `style.css`:
+  - Set `.stwid--iconTab` to include `padding-top: 0.6em`.
+  - Changed `.stwid--iconTabButton` to horizontal layout with:
+    - `flex-direction: row`
+    - `justify-content: center`
