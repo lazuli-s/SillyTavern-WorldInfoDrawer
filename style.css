@@ -235,6 +235,10 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--individualSo
   flex: 0 0 100%;
 }
 
+body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .stwid--perBookSortButtons {
+  display: flex;
+}
+
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
 body.stwid-- #WorldInfo .stwid--controls .stwid--sortingRow .text_pole {
   height: var(--stwid-control-height);

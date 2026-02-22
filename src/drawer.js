@@ -485,7 +485,10 @@ export const initDrawer = ({
                         perBookLabel.classList.add('stwid--thinContainerSmallTitle');
                         perBookLabel.textContent = 'Per-book Sorting:';
                         perBookTitle.append(perBookIcon, perBookLabel);
-                        perBookSortingGroup.append(perBookTitle, bookSortToggle, clearBookSorts);
+                        const perBookButtons = document.createElement('div');
+                        perBookButtons.classList.add('stwid--perBookSortButtons');
+                        perBookButtons.append(bookSortToggle, clearBookSorts);
+                        perBookSortingGroup.append(perBookTitle, perBookButtons);
                         sortingWrapper.append(globalSortingGroup, perBookSortingGroup);
                         controlsSecondary.append(sortingWrapper);
                         controls.append(controlsPrimary, controlsSecondary);
