@@ -405,28 +405,15 @@ export const initDrawer = ({
                         globalSortingGroup.classList.add('stwid--globalSorting');
                         const globalSortField = document.createElement('div');
                         globalSortField.classList.add('stwid-sort-field');
+                        const globalSortSectionTitle = document.createElement('div');
+                        globalSortSectionTitle.classList.add('stwid--thinContainerSectionTitle');
+                        const globalSortIcon = document.createElement('i');
+                        globalSortIcon.classList.add('fa-solid', 'fa-fw', 'fa-globe');
                         const globalSortLabel = document.createElement('span');
-                        globalSortLabel.classList.add('stwid-sort-label');
+                        globalSortLabel.classList.add('stwid--thinContainerSmallTitle');
                         globalSortLabel.textContent = 'Global Sorting:';
-                        globalSortField.append(globalSortLabel);
-                        const toggleSortField = document.createElement('div');
-                        toggleSortField.classList.add('stwid-sort-field');
-                        const toggleSortLabel = document.createElement('span');
-                        toggleSortLabel.classList.add('stwid-sort-label');
-                        toggleSortLabel.textContent = 'Toggle per book sorting:';
-                        const toggleSortHint = document.createElement('i');
-                        toggleSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-                        toggleSortHint.title = 'When enabled, individual books can use their own sort order instead of the global one';
-                        toggleSortField.append(toggleSortLabel, toggleSortHint);
-                        const clearSortField = document.createElement('div');
-                        clearSortField.classList.add('stwid-sort-field');
-                        const clearSortLabel = document.createElement('span');
-                        clearSortLabel.classList.add('stwid-sort-label');
-                        clearSortLabel.textContent = 'Clear sorting preferences:';
-                        const clearSortHint = document.createElement('i');
-                        clearSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-                        clearSortHint.title = 'Remove all saved per-book sort preferences and revert all books to the global sort';
-                        clearSortField.append(clearSortLabel, clearSortHint);
+                        globalSortSectionTitle.append(globalSortIcon, globalSortLabel);
+                        globalSortField.append(globalSortSectionTitle);
                         const sortSel = document.createElement('select'); {
                             sortSel.classList.add('text_pole');
                             sortSel.title = 'Global entry sort for the list panel';
@@ -470,7 +457,6 @@ export const initDrawer = ({
                                     listPanelApi.sortEntriesIfNeeded(name);
                                 }
                             });
-                            toggleSortField.append(bookSortToggle);
                         }
                         const clearBookSorts = document.createElement('button'); {
                             clearBookSorts.type = 'button';
@@ -490,12 +476,19 @@ export const initDrawer = ({
                                     clearBookSorts.disabled = false;
                                 }
                             });
-                            clearSortField.append(clearBookSorts);
                         }
                         globalSortingGroup.append(globalSortField);
                         const perBookSortingGroup = document.createElement('div');
                         perBookSortingGroup.classList.add('stwid--individualSorting');
-                        perBookSortingGroup.append(toggleSortField, clearSortField);
+                        const perBookTitle = document.createElement('div');
+                        perBookTitle.classList.add('stwid--thinContainerSectionTitle');
+                        const perBookIcon = document.createElement('i');
+                        perBookIcon.classList.add('fa-solid', 'fa-fw', 'fa-book');
+                        const perBookLabel = document.createElement('span');
+                        perBookLabel.classList.add('stwid--thinContainerSmallTitle');
+                        perBookLabel.textContent = 'Per-book Sorting:';
+                        perBookTitle.append(perBookIcon, perBookLabel);
+                        perBookSortingGroup.append(perBookTitle, bookSortToggle, clearBookSorts);
                         sortingWrapper.append(globalSortingGroup, perBookSortingGroup);
                         controlsSecondary.append(sortingWrapper);
                         controls.append(controlsPrimary, controlsSecondary);
