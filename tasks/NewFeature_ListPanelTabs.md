@@ -26,3 +26,13 @@
 ## Notes
 - Placeholder tabs are intentionally UI-only and do not change list filtering or data behavior.
 - No changes were made to `vendor/SillyTavern`.
+
+## Follow-up Update (2026-02-22)
+- Updated list panel tab labels and icons to match the latest UX wording:
+  - `Visibility` with eye icon
+  - `Sorting` with sort icon
+  - `Search` with magnifier icon
+- Refined tab styling in `style.css`:
+  - `stwid--iconTab` bottom spacing changed to `1.2em`
+  - `stwid--iconTabButton` gap/padding/font-size adjusted for denser layout
+  - `stwid--iconTabContent` font size set to `0.95em`

@@ -228,9 +228,9 @@ const createFilterBarSlice = ({
                 iconTabBar.setAttribute('role', 'tablist');
                 iconTabBar.setAttribute('aria-label', 'List panel tabs');
                 const placeholderTabs = [
-                    { id:'books', icon:'fa-book-open', label:'Books', placeholder:'Books placeholder tab content.' },
-                    { id:'folders', icon:'fa-folder-open', label:'Folders', placeholder:'Folders placeholder tab content.' },
-                    { id:'entries', icon:'fa-list-ul', label:'Entries', placeholder:'Entries placeholder tab content.' },
+                    { id:'visibility', icon:'fa-eye', label:'Visibility', placeholder:'Visibility placeholder tab content.' },
+                    { id:'sorting', icon:'fa-arrow-down-wide-short', label:'Sorting', placeholder:'Sorting placeholder tab content.' },
+                    { id:'search', icon:'fa-magnifying-glass', label:'Search', placeholder:'Search placeholder tab content.' },
                 ];
                 const tabButtons = [];
                 const tabContents = [];
