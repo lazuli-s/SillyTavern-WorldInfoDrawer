@@ -191,27 +191,27 @@ export const initDrawer = ({
                         const controlsPrimary = document.createElement('div');
                         controlsPrimary.classList.add('stwid--controlsRow');
                         const lorebooksGroup = document.createElement('div');
-                        lorebooksGroup.classList.add('stwid-thin-container');
+                        lorebooksGroup.classList.add('stwid--thinContainer');
                         const lorebooksGroupLabel = document.createElement('span');
-                        lorebooksGroupLabel.classList.add('stwid-thin-container-label');
+                        lorebooksGroupLabel.classList.add('stwid--thinContainerLabel');
                         lorebooksGroupLabel.textContent = 'Lorebooks';
                         lorebooksGroup.append(lorebooksGroupLabel);
                         controlsPrimary.append(lorebooksGroup);
                         const foldersGroup = document.createElement('div');
-                        foldersGroup.classList.add('stwid-thin-container');
+                        foldersGroup.classList.add('stwid--thinContainer');
                         const foldersGroupLabel = document.createElement('span');
-                        foldersGroupLabel.classList.add('stwid-thin-container-label');
+                        foldersGroupLabel.classList.add('stwid--thinContainerLabel');
                         foldersGroupLabel.textContent = 'Folders';
                         const foldersGroupHint = document.createElement('i');
-                        foldersGroupHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid-thin-container-label-hint');
+                        foldersGroupHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
                         foldersGroupHint.title = 'Create, import, or collapse folders';
                         foldersGroupLabel.append(foldersGroupHint);
                         foldersGroup.append(foldersGroupLabel);
                         controlsPrimary.append(foldersGroup);
                         const settingsGroup = document.createElement('div');
-                        settingsGroup.classList.add('stwid-thin-container');
+                        settingsGroup.classList.add('stwid--thinContainer');
                         const settingsGroupLabel = document.createElement('span');
-                        settingsGroupLabel.classList.add('stwid-thin-container-label');
+                        settingsGroupLabel.classList.add('stwid--thinContainerLabel');
                         settingsGroupLabel.textContent = 'Settings';
                         settingsGroup.append(settingsGroupLabel);
                         controlsPrimary.append(settingsGroup);
@@ -394,13 +394,15 @@ export const initDrawer = ({
                             foldersGroup.append(collapseAllFoldersToggle);
                         }
                         const controlsSecondary = document.createElement('div');
-                        controlsSecondary.classList.add('stwid--sortingControls');
+                        controlsSecondary.classList.add('stwid--sortingRow');
+                        const sortingWrapper = document.createElement('div');
+                        sortingWrapper.classList.add('stwid--thinContainer');
+                        const sortingWrapperLabel = document.createElement('span');
+                        sortingWrapperLabel.classList.add('stwid--thinContainerLabel');
+                        sortingWrapperLabel.textContent = 'Sorting';
+                        sortingWrapper.append(sortingWrapperLabel);
                         const globalSortingGroup = document.createElement('div');
-                        globalSortingGroup.classList.add('stwid-thin-container', 'stwid--globalSorting');
-                        const globalSortingGroupLabel = document.createElement('span');
-                        globalSortingGroupLabel.classList.add('stwid-thin-container-label');
-                        globalSortingGroupLabel.textContent = 'Global Sorting';
-                        globalSortingGroup.append(globalSortingGroupLabel);
+                        globalSortingGroup.classList.add('stwid--globalSorting');
                         const globalSortField = document.createElement('div');
                         globalSortField.classList.add('stwid-sort-field');
                         const globalSortLabel = document.createElement('span');
@@ -413,7 +415,7 @@ export const initDrawer = ({
                         toggleSortLabel.classList.add('stwid-sort-label');
                         toggleSortLabel.textContent = 'Toggle per book sorting:';
                         const toggleSortHint = document.createElement('i');
-                        toggleSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid-thin-container-label-hint');
+                        toggleSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
                         toggleSortHint.title = 'When enabled, individual books can use their own sort order instead of the global one';
                         toggleSortField.append(toggleSortLabel, toggleSortHint);
                         const clearSortField = document.createElement('div');
@@ -422,7 +424,7 @@ export const initDrawer = ({
                         clearSortLabel.classList.add('stwid-sort-label');
                         clearSortLabel.textContent = 'Clear sorting preferences:';
                         const clearSortHint = document.createElement('i');
-                        clearSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid-thin-container-label-hint');
+                        clearSortHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
                         clearSortHint.title = 'Remove all saved per-book sort preferences and revert all books to the global sort';
                         clearSortField.append(clearSortLabel, clearSortHint);
                         const sortSel = document.createElement('select'); {
@@ -492,12 +494,10 @@ export const initDrawer = ({
                         }
                         globalSortingGroup.append(globalSortField);
                         const perBookSortingGroup = document.createElement('div');
-                        perBookSortingGroup.classList.add('stwid-thin-container', 'stwid--individualSorting');
-                        const perBookSortingGroupLabel = document.createElement('span');
-                        perBookSortingGroupLabel.classList.add('stwid-thin-container-label');
-                        perBookSortingGroupLabel.textContent = 'Per-book Sorting';
-                        perBookSortingGroup.append(perBookSortingGroupLabel, toggleSortField, clearSortField);
-                        controlsSecondary.append(globalSortingGroup, perBookSortingGroup);
+                        perBookSortingGroup.classList.add('stwid--individualSorting');
+                        perBookSortingGroup.append(toggleSortField, clearSortField);
+                        sortingWrapper.append(globalSortingGroup, perBookSortingGroup);
+                        controlsSecondary.append(sortingWrapper);
                         controls.append(controlsPrimary, controlsSecondary);
                         list.append(controls);
                     }
