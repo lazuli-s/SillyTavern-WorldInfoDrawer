@@ -405,6 +405,14 @@ export const initDrawer = ({
                         dom.sortingRow = controlsSecondary;
                         const globalSortingWrapper = document.createElement('div');
                         globalSortingWrapper.classList.add('stwid--thinContainer');
+                        const globalSortingWrapperLabel = document.createElement('span');
+                        globalSortingWrapperLabel.classList.add('stwid--thinContainerLabel');
+                        globalSortingWrapperLabel.textContent = 'Global Sorting';
+                        const globalSortingWrapperHint = document.createElement('i');
+                        globalSortingWrapperHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                        globalSortingWrapperHint.title = 'This menu sets the default sorting for all lorebooks. If Per-book Sorting is on, books with saved per-book sorting use that instead.';
+                        globalSortingWrapperLabel.append(globalSortingWrapperHint);
+                        globalSortingWrapper.append(globalSortingWrapperLabel);
                         const globalSortingGroup = document.createElement('div');
                         globalSortingGroup.classList.add('stwid--globalSorting');
                         const globalSortSectionTitle = document.createElement('div');
@@ -481,6 +489,14 @@ export const initDrawer = ({
                         }
                         const perBookSortingWrapper = document.createElement('div');
                         perBookSortingWrapper.classList.add('stwid--thinContainer');
+                        const perBookSortingWrapperLabel = document.createElement('span');
+                        perBookSortingWrapperLabel.classList.add('stwid--thinContainerLabel');
+                        perBookSortingWrapperLabel.textContent = 'Per-book Sorting';
+                        const perBookSortingWrapperHint = document.createElement('i');
+                        perBookSortingWrapperHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                        perBookSortingWrapperHint.title = 'Turn this on to let each lorebook use its own sorting preference. Turn it off to make every lorebook follow Global Sorting.';
+                        perBookSortingWrapperLabel.append(perBookSortingWrapperHint);
+                        perBookSortingWrapper.append(perBookSortingWrapperLabel);
                         const perBookSortingGroup = document.createElement('div');
                         perBookSortingGroup.classList.add('stwid--individualSorting');
                         const perBookTitle = document.createElement('div');

@@ -103,3 +103,15 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
   - Changed `.stwid--iconTabButton` to horizontal layout with:
     - `flex-direction: row`
     - `justify-content: center`
+
+## Follow-up Adjustment 8
+
+- Updated sorting tab thin-container labels in `src/drawer.js`:
+  - Added `stwid--thinContainerLabel` text `Global Sorting` to the first sorting container.
+  - Added a `stwid--thinContainerLabelHint` question-mark icon with user-facing guidance that:
+    - Global Sorting is the default for all lorebooks.
+    - Per-book sorting can override the global menu when enabled.
+  - Added `stwid--thinContainerLabel` text `Per-book Sorting` to the second sorting container.
+  - Added a `stwid--thinContainerLabelHint` question-mark icon with user-facing guidance that:
+    - Enabling per-book sorting lets each lorebook use its own saved sorting.
+    - Disabling per-book sorting makes all lorebooks follow Global Sorting.
