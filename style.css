@@ -1,4 +1,4 @@
-/*
+﻿/*
   SillyTavern World Info Drawer (STWID)
 
   Phase 1 CSS refactor: organization + safe micro-dedup only.
@@ -76,11 +76,11 @@ body.stwid-- #WorldInfo > .stwid--body {
 }
 
 /* Loading overlay */
-body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading {
+body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
+body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   content: 'Loading...';
   position: absolute;
   inset: 0;
@@ -197,7 +197,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   opacity: 0.75;
 }
 
-.stwid--thinContainer.is-disabled {
+.stwid--thinContainer.stwid--state-disabled {
     opacity: 0.4;
     pointer-events: none;
 }
@@ -274,11 +274,11 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   height: var(--stwid-control-height);
 }
 
-.stwid--controls .stwid--active {
+.stwid--controls .stwid--state-active {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--list .stwid--filter .stwid--active {
+.stwid--list .stwid--filter .stwid--state-active {
   color: var(--SmartThemeQuoteColor);
 }
 
@@ -389,6 +389,11 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   border-radius: var(--stwid-radius-m);
 }
 
+.stwid--menu {
+  display: flex;
+  flex-direction: column;
+}
+
 .stwid--multiselectDropdownMenu {
   position: absolute;
   top: calc(100% + 0.35em);
@@ -404,7 +409,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   min-width: max-content;
 }
 
-.stwid--multiselectDropdownMenu.stwid--active {
+.stwid--multiselectDropdownMenu.stwid--state-active {
   display: flex;
   width: max-content;
   opacity: 1 !important;
@@ -415,14 +420,17 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-.stwid--multiselectDropdownOption {
+.stwid--menuItem {
   display: flex;
   align-items: center;
   gap: 0.35em;
+  border-radius: var(--stwid-radius-s);
+}
+
+.stwid--multiselectDropdownOption {
   font-size: 1em;
   transition: color 150ms ease, background-color 150ms ease;
   padding: 2px 4px;
-  border-radius: var(--stwid-radius-s);
   border: 0;
   color: inherit;
   background: transparent;
@@ -435,7 +443,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
-.stwid--multiselectDropdownOption.stwid--active {
+.stwid--multiselectDropdownOption.stwid--state-active {
   color: var(--SmartThemeQuoteColor);
 }
 
@@ -454,7 +462,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   color: var(--SmartThemeEmColor);
 }
 
-.stwid--multiselectDropdownOption.stwid--active .stwid--multiselectDropdownOptionCheckbox {
+.stwid--multiselectDropdownOption.stwid--state-active .stwid--multiselectDropdownOptionCheckbox {
   color: var(--SmartThemeQuoteColor);
 }
 
@@ -521,7 +529,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   line-height: 1;
 }
 
-.stwid--folder.stwid--isTarget .stwid--folderHeader {
+.stwid--folder.stwid--state-target .stwid--folderHeader {
   background-color: var(--stwid-state-target-bg);
   box-shadow: var(--stwid-state-target-outline);
 }
@@ -530,7 +538,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--folder:not(:has(.stwid--folderBooks.stwid--isCollapsed)) .stwid--folderIcon::before {
+.stwid--folder:not(:has(.stwid--folderBooks.stwid--state-collapsed)) .stwid--folderIcon::before {
   content: '\f07c';
 }
 
@@ -607,7 +615,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   opacity: 1;
 }
 
-.stwid--folder .stwid--folderBooks.stwid--isCollapsed {
+.stwid--folder .stwid--folderBooks.stwid--state-collapsed {
   display: none;
 }
 
@@ -616,8 +624,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
 }
 
-.stwid--books .stwid--book.stwid--isTarget,
-.stwid--books .stwid--book.stwid--isTarget .stwid--head {
+.stwid--books .stwid--book.stwid--state-target,
+.stwid--books .stwid--book.stwid--state-target .stwid--head {
   background-color: var(--stwid-state-selected-bg);
 }
 
@@ -626,7 +634,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: none;
 }
 
-.stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active) .stwid--head {
+.stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--state-active) .stwid--head {
   background-color: var(--white20a);
 }
 
@@ -660,7 +668,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   align-items: center;
 }
 
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--isEmpty {
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--state-empty {
   display: none;
 }
 
@@ -669,7 +677,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--books .stwid--book .stwid--entryList.stwid--isCollapsed {
+.stwid--books .stwid--book .stwid--entryList.stwid--state-collapsed {
   display: none;
 }
 
@@ -683,21 +691,21 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   transition: 200ms;
 }
 
-.stwid--books .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
+.stwid--books .stwid--entry:is(.stwid--state-dragging .stwid--entry:not(.stwid--state-selected)) {
   pointer-events: none;
 }
 
-.stwid--books .stwid--entry.stwid--isSelected {
+.stwid--books .stwid--entry.stwid--state-selected {
   background-color: var(--stwid-state-selected-bg);
   cursor: grab;
 }
 
-.stwid--books .stwid--entry.stwid--isSelected:hover,
-.stwid--books .stwid--entry.stwid--isSelected.stwid--active {
+.stwid--books .stwid--entry.stwid--state-selected:hover,
+.stwid--books .stwid--entry.stwid--state-selected.stwid--state-active {
   background-color: var(--stwid-state-selected-bg-strong);
 }
 
-.stwid--books .stwid--entry.stwid--isSelected *:not(:is(.stwid--selector)) {
+.stwid--books .stwid--entry.stwid--state-selected *:not(:is(.stwid--selector)) {
   pointer-events: none;
 }
 
@@ -706,12 +714,12 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 .stwid--books .stwid--entry:hover,
-.stwid--books .stwid--entry.stwid--active {
+.stwid--books .stwid--entry.stwid--state-active {
   background-color: var(--stwid-state-hover-bg);
 }
 
 .stwid--books .stwid--entry:hover .stwid--status,
-.stwid--books .stwid--entry.stwid--active .stwid--status {
+.stwid--books .stwid--entry.stwid--state-active .stwid--status {
   opacity: 1;
 }
 
@@ -1013,10 +1021,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
   transition: background-color 200ms, color 200ms, opacity 200ms;
-  display: flex;
   flex-direction: row;
-  gap: 0.35em;
-  align-items: center;
   box-sizing: border-box;
   padding: 3px;
   border-radius: var(--stwid-radius-m);
@@ -1295,7 +1300,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: var(--SmartThemeBorderColor);
 }
 
-.stwid--bulkEditContainer {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -1333,15 +1338,15 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 4em;
 }
 
-.stwid--bulkEditContainer .killSwitch.fa-toggle-on {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .killSwitch.fa-toggle-on {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--bulkEditContainer .killSwitch.fa-toggle-off {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .killSwitch.fa-toggle-off {
   color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
 }
 
-.stwid--bulkEditContainer.stwid--isDisabled {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer).stwid--state-disabled {
   opacity: var(--stwid-state-disabled-opacity);
   pointer-events: none;
 }
@@ -1354,7 +1359,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 3.5em;
 }
 
-.stwid--bulkEditContainer[data-field="outlet"] .stwid--input {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="outlet"] .stwid--input {
   width: 8em;
   font-size: 0.85em;
 }
@@ -1367,12 +1372,12 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   gap: 0.1em;
 }
 
-.stwid--bulkEditContainer[data-field="applyAll"] {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="applyAll"] {
   min-width: 5em;
 }
 
 /* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
-.stwid--bulkEditContainer .stwid--applyDirty {
+.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .stwid--applyDirty {
   color: var(--warning-color, #e8a97f);
 }
 
@@ -1405,7 +1410,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   font-size: 0.85em;
 }
 
-.stwid--orderTable .stwid--orderFilterButton.stwid--active {
+.stwid--orderTable .stwid--orderFilterButton.stwid--state-active {
   opacity: 1;
   color: var(--SmartThemeQuoteColor);
 }
@@ -1417,7 +1422,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   height: 20vh;
 }
 
-.stwid--script-filter.stwid--active {
+.stwid--script-filter.stwid--state-active {
   display: flex;
 }
 
@@ -1523,24 +1528,24 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
 }
 
-.stwid--orderTable tbody tr.stwid--isTarget {
+.stwid--orderTable tbody tr.stwid--state-target {
   background-color: var(--stwid-state-target-bg);
   box-shadow: var(--stwid-state-target-outline);
 }
 
-.stwid--orderTable tbody tr.stwid--isTarget:hover {
+.stwid--orderTable tbody tr.stwid--state-target:hover {
   background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 25%, var(--stwid-state-target-bg));
 }
 
-.stwid--orderTable tbody tr.stwid--isSelected {
+.stwid--orderTable tbody tr.stwid--state-selected {
   background-color: var(--stwid-state-selected-bg);
 }
 
-.stwid--orderTable tbody tr.stwid--isSelected:hover {
+.stwid--orderTable tbody tr.stwid--state-selected:hover {
   background-color: var(--stwid-state-selected-bg-strong);
 }
 
-.stwid--orderTable tr.stwid--isFiltered {
+.stwid--orderTable tr.stwid--state-filtered {
   display: none;
 }
 

@@ -1,4 +1,4 @@
-import {
+﻿import {
     MULTISELECT_DROPDOWN_CLOSE_HANDLER,
     closeOpenMultiselectDropdownMenus,
     setTooltip,
@@ -111,7 +111,7 @@ export function buildVisibilityRow({
         const applyKeyToggleStyle = ()=>{
             keyToggle.classList.toggle('fa-eye', !orderHelperState.hideKeys);
             keyToggle.classList.toggle('fa-eye-slash', orderHelperState.hideKeys);
-            keyToggle.classList.toggle('stwid--active', orderHelperState.hideKeys);
+            keyToggle.classList.toggle('stwid--state-active', orderHelperState.hideKeys);
         };
         applyKeyToggleStyle();
         keyToggle.addEventListener('click', ()=>{
@@ -149,7 +149,7 @@ export function buildVisibilityRow({
                 menuWrap.append(menuButton);
             }
             const menu = document.createElement('div'); {
-                menu.classList.add('stwid--multiselectDropdownMenu');
+                menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                 const columnInputs = new Map();
                 const mainColumnDefaults = Object.fromEntries(
                     Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)
@@ -174,7 +174,7 @@ export function buildVisibilityRow({
                 };
                 const addColumnAction = ({ label, icon, onClick })=>{
                     const action = document.createElement('div'); {
-                        action.classList.add('stwid--multiselectDropdownOption');
+                        action.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                         action.style.fontWeight = 'bold';
                         const iconEl = document.createElement('i'); {
                             iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--multiselectDropdownOptionIcon');
@@ -202,7 +202,7 @@ export function buildVisibilityRow({
                 });
                 for (const column of ORDER_HELPER_TOGGLE_COLUMNS) {
                     const option = document.createElement('label'); {
-                        option.classList.add('stwid--multiselectDropdownOption');
+                        option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                         const inputControl = createMultiselectDropdownCheckbox(
                             Boolean(orderHelperState.columns[column.key]),
                         );
@@ -273,7 +273,7 @@ export function buildVisibilityRow({
         filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
         setTooltip(filterToggle, 'Open filters. Apply Order only affects rows that are not filtered out');
         filterToggle.addEventListener('click', ()=>{
-            const is = dom.order.filter.root.classList.toggle('stwid--active');
+            const is = dom.order.filter.root.classList.toggle('stwid--state-active');
             if (is) {
                 updateOrderHelperPreview(getOrderHelperEntries(orderHelperState.book, true));
             } else {
@@ -529,7 +529,7 @@ export function buildBulkEditRow({
 
     // ── Select container ──────────────────────────────────────────────────
     const selectContainer = document.createElement('div');
-    selectContainer.classList.add('stwid--bulkEditContainer');
+    selectContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     selectContainer.dataset.field = 'select';
 
     const selectLabel = document.createElement('span');
@@ -544,7 +544,7 @@ export function buildBulkEditRow({
     const selectAll = document.createElement('div'); {
         dom.order.selectAll = selectAll;
         selectAll.classList.add('menu_button', 'interactable');
-        selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--active');
+        selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--state-active');
         setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
         selectAll.addEventListener('click', ()=>{
             const rows = getOrderHelperRows();
@@ -565,7 +565,7 @@ export function buildBulkEditRow({
 
     const refreshSelectionCount = ()=>{
         const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
-        const visible = rows.filter((r)=>!r.classList.contains('stwid--isFiltered'));
+        const visible = rows.filter((r)=>!r.classList.contains('stwid--state-filtered'));
         const total = visible.length;
         const selected = visible.filter((r)=>isOrderHelperRowSelected(r)).length;
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
@@ -585,7 +585,7 @@ export function buildBulkEditRow({
         const targets = [];
         let skippedInvalidRow = false;
         for (const tr of orderedRows) {
-            if (tr.classList.contains('stwid--isFiltered')) continue;
+            if (tr.classList.contains('stwid--state-filtered')) continue;
             if (!isOrderHelperRowSelected(tr)) continue;
             const bookName = tr.getAttribute('data-book');
             const uid = tr.getAttribute('data-uid');
@@ -615,7 +615,7 @@ export function buildBulkEditRow({
     const setApplyButtonBusy = (button, isBusy)=>{
         button.dataset.stwidBusy = isBusy ? '1' : '0';
         button.style.pointerEvents = isBusy ? 'none' : '';
-        button.classList.toggle('stwid--isDisabled', isBusy);
+        button.classList.toggle('stwid--state-disabled', isBusy);
         button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
     };
 
@@ -635,7 +635,7 @@ export function buildBulkEditRow({
 
     // ── Toggle Active State container ─────────────────────────────────────
     const activeStateContainer = document.createElement('div');
-    activeStateContainer.classList.add('stwid--bulkEditContainer');
+    activeStateContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     activeStateContainer.dataset.field = 'activeState';
 
     const activeStateLabel = document.createElement('span');
@@ -706,7 +706,7 @@ export function buildBulkEditRow({
 
     // ── Strategy container ────────────────────────────────────────────────
     const strategyContainer = document.createElement('div');
-    strategyContainer.classList.add('stwid--bulkEditContainer');
+    strategyContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     strategyContainer.dataset.field = 'strategy';
 
     const strategyLabel = document.createElement('span');
@@ -780,7 +780,7 @@ export function buildBulkEditRow({
 
     // ── Position container ────────────────────────────────────────────────
     const positionContainer = document.createElement('div');
-    positionContainer.classList.add('stwid--bulkEditContainer');
+    positionContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     positionContainer.dataset.field = 'position';
 
     const positionLabel = document.createElement('span');
@@ -844,7 +844,7 @@ export function buildBulkEditRow({
 
     // ── Depth container ───────────────────────────────────────────────────
     const depthContainer = document.createElement('div');
-    depthContainer.classList.add('stwid--bulkEditContainer');
+    depthContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     depthContainer.dataset.field = 'depth';
 
     const depthLabel = document.createElement('span');
@@ -905,7 +905,7 @@ export function buildBulkEditRow({
     // ── Depth visibility: enabled only when position is atDepth (value 4) ─
     const applyDepthContainerState = ()=>{
         const isDepth = positionSelect.value === '4';
-        depthContainer.classList.toggle('stwid--isDisabled', !isDepth);
+        depthContainer.classList.toggle('stwid--state-disabled', !isDepth);
         depthInput.disabled = !isDepth;
     };
     positionSelect.addEventListener('change', applyDepthContainerState);
@@ -913,7 +913,7 @@ export function buildBulkEditRow({
 
     // ── Outlet container ──────────────────────────────────────────────────
     const outletContainer = document.createElement('div');
-    outletContainer.classList.add('stwid--bulkEditContainer');
+    outletContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     outletContainer.dataset.field = 'outlet';
 
     const outletLabel = document.createElement('span');
@@ -937,7 +937,7 @@ export function buildBulkEditRow({
     if (storedOutlet !== null) outletInput.value = storedOutlet;
 
     const outletMenu = document.createElement('div');
-    outletMenu.classList.add('stwid--multiselectDropdownMenu');
+    outletMenu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
 
     const buildOutletMenuOptions = ()=>{
         outletMenu.innerHTML = '';
@@ -946,9 +946,9 @@ export function buildBulkEditRow({
         const visible = filter ? allOptions.filter((o)=>o.value.toLowerCase().includes(filter)) : allOptions;
         for (const opt of visible) {
             const optEl = document.createElement('div');
-            optEl.classList.add('stwid--multiselectDropdownOption');
+            optEl.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
             optEl.textContent = opt.value;
-            if (opt.value === outletInput.value) optEl.classList.add('stwid--active');
+            if (opt.value === outletInput.value) optEl.classList.add('stwid--state-active');
             optEl.addEventListener('mousedown', (e)=>{
                 e.preventDefault();
                 outletInput.value = opt.value;
@@ -959,14 +959,14 @@ export function buildBulkEditRow({
         }
     };
     const closeOutletMenu = ()=>{
-        if (!outletMenu.classList.contains('stwid--active')) return;
-        outletMenu.classList.remove('stwid--active');
+        if (!outletMenu.classList.contains('stwid--state-active')) return;
+        outletMenu.classList.remove('stwid--state-active');
         document.removeEventListener('click', handleOutletOutsideClick);
     };
     const openOutletMenu = ()=>{
-        if (outletMenu.classList.contains('stwid--active')) return;
+        if (outletMenu.classList.contains('stwid--state-active')) return;
         closeOpenMultiselectDropdownMenus(outletMenu);
-        outletMenu.classList.add('stwid--active');
+        outletMenu.classList.add('stwid--state-active');
         document.addEventListener('click', handleOutletOutsideClick);
     };
     const handleOutletOutsideClick = (event)=>{
@@ -1040,7 +1040,7 @@ export function buildBulkEditRow({
     // ── Outlet visibility: enabled only when position is outlet ───────────
     const applyOutletContainerState = ()=>{
         const isOutlet = isOutletPosition(positionSelect.value);
-        outletContainer.classList.toggle('stwid--isDisabled', !isOutlet);
+        outletContainer.classList.toggle('stwid--state-disabled', !isOutlet);
         outletInput.disabled = !isOutlet;
     };
     positionSelect.addEventListener('change', applyOutletContainerState);
@@ -1048,7 +1048,7 @@ export function buildBulkEditRow({
 
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
-    orderContainer.classList.add('stwid--bulkEditContainer');
+    orderContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     orderContainer.dataset.field = 'order';
 
     const orderLabel = document.createElement('span');
@@ -1202,7 +1202,7 @@ export function buildBulkEditRow({
 
     // ── Recursion container ────────────────────────────────────────────────
     const recursionContainer = document.createElement('div');
-    recursionContainer.classList.add('stwid--bulkEditContainer');
+    recursionContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     recursionContainer.dataset.field = 'recursion';
 
     const recursionLabel = document.createElement('span');
@@ -1270,7 +1270,7 @@ export function buildBulkEditRow({
 
     // ── Budget container ───────────────────────────────────────────────────
     const budgetContainer = document.createElement('div');
-    budgetContainer.classList.add('stwid--bulkEditContainer');
+    budgetContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     budgetContainer.dataset.field = 'budget';
 
     const budgetLabel = document.createElement('span');
@@ -1328,7 +1328,7 @@ export function buildBulkEditRow({
 
     // ── Probability container ──────────────────────────────────────────────
     const probabilityContainer = document.createElement('div');
-    probabilityContainer.classList.add('stwid--bulkEditContainer');
+    probabilityContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     probabilityContainer.dataset.field = 'probability';
 
     const probabilityLabel = document.createElement('span');
@@ -1392,7 +1392,7 @@ export function buildBulkEditRow({
 
     // ── Sticky container ───────────────────────────────────────────────────
     const stickyContainer = document.createElement('div');
-    stickyContainer.classList.add('stwid--bulkEditContainer');
+    stickyContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     stickyContainer.dataset.field = 'sticky';
 
     const stickyLabel = document.createElement('span');
@@ -1455,7 +1455,7 @@ export function buildBulkEditRow({
 
     // ── Cooldown container ─────────────────────────────────────────────────
     const cooldownContainer = document.createElement('div');
-    cooldownContainer.classList.add('stwid--bulkEditContainer');
+    cooldownContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     cooldownContainer.dataset.field = 'cooldown';
 
     const cooldownLabel = document.createElement('span');
@@ -1518,7 +1518,7 @@ export function buildBulkEditRow({
 
     // ── Delay container ────────────────────────────────────────────────────
     const bulkDelayContainer = document.createElement('div');
-    bulkDelayContainer.classList.add('stwid--bulkEditContainer');
+    bulkDelayContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     bulkDelayContainer.dataset.field = 'bulkDelay';
 
     const bulkDelayLabel = document.createElement('span');
@@ -1581,7 +1581,7 @@ export function buildBulkEditRow({
 
     // ── Apply All Changes container ────────────────────────────────────────
     const applyAllContainer = document.createElement('div');
-    applyAllContainer.classList.add('stwid--bulkEditContainer');
+    applyAllContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
     applyAllContainer.dataset.field = 'applyAll';
 
     const applyAllLabel = document.createElement('span');

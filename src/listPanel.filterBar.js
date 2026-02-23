@@ -1,4 +1,4 @@
-const BOOK_VISIBILITY_MODES = Object.freeze({
+﻿const BOOK_VISIBILITY_MODES = Object.freeze({
     ALL_BOOKS: 'allBooks',
     ALL_ACTIVE: 'allActive',
     CUSTOM: 'custom',
@@ -48,14 +48,14 @@ const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked)=>{
 };
 
 const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
-    for (const menu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--active')) {
+    for (const menu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--state-active')) {
         if (menu === excludeMenu) continue;
         const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
         if (typeof closeMenu === 'function') {
             closeMenu();
             continue;
         }
-        menu.classList.remove('stwid--active');
+        menu.classList.remove('stwid--state-active');
         const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
         trigger?.setAttribute('aria-expanded', 'false');
     }
@@ -372,7 +372,7 @@ const createFilterBarSlice = ({
 
             const closeBookVisibilityMenu = ()=>{
                 if (!listPanelState.bookVisibilityMenu) return;
-                listPanelState.bookVisibilityMenu.classList.remove('stwid--active');
+                listPanelState.bookVisibilityMenu.classList.remove('stwid--state-active');
                 const trigger = listPanelState.bookVisibilityMenu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
                 trigger?.setAttribute('aria-expanded', 'false');
             };
@@ -397,7 +397,7 @@ const createFilterBarSlice = ({
                         } else {
                             isActive = listPanelState.bookVisibilitySelections.has(optionMode);
                         }
-                        option.classList.toggle('stwid--active', isActive);
+                        option.classList.toggle('stwid--state-active', isActive);
                         option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
                         const optionCheckbox = option.querySelector('.stwid--multiselectDropdownOptionCheckbox');
                         if (optionCheckbox) {
@@ -427,14 +427,14 @@ const createFilterBarSlice = ({
                 menuWrap.append(trigger);
 
                 const menu = document.createElement('div');
-                menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu');
+                menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu', 'stwid--menu');
                 listPanelState.bookVisibilityMenu = menu;
 
                 for (const option of BOOK_VISIBILITY_OPTIONS) {
                     const optionTooltip = BOOK_VISIBILITY_OPTION_TOOLTIPS[option.mode] ?? option.label;
                     const optionButton = document.createElement('button');
                     optionButton.type = 'button';
-                    optionButton.classList.add('stwid--multiselectDropdownOption');
+                    optionButton.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                     optionButton.setAttribute('data-mode', option.mode);
                     optionButton.setAttribute('aria-pressed', 'false');
                     optionButton.title = optionTooltip;
@@ -472,11 +472,11 @@ const createFilterBarSlice = ({
                 trigger.addEventListener('click', (evt)=>{
                     evt.preventDefault();
                     evt.stopPropagation();
-                    const shouldOpen = !menu.classList.contains('stwid--active');
+                    const shouldOpen = !menu.classList.contains('stwid--state-active');
                     closeBookVisibilityMenu();
                     if (shouldOpen) {
                         closeOpenMultiselectDropdownMenus(menu);
-                        menu.classList.add('stwid--active');
+                        menu.classList.add('stwid--state-active');
                         trigger.setAttribute('aria-expanded', 'true');
                     }
                 });
@@ -490,7 +490,7 @@ const createFilterBarSlice = ({
                 visibilityRow.append(menuWrap, chips);
 
                 const onDocClickCloseMenu = (evt)=>{
-                    if (!menu.classList.contains('stwid--active')) return;
+                    if (!menu.classList.contains('stwid--state-active')) return;
                     const target = evt.target instanceof HTMLElement ? evt.target : null;
                     if (target?.closest('.stwid--visibilityRow')) return;
                     closeBookVisibilityMenu();

@@ -1,4 +1,4 @@
-import { cloneMetadata } from './sortHelpers.js';
+﻿import { cloneMetadata } from './sortHelpers.js';
 
 const createBooksViewSlice = ({
     listPanelState,
@@ -80,14 +80,14 @@ const createBooksViewSlice = ({
                     title.addEventListener('dragend', ()=>{
                         listPanelState.dragBookName = null;
                         for (const folderDom of listPanelState.getFolderDomValues()) {
-                            folderDom.root.classList.remove('stwid--isTarget');
+                            folderDom.root.classList.remove('stwid--state-target');
                         }
                         for (const bookDom of Object.values(runtime.cache)) {
-                            bookDom.dom.root.classList.remove('stwid--isTarget');
+                            bookDom.dom.root.classList.remove('stwid--state-target');
                         }
                     });
                     title.addEventListener('click', ()=>{
-                        const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
+                        const isCollapsed = !entryList.classList.contains('stwid--state-collapsed');
                         setBookCollapsed(name, isCollapsed);
                     });
                     head.append(title);
@@ -96,7 +96,7 @@ const createBooksViewSlice = ({
                     actions.classList.add('stwid--actions');
                     const sourceLinks = document.createElement('div'); {
                         world.dom.sourceLinks = sourceLinks;
-                        sourceLinks.classList.add('stwid--sourceLinks', 'stwid--isEmpty');
+                        sourceLinks.classList.add('stwid--sourceLinks', 'stwid--state-empty');
                         actions.append(sourceLinks);
                     }
                     const active = document.createElement('input'); {
@@ -168,7 +168,7 @@ const createBooksViewSlice = ({
                         collapseToggle.title = 'Collapse/expand this book';
                         collapseToggle.setAttribute('aria-label', 'Collapse or expand this book');
                         collapseToggle.addEventListener('click', ()=>{
-                            const isCollapsed = !entryList.classList.contains('stwid--isCollapsed');
+                            const isCollapsed = !entryList.classList.contains('stwid--state-collapsed');
                             setBookCollapsed(name, isCollapsed);
                         });
                         actions.append(collapseToggle);
@@ -181,12 +181,12 @@ const createBooksViewSlice = ({
             const entryList = document.createElement('div'); {
                 world.dom.entryList = entryList;
                 entryList.classList.add('stwid--entryList');
-                entryList.classList.add('stwid--isCollapsed');
+                entryList.classList.add('stwid--state-collapsed');
                 const { sort, direction } = getBookSortChoice(name);
                 for (const e of runtime.sortEntries(Object.values(world.entries), sort, direction)) {
                     await runtime.renderEntry(e, name);
                 }
-                const initialCollapsed = listPanelState.getCollapseState(name) ?? entryList.classList.contains('stwid--isCollapsed');
+                const initialCollapsed = listPanelState.getCollapseState(name) ?? entryList.classList.contains('stwid--state-collapsed');
                 setBookCollapsed(name, initialCollapsed);
                 book.append(entryList);
             }

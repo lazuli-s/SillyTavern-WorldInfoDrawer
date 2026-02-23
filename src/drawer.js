@@ -1,4 +1,4 @@
-import { getRequestHeaders } from '../../../../../script.js';
+﻿import { getRequestHeaders } from '../../../../../script.js';
 import { extensionNames } from '../../../../extensions.js';
 import { Popup } from '../../../../popup.js';
 import { SlashCommandParser } from '../../../../slash-commands/SlashCommandParser.js';
@@ -187,7 +187,7 @@ export const initDrawer = ({
             const body = document.createElement('div'); {
                 dom.drawer.body = body;
                 body.classList.add('stwid--body');
-                body.classList.add('stwid--isLoading');
+                body.classList.add('stwid--state-loading');
                 const list = document.createElement('div'); {
                     list.classList.add('stwid--list');
                     const controls = document.createElement('div'); {
@@ -309,7 +309,7 @@ export const initDrawer = ({
 
                                 // Only guard the "open" direction. Closing activation settings doesn't discard entry edits
                                 // because opening it already clears the entry editor (which this guard prevents while dirty).
-                                if (isDirty && !settings.classList.contains('stwid--active')) {
+                                if (isDirty && !settings.classList.contains('stwid--state-active')) {
                                     toastr.warning('Unsaved edits detected. Save or discard changes before opening Activation Settings.');
                                     return;
                                 }
@@ -335,7 +335,7 @@ export const initDrawer = ({
                             order.title = 'Open Order Helper (Book Visibility scope)';
                             order.setAttribute('aria-label', 'Open Order Helper for current Book Visibility scope');
                             order.addEventListener('click', ()=>{
-                                const isActive = order.classList.contains('stwid--active');
+                                const isActive = order.classList.contains('stwid--state-active');
 
                                 const currentEditor = getCurrentEditor();
                                 const isDirty = Boolean(
@@ -356,7 +356,7 @@ export const initDrawer = ({
                                         return;
                                     }
 
-                                    order.classList.remove('stwid--active');
+                                    order.classList.remove('stwid--state-active');
                                     editorPanelApi.clearEditor();
                                     return;
                                 }
@@ -441,7 +441,7 @@ export const initDrawer = ({
                             }
                             const updateToggleState = ()=>{
                                 const enabled = Settings.instance.useBookSorts;
-                                bookSortToggle.classList.toggle('stwid--active', enabled);
+                                bookSortToggle.classList.toggle('stwid--state-active', enabled);
                                 bookSortToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
                                 icon.classList.toggle('fa-toggle-on', enabled);
                                 icon.classList.toggle('fa-toggle-off', !enabled);
@@ -699,7 +699,7 @@ export const initDrawer = ({
             closeButton.addEventListener('click', ()=>{
                 const is = document.body.classList.toggle('stwid--');
                 if (!is) {
-                    if (dom.activationToggle?.classList?.contains('stwid--active')) {
+                    if (dom.activationToggle?.classList?.contains('stwid--state-active')) {
                         dom.activationToggle.click();
                     }
                 }

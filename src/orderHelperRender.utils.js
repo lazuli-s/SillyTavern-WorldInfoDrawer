@@ -1,4 +1,4 @@
-// ── Order Helper render utilities ─────────────────────────────────────────────
+﻿// ── Order Helper render utilities ─────────────────────────────────────────────
 // Shared helpers used across orderHelperRender.* slice files.
 // These functions are self-contained: they depend only on browser globals
 // (document, HTMLElement) and each other — no factory parameters needed.
@@ -47,14 +47,14 @@ export const createMultiselectDropdownCheckbox = (checked = false)=>{
 };
 
 export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
-    for (const menu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--active')) {
+    for (const menu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--state-active')) {
         if (menu === excludeMenu) continue;
         const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
         if (typeof closeMenu === 'function') {
             closeMenu();
             continue;
         }
-        menu.classList.remove('stwid--active');
+        menu.classList.remove('stwid--state-active');
         const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
         trigger?.setAttribute('aria-expanded', 'false');
     }
@@ -67,15 +67,15 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
 // (e.g. to close after a preset action).
 export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     const closeMenu = ()=>{
-        if (!menu.classList.contains('stwid--active')) return;
-        menu.classList.remove('stwid--active');
+        if (!menu.classList.contains('stwid--state-active')) return;
+        menu.classList.remove('stwid--state-active');
         menuButton?.setAttribute('aria-expanded', 'false');
         document.removeEventListener('click', handleOutsideClick);
     };
     const openMenu = ()=>{
-        if (menu.classList.contains('stwid--active')) return;
+        if (menu.classList.contains('stwid--state-active')) return;
         closeOpenMultiselectDropdownMenus(menu);
-        menu.classList.add('stwid--active');
+        menu.classList.add('stwid--state-active');
         menuButton?.setAttribute('aria-expanded', 'true');
         document.addEventListener('click', handleOutsideClick);
     };
@@ -87,7 +87,7 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     menu.addEventListener('click', (event)=>event.stopPropagation());
     menuButton.addEventListener('click', (event)=>{
         event.stopPropagation();
-        if (menu.classList.contains('stwid--active')) {
+        if (menu.classList.contains('stwid--state-active')) {
             closeMenu();
         } else {
             openMenu();

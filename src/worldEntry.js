@@ -1,4 +1,4 @@
-let context = null;
+﻿let context = null;
 
 export const setWorldEntryContext = (value) => {
     context = value;
@@ -29,7 +29,7 @@ export const renderEntry = async(e, name, before = null)=>{
                 evt.preventDefault();
                 return;
             }
-            context.dom.books.classList.add('stwid--isDragging');
+            context.dom.books.classList.add('stwid--state-dragging');
             evt.dataTransfer.setData('text/plain', entry.textContent);
         });
         const sel = document.createElement('div'); {

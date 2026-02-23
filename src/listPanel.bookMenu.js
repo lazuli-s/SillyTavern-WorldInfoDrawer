@@ -1,4 +1,4 @@
-
+﻿
 const createBookMenuSlice = ({
     listPanelState,
     runtime: state,
@@ -225,7 +225,7 @@ const createBookMenuSlice = ({
 
     const buildMoveBookMenuItem = (name, closeMenu)=>{
         const item = document.createElement('div'); {
-            item.classList.add('stwid--listDropdownItem');
+            item.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
             item.classList.add('stwid--moveToFolder');
             item.addEventListener('click', async(evt)=>{
                 evt.stopPropagation();
@@ -261,7 +261,7 @@ const createBookMenuSlice = ({
                 popupContent.append(title);
 
                 const row = document.createElement('div');
-                row.classList.add('stwid--listDropdownItem');
+                row.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                 row.classList.add('stwid--moveBookRow');
                 const select = document.createElement('select');
                 select.classList.add('text_pole');
@@ -434,13 +434,13 @@ const createBookMenuSlice = ({
                         menuTrigger.style.anchorName = '';
                     });
                     const menu = document.createElement('div'); {
-                        menu.classList.add('stwid--listDropdownMenu');
+                        menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
                         const closeMenu = ()=>{
                             blocker.remove();
                             menuTrigger.style.anchorName = '';
                         };
                         const rename = document.createElement('div'); {
-                            rename.classList.add('stwid--listDropdownItem');
+                            rename.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             rename.classList.add('stwid--rename');
                             rename.addEventListener('click', async()=>{
                                 const selected = await setSelectedBookInCoreUi(name);
@@ -462,7 +462,7 @@ const createBookMenuSlice = ({
                         menu.append(buildMoveBookMenuItem(name, closeMenu));
                         if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
                             const bulk = document.createElement('div'); {
-                                bulk.classList.add('stwid--listDropdownItem');
+                                bulk.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                 bulk.classList.add('stwid--bulkEdit');
                                 bulk.addEventListener('click', async()=>{
                                     const selected = await setSelectedBookInCoreUi(name);
@@ -486,7 +486,7 @@ const createBookMenuSlice = ({
                         }
                         if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoExternalEditor')) {
                             const editor = document.createElement('div'); {
-                                editor.classList.add('stwid--listDropdownItem');
+                                editor.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                 editor.classList.add('stwid--externalEditor');
                                 editor.addEventListener('click', async()=>{
                                     try {
@@ -521,7 +521,7 @@ const createBookMenuSlice = ({
                             }
                         }
                         const fillTitles = document.createElement('div'); {
-                            fillTitles.classList.add('stwid--listDropdownItem');
+                            fillTitles.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             fillTitles.classList.add('stwid--fillTitles');
                             fillTitles.addEventListener('click', async()=>{
                                 await state.fillEmptyTitlesWithKeywords(name);
@@ -539,7 +539,7 @@ const createBookMenuSlice = ({
                             menu.append(fillTitles);
                         }
                         const bookSort = document.createElement('div'); {
-                            bookSort.classList.add('stwid--listDropdownItem');
+                            bookSort.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             bookSort.classList.add('stwid--bookSort');
                             bookSort.addEventListener('click', (evt)=>evt.stopPropagation());
                             const i = document.createElement('i'); {
@@ -580,7 +580,7 @@ const createBookMenuSlice = ({
                             menu.append(bookSort);
                         }
                         const orderHelper = document.createElement('div'); {
-                            orderHelper.classList.add('stwid--listDropdownItem');
+                            orderHelper.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             orderHelper.classList.add('stwid--orderHelper');
                             orderHelper.addEventListener('click', ()=>{
                                 state.openOrderHelper(name);
@@ -599,7 +599,7 @@ const createBookMenuSlice = ({
                         }
                         const stloButton = document.createElement('div'); {
                             stloButton.id = 'lorebook_ordering_button';
-                            stloButton.classList.add('stwid--listDropdownItem');
+                            stloButton.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             stloButton.classList.add('stwid--stlo');
                             stloButton.dataset.i18n = '[title]stlo.button.configure; [aria-label]stlo.button.configure';
                             stloButton.title = 'Configure STLO Priority & Budget';
@@ -636,7 +636,7 @@ const createBookMenuSlice = ({
                             menu.append(stloButton);
                         }
                         const exp = document.createElement('div'); {
-                            exp.classList.add('stwid--listDropdownItem');
+                            exp.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             exp.classList.add('stwid--export');
                             exp.addEventListener('click', async()=>{
                                 state.download(JSON.stringify({
@@ -657,7 +657,7 @@ const createBookMenuSlice = ({
                             menu.append(exp);
                         }
                         const dup = document.createElement('div'); {
-                            dup.classList.add('stwid--listDropdownItem');
+                            dup.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             dup.classList.add('stwid--duplicate');
                             dup.addEventListener('click', async()=>{
                                 await duplicateBook(name);
@@ -675,7 +675,7 @@ const createBookMenuSlice = ({
                             menu.append(dup);
                         }
                         const del = document.createElement('div'); {
-                            del.classList.add('stwid--listDropdownItem');
+                            del.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             del.classList.add('stwid--delete');
                             del.addEventListener('click', async()=>{
                                 await deleteBook(name);

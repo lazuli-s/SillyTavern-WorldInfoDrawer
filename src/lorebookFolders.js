@@ -1,4 +1,4 @@
-const FOLDER_METADATA_KEY = 'folder';
+﻿const FOLDER_METADATA_KEY = 'folder';
 const FOLDER_REGISTRY_STORAGE_KEY = 'stwid--folder-registry';
 
 const normalizeFolderName = (value)=>String(value ?? '').trim();
@@ -199,7 +199,7 @@ const updateFolderCount = (countElement, count)=>{
 
 const setFolderCollapsed = (folderDom, isCollapsed)=>{
     if (!folderDom) return;
-    folderDom.books.classList.toggle('stwid--isCollapsed', Boolean(isCollapsed));
+    folderDom.books.classList.toggle('stwid--state-collapsed', Boolean(isCollapsed));
     if (isCollapsed) {
         folderDom.toggle.classList.remove('fa-chevron-up');
         folderDom.toggle.classList.add('fa-chevron-down');
@@ -238,17 +238,17 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                 const allowDrop = onDragStateChange?.(true, evt) ?? true;
                 if (!allowDrop) return;
                 evt.preventDefault();
-                root.classList.add('stwid--isTarget');
+                root.classList.add('stwid--state-target');
             });
             header.addEventListener('dragleave', (evt)=>{
                 if (!onDrop) return;
-                root.classList.remove('stwid--isTarget');
+                root.classList.remove('stwid--state-target');
                 onDragStateChange?.(false, evt);
             });
             header.addEventListener('drop', async(evt)=>{
                 if (!onDrop) return;
                 evt.preventDefault();
-                root.classList.remove('stwid--isTarget');
+                root.classList.remove('stwid--state-target');
                 await onDrop(evt);
             });
             const icon = document.createElement('i'); {
@@ -342,9 +342,9 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menuTrigger.style.anchorName = '';
                                 });
                                 const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--listDropdownMenu');
+                                    menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
                                     const rename = document.createElement('div'); {
-                                        rename.classList.add('stwid--listDropdownItem');
+                                        rename.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                         rename.classList.add('stwid--rename');
                                         rename.addEventListener('click', async()=>{
                                             blocker.remove();
@@ -404,7 +404,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                         menu.append(rename);
                                     }
                                 const imp = document.createElement('div'); {
-                                    imp.classList.add('stwid--listDropdownItem');
+                                    imp.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                     imp.classList.add('stwid--import');
                                     imp.addEventListener('click', async()=>{
                                         blocker.remove();
@@ -498,7 +498,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(imp);
                                 }
                                 const exp = document.createElement('div'); {
-                                    exp.classList.add('stwid--listDropdownItem');
+                                    exp.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                     exp.classList.add('stwid--export');
                                     exp.addEventListener('click', async()=>{
                                         blocker.remove();
@@ -524,7 +524,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(exp);
                                 }
                                 const orderHelper = document.createElement('div'); {
-                                    orderHelper.classList.add('stwid--listDropdownItem');
+                                    orderHelper.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                     orderHelper.classList.add('stwid--orderHelper');
                                     orderHelper.addEventListener('click', ()=>{
                                         blocker.remove();
@@ -550,7 +550,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     menu.append(orderHelper);
                                 }
                                 const del = document.createElement('div'); {
-                                    del.classList.add('stwid--listDropdownItem');
+                                    del.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                     del.classList.add('stwid--delete');
                                     del.addEventListener('click', async()=>{
                                         blocker.remove();

@@ -1,4 +1,4 @@
-import { createFolderDom, getFolderFromMetadata, setFolderCollapsed } from './lorebookFolders.js';
+﻿import { createFolderDom, getFolderFromMetadata, setFolderCollapsed } from './lorebookFolders.js';
 import { persistFolderCollapseStates, setFolderCollapsedAndPersist } from './listPanel.state.js';
 
 const createFoldersViewSlice = ({
@@ -10,7 +10,7 @@ const createFoldersViewSlice = ({
 
     const hasExpandedFolders = ()=>listPanelState.getFolderDomValues().some((folderDom)=>{
         const books = folderDom?.books;
-        return books && !books.classList.contains('stwid--isCollapsed');
+        return books && !books.classList.contains('stwid--state-collapsed');
     });
 
     const updateCollapseAllFoldersToggle = ()=>{
@@ -50,7 +50,7 @@ const createFoldersViewSlice = ({
                 const books = folderDom?.books;
                 if (!books) return;
                 bulkFolderCollapsedIntent = null;
-                const isCollapsed = !books.classList.contains('stwid--isCollapsed');
+                const isCollapsed = !books.classList.contains('stwid--state-collapsed');
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
                 updateCollapseAllFoldersToggle();
             },

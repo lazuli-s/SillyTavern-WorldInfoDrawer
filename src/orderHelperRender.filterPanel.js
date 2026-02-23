@@ -1,4 +1,4 @@
-import { DOMPurify } from '../../../../../lib.js';
+﻿import { DOMPurify } from '../../../../../lib.js';
 
 /**
  * Builds the Order Helper script-filter panel DOM element.
@@ -97,7 +97,7 @@ export function buildFilterPanel({
                 };
                 const updateHighlightDebounced = debounce(()=>updateHighlight(), 100);
                 const saveFilterDebounced = debounce(()=>localStorage.setItem(orderFilterStorageKey, inp.value), 200);
-                const isActive = ()=>dom.order.filter.root?.classList.contains('stwid--active');
+                const isActive = ()=>dom.order.filter.root?.classList.contains('stwid--state-active');
 
                 // Show filter compile/runtime errors inline (non-toastr) to avoid spam.
                 const showFilterError = (message)=>{

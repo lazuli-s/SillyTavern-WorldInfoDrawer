@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
   createBookInFolder,
   getFolderFromMetadata,
@@ -212,12 +212,12 @@ describe("lorebookFolders", () => {
       };
 
       setFolderCollapsed(folderDom, true);
-      expect(folderDom.books.classList.contains("stwid--isCollapsed")).toBe(true);
+      expect(folderDom.books.classList.contains("stwid--state-collapsed")).toBe(true);
       expect(folderDom.toggle.classList.contains("fa-chevron-down")).toBe(true);
       expect(folderDom.toggle.classList.contains("fa-chevron-up")).toBe(false);
 
       setFolderCollapsed(folderDom, false);
-      expect(folderDom.books.classList.contains("stwid--isCollapsed")).toBe(false);
+      expect(folderDom.books.classList.contains("stwid--state-collapsed")).toBe(false);
       expect(folderDom.toggle.classList.contains("fa-chevron-up")).toBe(true);
       expect(folderDom.toggle.classList.contains("fa-chevron-down")).toBe(false);
     });

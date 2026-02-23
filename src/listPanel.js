@@ -1,4 +1,4 @@
-import { cloneMetadata } from './sortHelpers.js';
+﻿import { cloneMetadata } from './sortHelpers.js';
 import {
     createBookInFolder,
     getFolderFromMetadata,
@@ -66,7 +66,7 @@ const setCollapseState = (name, isCollapsed)=>{
 
 const hasExpandedBooks = ()=>Object.values(state.cache).some((book)=>{
     const entryList = book?.dom?.entryList;
-    return entryList && !entryList.classList.contains('stwid--isCollapsed');
+    return entryList && !entryList.classList.contains('stwid--state-collapsed');
 });
 
 const updateCollapseAllToggle = ()=>{
@@ -90,7 +90,7 @@ const applyCollapseState = (name)=>{
     const isCollapsed = listPanelState.getCollapseState(name);
     const world = state.cache[name];
     if (isCollapsed === undefined || !world?.dom?.entryList || !world?.dom?.collapseToggle) return;
-    world.dom.entryList.classList.toggle('stwid--isCollapsed', isCollapsed);
+    world.dom.entryList.classList.toggle('stwid--state-collapsed', isCollapsed);
     if (isCollapsed) {
         world.dom.collapseToggle.classList.remove('fa-chevron-up');
         world.dom.collapseToggle.classList.add('fa-chevron-down');
@@ -191,7 +191,7 @@ const renderBookSourceLinks = (sourceLinksContainer, links = null)=>{
         }
     }
 
-    sourceLinksContainer.classList.toggle('stwid--isEmpty', sourceLinksContainer.childElementCount === 0);
+    sourceLinksContainer.classList.toggle('stwid--state-empty', sourceLinksContainer.childElementCount === 0);
 };
 
 const updateBookSourceLinks = (name, links = null)=>{
@@ -369,7 +369,7 @@ const renderBook = async(...args)=>booksViewSlice?.renderBook(...args);
 const loadList = async()=>booksViewSlice?.loadList();
 
 const runRefreshWorker = async()=>{
-    state.dom.drawer.body.classList.add('stwid--isLoading');
+    state.dom.drawer.body.classList.add('stwid--state-loading');
     try {
         while (refreshCompletedToken < refreshRequestToken) {
             const token = refreshRequestToken;
@@ -381,7 +381,7 @@ const runRefreshWorker = async()=>{
             refreshCompletedToken = token;
         }
     } finally {
-        state.dom.drawer.body.classList.remove('stwid--isLoading');
+        state.dom.drawer.body.classList.remove('stwid--state-loading');
         refreshWorkerPromise = null;
     }
 };

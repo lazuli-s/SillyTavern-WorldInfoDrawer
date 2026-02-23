@@ -1,4 +1,4 @@
-import { resetSelectionMemory } from './listPanel.state.js';
+﻿import { resetSelectionMemory } from './listPanel.state.js';
 
 const createSelectionDnDSlice = ({
     listPanelState,
@@ -7,25 +7,25 @@ const createSelectionDnDSlice = ({
 })=>{
     const selectEnd = ()=>{
         resetSelectionMemory((toast)=>toastr.clear(toast));
-        runtime.dom.books.classList.remove('stwid--isDragging');
-        [...runtime.dom.books.querySelectorAll('.stwid--entry.stwid--isSelected')]
+        runtime.dom.books.classList.remove('stwid--state-dragging');
+        [...runtime.dom.books.querySelectorAll('.stwid--entry.stwid--state-selected')]
             .forEach((item)=>{
-                item.classList.remove('stwid--isSelected');
+                item.classList.remove('stwid--state-selected');
                 item.removeAttribute('draggable');
                 const icon = item.querySelector('.stwid--selector > .stwid--icon');
                 icon.classList.add('fa-square');
                 icon.classList.remove('fa-square-check');
             })
         ;
-        [...runtime.dom.books.querySelectorAll('.stwid--book.stwid--isTarget')]
+        [...runtime.dom.books.querySelectorAll('.stwid--book.stwid--state-target')]
             .forEach((item)=>{
-                item.classList.remove('stwid--isTarget');
+                item.classList.remove('stwid--state-target');
             })
         ;
     };
 
     const selectAdd = (entry)=>{
-        entry.classList.add('stwid--isSelected');
+        entry.classList.add('stwid--state-selected');
         entry.setAttribute('draggable', 'true');
         const icon = entry.querySelector('.stwid--selector > .stwid--icon');
         icon.classList.remove('fa-square');
@@ -33,7 +33,7 @@ const createSelectionDnDSlice = ({
     };
 
     const selectRemove = (entry)=>{
-        entry.classList.remove('stwid--isSelected');
+        entry.classList.remove('stwid--state-selected');
         entry.setAttribute('draggable', 'false');
         const icon = entry.querySelector('.stwid--selector > .stwid--icon');
         icon.classList.add('fa-square');
@@ -87,28 +87,28 @@ const createSelectionDnDSlice = ({
     const onBookDropTargetDragOver = (evt, book)=>{
         if (listPanelState.dragBookName) {
             evt.preventDefault();
-            book.classList.add('stwid--isTarget');
+            book.classList.add('stwid--state-target');
             return;
         }
         if (listPanelState.selectFrom === null) return;
         evt.preventDefault();
-        book.classList.add('stwid--isTarget');
+        book.classList.add('stwid--state-target');
     };
 
     const onBookDropTargetDragLeave = (_evt, book)=>{
         if (listPanelState.dragBookName) {
-            book.classList.remove('stwid--isTarget');
+            book.classList.remove('stwid--state-target');
             return;
         }
         if (listPanelState.selectFrom === null) return;
-        book.classList.remove('stwid--isTarget');
+        book.classList.remove('stwid--state-target');
     };
 
     const onBookDropTargetDrop = async(evt, targetBookName, book, getTargetFolder)=>{
         if (listPanelState.dragBookName) {
             evt.preventDefault();
             evt.stopPropagation();
-            book.classList.remove('stwid--isTarget');
+            book.classList.remove('stwid--state-target');
             const draggedName = listPanelState.dragBookName;
             listPanelState.dragBookName = null;
             const targetFolder = getTargetFolder?.() ?? null;

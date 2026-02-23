@@ -1,4 +1,4 @@
-import { setFolderCollapsed } from './lorebookFolders.js';
+﻿import { setFolderCollapsed } from './lorebookFolders.js';
 
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
 const createSafeStateMap = ()=>Object.create(null);
@@ -300,7 +300,7 @@ export const resetSelectionMemory = (clearToast)=>{
 
 export const captureBookCollapseStatesFromDom = (cache, setCollapseState)=>{
     for (const [bookName, bookData] of Object.entries(cache ?? {})) {
-        const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--isCollapsed');
+        const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--state-collapsed');
         if (isCollapsed !== undefined) setCollapseState(bookName, isCollapsed);
     }
 };

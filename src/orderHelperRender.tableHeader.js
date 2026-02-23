@@ -1,4 +1,4 @@
-import {
+﻿import {
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
@@ -113,7 +113,7 @@ export function buildTableHeader({
                                     menuWrap.append(menuButton);
                                 }
                                 const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--multiselectDropdownMenu');
+                                    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                                     const updateFilterIndicator = ()=>{
                                         const allValues = orderHelperState.strategyValues.length
                                             ? orderHelperState.strategyValues
@@ -121,7 +121,7 @@ export function buildTableHeader({
                                         const filters = normalizeStrategyFilters(orderHelperState.filters.strategy);
                                         orderHelperState.filters.strategy = filters.length ? filters : [...allValues];
                                         const isActive = orderHelperState.filters.strategy.length !== allValues.length;
-                                        menuButton.classList.toggle('stwid--active', isActive);
+                                        menuButton.classList.toggle('stwid--state-active', isActive);
                                     };
                                     refreshStrategyFilterIndicator = updateFilterIndicator;
                                     const updateStrategyFilters = ()=>{
@@ -138,7 +138,7 @@ export function buildTableHeader({
                                     }
                                     for (const optionData of strategyOptions) {
                                         const option = document.createElement('label'); {
-                                            option.classList.add('stwid--multiselectDropdownOption');
+                                            option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                                             const inputControl = createMultiselectDropdownCheckbox(
                                                 orderHelperState.filters.strategy.includes(optionData.value),
                                             );
@@ -194,7 +194,7 @@ export function buildTableHeader({
                                     menuWrap.append(menuButton);
                                 }
                                 const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--multiselectDropdownMenu');
+                                    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                                     const updateFilterIndicator = ()=>{
                                         const allValues = orderHelperState.positionValues.length
                                             ? orderHelperState.positionValues
@@ -202,7 +202,7 @@ export function buildTableHeader({
                                         const filters = normalizePositionFilters(orderHelperState.filters.position);
                                         orderHelperState.filters.position = filters.length ? filters : [...allValues];
                                         const isActive = orderHelperState.filters.position.length !== allValues.length;
-                                        menuButton.classList.toggle('stwid--active', isActive);
+                                        menuButton.classList.toggle('stwid--state-active', isActive);
                                     };
                                     refreshPositionFilterIndicator = updateFilterIndicator;
                                     const updatePositionFilters = ()=>{
@@ -219,7 +219,7 @@ export function buildTableHeader({
                                     }
                                     for (const optionData of positionOptions) {
                                         const option = document.createElement('label'); {
-                                            option.classList.add('stwid--multiselectDropdownOption');
+                                            option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                                             const inputControl = createMultiselectDropdownCheckbox(
                                                 orderHelperState.filters.position.includes(optionData.value),
                                             );
@@ -275,7 +275,7 @@ export function buildTableHeader({
                                     menuWrap.append(menuButton);
                                 }
                                 const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--multiselectDropdownMenu');
+                                    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                                     const updateFilterIndicator = ()=>{
                                         const allValues = orderHelperState.recursionValues ?? [];
                                         if (!allValues.length) return;
@@ -283,7 +283,7 @@ export function buildTableHeader({
                                             orderHelperState.filters.recursion = [...allValues];
                                         }
                                         const isActive = orderHelperState.filters.recursion.length !== allValues.length;
-                                        menuButton.classList.toggle('stwid--active', isActive);
+                                        menuButton.classList.toggle('stwid--state-active', isActive);
                                     };
                                     refreshRecursionFilterIndicator = updateFilterIndicator;
                                     const updateRecursionFilters = ()=>{
@@ -299,7 +299,7 @@ export function buildTableHeader({
                                     // Phase 3: use ORDER_HELPER_RECURSION_OPTIONS (shared with row cell builder)
                                     for (const optionData of ORDER_HELPER_RECURSION_OPTIONS) {
                                         const option = document.createElement('label'); {
-                                            option.classList.add('stwid--multiselectDropdownOption');
+                                            option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                                             const inputControl = createMultiselectDropdownCheckbox(
                                                 orderHelperState.filters.recursion.includes(optionData.value),
                                             );
@@ -356,7 +356,7 @@ export function buildTableHeader({
                                         menuWrap.append(menuButton);
                                     }
                                     const menu = document.createElement('div'); {
-                                        menu.classList.add('stwid--multiselectDropdownMenu');
+                                        menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                                         const updateFilterIndicator = ()=>{
                                             const allValues = orderHelperState.outletValues.length
                                                 ? orderHelperState.outletValues
@@ -364,7 +364,7 @@ export function buildTableHeader({
                                             const filters = normalizeOutletFilters(orderHelperState.filters.outlet);
                                             orderHelperState.filters.outlet = filters.length ? filters : [...allValues];
                                             const isActive = orderHelperState.filters.outlet.length !== allValues.length;
-                                            menuButton.classList.toggle('stwid--active', isActive);
+                                            menuButton.classList.toggle('stwid--state-active', isActive);
                                         };
                                         // Phase 2: assign the late-bound indicator callback so row-level
                                         // outlet edits can refresh the header filter button state.
@@ -379,7 +379,7 @@ export function buildTableHeader({
                                         const outletOptions = getOutletOptions();
                                         for (const optionData of outletOptions) {
                                             const option = document.createElement('label'); {
-                                                option.classList.add('stwid--multiselectDropdownOption');
+                                                option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                                                 const inputControl = createMultiselectDropdownCheckbox(
                                                     orderHelperState.filters.outlet.includes(optionData.value),
                                                 );
@@ -435,7 +435,7 @@ export function buildTableHeader({
                                         menuWrap.append(menuButton);
                                     }
                                     const menu = document.createElement('div'); {
-                                        menu.classList.add('stwid--multiselectDropdownMenu');
+                                        menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                                         const updateFilterIndicator = ()=>{
                                             const allValues = orderHelperState.automationIdValues.length
                                                 ? orderHelperState.automationIdValues
@@ -443,7 +443,7 @@ export function buildTableHeader({
                                             const filters = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
                                             orderHelperState.filters.automationId = filters.length ? filters : [...allValues];
                                             const isActive = orderHelperState.filters.automationId.length !== allValues.length;
-                                            menuButton.classList.toggle('stwid--active', isActive);
+                                            menuButton.classList.toggle('stwid--state-active', isActive);
                                         };
                                         // Phase 2: assign the late-bound indicator callback so row-level
                                         // automationId edits can refresh the header filter button state.
@@ -458,7 +458,7 @@ export function buildTableHeader({
                                         const automationIdOptions = getAutomationIdOptions();
                                         for (const optionData of automationIdOptions) {
                                             const option = document.createElement('label'); {
-                                                option.classList.add('stwid--multiselectDropdownOption');
+                                                option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                                                 const inputControl = createMultiselectDropdownCheckbox(
                                                     orderHelperState.filters.automationId.includes(optionData.value),
                                                 );
@@ -514,7 +514,7 @@ export function buildTableHeader({
                                         menuWrap.append(menuButton);
                                     }
                                     const menu = document.createElement('div'); {
-                                        menu.classList.add('stwid--multiselectDropdownMenu');
+                                        menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
                                         const updateFilterIndicator = ()=>{
                                             const allValues = orderHelperState.groupValues.length
                                                 ? orderHelperState.groupValues
@@ -522,7 +522,7 @@ export function buildTableHeader({
                                             const filters = normalizeGroupFilters(orderHelperState.filters.group);
                                             orderHelperState.filters.group = filters.length ? filters : [...allValues];
                                             const isActive = orderHelperState.filters.group.length !== allValues.length;
-                                            menuButton.classList.toggle('stwid--active', isActive);
+                                            menuButton.classList.toggle('stwid--state-active', isActive);
                                         };
                                         // Phase 2: assign the late-bound indicator callback so row-level
                                         // group edits can refresh the header filter button state.
@@ -537,7 +537,7 @@ export function buildTableHeader({
                                         const groupOptions = getGroupOptions();
                                         for (const optionData of groupOptions) {
                                             const option = document.createElement('label'); {
-                                                option.classList.add('stwid--multiselectDropdownOption');
+                                                option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
                                                 const inputControl = createMultiselectDropdownCheckbox(
                                                     orderHelperState.filters.group.includes(optionData.value),
                                                 );

@@ -1,4 +1,4 @@
-export const initEditorPanel = ({
+﻿export const initEditorPanel = ({
     dom,
     activationBlock,
     activationBlockParent,
@@ -99,7 +99,7 @@ export const initEditorPanel = ({
     // rendered entry in the cache — O(1) instead of O(total entries).
     const clearEntryHighlights = () => {
         if (activeEntryDom) {
-            activeEntryDom.classList.remove('stwid--active');
+            activeEntryDom.classList.remove('stwid--state-active');
             activeEntryDom = null;
         }
     };
@@ -115,7 +115,7 @@ export const initEditorPanel = ({
 
     const hideActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
-        dom.activationToggle.classList.remove('stwid--active');
+        dom.activationToggle.classList.remove('stwid--state-active');
         activationBlockParent.append(activationBlock);
         clearEditor({ resetCurrent: false });
         setCurrentEditor(null);
@@ -125,12 +125,12 @@ export const initEditorPanel = ({
 
     const showActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
-        dom.activationToggle.classList.add('stwid--active');
+        dom.activationToggle.classList.add('stwid--state-active');
         setCurrentEditor(null);
         currentEditorKey = null;
         isEditorDirty = false;
         clearEditor({ resetCurrent: false });
-        if (dom.order.toggle.classList.contains('stwid--active')) {
+        if (dom.order.toggle.classList.contains('stwid--state-active')) {
             dom.order.toggle.click();
         }
         clearEntryHighlights();
@@ -143,13 +143,13 @@ export const initEditorPanel = ({
 
     const toggleActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
-        const isActive = dom.activationToggle.classList.toggle('stwid--active');
+        const isActive = dom.activationToggle.classList.toggle('stwid--state-active');
         setCurrentEditor(null);
         currentEditorKey = null;
         isEditorDirty = false;
         if (isActive) {
             clearEditor({ resetCurrent: false });
-            if (dom.order.toggle.classList.contains('stwid--active')) {
+            if (dom.order.toggle.classList.contains('stwid--state-active')) {
                 dom.order.toggle.click();
             }
             clearEntryHighlights();
@@ -165,7 +165,7 @@ export const initEditorPanel = ({
     };
 
     const resetEditorState = () => {
-        if (dom.activationToggle.classList.contains('stwid--active')) {
+        if (dom.activationToggle.classList.contains('stwid--state-active')) {
             hideActivationSettings();
         } else {
             clearEditor();
@@ -211,10 +211,10 @@ export const initEditorPanel = ({
 
         // F02: Close activation/order panels before async work begins, but do NOT
         // touch dirty state or row highlights yet — those only commit on success.
-        if (dom.activationToggle.classList.contains('stwid--active')) {
+        if (dom.activationToggle.classList.contains('stwid--state-active')) {
             hideActivationSettings();
         }
-        if (dom.order.toggle.classList.contains('stwid--active')) {
+        if (dom.order.toggle.classList.contains('stwid--state-active')) {
             dom.order.toggle.click();
         }
         // Defer clearEditor until new content is ready — keeps the old entry visible
@@ -249,7 +249,7 @@ export const initEditorPanel = ({
         // stale-token and missing-payload aborts from leaving the list highlight
         // desynced from the editor content currently on screen.
         clearEntryHighlights();
-        entryDom.classList.add('stwid--active');
+        entryDom.classList.add('stwid--state-active');
         activeEntryDom = entryDom; // F05: record new active row for O(1) future clears
         appendUnfocusButton();
         if (header) dom.editor.append(header);

@@ -1,4 +1,4 @@
-import { setTooltip, formatCharacterFilter } from './orderHelperRender.utils.js';
+﻿import { setTooltip, formatCharacterFilter } from './orderHelperRender.utils.js';
 import { ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
 
 /**
@@ -157,7 +157,7 @@ export function buildTableBody({
 
     const getVisibleOrderHelperRows = ()=>{
         const rows = getOrderHelperRows();
-        return rows.filter((row)=>!row.classList.contains('stwid--isFiltered'));
+        return rows.filter((row)=>!row.classList.contains('stwid--state-filtered'));
     };
 
     const updateCustomOrderFromDom = async()=>{
@@ -264,7 +264,7 @@ export function buildTableBody({
                             }
                             clickTimer = window.setTimeout(()=>{
                                 const visibleRows = getVisibleOrderHelperRows();
-                                if (!visibleRows.length || tr.classList.contains('stwid--isFiltered')) return;
+                                if (!visibleRows.length || tr.classList.contains('stwid--state-filtered')) return;
                                 const index = visibleRows.indexOf(tr);
                                 if (index === -1) return;
                                 const targetRow = direction === 'up'
@@ -287,7 +287,7 @@ export function buildTableBody({
                                 clickTimer = null;
                             }
                             const visibleRows = getVisibleOrderHelperRows();
-                            if (!visibleRows.length || tr.classList.contains('stwid--isFiltered')) return;
+                            if (!visibleRows.length || tr.classList.contains('stwid--state-filtered')) return;
                             const targetRow = direction === 'up'
                                 ? visibleRows[0]
                                 : visibleRows[visibleRows.length - 1];

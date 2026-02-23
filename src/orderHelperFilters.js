@@ -1,4 +1,4 @@
-const createOrderHelperFilters = ({
+﻿const createOrderHelperFilters = ({
     dom,
     orderHelperState,
     entryState,
@@ -56,7 +56,7 @@ const createOrderHelperFilters = ({
         const groupFiltered = row.dataset.stwidFilterGroup === 'true';
         const scriptFiltered = row.dataset.stwidFilterScript === 'true';
         row.classList.toggle(
-            'stwid--isFiltered',
+            'stwid--state-filtered',
             strategyFiltered
                 || positionFiltered
                 || recursionFiltered

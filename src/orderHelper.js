@@ -1,4 +1,4 @@
-import {
+﻿import {
     ORDER_HELPER_COLUMNS_STORAGE_KEY,
     ORDER_HELPER_DEFAULT_COLUMNS,
     ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
@@ -233,7 +233,7 @@ export const initOrderHelper = ({
         if (!dom.order.selectAll) return;
         const rows = getOrderHelperRows();
         const allSelected = rows.length > 0 && rows.every(isOrderHelperRowSelected);
-        dom.order.selectAll.classList.toggle('stwid--active', allSelected);
+        dom.order.selectAll.classList.toggle('stwid--state-active', allSelected);
         dom.order.selectAll.classList.toggle('fa-square-check', allSelected);
         dom.order.selectAll.classList.toggle('fa-square', !allSelected);
     };
@@ -405,12 +405,12 @@ export const initOrderHelper = ({
         syncOrderHelperPositionFilters();
 
         scopedBookNames = normalizeScope(scope);
-        dom.order.toggle.classList.add('stwid--active');
+        dom.order.toggle.classList.add('stwid--state-active');
         renderOrderHelper(book);
     };
 
     const refreshOrderHelperScope = (scope = null)=>{
-        if (!dom.order.toggle?.classList.contains('stwid--active')) return;
+        if (!dom.order.toggle?.classList.contains('stwid--state-active')) return;
         if (orderHelperState.book) return;
         const nextScope = normalizeScope(scope);
         if (isSameScope(scopedBookNames, nextScope)) return;
