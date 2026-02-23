@@ -208,15 +208,18 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   gap: 0.7em;
   margin-top: 0;
   align-items: center;
+  justify-content: space-evenly;
   flex-wrap: nowrap;
 }
 
 .stwid--sortingRow .stwid--thinContainer {
   gap: 1.1em;
-  min-width: 0;
+  min-width: 45%;
   flex-wrap: wrap;
   row-gap: 0.55em;
   padding-top: 0.7em;
+  display: flex;
+  justify-content: space-around;
 }
 
 .stwid--sortingRow .stwid--globalSorting,
@@ -1639,10 +1642,11 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 }
 
 .stwid--characterFilterRow,
-.stwid--recursionRow {
+.stwid--small-check-row {
   display: flex;
   align-items: center;
   gap: 0.4em;
+  font-size: 0.85em;
 }
 
 .stwid--characterFilterRow--include {
@@ -1654,7 +1658,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 }
 
 /* override: FA icon checkbox defaults are too large for the compact recursion options row */
-.stwid--recursionRow .checkbox {
+.stwid--small-check-row .checkbox {
   width: 0.85em;
   height: 0.85em;
 }

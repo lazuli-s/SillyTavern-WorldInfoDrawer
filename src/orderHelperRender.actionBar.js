@@ -1220,7 +1220,7 @@ export function buildBulkEditRow({
         recursionOptions.classList.add('stwid--recursionOptions');
         for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
             const row = document.createElement('label'); {
-                row.classList.add('stwid--recursionRow');
+                row.classList.add('stwid--small-check-row');
                 const input = document.createElement('input'); {
                     input.type = 'checkbox';
                     input.classList.add('checkbox');
@@ -1286,7 +1286,7 @@ export function buildBulkEditRow({
     const budgetOptions = document.createElement('div'); {
         budgetOptions.classList.add('stwid--recursionOptions');
         const row = document.createElement('label'); {
-            row.classList.add('stwid--recursionRow');
+            row.classList.add('stwid--small-check-row');
             const input = document.createElement('input'); {
                 input.type = 'checkbox';
                 input.classList.add('checkbox');

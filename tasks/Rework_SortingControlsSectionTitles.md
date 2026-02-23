@@ -123,3 +123,20 @@ Replaced per-field text labels and question-mark hint icons in the Sorting thin 
   - Removed the `Per-book Sorting:` icon/title row (`stwid--thinContainerSectionTitle`) from `stwid--individualSorting`.
 - Updated `style.css`:
   - Removed `font-size: 0.95em` from `.stwid--iconTabContent`.
+
+## Follow-up Adjustment 10
+
+- Updated sorting row layout in `style.css`:
+  - Added `justify-content: space-evenly` to `.stwid--sortingRow`.
+  - Updated `.stwid--sortingRow .stwid--thinContainer` to:
+    - `min-width: 45%`
+    - `display: flex`
+    - `justify-content: space-around`
+    - keep wrapped rows and compact row spacing (`flex-wrap`, `row-gap`, `padding-top`).
+- Renamed Order Helper checkbox row class from `stwid--recursionRow` to `stwid--small-check-row`:
+  - Updated DOM class assignments in:
+    - `src/orderHelperRender.actionBar.js`
+    - `src/orderHelperRender.tableBody.js`
+  - Updated CSS selectors in `style.css` to use `stwid--small-check-row`.
+  - Added `font-size: 0.85em` to `stwid--small-check-row`.
+- Replaced label-targeting behavior with the reusable class-based hook (`stwid--small-check-row`) to avoid relying on brittle deep DOM path selectors.
