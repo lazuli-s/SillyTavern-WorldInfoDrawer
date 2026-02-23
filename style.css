@@ -93,13 +93,16 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after {
 
 /* -------------------------------------------------------------------------- */
 
+/* Panel: all extension-owned elements inside WorldInfo root */
+#WorldInfo {
+/* -------------------------------------------------------------------------- */
+
 /* 1.5) Shared layout shells                                                 */
 
 /* -------------------------------------------------------------------------- */
 
-/* Flex-column fill shell — grows to fill parent, scrolls internally */
-body.stwid-- #WorldInfo .stwid--editor,
-.stwid--orderHelper {
+/* Flex-column fill shell - grows to fill parent, scrolls internally */
+.stwid--editor {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -108,9 +111,8 @@ body.stwid-- #WorldInfo .stwid--editor,
   min-height: 0;
 }
 
-/* Scrollable fill wrapper — grows to fill remaining height, scrolls */
-body.stwid-- #WorldInfo .stwid--list .stwid--books,
-.stwid--orderTableWrap {
+/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--list .stwid--books {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
@@ -122,7 +124,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books,
 
 /* -------------------------------------------------------------------------- */
 
-body.stwid-- #WorldInfo .stwid--list {
+.stwid--list {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -133,15 +135,15 @@ body.stwid-- #WorldInfo .stwid--list {
 }
 
 /* Top controls (new book/folder, import/export, search, etc.) */
-body.stwid-- #WorldInfo .stwid--controls {
+.stwid--controls {
   display: flex;
   flex-direction: column;
   gap: 0.25em;
   align-items: stretch;
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--controlsRow,
-body.stwid-- #WorldInfo .stwid--controls .stwid--visibilityAndSettingsRow {
+.stwid--controls .stwid--controlsRow,
+.stwid--controls .stwid--visibilityAndSettingsRow {
   --stwid-control-height: 2.35em;
   display: flex;
   gap: 0.7em;
@@ -150,7 +152,7 @@ body.stwid-- #WorldInfo .stwid--controls .stwid--visibilityAndSettingsRow {
   flex-wrap: wrap;
 }
 
-body.stwid-- #WorldInfo .stwid--thinContainer {
+.stwid--thinContainer {
     display: flex;
     align-items: center;
     gap: 0.5em;
@@ -160,7 +162,7 @@ body.stwid-- #WorldInfo .stwid--thinContainer {
     position: relative;
 }
 
-body.stwid-- #WorldInfo .stwid--thinContainerLabel {
+.stwid--thinContainerLabel {
     position: absolute;
     top: -0.6em;
     left: 0.4em;
@@ -171,36 +173,36 @@ body.stwid-- #WorldInfo .stwid--thinContainerLabel {
     white-space: nowrap;
 }
 
-body.stwid-- #WorldInfo i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
+i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   font-size: 0.95em;
   opacity: 0.8;
   cursor: help;
   padding-left: 0.5em;
 }
 
-body.stwid-- #WorldInfo .stwid--thinContainerSmallTitle {
+.stwid--thinContainerSmallTitle {
   font-size: 0.78em;
   opacity: 0.75;
   white-space: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--thinContainerSectionTitle {
+.stwid--thinContainerSectionTitle {
   display: inline-flex;
   align-items: baseline;
   gap: 0.25em;
 }
 
-body.stwid-- #WorldInfo .stwid--thinContainerSectionTitle > i {
+.stwid--thinContainerSectionTitle > i {
   font-size: 0.78em;
   opacity: 0.75;
 }
 
-body.stwid-- #WorldInfo .stwid--thinContainer.is-disabled {
+.stwid--thinContainer.is-disabled {
     opacity: 0.4;
     pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow {
+.stwid--sortingRow {
   --stwid-control-height: 2.35em;
   display: flex;
   gap: 0.7em;
@@ -209,7 +211,7 @@ body.stwid-- #WorldInfo .stwid--sortingRow {
   flex-wrap: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--thinContainer {
+.stwid--sortingRow .stwid--thinContainer {
   gap: 1.1em;
   min-width: 0;
   flex-wrap: wrap;
@@ -217,21 +219,21 @@ body.stwid-- #WorldInfo .stwid--sortingRow .stwid--thinContainer {
   padding-top: 0.7em;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--globalSorting,
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--individualSorting {
+.stwid--sortingRow .stwid--globalSorting,
+.stwid--sortingRow .stwid--individualSorting {
   display: flex;
   align-items: flex-start;
   gap: 0.5em;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--globalSorting {
+.stwid--sortingRow .stwid--globalSorting {
   align-items: center;
   display: flex;
   flex-direction: column;
   gap: 0em;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--individualSorting {
+.stwid--sortingRow .stwid--individualSorting {
   flex-wrap: wrap;
   align-items: center;
   gap: 0em;
@@ -239,17 +241,17 @@ body.stwid-- #WorldInfo .stwid--sortingRow .stwid--individualSorting {
   flex-direction: column;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
+.stwid--sortingRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
   flex: 0 0 100%;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--perBookSortButtons {
+.stwid--sortingRow .stwid--perBookSortButtons {
   display: flex;
   gap: 0.5em;
 }
 
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
-body.stwid-- #WorldInfo .stwid--sortingRow .text_pole {
+.stwid--sortingRow .text_pole {
   height: var(--stwid-control-height);
   padding: 0.35em;
   display: inline-flex;
@@ -257,14 +259,14 @@ body.stwid-- #WorldInfo .stwid--sortingRow .text_pole {
   box-sizing: border-box;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--globalSorting .stwid--smallSelectTextPole {
+.stwid--sortingRow .stwid--globalSorting .stwid--smallSelectTextPole {
   width: 9em;
   max-width: 9em;
   font-size: 0.9em;
 }
 
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--bookSortToggle,
-body.stwid-- #WorldInfo .stwid--sortingRow .stwid--clearBookSorts {
+.stwid--sortingRow .stwid--bookSortToggle,
+.stwid--sortingRow .stwid--clearBookSorts {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -272,57 +274,57 @@ body.stwid-- #WorldInfo .stwid--sortingRow .stwid--clearBookSorts {
   height: var(--stwid-control-height);
 }
 
-body.stwid-- #WorldInfo .stwid--controls .stwid--active {
+.stwid--controls .stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--filter .stwid--active {
+.stwid--list .stwid--filter .stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
 /* Search / active filter row */
-body.stwid-- #WorldInfo .stwid--list .stwid--filter {
+.stwid--list .stwid--filter {
   display: flex;
   flex-direction: column;
   gap: 0.45em;
   align-items: stretch;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--searchRow,
-body.stwid-- #WorldInfo .stwid--list .stwid--visibilityRow {
+.stwid--list .stwid--searchRow,
+.stwid--list .stwid--visibilityRow {
   display: flex;
   gap: 0.75em;
   align-items: center;
   flex-wrap: wrap;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--visibilityRow {
+.stwid--list .stwid--visibilityRow {
   padding-top: 0.1em;
 }
 
-body.stwid-- #WorldInfo .stwid--list .stwid--searchRow .stwid--search {
+.stwid--list .stwid--searchRow .stwid--search {
   flex: 1 1 12em;
   min-width: 10em;
 }
 
-body.stwid-- #WorldInfo .stwid--searchEntries {
+.stwid--searchEntries {
   display: flex;
   gap: 0.5em;
   align-items: center;
 }
 
-body.stwid-- #WorldInfo .stwid--iconTab {
+.stwid--iconTab {
   padding-top: 0.6em;
   margin-bottom: 1.2em;
 }
 
-body.stwid-- #WorldInfo .stwid--iconTabBar {
+.stwid--iconTabBar {
   display: flex;
   border-bottom: 1px solid var(--SmartThemeBorderColor);
   margin-bottom: 15px;
 }
 
-body.stwid-- #WorldInfo .stwid--iconTabButton {
+.stwid--iconTabButton {
   flex: 1;
   display: flex;
   flex-direction: row;
@@ -341,24 +343,24 @@ body.stwid-- #WorldInfo .stwid--iconTabButton {
   transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-body.stwid-- #WorldInfo .stwid--iconTabButton:hover {
+.stwid--iconTabButton:hover {
   opacity: 0.8;
 }
 
-body.stwid-- #WorldInfo .stwid--iconTabButton.active {
+.stwid--iconTabButton.active {
   opacity: 1;
   border-bottom-color: var(--SmartThemeBodyColor);
 }
 
-body.stwid-- #WorldInfo .stwid--iconTabContent {
+.stwid--iconTabContent {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--iconTabContent.active {
+.stwid--iconTabContent.active {
   display: block;
 }
 
-body.stwid-- #WorldInfo .stwid--visibilityRow {
+.stwid--visibilityRow {
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -368,14 +370,14 @@ body.stwid-- #WorldInfo .stwid--visibilityRow {
   flex: 1 1 auto;
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownWrap {
+.stwid--multiselectDropdownWrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownButton {
+.stwid--multiselectDropdownButton {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
@@ -383,11 +385,11 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownButton {
   border-radius: var(--stwid-radius-m);
 }
 
-body.stwid-- #WorldInfo .stwid--listDropdownTrigger {
+.stwid--listDropdownTrigger {
   border-radius: var(--stwid-radius-m);
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownMenu {
+.stwid--multiselectDropdownMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -402,7 +404,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownMenu {
   min-width: max-content;
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownMenu.stwid--active {
+.stwid--multiselectDropdownMenu.stwid--active {
   display: flex;
   width: max-content;
   opacity: 1 !important;
@@ -413,7 +415,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownMenu.stwid--active {
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption {
+.stwid--multiselectDropdownOption {
   display: flex;
   align-items: center;
   gap: 0.35em;
@@ -428,16 +430,16 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption {
   text-align: left;
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:hover {
+.stwid--multiselectDropdownOption:hover {
   color: var(--customThemeColor) !important;
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption.stwid--active {
+.stwid--multiselectDropdownOption.stwid--active {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
+.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
   color: var(--customThemeColor);
   display: inline-flex;
   align-items: center;
@@ -446,13 +448,13 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption .stwid--multiselectDro
   width: 1em;
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
   width: 1em;
   text-align: center;
   color: var(--SmartThemeEmColor);
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption.stwid--active .stwid--multiselectDropdownOptionCheckbox {
+.stwid--multiselectDropdownOption.stwid--active .stwid--multiselectDropdownOptionCheckbox {
   color: var(--SmartThemeQuoteColor);
 }
 
@@ -461,7 +463,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption.stwid--active .stwid--
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOptionInput {
+.stwid--multiselectDropdownOptionInput {
   position: absolute;
   width: 0;
   height: 0;
@@ -470,7 +472,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOptionInput {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--visibilityChips {
+.stwid--visibilityChips {
   display: flex;
   align-items: center;
   align-content: flex-start;
@@ -482,7 +484,7 @@ body.stwid-- #WorldInfo .stwid--visibilityChips {
   align-self: center;
 }
 
-body.stwid-- #WorldInfo .stwid--visibilityChip {
+.stwid--visibilityChip {
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
@@ -493,20 +495,20 @@ body.stwid-- #WorldInfo .stwid--visibilityChip {
   background-color: var(--SmartThemeBlurTintColor);
 }
 
-body.stwid-- #WorldInfo .stwid--visibilityChip .stwid--icon {
+.stwid--visibilityChip .stwid--icon {
   color: var(--SmartThemeQuoteColor);
 }
 
-/* Scrollable book list — see shared section 1.5 */
+/* Scrollable book list - see shared section 1.5 */
 
 /* Folders */
-body.stwid-- #WorldInfo .stwid--folder {
+.stwid--folder {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
   border-radius: 8px;
   margin: 0.35em 0;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader {
+.stwid--folder .stwid--folderHeader {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -519,20 +521,20 @@ body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader {
   line-height: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--folder.stwid--isTarget .stwid--folderHeader {
+.stwid--folder.stwid--isTarget .stwid--folderHeader {
   background-color: var(--stwid-state-target-bg);
   box-shadow: var(--stwid-state-target-outline);
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderIcon {
+.stwid--folder .stwid--folderIcon {
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--folder:not(:has(.stwid--folderBooks.stwid--isCollapsed)) .stwid--folderIcon::before {
+.stwid--folder:not(:has(.stwid--folderBooks.stwid--isCollapsed)) .stwid--folderIcon::before {
   content: '\f07c';
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderLabel {
+.stwid--folder .stwid--folderLabel {
   font-weight: bold;
   font-size: 1.05em;
   overflow: hidden;
@@ -541,7 +543,7 @@ body.stwid-- #WorldInfo .stwid--folder .stwid--folderLabel {
   line-height: 1.2;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderCount {
+.stwid--folder .stwid--folderCount {
   opacity: 0.85;
   background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 12%, transparent);
   border-radius: 999px;
@@ -550,26 +552,26 @@ body.stwid-- #WorldInfo .stwid--folder .stwid--folderCount {
   line-height: 1.2;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions {
+.stwid--folder .stwid--folderHeader .stwid--actions {
   display: flex;
   gap: 0.25em;
   align-items: center;
   margin-left: auto;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderIcon,
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle {
+.stwid--folder .stwid--folderIcon,
+.stwid--folder .stwid--folderActiveToggle {
   display: inline-flex;
   align-items: center;
   line-height: 1;
   vertical-align: middle;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle {
+.stwid--folder .stwid--folderActiveToggle {
   cursor: pointer;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle[data-state='partial']::before {
+.stwid--folder .stwid--folderActiveToggle[data-state='partial']::before {
   content: '';
   transform: scale(1);
   width: 0.65em;
@@ -580,55 +582,55 @@ body.stwid-- #WorldInfo .stwid--folder .stwid--folderActiveToggle[data-state='pa
   background-color: var(--SmartThemeCheckboxTickColor);
 }
 
-/* Action icon affordance — dim until hovered */
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action,
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
+/* Action icon affordance - dim until hovered */
+.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action,
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
   cursor: pointer;
   opacity: 0.5;
   transition: 200ms;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover,
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
+.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover,
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
   opacity: 1;
 }
 
 /* Folder header buttons */
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
+.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
   /* Folder actions also need zero padding (book actions do not) */
   padding: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
+.stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--folder .stwid--folderBooks.stwid--isCollapsed {
+.stwid--folder .stwid--folderBooks.stwid--isCollapsed {
   display: none;
 }
 
 /* Books */
-body.stwid-- #WorldInfo .stwid--books .stwid--book {
+.stwid--books .stwid--book {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--isTarget,
-body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--isTarget .stwid--head {
+.stwid--books .stwid--book.stwid--isTarget,
+.stwid--books .stwid--book.stwid--isTarget .stwid--head {
   background-color: var(--stwid-state-selected-bg);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--filter-visibility,
-body.stwid-- #WorldInfo .stwid--books .stwid--book.stwid--filter-query {
+.stwid--books .stwid--book.stwid--filter-visibility,
+.stwid--books .stwid--book.stwid--filter-query {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active) .stwid--head {
+.stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--active) .stwid--head {
   background-color: var(--white20a);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head {
+.stwid--books .stwid--book .stwid--head {
   display: flex;
   gap: 0.5em;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
@@ -637,7 +639,7 @@ body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head {
   z-index: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--title {
+.stwid--books .stwid--book .stwid--head .stwid--title {
   flex: 1 1 auto;
   cursor: pointer;
   font-weight: bold;
@@ -646,33 +648,33 @@ body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--title {
   white-space: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions {
+.stwid--books .stwid--book .stwid--head .stwid--actions {
   display: flex;
   gap: 0.25em;
   align-items: center;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
   display: inline-flex;
   gap: 0.1em;
   align-items: center;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--isEmpty {
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--isEmpty {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
   opacity: 0.75;
   color: var(--SmartThemeQuoteColor);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--book .stwid--entryList.stwid--isCollapsed {
+.stwid--books .stwid--book .stwid--entryList.stwid--isCollapsed {
   display: none;
 }
 
 /* Entries */
-body.stwid-- #WorldInfo .stwid--books .stwid--entry {
+.stwid--books .stwid--entry {
   display: flex;
   gap: 0.5em;
   border-bottom: 2px solid var(--SmartThemeBorderColor);
@@ -681,43 +683,43 @@ body.stwid-- #WorldInfo .stwid--books .stwid--entry {
   transition: 200ms;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
+.stwid--books .stwid--entry:is(.stwid--isDragging .stwid--entry:not(.stwid--isSelected)) {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected {
+.stwid--books .stwid--entry.stwid--isSelected {
   background-color: var(--stwid-state-selected-bg);
   cursor: grab;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected:hover,
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected.stwid--active {
+.stwid--books .stwid--entry.stwid--isSelected:hover,
+.stwid--books .stwid--entry.stwid--isSelected.stwid--active {
   background-color: var(--stwid-state-selected-bg-strong);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--isSelected *:not(:is(.stwid--selector)) {
+.stwid--books .stwid--entry.stwid--isSelected *:not(:is(.stwid--selector)) {
   pointer-events: none;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--filter-query {
+.stwid--books .stwid--entry.stwid--filter-query {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry:hover,
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--active {
+.stwid--books .stwid--entry:hover,
+.stwid--books .stwid--entry.stwid--active {
   background-color: var(--stwid-state-hover-bg);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry:hover .stwid--status,
-body.stwid-- #WorldInfo .stwid--books .stwid--entry.stwid--active .stwid--status {
+.stwid--books .stwid--entry:hover .stwid--status,
+.stwid--books .stwid--entry.stwid--active .stwid--status {
   opacity: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
+.stwid--books .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
   opacity: var(--stwid-state-disabled-opacity);
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--selector {
+.stwid--books .stwid--entry .stwid--selector {
   display: flex;
   align-items: center;
   opacity: 0.25;
@@ -725,32 +727,32 @@ body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--selector {
   cursor: pointer;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--selector:hover {
+.stwid--books .stwid--entry .stwid--selector:hover {
   opacity: 1;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body {
+.stwid--books .stwid--entry .stwid--body {
   flex: 1 1 auto;
   cursor: pointer;
   overflow: hidden;
 }
 
-/* Entry text truncation — one line, ellipsis if overflow */
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body .stwid--comment,
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body .stwid--key {
+/* Entry text truncation - one line, ellipsis if overflow */
+.stwid--books .stwid--entry .stwid--body .stwid--comment,
+.stwid--books .stwid--entry .stwid--body .stwid--key {
   height: 1lh;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--body .stwid--key {
+.stwid--books .stwid--entry .stwid--body .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
   font-style: italic;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--status {
+.stwid--books .stwid--entry .stwid--status {
   align-self: center;
   display: flex;
   gap: 0.5em;
@@ -759,7 +761,7 @@ body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--status {
   transition: 200ms;
 }
 
-body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--status .stwid--enabled {
+.stwid--books .stwid--entry .stwid--status .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
@@ -770,7 +772,7 @@ body.stwid-- #WorldInfo .stwid--books .stwid--entry .stwid--status .stwid--enabl
 
 /* -------------------------------------------------------------------------- */
 
-body.stwid-- #WorldInfo .stwid--splitter {
+.stwid--splitter {
   flex: 0 0 auto;
   width: var(--stwid-splitter-width);
   margin: 0 var(--stwid-splitter-margin-x);
@@ -780,8 +782,8 @@ body.stwid-- #WorldInfo .stwid--splitter {
   transition: opacity 0.15s ease-in-out;
 }
 
-body.stwid-- #WorldInfo .stwid--splitter:hover,
-body.stwid-- #WorldInfo .stwid--splitter:active {
+.stwid--splitter:hover,
+.stwid--splitter:active {
   opacity: 1;
 }
 
@@ -791,7 +793,7 @@ body.stwid-- #WorldInfo .stwid--splitter:active {
 
 /* -------------------------------------------------------------------------- */
 
-body.stwid-- #WorldInfo .stwid--editor:empty::after {
+.stwid--editor:empty::after {
   content: '\f558';
   font-family: 'Font Awesome 6 Free', sans-serif;
   font-size: 20em;
@@ -802,74 +804,66 @@ body.stwid-- #WorldInfo .stwid--editor:empty::after {
   justify-content: center;
 }
 
-body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings {
+.stwid--editor #wiActivationSettings {
   flex-wrap: nowrap;
 }
 
 /* override: vanilla #wiCheckboxes sets width:100%; unset here so it shrinks to content in the flex activation row */
-body.stwid-- #WorldInfo .stwid--editor #wiActivationSettings #wiCheckboxes {
+.stwid--editor #wiActivationSettings #wiCheckboxes {
   flex: 0 0 auto;
   width: unset;
 }
 
 /* focus mode: hides all WI entry controls except the content field and stwim-- micromenu elements */
-body.stwid-- #WorldInfo .stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
-body.stwid--
-  #WorldInfo
-  .stwid--editor.stwid--focus
-  .world_entry
-  *:not(:has([name='content']), [name='content'], :has([class*='stwim--']), [class*='stwim--']) {
+.stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
+.stwid--editor.stwid--focus .world_entry *:not(:has([name='content']), [name='content'], :has([class*='stwim--']), [class*='stwim--']) {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--editor.stwid--focus .stwid--unfocusToggle {
+.stwid--editor.stwid--focus .stwid--unfocusToggle {
   display: flex;
 }
 
-body.stwid-- #WorldInfo .stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
+.stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
   justify-content: end;
 }
 
-body.stwid--
-  #WorldInfo
-  .stwid--editor.stwid--focus
-  :has(> .stwim--pickerTriggerWrap)
-  .stwim--pickerTriggerWrap {
+.stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) .stwim--pickerTriggerWrap {
   position: absolute;
   top: -3em;
   right: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--editor .stwid--unfocusToggle {
+.stwid--editor .stwid--unfocusToggle {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--editor .stwid--focusToggle {
+.stwid--editor .stwid--focusToggle {
   margin-left: 1em;
 }
 
 /* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
-body.stwid-- #WorldInfo .stwid--editor .world_entry,
-body.stwid-- #WorldInfo .stwid--editor .world_entry_form,
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
+.stwid--editor .world_entry,
+.stwid--editor .world_entry_form,
+.stwid--editor .inline-drawer {
   height: 100%;
 }
 
 /* override: vanilla inline-drawer uses block layout; drawer needs flex-column so the content area can scroll */
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer {
+.stwid--editor .inline-drawer {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
 /* override: hide the vanilla drag handle and collapse toggle - the drawer provides no use for them */
-body.stwid-- #WorldInfo .stwid--editor .drag-handle,
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer-toggle {
+.stwid--editor .drag-handle,
+.stwid--editor .inline-drawer-toggle {
   display: none;
 }
 
 /* override: !important required - vanilla sets display on .inline-drawer-content; flex-column needed for scrollable layout */
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
+.stwid--editor .inline-drawer-content {
   flex: 1 1 auto;
   display: flex !important;
   flex-direction: column;
@@ -877,7 +871,7 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content {
 }
 
 /* override: vanilla world_entry_edit has display:contents; replaced with flex-column so the entry form fills and scrolls inside the drawer */
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit {
+.stwid--editor .inline-drawer-content > .world_entry_edit {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -886,7 +880,7 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
 }
 
 /* override: first child of world_entry_edit - the outer keywords/overrides/content wrapper; flex:1 lets it fill drawer height */
-body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter {
+.stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter {
   flex: 1 1 auto;
   flex-direction: column;
   align-items: stretch;
@@ -894,29 +888,44 @@ body.stwid-- #WorldInfo .stwid--editor .inline-drawer-content > .world_entry_edi
 }
 
 /* override: hide the nested "User Settings" inline-drawer that appears inside the WI entry - not needed in the drawer UI */
-body.stwid--
-  #WorldInfo
-  .stwid--editor
-  .inline-drawer-content
-  > .world_entry_edit
-  .inline-drawer:has(> .userSettingsInnerExpandable) {
+.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer:has(> .userSettingsInnerExpandable) {
   display: none;
 }
 
-body.stwid-- #WorldInfo .stwid--editor [name='contentAndCharFilterBlock'] {
+.stwid--editor [name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
   min-height: 0;
   min-width: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--editor [name='content'] {
+.stwid--editor [name='content'] {
   flex: 1 1 auto;
   min-height: 0;
 }
 
-body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
+.stwid--editor [name='WIEntryBottomControls'] {
   display: none;
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+/* 5) Context Menu + Modals                                                   */
+
+/* Shared menu/item patterns (Phase 4)
+   Keep selectors local to this extension and avoid changing layout/positioning.
+*/
+:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton) {
+  border-radius: var(--stwid-radius-m);
+}
+
+:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton):focus-visible,
+.stwid--multiselectDropdownOption:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+} 
 
 /* -------------------------------------------------------------------------- */
 
@@ -930,15 +939,6 @@ body.stwid-- #WorldInfo .stwid--editor [name='WIEntryBottomControls'] {
   z-index: 30000;
 }
 
-/* Shared menu/item patterns (Phase 4)
-   Keep selectors local to this extension and avoid changing layout/positioning.
-*/
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton) {
-  border-radius: var(--stwid-radius-m);
-}
-
-body.stwid-- #WorldInfo :is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton):focus-visible,
-body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
 .stwid--blocker .stwid--listDropdownItem:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
@@ -964,7 +964,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   gap: 0.5em;
 }
 
-/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside #WorldInfo */
+/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside the drawer root */
 .stwid--moveBookContent .stwid--moveBookRow .text_pole {
   flex: 1 1 auto;
   min-width: 0;
@@ -1059,6 +1059,23 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   font-size: 1em;
 }
 
+/* Flex-column fill shell - grows to fill parent, scrolls internally */
+.stwid--orderHelper {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--orderTableWrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* 6) Order Helper (actions, filter, table)                                   */
@@ -1128,7 +1145,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   display: none;
 }
 
-/* Visibility row and bulk edit row — shared base */
+/* Visibility row and bulk edit row - shared base */
 .stwid--order-action-bar,
 .stwid--bulkEditRow {
   flex: 0 0 auto;
@@ -1176,7 +1193,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   line-height: 1.1;
 }
 
-/* Visibility row — right side */
+/* Visibility row - right side */
 .stwid--visibilityInfo {
   display: flex;
   align-items: center;
@@ -1200,7 +1217,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   color: var(--SmartThemeEmColor);
 }
 
-/* Filter chips — same visual style as stwid--visibilityChip but scoped to orderHelper */
+/* Filter chips - same visual style as stwid--visibilityChip but scoped to orderHelper */
 .stwid--filterChip {
   display: inline-flex;
   align-items: center;
@@ -1342,7 +1359,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   font-size: 0.85em;
 }
 
-/* Feature 1: Order container — stack Start and Spacing vertically */
+/* Feature 1: Order container - stack Start and Spacing vertically */
 .stwid--orderStartSpacingPair {
   display: flex;
   flex-direction: column;
@@ -1354,7 +1371,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   min-width: 5em;
 }
 
-/* Feature 2: Dirty indicator — Apply button turns warm amber when inputs changed */
+/* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
 .stwid--bulkEditContainer .stwid--applyDirty {
   color: var(--warning-color, #e8a97f);
 }
@@ -1476,7 +1493,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   height: 100%;
 }
 
-/* Table wrapper — see shared section 1.5 */
+/* Table wrapper - see shared section 1.5 */
 
 /* Table */
 .stwid--orderTable {
