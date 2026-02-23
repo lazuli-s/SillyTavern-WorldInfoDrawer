@@ -48,3 +48,8 @@
   - `.stwid--small-multiselect .multiselect-check`
   - `.stwid--small-multiselect a[data-selected="true"] .multiselect-check`
 - This follows the requested rename from `compact-context-multiselect-ultra` to `stwid--small-multiselect` while preserving the same visual/interaction behavior.
+
+## Follow-up Adjustment 8
+
+- Updated `src/listPanel.filterBar.js` so the Book Visibility dropdown menu now includes the `stwid--small-multiselect` class on creation.
+- This replaces dependency on deep structure-specific selector targeting for that menu and ensures the compact multiselect styling is applied via class contract.

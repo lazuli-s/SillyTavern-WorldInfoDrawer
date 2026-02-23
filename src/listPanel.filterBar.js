@@ -427,7 +427,7 @@ const createFilterBarSlice = ({
                 menuWrap.append(trigger);
 
                 const menu = document.createElement('div');
-                menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu', 'stwid--menu');
+                menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu', 'stwid--small-multiselect', 'stwid--menu');
                 listPanelState.bookVisibilityMenu = menu;
 
                 for (const option of BOOK_VISIBILITY_OPTIONS) {
