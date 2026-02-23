@@ -90,7 +90,7 @@ export function buildVisibilityRow({
     filterIndicatorRefs,
 }) {
     const row = document.createElement('div');
-    row.classList.add('stwid--visibilityRow');
+    row.classList.add('stwid--order-action-bar');
 
     // ── Row title ─────────────────────────────────────────────────────────
     const rowTitle = document.createElement('div');
@@ -1653,3 +1653,4 @@ export function buildBulkEditRow({
 
     return { element: row, refreshSelectionCount, cleanup };
 }
+

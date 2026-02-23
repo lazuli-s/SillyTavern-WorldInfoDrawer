@@ -27,7 +27,7 @@ export function buildFilterPanel({
 }) {
     const filter = document.createElement('div');
     dom.order.filter.root = filter;
-    filter.classList.add('stwid--filter');
+    filter.classList.add('stwid--script-filter');
 
     const main = document.createElement('div'); {
         main.classList.add('stwid--main');
@@ -188,3 +188,4 @@ export function buildFilterPanel({
 
     return filter;
 }
+
