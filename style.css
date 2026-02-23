@@ -918,7 +918,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 
 /* -------------------------------------------------------------------------- */
 
-/* 5) Context Menu + Modals                                                   */
+/* 5) Shared UI Patterns (drawer-internal)                                   */
 
 /* Shared menu/item patterns (Phase 4)
    Keep selectors local to this extension and avoid changing layout/positioning.
