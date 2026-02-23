@@ -483,6 +483,51 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   pointer-events: none;
 }
 
+.stwid--small-multiselect {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  background-color: var(--SmartThemeBlurTintColor);
+  backdrop-filter: blur(var(--SmartThemeBlurStrength));
+  -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength));
+}
+
+.stwid--small-multiselect a {
+  color: var(--SmartThemeBodyColor);
+  padding: 2px 4px;
+  text-decoration: none;
+  display: flex;
+  column-gap: 4px;
+  cursor: pointer;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity var(--animation-duration);
+}
+
+.stwid--small-multiselect a:hover,
+.stwid--small-multiselect a[data-selected="true"] {
+  opacity: 1;
+}
+
+.stwid--small-multiselect i {
+  width: 12px;
+  height: 12px;
+  font-size: 0.85em;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.stwid--small-multiselect .multiselect-check {
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--small-multiselect a[data-selected="true"] .multiselect-check {
+  color: var(--SmartThemeQuoteColor);
+}
+
 .stwid--visibilityChips {
   display: flex;
   align-items: center;

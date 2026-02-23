@@ -36,3 +36,15 @@
   - Updated `src/listPanel.filterBar.js` so the visibility control block (`stwid--bookVisibility`) mounts into `stwid--visibilityAndSettingsRow` instead of `stwid--filterRow--visibility`.
   - Kept a safe fallback to the old filter row if the new host row is unavailable.
 - Updated `style.css` to style `stwid--visibilityAndSettingsRow` with the same control-row layout rules used by `stwid--controlsRow`, plus a flex rule for `stwid--bookVisibility`.
+
+## Follow-up Adjustment 7
+
+- Added a compact multiselect style block in `style.css` using the extension naming:
+  - `.stwid--small-multiselect`
+  - `.stwid--small-multiselect a`
+  - `.stwid--small-multiselect a:hover`
+  - `.stwid--small-multiselect a[data-selected="true"]`
+  - `.stwid--small-multiselect i`
+  - `.stwid--small-multiselect .multiselect-check`
+  - `.stwid--small-multiselect a[data-selected="true"] .multiselect-check`
+- This follows the requested rename from `compact-context-multiselect-ultra` to `stwid--small-multiselect` while preserving the same visual/interaction behavior.
