@@ -1,14 +1,14 @@
 ---
 name: implement-task
-description: "This skill should be used when the user wants to implement the next pending task from tasks/TASKS_PENDING_IMPLEMENTATION.md — tasks analyzed and defined by the analyze-request skill. It loads authoritative docs, resolves open questions via code inspection, builds a step-by-step implementation checklist inside the task file, implements all changes, updates architecture docs if needed, writes an After Implementation section, and queues the task for post-implementation review. Use when the user says 'implement the next task', 'run /implement-task', or invokes /implement-task. Do NOT use when the user is still defining a request — use analyze-request for that instead."
+description: "Implements the next pending task from the main-tasks queue. Reads tasks/main-tasks-queue.md, picks the first item from '## Documented tasks', reviews and corrects its existing implementation plan for JS best practice and WI API violations, applies all code changes, writes an After Implementation section, and sets status to IMPLEMENTED. Use when the user says 'implement the next task', 'run /implement-task', or invokes /implement-task. Do NOT use when still defining a request — use analyze-request for that instead."
 ---
 
 # implement-task
 
 An implementation skill for the SillyTavern WorldInfoDrawer extension.
 
-Takes the next pending task from `tasks/TASKS_PENDING_IMPLEMENTATION.md`, plans a detailed
-implementation checklist, implements it, and hands off to post-implementation review.
+Takes the next documented task from `tasks/main-tasks-queue.md`, validates and corrects its
+implementation plan, implements all changes, and marks the task as IMPLEMENTED.
 
 ---
 
@@ -24,180 +24,167 @@ frontend extension. Prioritize correctness and minimal-diff changes over clevern
 
 ---
 
-## Step 1: Scan the pending implementation list
+## Step 1: Select target from queue
 
-1. Read `tasks/TASKS_PENDING_IMPLEMENTATION.md`.
-2. Locate the section `## Tasks Pending Implementation`.
-3. If the list is empty: report "No tasks pending -- queue is empty." and stop.
-4. Otherwise: choose the **first** file as `TARGET_TASK_FILE`.
+1. Read `tasks/main-tasks-queue.md`.
+2. Locate the section `## Documented tasks`.
+3. If the section is empty or missing: report "No documented tasks — queue is empty." and stop.
+4. Choose the **first** file path listed as `TARGET_TASK_FILE`.
 
 ---
 
-## Step 2: Load authoritative docs (mandatory -- do this before reading the task file)
+## Step 2: Load authoritative docs (mandatory — do this before reading the task file)
 
 Read all of the following:
 
-1. `ARCHITECTURE.md` -- module responsibilities and boundaries
-2. `FEATURE_MAP.md` -- where each feature lives in the codebase
-3. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` -- integration contract (what ST owns vs. extension)
-4. `.claude/skills/st-js-best-practices/references/patterns.md` -- JS best practices (SEC/PERF/COMPAT rules)
-5. `.claude/skills/st-world-info-api/references/wi-api.md` -- WI API reference and anti-patterns
+1. `ARCHITECTURE.md` — module responsibilities and boundaries
+2. `FEATURE_MAP.md` — where each feature lives in the codebase
+3. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — integration contract (what ST owns vs. extension)
+4. `.claude/skills/st-js-best-practices/references/patterns.md` — JS best practices (SEC/PERF/COMPAT rules)
+5. `.claude/skills/st-world-info-api/references/wi-api.md` — WI API reference and anti-patterns
 
 If the task involves WI books, entries, or events, also load:
 - `vendor/SillyTavern/public/scripts/st-context.js` (ST API shape confirmation)
 
 ---
 
-## Step 3: Read and parse the task file
+## Step 3: Parse the task file
 
 1. Read `TARGET_TASK_FILE`.
-2. Identify the following sections:
-   - **Summary** -- what the task is about
-   - **Current Behavior** -- what the code does today
-   - **Expected Behavior** -- what it should do after the fix
-   - **Agreed Scope** -- which files and functions are involved
-   - **Open Questions / Assumptions** -- unresolved items from the analysis phase
-   - **Out of Scope** -- what NOT to touch
+2. Identify these sections:
+   - **Summary** — what the task is about
+   - **Current Behavior** / **Expected Behavior** — the observable change
+   - **Agreed Scope** — which files/functions are involved
+   - **Out of Scope** — what NOT to touch
+   - **Implementation Plan** — the checklist to execute
 
-3. From `FEATURE_MAP.md`: identify the owning module(s) for the behavior being changed.
-   Flag any scope item that falls outside the stated module responsibilities.
+3. Produce `FILES_TO_INSPECT`:
+   - If `Agreed Scope` lists specific file paths: extract those paths.
+   - If `Agreed Scope` is vague or lists no explicit paths: infer owning modules from
+     `FEATURE_MAP.md` using the features described in the task.
+   - If files were inferred, record this at the top of the Implementation Plan:
+     *"Files inferred from FEATURE_MAP.md — Agreed Scope did not list explicit paths."*
 
----
-
-## Step 4: Resolve open questions (if any)
-
-If `Open Questions / Assumptions` contains unresolved items:
-
-1. Read each source file mentioned in the task's Agreed Scope.
-2. Try to answer each open question from the code itself.
-3. For each question:
-   - If resolvable from code: document the resolution in the plan (Step 5).
-   - If NOT resolvable from code: make a reasonable assumption, document it clearly, and add
-     a corresponding manual check item (Step 8).
-4. Do NOT stop to ask the user unless the open question is blocking and genuinely
-   unanswerable from code inspection alone.
+4. From `FEATURE_MAP.md`: confirm the owning module(s). Flag anything in scope that falls outside
+   the stated module responsibilities.
 
 ---
 
-## Step 5: Build the implementation plan checklist
+## Step 4: Review and correct the implementation plan
 
-Before writing any code:
+### 4a: If the Implementation Plan is empty
 
-1. Read every source file listed in `Agreed Scope`.
-2. For each file: identify the exact functions, lines, and variables to change.
-3. Append a `## Implementation Plan` section to `TARGET_TASK_FILE`.
+Build it before reviewing:
 
-Format:
-
-    ## Implementation Plan
-
-    - [ ] Read `src/example.js` and locate function `doThing()`
-    - [ ] In `doThing()`, after the call to `mutateEntry()`, call `syncFilters()` to refresh state
-    - [ ] In `src/otherFile.js`, pass `syncFilters` into `buildRow()` alongside `applyFilter`
-    - [ ] Confirm `syncFilters` is exported from `orderHelperFilters.js` (already exported -- no change needed)
+1. Read every file in `FILES_TO_INSPECT`.
+2. Identify the exact functions, lines, and variables to change.
+3. Write the checklist into the `## Implementation Plan` section of `TARGET_TASK_FILE`.
 
 Rules for checklist items:
-- Each item is **concrete**: name the exact function, variable, and file.
-- Each item is **self-contained**: an LLM can execute it without human input.
-- Steps are **ordered** to satisfy dependencies (e.g., export before calling).
+- **Concrete**: name the exact function, variable, and file.
+- **Self-contained**: an LLM can execute it without human input.
+- **Ordered** to satisfy dependencies (e.g., export before calling).
 - Steps requiring NO change are noted as "no change needed" to avoid confusion.
+
+### 4b: Review the plan for violations
+
+Check each checklist item against:
+
+**JS best practice violations:**
+
+| Code | Violation |
+|---|---|
+| SEC-01 | Unsanitized HTML inserted into DOM |
+| SEC-02 | `eval()` or `new Function()` |
+| SEC-03 | Secrets in source |
+| PERF-01 | Large data stored in localStorage |
+| PERF-02 | Event listeners without cleanup |
+| PERF-03 | Blocking synchronous operations |
+| COMPAT-01 | Direct ST internals access instead of `getContext()` |
+| COMPAT-02 | Non-unique MODULE_NAME |
+| COMPAT-03 | Settings not initialized with defaults |
+| COMPAT-04 | Direct emission of ST-internal events |
+
+**WI API violations:** Check against Section 11 anti-patterns in `wi-api.md`. Verify the plan
+uses the correct API methods for book/entry CRUD.
+
+If violations are found:
+- Rewrite the affected checklist item(s) in-place with corrected steps.
+- Append a short note directly below explaining what changed and why.
+  *Example: "Step 3 rewritten: original used direct DOM injection without sanitization — corrected to use DOMPurify per SEC-01."*
 
 ---
 
-## Step 6: Implement each step in order
+## Step 5: Implement each step in order
 
-For each step in the `## Implementation Plan` checklist:
+For each item in the `## Implementation Plan` checklist:
 
 1. Read the source file if not already loaded.
 2. Apply the change using targeted edits (prefer Edit over Write unless changes are too scattered).
-3. After each successful change, mark the corresponding item as `- [x]` in the task file.
-4. Follow all rules from the authoritative docs loaded in Step 2:
-   - SEC/PERF/COMPAT patterns from `st-js-best-practices`
-   - WI API ownership rules from `st-world-info-api`
-   - Module boundaries from `ARCHITECTURE.md`
-   - Integration contract from `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
+3. After each successful change: mark the item as `- [x]` in the task file immediately. Do not batch updates.
+4. Follow all rules from the authoritative docs loaded in Step 2.
 
 ---
 
-## Step 7: Update architecture docs (if scope changed)
+## Step 6: Update architecture docs (if scope changed)
 
-After implementing all changes:
+After all steps are complete:
 
 1. If a **new feature** was added: update `FEATURE_MAP.md` to list it under the owning module.
-2. If a feature was **moved** from one module to another: update both `FEATURE_MAP.md` and
-   `ARCHITECTURE.md` to reflect the new ownership.
+2. If a feature was **moved** between modules: update both `FEATURE_MAP.md` and `ARCHITECTURE.md`.
 3. If nothing changed in module ownership: skip this step.
 
 ---
 
-## Step 8: Write the "After Implementation" section
+## Step 7: Write the "After Implementation" section
 
-Append the following section to `TARGET_TASK_FILE`:
+Append to `TARGET_TASK_FILE`:
 
-    ## After Implementation
+```markdown
+## After Implementation
+*Implemented: <Month D, YYYY>*
 
-    ### What changed
+### What changed
 
-    - Files changed: `src/example.js`, `src/otherFile.js`
-      - `doThing()` -- now calls `syncFilters()` after mutating entries
-      - `buildRow()` -- receives `syncFilters` as a parameter alongside `applyFilter`
+[List each file changed, then 1–3 bullets per file in plain language. No jargon. No code snippets.]
 
-    ### Risks / What might break
+### Risks / What might break
 
-    - This touches the outlet filter sync flow, so it might affect inline outlet edits or
-      filter indicator refresh timing if those call the same path.
-    - If `syncFilters` is called before mutation completes in a fast sequence, the filter
-      snapshot might miss the latest value.
+[1–3 plausible side effects in plain language.
+Style: "This touches X, so it might affect Y or Z."]
 
-    ### Manual checks
+### Manual checks
 
-    - [ ] Open Order Helper, select 3 entries, apply a new outlet name via bulk edit; confirm
-      all 3 entries remain visible after Apply. (Success: entries stay in the table.)
-    - [ ] Open Order Helper with an outlet filter already active, bulk-edit to a different
-      outlet; confirm those entries disappear. (Success: intentional filter is respected.)
+[Concrete, observable steps. Each item must state what success looks like in plain terms.
+Cover every risk listed above.]
+```
 
-Tone and format rules:
-- **What changed**: succinct. List files, then 1-3 bullets per file describing changes.
-  No jargon. No code snippets.
-- **Risks**: 1-3 plausible side effects in plain language. Style:
-  "This touches X, so it might affect Y or Z."
-- **Manual checks**: concrete, observable steps. Each item must say **what success looks like**
-  in a few words. Cover the risk items listed above.
+Tone rules:
+- **What changed**: succinct. List files, then 1–3 bullets per file. No code snippets.
+- **Risks**: 1–3 plain-language side effects. "This touches X, so it might affect Y or Z."
+- **Manual checks**: each item says **what success looks like** in a few words.
 
 ---
 
-## Step 9: Update queue files
+## Step 8: Set status to IMPLEMENTED
 
-1. Remove `TARGET_TASK_FILE` from the bullet list under `## Tasks Pending Implementation`
-   in `tasks/TASKS_PENDING_IMPLEMENTATION.md`.
+In `TARGET_TASK_FILE`, update the status line to:
 
-2. Add `TARGET_TASK_FILE` to `tasks/POST_IMPLEMENTATION_REVIEW.md`:
-   - If the file does not exist, create it with this header:
+```markdown
+**Status:** IMPLEMENTED
+```
 
-         # Post-Implementation Review Queue
-
-         Tasks that have been implemented and are waiting for review.
-
-         ---
-
-         ## Tasks Pending Review
-
-   - Append the task file path as a bullet:
-
-         - `tasks/<filename>.md`
-
-3. Keep separators and ordering style consistent with existing entries in both files.
+Do NOT update `tasks/main-tasks-queue.md` — queue moves are handled by the sync_queue utility.
 
 ---
 
-## Step 10: Report completion
+## Step 9: Report completion
 
 Tell the user:
 
-- Which task was implemented (`TARGET_TASK_FILE`)
+- Which task file was implemented (`TARGET_TASK_FILE`)
 - A one-sentence plain-language summary of what changed
-- That `tasks/POST_IMPLEMENTATION_REVIEW.md` was updated
-- Prompt them to run the **Manual checks** listed in the task file before anything else
+- The **Manual checks** list from the After Implementation section so they can verify immediately
 
 ---
 
@@ -208,3 +195,4 @@ Tell the user:
 - Do NOT add new external dependencies.
 - Do NOT change behavior outside the task's Agreed Scope without flagging it explicitly.
 - Do NOT commit. The user commits when ready.
+- Do NOT update `tasks/main-tasks-queue.md` — sync_queue handles all queue updates.

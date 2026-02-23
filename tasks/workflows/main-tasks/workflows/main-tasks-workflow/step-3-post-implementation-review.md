@@ -6,7 +6,7 @@
 
 ## 1. Select target
 1. Read `tasks/main-tasks-queue.md`.
-2. Under `## Tasks pending review`, select the first item.
+2. Under `## Implemented tasks`, select the first item.
 3. If none exist: report "All reviewed" and stop.
 4. Set `TARGET_TASK_FILE` to the full path from the checklist (e.g., tasks/main-tasks/implemented-tasks/NewFeature_BulkEditOutletContainer.md).
 

@@ -5,7 +5,7 @@
 </objective>
 
 <steps_overview>
-- Scan all task files in the tasks/ root and all tasks/main-tasks/ subfolders
+- Scan all task files in tasks/main-tasks/ subfolders
 - For each file: read its Status field
 - Create any destination folders that do not exist yet
 - Move files that are in the wrong folder
@@ -31,7 +31,6 @@ Exclude files that are not task files:
 
 - Anything inside `tasks/workflows/`
 - Anything inside `tasks/code-reviews/`
-- Any file whose name does not start with `Issue_`, `NewFeature_`, `Rework_`, or `Refactoring_`
 
 ---
 
@@ -56,7 +55,6 @@ Use this routing table:
 | `NO_ISSUES` | `## Finished Tasks` | `tasks/main-tasks/finished-tasks` |
 | `FINISHED` | `## Finished Tasks` | `tasks/main-tasks/finished-tasks` |
 | `ISSUES_FOUND` | `## Tasks with issues found` | `tasks/main-tasks/issues-found` |
-| `PENDING_FIX` | `## Tasks pending fixes` | `tasks/main-tasks/pending-fix` |
 
 If the status is anything else (e.g. `PENDING_REVIEW`, `PENDING_HUMAN_REVIEW`, `HIGH_RISK_FIX`): skip this file. These are leftover statuses and are not routed.
 

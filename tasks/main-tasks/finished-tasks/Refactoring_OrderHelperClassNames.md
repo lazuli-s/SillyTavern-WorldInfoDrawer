@@ -2,7 +2,7 @@
 *Created: February 23, 2026*
 
 **Type:** REFACTORING
-**Status:** IMPLEMENTED
+**Status:** NO_ISSUES
 
 ---
 
@@ -179,3 +179,42 @@ Files affected:
   Success: panel opens and closes correctly, and the editor/preview areas render normally.
 - Apply a few column filters and confirm active filter chips still render and can be cleared.
   Success: chips appear with the same style as before, and clearing a chip updates the table rows correctly.
+
+---
+
+## Post-Implementation Review
+*Reviewed: February 23, 2026*
+
+### Files Inspected
+- `style.css`
+- `src/orderHelperRender.actionBar.js`
+- `src/orderHelperRender.filterPanel.js`
+- `src/orderHelperRender.js`
+- `src/orderHelper.js`
+- `tasks/Rework_NewCSSskills.md`
+
+### No Issues Found
+
+The implementation correctly:
+
+1. **Renamed `.stwid--visibilityRow` → `.stwid--order-action-bar`** in both CSS and JS:
+   - `style.css`: All order helper action bar selectors now use `.stwid--order-action-bar`
+   - `src/orderHelperRender.actionBar.js`: Line 43 uses `stwid--order-action-bar`
+   - List panel's `.stwid--visibilityRow` rules (section 2, lines 283-369) remain untouched
+
+2. **Renamed `.stwid--filter` → `.stwid--script-filter`** in both CSS and JS:
+   - `style.css`: All order helper script filter selectors now use `.stwid--script-filter`
+   - `src/orderHelperRender.filterPanel.js`: Line 36 uses `stwid--script-filter`
+   - List panel's `.stwid--list .stwid--filter` rules (section 2, lines 279-289) remain untouched
+
+3. **Removed redundant `.stwid--orderHelper ` parent prefixes**:
+   - Only 1 occurrence remains: the root element rule `.stwid--orderHelper { ... }` (correct)
+   - All 15 compound selectors preserved: `.stwid--orderHelper.stwid--hideKeys`, `.stwid--orderHelper.stwid--hide-col-*` (correct)
+
+4. **Added NAME-06 rule** to `tasks/Rework_NewCSSskills.md`:
+   - Rule text: "Give each class a name that is unique enough on its own that no parent scope is needed to distinguish it from similar classes elsewhere."
+
+5. **JS best practices verified**:
+   - `src/orderHelperRender.filterPanel.js`: Uses `DOMPurify.sanitize()` for user input (SEC-02 compliant)
+   - Both files use `await new Promise(resolve => setTimeout(resolve, 0))` to yield during heavy loops (PERF-03 compliant)
+   - `buildBulkEditRow` returns a `cleanup` function for event listener removal (PERF-02 compliant)

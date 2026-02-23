@@ -2,7 +2,7 @@
 *Created: February 23, 2026*
 
 **Type:** REFACTORING
-**Status:** ISSUES_FOUND
+**Status:** FINISHED
 
 ---
 
@@ -344,3 +344,11 @@ Process sections 1.5 through 4 one section at a time:
   - [x] Keep the section header outside the nesting block (around line 637) as "5) Context Menu + Modals" since it accurately describes the `.stwid--blocker` and modal rules that follow.
 
 - **Requires human judgment**: No
+
+---
+
+## Post-Implementation Fixes
+*Implemented: February 23, 2026*
+
+- [x] **PIR-01**: Duplicate Section 5 Header
+  - **What changed**: Renamed the first duplicated section title so it now clearly says it is for shared drawer-internal patterns, while keeping the real context menu section title unchanged.
