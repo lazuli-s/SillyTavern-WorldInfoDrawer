@@ -590,9 +590,7 @@ const createBookMenuSlice = ({
                                     } else {
                                         await setBookSortPreference(name, null, null);
                                     }
-                                    blocker.remove();
-                                    menuTrigger.style.anchorName = '';
-                                    menuTrigger.setAttribute('aria-expanded', 'false');
+                                    closeMenu();
                                 });
                             }
                             bookSort.append(sortSelect);
@@ -634,9 +632,7 @@ const createBookMenuSlice = ({
                                     toastr.error('STLO command failed. Check the browser console for details.');
                                     return;
                                 }
-                                blocker.remove();
-                                menuTrigger.style.anchorName = '';
-                                menuTrigger.setAttribute('aria-expanded', 'false');
+                                closeMenu();
                             });
                             stloButton.addEventListener('keydown', (evt)=>{
                                 if (evt.key === 'Enter' || evt.key === ' ') {

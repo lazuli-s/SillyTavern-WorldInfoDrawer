@@ -139,8 +139,8 @@ This follow-up should focus on behavior consistency, not visual redesign.
 - **Fix risk:** Low 🟢
 
 - **Fix Plan:**
-  - [ ] Update sortSelect change handler to call closeMenu() instead of manually setting aria-expanded
-  - [ ] Update stloButton click handler to call closeMenu() instead of manually setting aria-expanded (but only on success path)
+  - [x] Update sortSelect change handler to call closeMenu() instead of manually setting aria-expanded
+  - [x] Update stloButton click handler to call closeMenu() instead of manually setting aria-expanded (but only on success path)
 
 - **Requires human judgment**: ⚠️ No
 
