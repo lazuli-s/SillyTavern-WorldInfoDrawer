@@ -1,4 +1,4 @@
-﻿# Main Tasks Queue
+# Main Tasks Queue
 
 ## Documented tasks
 
@@ -6,21 +6,19 @@
 
 ## Implemented tasks
 
-- 
+-
 
 ## Tasks pending review
 
-- 
+-
 
 ## Reviewed Tasks
 
 ### Tasks with issues found
 
 
-### Tasks with no issues
 
 
----
 
 ## Finished tasks
 
