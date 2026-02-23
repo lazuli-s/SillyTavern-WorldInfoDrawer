@@ -1,4 +1,4 @@
-﻿
+
 const createBookMenuSlice = ({
     listPanelState,
     runtime: state,
@@ -415,6 +415,15 @@ const createBookMenuSlice = ({
             menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
             menuTrigger.title = 'Book menu';
             menuTrigger.setAttribute('aria-label', 'Book menu');
+            menuTrigger.setAttribute('aria-expanded', 'false');
+            menuTrigger.setAttribute('aria-haspopup', 'true');
+            menuTrigger.tabIndex = 0;
+            menuTrigger.addEventListener('keydown', (evt)=>{
+                if (evt.key === 'Enter' || evt.key === ' ') {
+                    evt.preventDefault();
+                    menuTrigger.click();
+                }
+            });
             menuTrigger.addEventListener('click', ()=>{
                 menuTrigger.style.anchorName = '--stwid--ctxAnchor';
                 const blocker = document.createElement('div'); {
@@ -432,17 +441,23 @@ const createBookMenuSlice = ({
                         evt.stopPropagation();
                         blocker.remove();
                         menuTrigger.style.anchorName = '';
+                        menuTrigger.setAttribute('aria-expanded', 'false');
                     });
                     const menu = document.createElement('div'); {
                         menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
+                        menu.setAttribute('role', 'menu');
                         const closeMenu = ()=>{
                             blocker.remove();
                             menuTrigger.style.anchorName = '';
+                            menuTrigger.setAttribute('aria-expanded', 'false');
+                            menuTrigger.focus();
                         };
+                        menuTrigger.setAttribute('aria-expanded', 'true');
                         const rename = document.createElement('div'); {
                             rename.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             rename.classList.add('stwid--rename');
                             rename.addEventListener('click', async()=>{
+                                closeMenu?.();
                                 const selected = await setSelectedBookInCoreUi(name);
                                 if (!selected) return;
                                 await clickCoreUiAction(coreUiActionSelectors.renameBook);
@@ -470,6 +485,7 @@ const createBookMenuSlice = ({
                                     await clickCoreUiAction([
                                         '.stwibe--trigger',
                                     ]);
+                                    closeMenu?.();
                                 });
                                 const i = document.createElement('i'); {
                                     i.classList.add('stwid--icon');
@@ -506,6 +522,7 @@ const createBookMenuSlice = ({
                                         console.warn('[STWID] External Editor request failed.', error);
                                         toastr.error('External Editor request failed. Check the browser console for details.');
                                     }
+                                    closeMenu?.();
                                 });
                                 const i = document.createElement('i'); {
                                     i.classList.add('stwid--icon');
@@ -525,6 +542,7 @@ const createBookMenuSlice = ({
                             fillTitles.classList.add('stwid--fillTitles');
                             fillTitles.addEventListener('click', async()=>{
                                 await state.fillEmptyTitlesWithKeywords(name);
+                                closeMenu?.();
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');
@@ -574,6 +592,7 @@ const createBookMenuSlice = ({
                                     }
                                     blocker.remove();
                                     menuTrigger.style.anchorName = '';
+                                    menuTrigger.setAttribute('aria-expanded', 'false');
                                 });
                             }
                             bookSort.append(sortSelect);
@@ -584,6 +603,7 @@ const createBookMenuSlice = ({
                             orderHelper.classList.add('stwid--orderHelper');
                             orderHelper.addEventListener('click', ()=>{
                                 state.openOrderHelper(name);
+                                closeMenu?.();
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');
@@ -616,6 +636,7 @@ const createBookMenuSlice = ({
                                 }
                                 blocker.remove();
                                 menuTrigger.style.anchorName = '';
+                                menuTrigger.setAttribute('aria-expanded', 'false');
                             });
                             stloButton.addEventListener('keydown', (evt)=>{
                                 if (evt.key === 'Enter' || evt.key === ' ') {
@@ -643,6 +664,7 @@ const createBookMenuSlice = ({
                                     entries: structuredClone(state.cache[name].entries),
                                     metadata: structuredClone(state.cache[name].metadata ?? {}),
                                 }), name, 'application/json');
+                                closeMenu?.();
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');
@@ -661,6 +683,7 @@ const createBookMenuSlice = ({
                             dup.classList.add('stwid--duplicate');
                             dup.addEventListener('click', async()=>{
                                 await duplicateBook(name);
+                                closeMenu?.();
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');
@@ -679,6 +702,7 @@ const createBookMenuSlice = ({
                             del.classList.add('stwid--delete');
                             del.addEventListener('click', async()=>{
                                 await deleteBook(name);
+                                closeMenu?.();
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');
