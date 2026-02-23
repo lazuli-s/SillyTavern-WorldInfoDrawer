@@ -157,6 +157,6 @@ This follow-up should focus on behavior consistency, not visual redesign.
 - **Fix risk:** Low 🟢
 
 - **Fix Plan:**
-  - [ ] In the list dropdown close loop, add `trigger?.focus()` after setting aria-expanded
+  - [x] In the list dropdown close loop, add `trigger?.focus()` after setting aria-expanded
 
 - **Requires human judgment**: ⚠️ No

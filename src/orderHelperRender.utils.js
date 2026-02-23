@@ -1,4 +1,4 @@
-﻿// ── Order Helper render utilities ─────────────────────────────────────────────
+// ── Order Helper render utilities ─────────────────────────────────────────────
 // Shared helpers used across orderHelperRender.* slice files.
 // These functions are self-contained: they depend only on browser globals
 // (document, HTMLElement) and each other — no factory parameters needed.
@@ -57,6 +57,19 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
         menu.classList.remove('stwid--state-active');
         const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
         trigger?.setAttribute('aria-expanded', 'false');
+    }
+    // Also close list dropdown menus (blocker-based menus)
+    for (const blocker of document.querySelectorAll('.stwid--blocker')) {
+        const menu = blocker.querySelector('.stwid--listDropdownMenu');
+        const closeMenu = menu?.[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
+        if (typeof closeMenu === 'function') {
+            closeMenu();
+            continue;
+        }
+        const trigger = document.querySelector('.stwid--listDropdownTrigger[aria-expanded="true"]');
+        blocker.remove();
+        trigger?.setAttribute('aria-expanded', 'false');
+        trigger?.focus();
     }
 };
 
