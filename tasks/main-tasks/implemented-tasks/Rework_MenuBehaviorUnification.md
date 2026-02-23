@@ -2,7 +2,7 @@
 *Created: Feb 23, 2026*
 
 **Type:** REWORK
-**Status:** ISSUES_FOUND
+**Status:** FINISHED
 
 ---
 
@@ -123,6 +123,20 @@ This follow-up should focus on behavior consistency, not visual redesign.
   - [x] For async actions (bulk, editor, duplicate, delete), call closeMenu() after the await completes
 
 - **Requires human judgment**: ⚠️ No
+
+---
+
+## Post-Implementation Fixes
+*Implemented: Feb 23, 2026*
+
+- [x] **PIR-01**: Menu items don't close the menu after action
+  - **What changed**: Updated every affected book-menu action so the menu now closes after the action runs, including async actions like duplicate and delete.
+
+- [x] **PIR-02**: Inconsistent aria-expanded handling
+  - **What changed**: Replaced duplicate close logic in the sort and STLO handlers with the shared close function so expanded state and focus are handled in one place.
+
+- [x] **PIR-03**: Missing focus() in cross-system close
+  - **What changed**: Updated cross-system menu close behavior so it now returns keyboard focus to the menu button when closing a list dropdown.
 
 #### PIR-02: Inconsistent aria-expanded handling
 
