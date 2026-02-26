@@ -25,33 +25,35 @@ The user of this repository **is not a programmer**. This shapes every interacti
 
 ## 2. Task File Naming Conventions
 
-Whenever working on a bug, issue, new feature, rework, or refactoring, create a task planning file according to the type of work:
-
-| Type | File path |
-| --- | --- |
-| Bug / Issue | `tasks/Issue_<NameHereWithNoUnderscores>.md` |
-| New Feature | `tasks/NewFeature_<NameHereWithNoUnderscores>.md` |
-| Rework of existing feature | `tasks/Rework_<NameHereWithNoUnderscores>.md` |
-| Refactoring | `tasks/Refactoring_<NameOfFileToBeRefactored>.md` |
-
-Check the `tasks/` folder first — if a relevant task file already exists, update it rather than creating a duplicate.
+See the `file-naming` skill for the authoritative rules on task file names, folder locations, and the check-first rule.
 
 ## 3. Authoritative Documentation
 
-Before making changes, always analyze these files to understand how the code works **without scanning everything** and wasting tokens on unnecessary context:
+Read only what is relevant to the task. Do NOT read all docs every time — that wastes context window space and slows work down.
 
-- `ARCHITECTURE.md`
-  (module boundaries, responsibilities, and runtime model)
-- `FEATURE_MAP.md`
-  (where each extension feature/behavior is implemented)
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-  (ownership boundaries, integration contract, and safe hook points)
+### Always read first
+
+- `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
+- `FEATURE_MAP.md` — where each extension feature/behavior is implemented
+
+### When writing or modifying any JavaScript
+
 - `.claude/skills/st-js-best-practices/references/patterns.md`
-  (JS best practices rules with concrete good/bad examples — Security: SEC-01–03, Performance: PERF-01–03, API Compatibility: COMPAT-01–04; consult before writing any JS)
+  (JS best practices — Security: SEC-01–03, Performance: PERF-01–03, API Compatibility: COMPAT-01–04)
+
+### When reading or writing World Info books or entries
+
 - `.claude/skills/st-world-info-api/references/wi-api.md`
-  (Compact WI API reference — book/entry CRUD, entry shape, enums, events, ownership rules, and anti-patterns; consult before writing any code that reads or writes WI books or entries)
+  (Compact WI API reference — book/entry CRUD, entry shape, enums, events, anti-patterns)
 - `vendor/SillyTavern/public/scripts/st-context.js`
-  (Authoritative list of what `SillyTavern.getContext()` exposes — consult when you need to know whether a ST API, state value, helper, or event is available on the context object vs. requires a direct import)
+  (What `SillyTavern.getContext()` exposes vs. what requires a direct import)
+
+### When uncertain about what belongs in ST vs. this extension
+
+- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
+  (Ownership boundaries, integration contract, and safe hook points)
+
+---
 
 SillyTavern source is available as a **reference-only submodule** under: `vendor/SillyTavern`
 
@@ -85,13 +87,20 @@ Main shared libs include:
 
 ## 5. Style Guide Compliance
 
-Before making any UI or CSS change, always run the `style-guide` skill.
+Before making any UI or CSS change, always run **both** the `style-guide` skill and the `css-responsive` skill.
 
 Style guide requirements are mandatory:
 
 - Reuse existing SillyTavern styles first
 - Only add new extension CSS when no suitable existing style is available
 - Keep styling changes small, targeted, and consistent with the guide
+
+Responsive CSS requirements are mandatory (enforced by `css-responsive`):
+
+- Use fluid units for panel widths and heights (RESP rules)
+- Use only ST-mirrored breakpoints — `max-width: 1000px` and `max-width: 768px` (BRK rules)
+- Never allow horizontal overflow at the drawer level (OVF rules)
+- Every new row-direction flex container that holds major panels must include a mobile column-direction override (LAY rules)
 
 ## 6. Ownership and Integration Contract
 
@@ -144,43 +153,7 @@ When implementing or modifying behavior, follow the ownership boundary document:
 
 Only commit when **explicitly asked** by the user.
 
-Use **Conventional Commits** format, matching the project's established style:
-
-```text
-type(scope): lowercase description, imperative mood, no period at end
-```
-
-**Types:**
-
-| Type | When to use |
-| --- | --- |
-| `new-feat` | New feature or new behavior added from scratch |
-| `rework` | Intentional change to how an existing feature works or looks — behavior or design intent changed, not just a tweak |
-| `fix` | Bug fix |
-| `style` | CSS or visual tweak with no intent change (colors, spacing, alignment) |
-| `docs` | Changes in documentation or architecture files |
-| `refactor` | Code restructured without changing behavior |
-| `chore` | Config, tooling, or maintenance (no production code) |
-| `code-review` | The review activity itself for a specific file — planning, findings, tracking, or implementation notes |
-
-**Scopes** — use the module or area being changed (e.g. `ui`, `editor`, `order-helper`, `css`, `code-review`). Omit the scope only when the change is truly cross-cutting and no single area owns it. `code-review` can also be used as a scope when a `fix` or `refactor` was directly triggered by a review.
-
-**Message rules:**
-
-- Lowercase after the colon
-- Imperative mood: "add", "fix", "remove", "prevent", "update" — not "added" or "fixing"
-- No period at the end
-- Keep the message under 72 characters
-
-**Examples from this project:**
-
-- `fix(editor): prevent blank flash on entry clear`
-- `new-feat(ui): add collapsible visibility row`
-- `rework(ui): redesign visibility row to use icon chips`
-- `style: remove unused row divider CSS`
-- `docs(tasks): update task file for order-helper refactor`
-- `code-review(sortHelpers.js): add findings for sortHelpers`
-- `fix(code-review): address null-check issue found in review`
+**Always run the `git-commit` skill before writing any commit message.** It defines the required format, allowed types, canonical scope list, body/footer rules, and breaking-change notation for this project.
 
 ## 11. Definition of Done
 
