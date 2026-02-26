@@ -2,22 +2,31 @@
 
 ## Documented tasks
 
+*Folder: `tasks/main-tasks/documented/`*
+
 
 ## Implemented tasks
 
-- `skills symlink sync`: set `skills/` as canonical source and add strict symlink validation for `.claude/skills` and `.codex/skills` via `scripts/validate-skill-symlinks.ps1`
+*Folder: `tasks/main-tasks/implemented-tasks/`*
+
 
 ## Tasks pending review
+
+*(tasks stay in `implemented-tasks/` while pending review)*
 
 
 ## Reviewed Tasks
 
 ### Tasks with issues found
 
+*Folder: `tasks/main-tasks/tasks-issues-found/`*
+
 
 ## Finished tasks
 
-- `tasks/main-tasks/changes/done/Refactoring_CSS_ClassConsolidation_BCD.md`
-- `tasks/main-tasks/changes/done/Refactoring_OrderHelperClassNames.md`
-- `tasks/main-tasks/changes/done/Refactoring_stylecssNesting.md`
-- `tasks/main-tasks/changes/done/Rework_MenuBehaviorUnification.md`
+*Folder: `tasks/main-tasks/finished-tasks/`*
+
+- `tasks/main-tasks/finished-tasks/Refactoring_CSS_ClassConsolidation_BCD.md`
+- `tasks/main-tasks/finished-tasks/Refactoring_OrderHelperClassNames.md`
+- `tasks/main-tasks/finished-tasks/Refactoring_stylecssNesting.md`
+- `tasks/main-tasks/finished-tasks/Rework_MenuBehaviorUnification.md`

@@ -1,14 +1,6 @@
 ---
 name: implement-task
-description: >-
-  Implements the next pending task from the main-tasks queue. Reads
-  tasks/main-tasks/main-tasks-queue.md, picks the first item from '## Documented
-  tasks', reviews and corrects its existing implementation plan for JS best
-  practice and WI API violations, applies all code changes, writes an After
-  Implementation section, and sets status to IMPLEMENTED. Use when the user says
-  'implement the next task', 'run /implement-task', or invokes /implement-task.
-  Do NOT use when still defining a request â€” use analyze-request for that
-  instead.
+description: “Implements the next pending task from the main-tasks queue. Reads tasks/main-tasks-queue.md, picks the first item from '## Documented tasks', reviews and corrects its existing implementation plan for JS best practice and WI API violations, applies all code changes, writes an After Implementation section, and sets status to IMPLEMENTED. Use when the user says 'implement the next task', 'run /implement-task', or invokes /implement-task. Do NOT use when still defining a request - use analyze-request for that instead.”
 metadata:
   sync:
     version: 2
@@ -19,7 +11,7 @@ metadata:
 
 An implementation skill for the SillyTavern WorldInfoDrawer extension.
 
-Takes the next documented task from `tasks/main-tasks/main-tasks-queue.md`, validates and corrects its
+Takes the next documented task from `tasks/main-tasks-queue.md`, validates and corrects its
 implementation plan, implements all changes, and marks the task as IMPLEMENTED.
 
 ---
@@ -38,7 +30,7 @@ frontend extension. Prioritize correctness and minimal-diff changes over clevern
 
 ## Step 1: Select target from queue
 
-1. Read `tasks/main-tasks/main-tasks-queue.md`.
+1. Read `tasks/main-tasks-queue.md`.
 2. Locate the section `## Documented tasks`.
 3. If the section is empty or missing: report "No documented tasks â€” queue is empty." and stop.
 4. Choose the **first** file path listed as `TARGET_TASK_FILE`.
@@ -186,7 +178,7 @@ In `TARGET_TASK_FILE`, update the status line to:
 **Status:** IMPLEMENTED
 ```
 
-Do NOT update `tasks/main-tasks/main-tasks-queue.md` â€” queue moves are handled by the sync_queue utility.
+Do NOT update `tasks/main-tasks-queue.md` â€” queue moves are handled by the sync_queue utility.
 
 ---
 
@@ -207,4 +199,4 @@ Tell the user:
 - Do NOT add new external dependencies.
 - Do NOT change behavior outside the task's Agreed Scope without flagging it explicitly.
 - Do NOT commit. The user commits when ready.
-- Do NOT update `tasks/main-tasks/main-tasks-queue.md` â€” sync_queue handles all queue updates.
+- Do NOT update `tasks/main-tasks-queue.md` â€” sync_queue handles all queue updates.

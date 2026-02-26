@@ -1,15 +1,6 @@
 ---
 name: analyze-request
-description: >-
-  This skill should be used when the user wants to define a feature, report a
-  bug, describe a rework, or request any change to the SillyTavern
-  WorldInfoDrawer extension before coding begins. It activates an analysis-only
-  mode that reads architecture docs, interviews the user to build a precise
-  shared understanding, and produces a draft task file. Use this skill when the
-  user says things like "I want a feature that...", "there's a bug where...", "I
-  want to change how X works", or invokes /analyze-request. Do NOT use this
-  skill when the user explicitly asks to write code or has already completed the
-  definition phase.
+description: "This skill should be used when the user wants to define a feature, report a bug, describe a rework, or request any change to the SillyTavern WorldInfoDrawer extension before coding begins. It activates an analysis-only mode that reads architecture docs, interviews the user to build a precise shared understanding, and produces a draft task file. Use this skill when the user says things like 'I want a feature that...', 'there is a bug where...', 'I want to change how X works', or invokes /analyze-request. Do NOT use this skill when the user explicitly asks to write code or has already completed the definition phase."
 metadata:
   sync:
     version: 2
@@ -106,16 +97,19 @@ When the interview is complete and a precise understanding has been agreed on:
 
 ### 4a: Choose the file name
 
-Use the naming conventions from `AGENTS.md`:
+All new task files go into `tasks/main-tasks/documented/`, regardless of type.
+Use the `file-naming` skill for the authoritative naming and placement rules.
 
 | Type of work | File path |
 |---|---|
-| Bug or issue | `tasks/Issue_<NameHereWithNoUnderscores>.md` |
-| New feature | `tasks/NewFeature_<NameHereWithNoUnderscores>.md` |
-| Rework of existing feature | `tasks/Rework_<NameHereWithNoUnderscores>.md` |
-| Refactoring | `tasks/Refactoring_<NameOfFileToBeRefactored>.md` |
+| Bug or issue | `tasks/main-tasks/documented/Issue_<NameHereWithNoUnderscores>.md` |
+| New feature | `tasks/main-tasks/documented/NewFeature_<NameHereWithNoUnderscores>.md` |
+| Rework of existing feature | `tasks/main-tasks/documented/Rework_<NameHereWithNoUnderscores>.md` |
+| Refactoring | `tasks/main-tasks/documented/Refactoring_<NameOfFileToBeRefactored>.md` |
+| Documentation task | `tasks/main-tasks/documented/Docs_<NameHereWithNoUnderscores>.md` |
+| Skill task | `tasks/main-tasks/documented/SkillReview_<SkillName>.md` |
 
-Check the `tasks/` folder first — if a relevant task file already exists, update it rather than
+Check the `tasks/main-tasks/documented/` folder first — if a relevant task file already exists, update it rather than
 creating a new one.
 
 ### 4b: Write the task file
