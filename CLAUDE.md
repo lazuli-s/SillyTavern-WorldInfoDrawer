@@ -142,17 +142,3 @@ When implementing or modifying behavior, follow the ownership boundary document:
 Only commit when **explicitly asked** by the user.
 
 **Always run the `git-commit` skill before writing any commit message.** It defines the required format, allowed types, canonical scope list, body/footer rules, and breaking-change notation for this project.
-
-## 11. Definition of Done
-
-A task is complete when **all of the following are true**:
-
-1. **Code is written** — all changes are saved and in their final state.
-2. **Task file is updated** — the relevant `tasks/` file reflects what was done, what changed, and why.
-3. **Architecture docs are updated** — if the task added, removed, or moved a feature, `ARCHITECTURE.md` and/or `FEATURE_MAP.md` are updated to reflect the new state.
-
-Do NOT consider a task done if:
-
-- The implementation is partial or a placeholder remains
-- The task file was not updated
-- A feature was added or moved but the architecture docs were not updated
