@@ -34,3 +34,12 @@ go into `tasks/main-tasks/documented/` when first created.
 - **No underscores in the name part** - underscores only appear as the separator after the prefix
 - **No spaces** in any filename
 - Always end with `.md`
+
+## Required Task Header
+
+At the top of each task file, include this header:
+
+```md
+# TASK TYPE: task title
+*Created: <Month D, YYYY>*
+```

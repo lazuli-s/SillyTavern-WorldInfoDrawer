@@ -274,5 +274,4 @@ None — all decisions captured above.
 - [x] `css-rules` skill created
 - [x] `css-animation` skill created
 - [x] `css-accessibility` skill created (includes ACC-01 through ACC-05)
-- [ ] `.agents/skills/fixing-accessibility/` deleted (rules absorbed into `css-accessibility`)
-- [ ] `.agents/skills/fixing-motion-performance/` deleted (superseded by `css-animation`)
+
