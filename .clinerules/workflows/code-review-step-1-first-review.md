@@ -49,7 +49,7 @@ Do not write workflow/review markdown content through shell text output commands
 
 1. Use `read_file` on `TARGET_FILE`.
 
-2. Identify â€œshared helpersâ€ used by `TARGET_FILE`:
+2. Identify “shared helpers” used by `TARGET_FILE`:
     1. Scan the top-of-file imports/exports and local references.
     2. If `TARGET_FILE` imports local modules (e.g. `./utils.js`, `../constants.js`), read them with `read_file` **only if** they are required to understand a finding in `TARGET_FILE`.
     3. Do not recursively scan the whole repo.
@@ -88,7 +88,7 @@ Do not write workflow/review markdown content through shell text output commands
 2. Use `write_to_file` to create the full contents of `CodeReview_<BASENAME>.md`.
 
 3. Generate findings for `TARGET_FILE`:
-    1. Keep the exact structure and labels (`F01`, `F02`, â€¦).
+    1. Keep the exact structure and labels (`F01`, `F02`, …).
 
 4. Use the following file structure:
 
@@ -121,28 +121,28 @@ Do not write workflow/review markdown content through shell text output commands
     - **Why it matters:**
       Describe the possible consequences of not addressing this issue.
 
-    - **Severity:** Low â­• / Medium â— / High â—â—
+    - **Severity:** Low ⭕ / Medium ❗ / High ❗❗
       Low = cosmetic/edge-case with minimal user impact. Medium = plausible data loss or UX confusion under realistic conditions. High = direct data loss, crash, or security issue on a common path.
 
-    - **Confidence:** Low ðŸ˜” / Medium ðŸ¤” / High ðŸ˜€
+    - **Confidence:** Low 😔 / Medium 🤔 / High 😀
       High = complete failure path traceable entirely from code, no runtime assumptions needed. Medium = failure depends on a runtime condition not confirmable from code alone (e.g., concurrent update in-flight). Low = speculative; depends on unverifiable user behavior or unmeasured load.
 
-    - **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice â€” pick the single best-fit category
+    - **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice — pick the single best-fit category
 
     #### ADDRESSING THE ISSUE
 
     - **Suggested direction:**
-      1â€“3 sentences; NO code and NO detailed plan. If you're in doubt about two different ways of fixing the same issue, choose ONLY one (the one that changes behavior the least.)
+      1–3 sentences; NO code and NO detailed plan. If you're in doubt about two different ways of fixing the same issue, choose ONLY one (the one that changes behavior the least.)
 
     - **Proposed fix:**
       Concrete implementation details: name the exact functions, variables, and changes required.
-      If the fix cannot be fully specified without first confirming a runtime behavior or observable symptom, add `ðŸš© Requires user input` and state exactly what needs to be confirmed.
+      If the fix cannot be fully specified without first confirming a runtime behavior or observable symptom, add `🚩 Requires user input` and state exactly what needs to be confirmed.
 
     - **Implementation Checklist:**
       Incremental, self-contained steps for an LLM to implement. Do not include any step that requires user input or manual verification.
       [ ] Detailed, incremental task to fix this issue
 
-    - **Fix risk:** Low ðŸŸ¢ / Medium ðŸŸ¡ / High ðŸ”´
+    - **Fix risk:** Low 🟢 / Medium 🟡 / High 🔴
       Justify with risks and cons of applying this fix, potential side-effects or unwanted consequences, behaviors that might change, etc.
 
     - **Why it's safe to implement:**
@@ -166,11 +166,11 @@ Apply the following updates:
     1. Create a new section:
 
         - `### \`<TARGET_FILE>\``
-          - `â†’ `CodeReview_<BASENAME>.md``
+          - `→ `CodeReview_<BASENAME>.md``
 
     2. Under that, add bullet items for each finding title, following the existing pattern:
 
-        - `- **F01** â€” <Title>`
+        - `- **F01** — <Title>`
           - ```
               - Meta-reviewed: [ ]
                 - Verdict:

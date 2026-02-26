@@ -20,11 +20,11 @@ Reviews an existing skill against the skill-creator quality rules and auto-write
 
 ## Review Workflow
 
-1. **Locate** â€” resolve the name or path to a directory.
-2. **Read the skill** â€” read `SKILL.md` plus every file in `references/`, `scripts/`, and `assets/`.
-3. **Read the rules** â€” read `.claude/skills/skill-creator/SKILL.md` for the authoritative rule definitions.
-4. **Analyze** â€” work through every item in the Review Checklist below.
-5. **Write the report** â€” auto-write to `tasks/main-tasks/skills/SkillReview_<name>.md`. Create `tasks/main-tasks/skills/` if it does not exist.
+1. **Locate** — resolve the name or path to a directory.
+2. **Read the skill** — read `SKILL.md` plus every file in `references/`, `scripts/`, and `assets/`.
+3. **Read the rules** — read `.claude/skills/skill-creator/SKILL.md` for the authoritative rule definitions.
+4. **Analyze** — work through every item in the Review Checklist below.
+5. **Write the report** — auto-write to `tasks/main-tasks/skills/SkillReview_<name>.md`. Create `tasks/main-tasks/skills/` if it does not exist.
 
 Do not ask for confirmation before writing. Write the report only.
 
@@ -32,14 +32,14 @@ Do not ask for confirmation before writing. Write the report only.
 
 An excellent skill has **all** of the following:
 
-- **Tight description** â€” states clearly *what* the skill does and *exactly when* to trigger it. Includes explicit trigger phrases (slash commands, intent keywords, user-facing example phrases). Claude could auto-select this skill without ambiguity.
-- **Lean SKILL.md** â€” under 500 lines. Contains only core workflow and navigation guidance. No lengthy reference material crammed into the body.
-- **Good progressive disclosure** â€” all substantial detail (schemas, API docs, domain rules, large examples) lives in `references/` files. Each reference file is linked from SKILL.md with a one-line note saying *when* to read it.
-- **No extraneous files** â€” only files an AI agent actually needs to do the job. 
-- **No duplication** â€” each piece of information lives in exactly one place: either SKILL.md or a references file, never both.
-- **Flat reference structure** â€” all reference files are linked directly from SKILL.md. No reference file links to another reference file.
-- **Purposeful assets** â€” every file in `assets/` is something Claude would copy or embed in output. No orphaned or decorative files.
-- **Correct frontmatter** â€” only `name` and `description` fields are present (plus optional `license`). No extra YAML keys.
+- **Tight description** — states clearly *what* the skill does and *exactly when* to trigger it. Includes explicit trigger phrases (slash commands, intent keywords, user-facing example phrases). Claude could auto-select this skill without ambiguity.
+- **Lean SKILL.md** — under 500 lines. Contains only core workflow and navigation guidance. No lengthy reference material crammed into the body.
+- **Good progressive disclosure** — all substantial detail (schemas, API docs, domain rules, large examples) lives in `references/` files. Each reference file is linked from SKILL.md with a one-line note saying *when* to read it.
+- **No extraneous files** — only files an AI agent actually needs to do the job. 
+- **No duplication** — each piece of information lives in exactly one place: either SKILL.md or a references file, never both.
+- **Flat reference structure** — all reference files are linked directly from SKILL.md. No reference file links to another reference file.
+- **Purposeful assets** — every file in `assets/` is something Claude would copy or embed in output. No orphaned or decorative files.
+- **Correct frontmatter** — only `name` and `description` fields are present (plus optional `license`). No extra YAML keys.
 
 ## Review Checklist
 
@@ -49,7 +49,7 @@ An excellent skill has **all** of the following:
 - **Progressive disclosure**: Is substantial detail split into `references/` files? Is each file linked from SKILL.md with "when to read" context?
 - **Extraneous files**: Does the skill contain README, CHANGELOG, INSTALLATION_GUIDE, or other non-operational files?
 - **No duplication**: Is the same information repeated in both SKILL.md and a references file?
-- **Flat references**: Do any reference files link to other reference files (not allowed â€” must link only from SKILL.md)?
+- **Flat references**: Do any reference files link to other reference files (not allowed — must link only from SKILL.md)?
 
 ### Content
 
@@ -77,7 +77,7 @@ Write the report using exactly this structure:
 A bullet list with:
 - Name
 - Description word count (approximate)
-- Trigger clarity rating: Excellent / Good / Weak / Missing â€” one sentence explaining why
+- Trigger clarity rating: Excellent / Good / Weak / Missing — one sentence explaining why
 - SKILL.md line count
 - Resources present (which of: references/, scripts/, assets/ exist and how many files each)
 - Overall quality: Excellent / Good / Needs Work / Poor
@@ -103,5 +103,5 @@ Ordered list of actionable changes, highest priority first. Each item references
 
 ## What Excellent Looks Like
 
-2-4 sentences describing what this specific skill would look like if it fully met all quality criteria. Tailor this to the skill's actual purpose â€” give the implementer a concrete, achievable target.
+2-4 sentences describing what this specific skill would look like if it fully met all quality criteria. Tailor this to the skill's actual purpose — give the implementer a concrete, achievable target.
 ```

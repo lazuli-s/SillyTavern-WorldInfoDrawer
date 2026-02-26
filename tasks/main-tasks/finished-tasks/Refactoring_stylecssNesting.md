@@ -9,7 +9,7 @@
 ## Summary
 
 `style.css` repeats `#WorldInfo` on approximately 130 selectors throughout the panel section.
-CSS nesting â€” a modern browser feature that requires no build step â€” lets you write `#WorldInfo`
+CSS nesting — a modern browser feature that requires no build step — lets you write `#WorldInfo`
 once as a wrapper block, and all rules inside it automatically inherit that scope. This makes the
 file significantly shorter, removes visual clutter from every selector, and makes the scoping
 intent obvious at a glance.
@@ -23,21 +23,21 @@ repetition at once, making the earlier task redundant for the panel-section rule
 ## Background: CSS Nesting
 
 CSS nesting is a native browser feature (Chrome 112+, Firefox 117+, Safari 16.5+, all released
-2023). It works without any build tool or compilation step â€” the browser reads it directly.
+2023). It works without any build tool or compilation step — the browser reads it directly.
 
 Instead of:
 ```css
-#WorldInfo .stwid--list { â€¦ }
-#WorldInfo .stwid--editor { â€¦ }
-#WorldInfo .stwid--splitter { â€¦ }
+#WorldInfo .stwid--list { … }
+#WorldInfo .stwid--editor { … }
+#WorldInfo .stwid--splitter { … }
 ```
 
 You write:
 ```css
 #WorldInfo {
-  .stwid--list { â€¦ }
-  .stwid--editor { â€¦ }
-  .stwid--splitter { â€¦ }
+  .stwid--list { … }
+  .stwid--editor { … }
+  .stwid--splitter { … }
 }
 ```
 
@@ -72,16 +72,16 @@ element itself, or use `body.stwid--` as a genuine on/off gate for SillyTavern-o
 
 | Selector | Reason to keep flat |
 |---|---|
-| `body #WorldInfo > .stwid--body { display: none; }` | Default hide rule â€” must apply before the extension activates, so it cannot be scoped inside `#WorldInfo {}` |
+| `body #WorldInfo > .stwid--body { display: none; }` | Default hide rule — must apply before the extension activates, so it cannot be scoped inside `#WorldInfo {}` |
 | `body.stwid-- #WorldInfo { }` | Overrides ST's own `#WorldInfo` element (sizing, layout, CSS tokens). KEEP. |
 | `body.stwid-- #WorldInfo.openDrawer { }` | Forces `display: flex` on ST's own element when it has the `openDrawer` class. KEEP. |
 | `body.stwid-- #WorldInfo #wi-holder { }` | Hides ST's own child element. KEEP. |
-| `body.stwid-- #WorldInfo > .stwid--body { }` | Overrides the default-hide rule above â€” `body.stwid--` is the genuine state gate here. KEEP. |
+| `body.stwid-- #WorldInfo > .stwid--body { }` | Overrides the default-hide rule above — `body.stwid--` is the genuine state gate here. KEEP. |
 | `body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading { }` | Same state gate. KEEP. |
 | `body.stwid-- #WorldInfo > .stwid--body.stwid--isLoading::after { }` | Same state gate. KEEP. |
 
 The orderHelper section (section 6), the context menu section (`.stwid--blocker`), and the Move
-Book dialog (`.stwid--moveBookContent`) are already flat and stay flat â€” they render outside
+Book dialog (`.stwid--moveBookContent`) are already flat and stay flat — they render outside
 `#WorldInfo`.
 
 ---
@@ -91,9 +91,9 @@ Book dialog (`.stwid--moveBookContent`) are already flat and stay flat â€” 
 Three rules in the current file use a grouped selector (comma-separated) that mixes one selector
 inside `#WorldInfo` and one selector outside. These must be split into two separate rules.
 
-### Split 1 â€” Shared layout shell (flex-column fill)
+### Split 1 — Shared layout shell (flex-column fill)
 
-**Current (lines 101â€“109):**
+**Current (lines 101–109):**
 ```css
 body.stwid-- #WorldInfo .stwid--editor,
 .stwid--orderHelper {
@@ -118,7 +118,7 @@ body.stwid-- #WorldInfo .stwid--editor,
   min-height: 0;
 }
 
-/* Outside â€” orderHelper renders outside #WorldInfo */
+/* Outside — orderHelper renders outside #WorldInfo */
 .stwid--orderHelper {
   flex: 1 1 auto;
   display: flex;
@@ -129,9 +129,9 @@ body.stwid-- #WorldInfo .stwid--editor,
 }
 ```
 
-### Split 2 â€” Shared layout shell (scrollable fill wrapper)
+### Split 2 — Shared layout shell (scrollable fill wrapper)
 
-**Current (lines 112â€“117):**
+**Current (lines 112–117):**
 ```css
 body.stwid-- #WorldInfo .stwid--list .stwid--books,
 .stwid--orderTableWrap {
@@ -158,7 +158,7 @@ body.stwid-- #WorldInfo .stwid--list .stwid--books,
 }
 ```
 
-### Split 3 â€” Focus ring rule (section 5, lines 940â€“945)
+### Split 3 — Focus ring rule (section 5, lines 940–945)
 
 **Current:**
 ```css
@@ -179,7 +179,7 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
   outline-offset: var(--stwid-focus-ring-offset);
 }
 
-/* Outside â€” context menu renders inside .stwid--blocker at document level */
+/* Outside — context menu renders inside .stwid--blocker at document level */
 .stwid--blocker .stwid--listDropdownItem:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
@@ -193,15 +193,15 @@ body.stwid-- #WorldInfo .stwid--multiselectDropdownOption:focus-visible,
 Single file: **`style.css`** (root of the extension).
 No JavaScript files are touched. No behavior changes. No visual changes.
 
-The CSS nesting feature is already supported by modern browsers that SillyTavern targets â€” the
-codebase already uses `color-mix()`, `rgb(from â€¦)`, and CSS anchor positioning, which require the
+The CSS nesting feature is already supported by modern browsers that SillyTavern targets — the
+codebase already uses `color-mix()`, `rgb(from …)`, and CSS anchor positioning, which require the
 same or newer baseline.
 
 ---
 
 ## Out of Scope
 
-- The orderHelper section (section 6) â€” no `#WorldInfo` repetition to remove there.
+- The orderHelper section (section 6) — no `#WorldInfo` repetition to remove there.
 - Any other CSS style guide violations (naming, formatting, danger rules).
 - Changes to property values, declaration order, or visual appearance.
 
@@ -209,12 +209,12 @@ same or newer baseline.
 
 ## Implementation Plan
 
-### Step 1 â€” Verify stylelint supports CSS nesting
+### Step 1 — Verify stylelint supports CSS nesting
 
 - [x] Open `.stylelintrc.json` and confirm that the stylelint configuration does not block CSS
   nesting syntax. If it does, update the config to allow it before proceeding.
 
-### Step 2 â€” Identify the seven flat rules (see table above)
+### Step 2 — Identify the seven flat rules (see table above)
 
 Before touching anything, mark these seven rules mentally as "do not move":
 `body #WorldInfo > .stwid--body`,
@@ -223,54 +223,54 @@ Before touching anything, mark these seven rules mentally as "do not move":
 `body.stwid-- #WorldInfo #wi-holder`,
 and the three `body.stwid-- #WorldInfo > .stwid--body*` loading rules.
 
-### Step 3 â€” Split the three grouped selectors (see Grouped Selectors section above)
+### Step 3 — Split the three grouped selectors (see Grouped Selectors section above)
 
 - [x] Split the `stwid--editor` / `stwid--orderHelper` grouped rule into two separate rules
   (duplicate the declarations). Leave the `stwid--orderHelper` copy in place; the
   `stwid--editor` copy will move into the nesting block in Step 5.
 - [x] Split the `stwid--list .stwid--books` / `stwid--orderTableWrap` grouped rule the same way.
-- [x] Split the focus-ring grouped rule (section 5, lines 940â€“945) the same way. Leave the
+- [x] Split the focus-ring grouped rule (section 5, lines 940–945) the same way. Leave the
   `.stwid--blocker` copy in place; the `#WorldInfo` copy will move in Step 5.
 
-### Step 4 â€” Create the `#WorldInfo { }` nesting block
+### Step 4 — Create the `#WorldInfo { }` nesting block
 
 - [x] After the seven flat rules (after the last `body.stwid-- #WorldInfo > .stwid--body`
   loading rule, around line 92), open a new `#WorldInfo { }` block with a section comment:
 
 ```css
 /* ------------------------------------------------------------------ */
-/* Panel â€” all extension-owned elements inside #WorldInfo              */
+/* Panel — all extension-owned elements inside #WorldInfo              */
 /* ------------------------------------------------------------------ */
 #WorldInfo {
 
 }
 ```
 
-### Step 5 â€” Move all remaining `#WorldInfo`-scoped rules inside the block
+### Step 5 — Move all remaining `#WorldInfo`-scoped rules inside the block
 
 Process sections 1.5 through 4 one section at a time:
 
 - [x] Section 1.5 (shared layout shells): move the `stwid--editor` and
   `stwid--list .stwid--books` halves (created in Step 3) inside the block. Remove any
   remaining `body.stwid-- #WorldInfo` or `#WorldInfo` prefix from each selector.
-- [x] Section 2 (List Panel, lines ~125â€“765): move all rules inside the block, removing the
+- [x] Section 2 (List Panel, lines ~125–765): move all rules inside the block, removing the
   `body.stwid-- #WorldInfo` prefix from every selector.
-- [x] Section 3 (Splitter, lines ~773â€“786): move inside the block.
-- [x] Section 4 (Editor Panel, lines ~794â€“919): move inside the block.
-- [x] Section 5 (Context Menu, lines ~936â€“945): move the `#WorldInfo`-scoped focus-ring half
-  (created in Step 3) and the `:is(â€¦)` border-radius rule inside the block.
+- [x] Section 3 (Splitter, lines ~773–786): move inside the block.
+- [x] Section 4 (Editor Panel, lines ~794–919): move inside the block.
+- [x] Section 5 (Context Menu, lines ~936–945): move the `#WorldInfo`-scoped focus-ring half
+  (created in Step 3) and the `:is(…)` border-radius rule inside the block.
 
-### Step 6 â€” Close the nesting block and verify structure
+### Step 6 — Close the nesting block and verify structure
 
 - [x] Close the `#WorldInfo { }` block.
 - [x] Confirm the file structure reads top-to-bottom as:
   1. Section comment + flat drawer rules (the 7 flat rules)
-  2. `#WorldInfo { }` nesting block (sections 1.5â€“5)
+  2. `#WorldInfo { }` nesting block (sections 1.5–5)
   3. Flat: `.stwid--blocker` and `.stwid--moveBookContent` (context menu / modals)
   4. Section 6: orderHelper (unchanged)
   5. Section 7: misc (unchanged)
 
-### Step 7 â€” Final verification
+### Step 7 — Final verification
 
 - [x] `grep` for `#WorldInfo` in `style.css` and confirm it appears only in the 7 flat rules
   plus the single opening line of the nesting block.
@@ -283,7 +283,7 @@ Process sections 1.5 through 4 one section at a time:
 
 - **`Refactoring_stylecss.md`** (remove `body.stwid--` only): that task is now superseded by
   this one. Once CSS nesting is in place, the `body.stwid--` removal is no longer needed for
-  the panel section â€” nesting handles it automatically. The `Refactoring_stylecss.md` plan
+  the panel section — nesting handles it automatically. The `Refactoring_stylecss.md` plan
   should be marked superseded rather than implemented.
 
 ---
@@ -329,15 +329,15 @@ Process sections 1.5 through 4 one section at a time:
 
 - **Category:** Redundancy
 
-- **Severity:** Low ⭕
+- **Severity:** Low ?
 
-- **Location:** style.css — Section 5 comments (lines ~579-581 and ~637-641)
+- **Location:** style.css � Section 5 comments (lines ~579-581 and ~637-641)
 
 - **Summary:** Two "5) Context Menu + Modals" section headers exist after the refactoring. The first (inside the `#WorldInfo` nesting block) contains shared UI patterns like the `:is()` border-radius and focus-visible rules. The second (outside the nesting block) contains the actual `.stwid--blocker` context menu rules. This duplication is confusing for maintainers trying to locate context menu styles.
 
-- **Confidence:** High 😀
+- **Confidence:** High ?
 
-- **Fix risk:** Low 🟢 — Renaming a comment has no runtime impact.
+- **Fix risk:** Low ? � Renaming a comment has no runtime impact.
 
 - **Fix Plan:**
   - [x] Rename the section header inside the nesting block (around line 579) from "5) Context Menu + Modals" to something more accurate like "5) Shared UI Patterns (drawer-internal)" or merge the comment into the "Shared menu/item patterns" comment that follows it.
