@@ -23,10 +23,6 @@ Reference model: `.claude/skills/st-js-best-practices/SKILL.md` (rule family + I
 Modeled after `.claude/skills/st-js-best-practices/SKILL.md` — uses rule families with IDs,
 operates in two modes (Guide mode when writing, Review mode when auditing).
 
-### Folder
-
-`.claude/skills/css-rules/`
-
 ### Frontmatter description (trigger text)
 
 Authoring companion enforcing CSS naming, formatting, property value, and danger rules for this
@@ -114,10 +110,6 @@ When asked to review or audit CSS for naming/formatting/property/danger issues:
 
 ## Skill 2: `css-animation`
 
-### Folder
-
-`.claude/skills/css-animation/`
-
 ### Frontmatter description (trigger text)
 
 Authoring companion enforcing CSS animation and transition performance rules for this
@@ -167,9 +159,6 @@ via a separate refactoring task.
 
 ## Skill 3: `css-accessibility`
 
-### Folder
-
-`.claude/skills/css-accessibility/`
 
 ### Frontmatter description (trigger text)
 
@@ -283,8 +272,8 @@ None — all decisions captured above.
 ## Status
 
 - [x] Planning complete — all decisions made
-- [x] `css-rules` skill created (includes NAME-01 through NAME-05 + naming guideline)
-- [ ] `css-animation` skill created
+- [x] `css-rules` skill created
+- [x] `css-animation` skill created
 - [ ] `css-accessibility` skill created (includes ACC-01 through ACC-05)
 - [ ] `.agents/skills/fixing-accessibility/` deleted (rules absorbed into `css-accessibility`)
 - [ ] `.agents/skills/fixing-motion-performance/` deleted (superseded by `css-animation`)
