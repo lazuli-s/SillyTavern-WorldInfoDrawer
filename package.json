@@ -7,7 +7,9 @@
     "lint:css": "stylelint \"**/*.css\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "format:css": "prettier --write style.css"
+    "format:css": "prettier --write style.css",
+    "fix:encoding:scan": "node scripts/fix-corrupted-text.js",
+    "fix:encoding": "node scripts/fix-corrupted-text.js --write"
   },
   "devDependencies": {
     "eslint": "^9.39.2",

@@ -135,6 +135,7 @@ When implementing or modifying behavior, follow the ownership boundary document:
 - Do NOT introduce frameworks (React, Vue, etc.)
 - Do NOT change public APIs unintentionally
 - Do NOT use Bash `echo`, `printf`, or heredoc to write file content — always use the Write or Edit tools. Shell output on Windows can corrupt multi-byte characters (emojis, special Unicode) inside files.
+- Prefer `apply_patch` for targeted edits to existing text files, especially workflow/docs files with symbols; direct file edits are safer than shell text output on Windows.
 
 ## 10. Git Commits
 

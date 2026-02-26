@@ -6,6 +6,11 @@ Process the first unchecked file in `tasks/POST_IMPLEMENTATION_REVIEW.md`: load 
 
 <detailed_sequence_steps>
 
+## Editing tool policy (encoding safety)
+
+When this workflow edits existing text files, prefer `apply_patch` for targeted changes.
+Do not write workflow/review markdown content through shell text output commands, because Windows encoding mismatches can corrupt symbols.
+
 # Post-Implementation Review — Detailed Sequence of Steps
 
 ## 1. Initialize or update the review checklist

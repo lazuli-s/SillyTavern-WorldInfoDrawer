@@ -46,6 +46,9 @@ This document provides guidelines for creating standardized Cline workflow files
 - For user interaction, use the `ask_followup_question` tool
 - For accessing external data, use appropriate MCP tools (e.g., `use_mcp_tool`)
 - For file operations, specify directory checks and file creation steps
+- Prefer `apply_patch` for targeted edits to existing files.
+  - Why: `apply_patch` edits file content directly and is safer for special symbols (emoji, arrows, dashes) than terminal text output on Windows.
+  - Avoid writing file contents through shell output commands for workflow docs, because encoding mismatches can corrupt characters.
 - Always end workflows with the `attempt_completion` tool to present results
 
 ## Step formatting

@@ -8,6 +8,11 @@ Process `tasks/code-reviews/queue-code-review.md` "Files Pending Implementation"
 
 # Implementation Process - Detailed Sequence of Steps
 
+## Editing tool policy (encoding safety)
+
+When this workflow edits existing text files, prefer `apply_patch` for targeted changes.
+Do not write workflow/review markdown content through shell text output commands, because Windows encoding mismatches can corrupt symbols.
+
 ## 1. Start an iteration by scanning the pending implementation list (single source of truth)
 
 1. Use `read_file` on `tasks/code-reviews/queue-code-review.md`.
