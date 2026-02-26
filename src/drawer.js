@@ -194,9 +194,6 @@ export const initDrawer = ({
                         controls.classList.add('stwid--controls');
                         const controlsPrimary = document.createElement('div');
                         controlsPrimary.classList.add('stwid--controlsRow');
-                        const visibilityAndSettingsRow = document.createElement('div');
-                        visibilityAndSettingsRow.classList.add('stwid--visibilityAndSettingsRow');
-                        dom.visibilityAndSettingsRow = visibilityAndSettingsRow;
                         const lorebooksGroup = document.createElement('div');
                         lorebooksGroup.classList.add('stwid--thinContainer');
                         const lorebooksGroupLabel = document.createElement('span');
@@ -221,7 +218,7 @@ export const initDrawer = ({
                         settingsGroupLabel.classList.add('stwid--thinContainerLabel');
                         settingsGroupLabel.textContent = 'Settings';
                         settingsGroup.append(settingsGroupLabel);
-                        visibilityAndSettingsRow.append(settingsGroup);
+                        controlsPrimary.append(settingsGroup);
                         const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
@@ -497,7 +494,7 @@ export const initDrawer = ({
                         globalSortingWrapper.append(globalSortingGroup);
                         perBookSortingWrapper.append(perBookSortingGroup);
                         controlsSecondary.append(globalSortingWrapper, perBookSortingWrapper);
-                        controls.append(controlsPrimary, visibilityAndSettingsRow, controlsSecondary);
+                        controls.append(controlsPrimary, controlsSecondary);
                         list.append(controls);
                     }
                     editorPanelApi = initEditorPanel({
