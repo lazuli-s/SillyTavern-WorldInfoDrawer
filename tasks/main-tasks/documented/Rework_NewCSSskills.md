@@ -282,8 +282,8 @@ None — all decisions captured above.
 
 ## Status
 
-- [ ] Planning complete — all decisions made
-- [ ] `css-rules` skill created (includes NAME-01 through NAME-05 + naming guideline)
+- [x] Planning complete — all decisions made
+- [x] `css-rules` skill created (includes NAME-01 through NAME-05 + naming guideline)
 - [ ] `css-animation` skill created
 - [ ] `css-accessibility` skill created (includes ACC-01 through ACC-05)
 - [ ] `.agents/skills/fixing-accessibility/` deleted (rules absorbed into `css-accessibility`)
