@@ -90,7 +90,6 @@ Documentation and reference material intended to be loaded as needed into contex
 - **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
 - **Benefits**: Keeps SKILL.md lean, loaded only when Claude determines it's needed
 - **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
 
 ##### Assets (`assets/`)
 
@@ -260,17 +259,7 @@ At this point, it is time to actually create the skill.
 
 Skip this step only if the skill being developed already exists. In this case, continue to the next step.
 
-Create the skill directory manually inside the `skills/` folder:
-
-```
-skills/<skill-name>/
-├── SKILL.md
-├── references/     (only if needed)
-├── scripts/        (only if needed)
-└── assets/         (only if needed)
-```
-
-Only create subdirectories (`references/`, `scripts/`, `assets/`) that the skill actually needs. Do not create empty placeholder directories.
+Create the skill directory and its `SKILL.md` inside the `skills/` folder, following the structure defined in the Anatomy of a Skill section above. Only create subdirectories that the skill actually needs — do not create empty placeholder directories.
 
 ### Step 4: Edit the Skill
 
@@ -290,8 +279,6 @@ These files contain established best practices for effective skill design.
 To begin implementation, start with the reusable resources identified above: `scripts/`, `references/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `references/`.
 
 Added scripts must be tested by actually running them to ensure there are no bugs and that the output matches what is expected. If there are many similar scripts, only a representative sample needs to be tested to ensure confidence that they all work while balancing time to completion.
-
-Only keep files and directories that the skill actually uses. Do not leave empty or unused subdirectories in the skill folder.
 
 #### Update SKILL.md
 
