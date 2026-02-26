@@ -7,10 +7,11 @@ description: Reference of reusable SillyTavern CSS classes for the WorldInfoDraw
 
 ## Core Rule
 
-**Always reuse existing ST CSS classes before writing new extension CSS.**
+Before writing any new CSS, check in this order:
 
-If what you need is covered below, use it. Only add new `.stwid--` classes when
-nothing here fits, and document why with a comment.
+1. **ST classes first** — if what you need is covered in this file, use it.
+2. **Extension classes second** — if an existing `.stwid--` class already does the job, reuse it. Check `style.css` before adding a new class.
+3. **Write new CSS only as a last resort** — if nothing in ST or the extension covers it, add a new `.stwid--` class and document why with a comment.
 
 ---
 
@@ -149,3 +150,45 @@ Apply to the popup element after creation to control size:
 | `.vertical_scrolling_dialogue_popup` | Enables vertical scroll inside content |
 | `.horizontal_scrolling_dialogue_popup` | Enables horizontal scroll inside content |
 | `.left_aligned_dialogue_popup` | Left-aligns content text |
+
+---
+
+## CSS Variables (Theming)
+
+**Never hardcode hex colors for text, backgrounds, or borders.**
+Always use ST's CSS variables so the extension respects the user's active theme.
+
+### Smart Theme — Text
+
+| Variable | Use for |
+|---|---|
+| `--SmartThemeBodyColor` | Default body text |
+| `--SmartThemeEmColor` | Emphasized / italic text |
+| `--SmartThemeUnderlineColor` | Underlined text |
+| `--SmartThemeQuoteColor` | Quoted text (blockquotes, callouts) |
+
+### Smart Theme — Backgrounds & Borders
+
+| Variable | Use for |
+|---|---|
+| `--SmartThemeBlurTintColor` | Blurred/frosted-glass panel backgrounds |
+| `--SmartThemeChatTintColor` | Chat area tint overlays |
+| `--SmartThemeShadowColor` | Drop shadows and depth effects |
+| `--SmartThemeBorderColor` | Borders, dividers, outlines |
+
+### Opacity Colors
+
+Pre-built semi-transparent blacks, whites, and greys — use instead of `rgba()` literals.
+
+| Variable | Use for |
+|---|---|
+| `--black30a` | Very light dark overlay |
+| `--black50a` | Medium dark overlay (modal scrim, hover tint) |
+| `--black60a` | Slightly heavier overlay |
+| `--black70a` | Strong overlay |
+| `--black90a` | Near-opaque dark layer |
+| `--white20a` | Subtle light highlight |
+| `--white30a` | Light highlight |
+| `--white50a` | Medium light overlay |
+| `--white70a` | Strong light overlay |
+| `--grey30a` | Neutral semi-transparent layer |
