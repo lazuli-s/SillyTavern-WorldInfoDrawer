@@ -1,7 +1,7 @@
 <task name="Code Review - Step 1: Review Pending Files">
 
 <task_objective>
-Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the first pending file, load required repo/ST docs, review it using the provided code-review prompt, write `tasks/code-reviews/CodeReview_<filename>.md`, update queue files and `REVIEW_TRACKER.md` (add findings under Reviewed Files, remove from pending queue, add to meta-review queue). Only output the created/updated files.
+Process `tasks/code-reviews/queue-code-review.md` "Files Pending Review": pick the first pending file, load required repo/ST docs, review it using the provided code-review prompt, write `tasks/code-reviews/CodeReview_<filename>.md`, update the queue file and `REVIEW_TRACKER.md` (add findings under Reviewed Files, remove from pending review, add to pending meta-review). Only output the created/updated files.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -10,7 +10,7 @@ Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the fi
 
 ## 1. Scan the pending list (single source of truth)
 
-1. Use `read_file` on `tasks/code-reviews/QUEUE_REVIEW.md`.
+1. Use `read_file` on `tasks/code-reviews/queue-code-review.md`.
 
 2. Locate the section:
 
@@ -44,7 +44,7 @@ Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the fi
 
 1. Use `read_file` on `TARGET_FILE`.
 
-2. Identify “shared helpers” used by `TARGET_FILE`:
+2. Identify â€œshared helpersâ€ used by `TARGET_FILE`:
     1. Scan the top-of-file imports/exports and local references.
     2. If `TARGET_FILE` imports local modules (e.g. `./utils.js`, `../constants.js`), read them with `read_file` **only if** they are required to understand a finding in `TARGET_FILE`.
     3. Do not recursively scan the whole repo.
@@ -83,7 +83,7 @@ Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the fi
 2. Use `write_to_file` to create the full contents of `CodeReview_<BASENAME>.md`.
 
 3. Generate findings for `TARGET_FILE`:
-    1. Keep the exact structure and labels (`F01`, `F02`, …).
+    1. Keep the exact structure and labels (`F01`, `F02`, â€¦).
 
 4. Use the following file structure:
 
@@ -116,28 +116,28 @@ Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the fi
     - **Why it matters:**
       Describe the possible consequences of not addressing this issue.
 
-    - **Severity:** Low ⭕ / Medium ❗ / High ❗❗
+    - **Severity:** Low â­• / Medium â— / High â—â—
       Low = cosmetic/edge-case with minimal user impact. Medium = plausible data loss or UX confusion under realistic conditions. High = direct data loss, crash, or security issue on a common path.
 
-    - **Confidence:** Low 😔 / Medium 🤔 / High 😀
+    - **Confidence:** Low ðŸ˜” / Medium ðŸ¤” / High ðŸ˜€
       High = complete failure path traceable entirely from code, no runtime assumptions needed. Medium = failure depends on a runtime condition not confirmable from code alone (e.g., concurrent update in-flight). Low = speculative; depends on unverifiable user behavior or unmeasured load.
 
-    - **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice — pick the single best-fit category
+    - **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice â€” pick the single best-fit category
 
     #### ADDRESSING THE ISSUE
 
     - **Suggested direction:**
-      1–3 sentences; NO code and NO detailed plan. If you're in doubt about two different ways of fixing the same issue, choose ONLY one (the one that changes behavior the least.)
+      1â€“3 sentences; NO code and NO detailed plan. If you're in doubt about two different ways of fixing the same issue, choose ONLY one (the one that changes behavior the least.)
 
     - **Proposed fix:**
       Concrete implementation details: name the exact functions, variables, and changes required.
-      If the fix cannot be fully specified without first confirming a runtime behavior or observable symptom, add `🚩 Requires user input` and state exactly what needs to be confirmed.
+      If the fix cannot be fully specified without first confirming a runtime behavior or observable symptom, add `ðŸš© Requires user input` and state exactly what needs to be confirmed.
 
     - **Implementation Checklist:**
       Incremental, self-contained steps for an LLM to implement. Do not include any step that requires user input or manual verification.
       [ ] Detailed, incremental task to fix this issue
 
-    - **Fix risk:** Low 🟢 / Medium 🟡 / High 🔴
+    - **Fix risk:** Low ðŸŸ¢ / Medium ðŸŸ¡ / High ðŸ”´
       Justify with risks and cons of applying this fix, potential side-effects or unwanted consequences, behaviors that might change, etc.
 
     - **Why it's safe to implement:**
@@ -152,20 +152,20 @@ Process `tasks/code-reviews/QUEUE_REVIEW.md` "Files Pending Review": pick the fi
 
 ## 6. Update queue files and tracker (preserve structure)
 
-Apply the following updates across three files:
+Apply the following updates:
 
-1. In `tasks/code-reviews/QUEUE_REVIEW.md`: use `replace_in_file` to remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
+1. In `tasks/code-reviews/queue-code-review.md`: use `replace_in_file` to remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
 
 2. In `tasks/code-reviews/REVIEW_TRACKER.md`: use `replace_in_file` to add a new entry under `## Reviewed Files` with the same formatting used by existing reviewed files:
 
     1. Create a new section:
 
         - `### \`<TARGET_FILE>\``
-          - `→ `CodeReview_<BASENAME>.md``
+          - `â†’ `CodeReview_<BASENAME>.md``
 
     2. Under that, add bullet items for each finding title, following the existing pattern:
 
-        - `- **F01** — <Title>`
+        - `- **F01** â€” <Title>`
           - ```
               - Meta-reviewed: [ ]
                 - Verdict:
@@ -173,7 +173,7 @@ Apply the following updates across three files:
               - Implemented:
             ```
 
-3. In `tasks/code-reviews/QUEUE_META_REVIEW.md`: use `replace_in_file` to add `tasks/code-reviews/CodeReview_<BASENAME>.md` as a new bullet entry under `## Files Pending Meta-Review` (same bullet-list formatting used by existing entries).
+3. In `tasks/code-reviews/queue-code-review.md`: use `replace_in_file` to add `tasks/code-reviews/CodeReview_<BASENAME>.md` as a new bullet entry under `## Files Pending Meta-Review` (same bullet-list formatting used by existing entries).
 
 4. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
