@@ -1,7 +1,7 @@
 <task name="Code Review - Step 4: Changelog">
 
 <task_objective>
-Process `tasks/code-reviews/queue-code-review.md` "Files Pending Changelog": for the first pending `tasks/code-reviews/CodeReview_*.md`, read the review file to extract implemented findings, create/update `CODE_REVIEW_CHANGELOG.md`, remove the file from "Files Pending Changelog" in the queue, and move the review file into `tasks/code-reviews/finished/Mon-D-YYYY/` (creating the dated folder if needed). Only output the created/updated files. Output proper emojis.
+Process `tasks/code-reviews/queue-code-review.md` "Files Pending Changelog": for the first pending `tasks/code-reviews/CodeReview_*.md`, read the review file to extract implemented findings, create/update `CODE_REVIEW_CHANGELOG.md`, remove the file from "Files Pending Changelog" in the queue, and move the review file into `tasks/code-reviews/finished/Mon-YYYY/` (creating the dated folder if needed). Only output the created/updated files. Output proper emojis.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -96,16 +96,16 @@ Keep existing formatting consistent (same `---` separators, blank lines, indenta
 
 ## 5. Move the review file to the dated finished folder
 
-1. Determine today's date in `Mon-D-YYYY` format: abbreviated month name (Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec), day with no leading zero, four-digit year. Example: `Feb-26-2026`.
+1. Determine today's date in `Mon-YYYY` format: abbreviated month name (Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec) and four-digit year. Example: `Feb-2026`.
 
 2. Run:
 
     ```bash
-    mkdir -p "tasks/code-reviews/finished/<Mon-D-YYYY>"
-    mv "tasks/code-reviews/CodeReview_<BASENAME>.md" "tasks/code-reviews/finished/<Mon-D-YYYY>/CodeReview_<BASENAME>.md"
+    mkdir -p "tasks/code-reviews/finished/<Mon-YYYY>"
+    mv "tasks/code-reviews/CodeReview_<BASENAME>.md" "tasks/code-reviews/finished/<Mon-YYYY>/CodeReview_<BASENAME>.md"
     ```
 
-    Substitute the actual date (e.g. `Feb-26-2026`) and filename (e.g. `CodeReview_utils.js.md`) for the placeholders.
+    Substitute the actual date (e.g. `Feb-2026`) and filename (e.g. `CodeReview_utils.js.md`) for the placeholders.
 
 3. Report the file that was processed and stop.
 
