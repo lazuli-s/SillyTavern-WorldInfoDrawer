@@ -20,11 +20,12 @@ Where each feature or behavior is implemented in the codebase.
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/listPanel.booksView.js
-- Top control row (new book, new folder, import book, import folder, collapse/expand all books, collapse/expand all folders), including thin-container groups: Lorebooks (new/import/collapse-all-books) and Folders (new/import/collapse-all-folders) → src/drawer.js, src/listPanel.js
+- Top control row (new book, new folder, import book, import folder, collapse/expand all books, collapse/expand all folders, activation settings, refresh), including thin-container groups: Lorebooks (new/import/collapse-all-books), Folders (new/import/collapse-all-folders), and Settings (activation + refresh) → src/drawer.js, src/listPanel.js
 - Book active toggle (global active status) → src/listPanel.booksView.js
 - Book collapse/expand and collapse-all behavior → src/listPanel.booksView.js, src/listPanel.js, src/drawer.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.booksView.js, src/listPanel.selectionDnD.js, src/listPanel.js
 - Book context menu actions (rename, move folder, duplicate, export, delete) → src/listPanel.bookMenu.js
+- Book context menu accessibility and behavior: `aria-expanded`/`aria-haspopup` on trigger, `role="menu"`/`role="menuitem"` on container/items, keyboard open (Enter/Space), focus return to trigger on close, centralized close via `MULTISELECT_DROPDOWN_CLOSE_HANDLER`, all actions close the menu → src/listPanel.bookMenu.js
 - Fill empty entry titles from keywords (book action) → src/wiUpdateHandler.js, src/listPanel.bookMenu.js
 - Per-book sort preference menu + clear all preferences → src/listPanel.bookMenu.js, src/listPanel.js, src/sortHelpers.js
 
@@ -69,8 +70,8 @@ Where each feature or behavior is implemented in the codebase.
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
 - List-panel icon tabs (`Visibility`, `Sorting`, `Search`) with active-state switching and real control rows mounted per tab → src/listPanel.filterBar.js, style.css
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
-- Book visibility control/chip layout (chips wrap beside the menu trigger/help icon instead of dropping below by default) → style.css
-- Visibility tab row (`stwid--visibilityRow`) groups Book Visibility trigger + chips + Order Helper toggle, while the drawer settings row keeps activation/refresh actions → src/listPanel.filterBar.js, src/drawer.js, style.css
+- Book visibility control/chip layout (chips wrap inline beside the trigger button; no separate help icon in the row) → style.css
+- Visibility tab row (`stwid--visibilityRow`) groups Order Helper toggle + Book Visibility trigger + chips; activation/refresh actions live in the top `stwid--controlsRow` Settings group (owned by `src/drawer.js`) → src/listPanel.filterBar.js, src/drawer.js, style.css
 
 ## Sorting & ordering
 
@@ -78,7 +79,7 @@ Where each feature or behavior is implemented in the codebase.
 - Global sort settings and persistence bridge (`extension_settings.worldInfoDrawer`) → src/Settings.js
 - Entry sort implementations (title, trigger, prompt, position, depth, order, uid, length, custom) → src/sortHelpers.js
 - Sort option labels/options for dropdowns → src/utils.js
-- Sorting controls row (`stwid--sortingRow`) grouped into a labeled `Sorting` thin-container with `Global Sorting`, `Toggle per book sorting`, and `Clear sorting preferences` fields; mounted in icon tab 2 (`Sorting`) → src/drawer.js, src/listPanel.filterBar.js, style.css
+- Sorting controls row (`stwid--sortingRow`) split into two labeled thin containers: `Global Sorting` (sort select + `stwid--smallSelectTextPole`) and `Per-book Sorting` (enable/disable toggle + clear preferences); mounted in icon tab 2 (`Sorting`) → src/drawer.js, src/listPanel.filterBar.js, style.css
 - Book-level sort choice resolution and DOM reorder application → src/listPanel.js, src/listPanel.booksView.js
 - Per-book metadata sort read/write (`stwid.sort`) → src/sortHelpers.js, src/listPanel.js
 
@@ -118,5 +119,5 @@ Where each feature or behavior is implemented in the codebase.
 - Live preview panel for script filter context data → src/orderHelper.js, src/orderHelperRender.filterPanel.js
 - Character filter column display (read-only) → src/orderHelperRender.tableBody.js
 - Focus entry in main list/editor from Order Helper row link → src/orderHelper.js, src/orderHelperRender.tableBody.js
-- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox) → src/orderHelperRender.utils.js
+- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox); `closeOpenMultiselectDropdownMenus` closes both multiselect and list dropdown menus and returns focus to trigger → src/orderHelperRender.utils.js
 - Order Helper table column/option schema constants → src/constants.js
