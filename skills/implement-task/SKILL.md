@@ -1,13 +1,25 @@
 ---
 name: implement-task
-description: "Implements the next pending task from the main-tasks queue. Reads tasks/main-tasks-queue.md, picks the first item from '## Documented tasks', reviews and corrects its existing implementation plan for JS best practice and WI API violations, applies all code changes, writes an After Implementation section, and sets status to IMPLEMENTED. Use when the user says 'implement the next task', 'run /implement-task', or invokes /implement-task. Do NOT use when still defining a request — use analyze-request for that instead."
+description: >-
+  Implements the next pending task from the main-tasks queue. Reads
+  tasks/main-tasks/main-tasks-queue.md, picks the first item from '## Documented
+  tasks', reviews and corrects its existing implementation plan for JS best
+  practice and WI API violations, applies all code changes, writes an After
+  Implementation section, and sets status to IMPLEMENTED. Use when the user says
+  'implement the next task', 'run /implement-task', or invokes /implement-task.
+  Do NOT use when still defining a request â€” use analyze-request for that
+  instead.
+metadata:
+  sync:
+    version: 2
+    hash: sha256-fb292be9326729d0e0eeb1a4d3c01a50456572bf4baf51f86fa2e78852bb2ca6
 ---
 
 # implement-task
 
 An implementation skill for the SillyTavern WorldInfoDrawer extension.
 
-Takes the next documented task from `tasks/main-tasks-queue.md`, validates and corrects its
+Takes the next documented task from `tasks/main-tasks/main-tasks-queue.md`, validates and corrects its
 implementation plan, implements all changes, and marks the task as IMPLEMENTED.
 
 ---
@@ -26,22 +38,22 @@ frontend extension. Prioritize correctness and minimal-diff changes over clevern
 
 ## Step 1: Select target from queue
 
-1. Read `tasks/main-tasks-queue.md`.
+1. Read `tasks/main-tasks/main-tasks-queue.md`.
 2. Locate the section `## Documented tasks`.
-3. If the section is empty or missing: report "No documented tasks — queue is empty." and stop.
+3. If the section is empty or missing: report "No documented tasks â€” queue is empty." and stop.
 4. Choose the **first** file path listed as `TARGET_TASK_FILE`.
 
 ---
 
-## Step 2: Load authoritative docs (mandatory — do this before reading the task file)
+## Step 2: Load authoritative docs (mandatory â€” do this before reading the task file)
 
 Read all of the following:
 
-1. `ARCHITECTURE.md` — module responsibilities and boundaries
-2. `FEATURE_MAP.md` — where each feature lives in the codebase
-3. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — integration contract (what ST owns vs. extension)
-4. `.claude/skills/st-js-best-practices/references/patterns.md` — JS best practices (SEC/PERF/COMPAT rules)
-5. `.claude/skills/st-world-info-api/references/wi-api.md` — WI API reference and anti-patterns
+1. `ARCHITECTURE.md` â€” module responsibilities and boundaries
+2. `FEATURE_MAP.md` â€” where each feature lives in the codebase
+3. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` â€” integration contract (what ST owns vs. extension)
+4. `.claude/skills/st-js-best-practices/references/patterns.md` â€” JS best practices (SEC/PERF/COMPAT rules)
+5. `.claude/skills/st-world-info-api/references/wi-api.md` â€” WI API reference and anti-patterns
 
 If the task involves WI books, entries, or events, also load:
 - `vendor/SillyTavern/public/scripts/st-context.js` (ST API shape confirmation)
@@ -52,18 +64,18 @@ If the task involves WI books, entries, or events, also load:
 
 1. Read `TARGET_TASK_FILE`.
 2. Identify these sections:
-   - **Summary** — what the task is about
-   - **Current Behavior** / **Expected Behavior** — the observable change
-   - **Agreed Scope** — which files/functions are involved
-   - **Out of Scope** — what NOT to touch
-   - **Implementation Plan** — the checklist to execute
+   - **Summary** â€” what the task is about
+   - **Current Behavior** / **Expected Behavior** â€” the observable change
+   - **Agreed Scope** â€” which files/functions are involved
+   - **Out of Scope** â€” what NOT to touch
+   - **Implementation Plan** â€” the checklist to execute
 
 3. Produce `FILES_TO_INSPECT`:
    - If `Agreed Scope` lists specific file paths: extract those paths.
    - If `Agreed Scope` is vague or lists no explicit paths: infer owning modules from
      `FEATURE_MAP.md` using the features described in the task.
    - If files were inferred, record this at the top of the Implementation Plan:
-     *"Files inferred from FEATURE_MAP.md — Agreed Scope did not list explicit paths."*
+     *"Files inferred from FEATURE_MAP.md â€” Agreed Scope did not list explicit paths."*
 
 4. From `FEATURE_MAP.md`: confirm the owning module(s). Flag anything in scope that falls outside
    the stated module responsibilities.
@@ -111,7 +123,7 @@ uses the correct API methods for book/entry CRUD.
 If violations are found:
 - Rewrite the affected checklist item(s) in-place with corrected steps.
 - Append a short note directly below explaining what changed and why.
-  *Example: "Step 3 rewritten: original used direct DOM injection without sanitization — corrected to use DOMPurify per SEC-01."*
+  *Example: "Step 3 rewritten: original used direct DOM injection without sanitization â€” corrected to use DOMPurify per SEC-01."*
 
 ---
 
@@ -146,11 +158,11 @@ Append to `TARGET_TASK_FILE`:
 
 ### What changed
 
-[List each file changed, then 1–3 bullets per file in plain language. No jargon. No code snippets.]
+[List each file changed, then 1â€“3 bullets per file in plain language. No jargon. No code snippets.]
 
 ### Risks / What might break
 
-[1–3 plausible side effects in plain language.
+[1â€“3 plausible side effects in plain language.
 Style: "This touches X, so it might affect Y or Z."]
 
 ### Manual checks
@@ -160,8 +172,8 @@ Cover every risk listed above.]
 ```
 
 Tone rules:
-- **What changed**: succinct. List files, then 1–3 bullets per file. No code snippets.
-- **Risks**: 1–3 plain-language side effects. "This touches X, so it might affect Y or Z."
+- **What changed**: succinct. List files, then 1â€“3 bullets per file. No code snippets.
+- **Risks**: 1â€“3 plain-language side effects. "This touches X, so it might affect Y or Z."
 - **Manual checks**: each item says **what success looks like** in a few words.
 
 ---
@@ -174,7 +186,7 @@ In `TARGET_TASK_FILE`, update the status line to:
 **Status:** IMPLEMENTED
 ```
 
-Do NOT update `tasks/main-tasks-queue.md` — queue moves are handled by the sync_queue utility.
+Do NOT update `tasks/main-tasks/main-tasks-queue.md` â€” queue moves are handled by the sync_queue utility.
 
 ---
 
@@ -195,4 +207,4 @@ Tell the user:
 - Do NOT add new external dependencies.
 - Do NOT change behavior outside the task's Agreed Scope without flagging it explicitly.
 - Do NOT commit. The user commits when ready.
-- Do NOT update `tasks/main-tasks-queue.md` — sync_queue handles all queue updates.
+- Do NOT update `tasks/main-tasks/main-tasks-queue.md` â€” sync_queue handles all queue updates.

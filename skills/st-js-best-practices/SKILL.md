@@ -1,6 +1,17 @@
 ---
 name: st-js-best-practices
-description: "Enforces JS best practices for SillyTavern extension development. This skill should be used when writing new JS code for this extension OR when reviewing/auditing existing JS for correctness. Covers three rule families: Security (DOMPurify, no eval, no secrets), Performance (localforage for large data, listener cleanup, async UI), and API Compatibility (getContext() preference, unique MODULE_NAME, settings initialization). Activates automatically during JS authoring and on code review requests."
+description: >-
+  Enforces JS best practices for SillyTavern extension development. This skill
+  should be used when writing new JS code for this extension OR when
+  reviewing/auditing existing JS for correctness. Covers three rule families:
+  Security (DOMPurify, no eval, no secrets), Performance (localforage for large
+  data, listener cleanup, async UI), and API Compatibility (getContext()
+  preference, unique MODULE_NAME, settings initialization). Activates
+  automatically during JS authoring and on code review requests.
+metadata:
+  sync:
+    version: 2
+    hash: sha256-bebc6b3e5d7ff17293eac65df2a31e9a122125b6940c4b2ed311ea67fa4f52ab
 ---
 
 # ST JS Best Practices Skill

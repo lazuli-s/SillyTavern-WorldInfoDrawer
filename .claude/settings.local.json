@@ -17,7 +17,9 @@
       "Bash(python:*)",
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
       "Bash(powershell -Command:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git config core.symlinks true)",
+      "Bash(git config core.symlinks)"
     ]
   },
   "hooks": {

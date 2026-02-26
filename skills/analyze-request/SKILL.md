@@ -1,6 +1,19 @@
 ---
 name: analyze-request
-description: This skill should be used when the user wants to define a feature, report a bug, describe a rework, or request any change to the SillyTavern WorldInfoDrawer extension before coding begins. It activates an analysis-only mode that reads architecture docs, interviews the user to build a precise shared understanding, and produces a draft task file. Use this skill when the user says things like "I want a feature that...", "there's a bug where...", "I want to change how X works", or invokes /analyze-request. Do NOT use this skill when the user explicitly asks to write code or has already completed the definition phase.
+description: >-
+  This skill should be used when the user wants to define a feature, report a
+  bug, describe a rework, or request any change to the SillyTavern
+  WorldInfoDrawer extension before coding begins. It activates an analysis-only
+  mode that reads architecture docs, interviews the user to build a precise
+  shared understanding, and produces a draft task file. Use this skill when the
+  user says things like "I want a feature that...", "there's a bug where...", "I
+  want to change how X works", or invokes /analyze-request. Do NOT use this
+  skill when the user explicitly asks to write code or has already completed the
+  definition phase.
+metadata:
+  sync:
+    version: 2
+    hash: sha256-e9d4d8a80a36fbc44c627bc4846978f806d11548a2033b8d7b1b6da4bdb185f0
 ---
 
 # analyze-request

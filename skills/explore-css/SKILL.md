@@ -1,6 +1,17 @@
 ---
 name: explore-css
-description: This skill should be used when the user wants to investigate CSS, explore existing UI styles, or define a UI/visual change for the SillyTavern WorldInfoDrawer extension. It activates an analysis-only mode focused on understanding what should change visually before any code is written. Use this skill when users say things like "I want to change the look of...", "how does this style work?", "I want to add a UI feature", "can we adjust the spacing/color/layout of...", or any other CSS/UI investigation request.
+description: >-
+  This skill should be used when the user wants to investigate CSS, explore
+  existing UI styles, or define a UI/visual change for the SillyTavern
+  WorldInfoDrawer extension. It activates an analysis-only mode focused on
+  understanding what should change visually before any code is written. Use this
+  skill when users say things like "I want to change the look of...", "how does
+  this style work?", "I want to add a UI feature", "can we adjust the
+  spacing/color/layout of...", or any other CSS/UI investigation request.
+metadata:
+  sync:
+    version: 2
+    hash: sha256-903bf02d450665cc5fc751d1ca6a18745134fe359c41dedc18d379398714ae1c
 ---
 
 # explore-css

@@ -1,6 +1,14 @@
 ---
 name: st-world-info-api
-description: "Compact reference of SillyTavern World Info APIs, events, state, data shapes, and ownership rules. Use before writing any code that reads/writes WI books, entries, or settings. Includes inline anti-patterns (what not to reinvent) and ownership flags (ST-owned vs extension-owned)."
+description: >-
+  Compact reference of SillyTavern World Info APIs, events, state, data shapes,
+  and ownership rules. Use before writing any code that reads/writes WI books,
+  entries, or settings. Includes inline anti-patterns (what not to reinvent) and
+  ownership flags (ST-owned vs extension-owned).
+metadata:
+  sync:
+    version: 2
+    hash: sha256-d295ddc50b63a0bf3084cff1764bf0e7a233c4c21e5e459160d1907d13a814cc
 ---
 
 # ST World Info API — Reference Skill

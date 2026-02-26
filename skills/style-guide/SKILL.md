@@ -1,6 +1,15 @@
 ---
 name: style-guide
-description: "Enforces UI/CSS styling rules for the SillyTavern WorldInfoDrawer extension. Use whenever making any UI change, adding CSS, creating or modifying HTML markup, or styling components. Ensures existing SillyTavern styles are reused before adding new ones, and that extension-specific CSS families (dropdowns, visibility chips) follow the established contract."
+description: >-
+  Enforces UI/CSS styling rules for the SillyTavern WorldInfoDrawer extension.
+  Use whenever making any UI change, adding CSS, creating or modifying HTML
+  markup, or styling components. Ensures existing SillyTavern styles are reused
+  before adding new ones, and that extension-specific CSS families (dropdowns,
+  visibility chips) follow the established contract.
+metadata:
+  sync:
+    version: 2
+    hash: sha256-8c8ba6bc4fcf4dd207cf3f782b4e3eab8514092da1ee53033f6fd846f09a6636
 ---
 
 # Style Guide Skill (UI Design / CSS)
