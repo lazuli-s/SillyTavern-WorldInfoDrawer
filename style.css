@@ -1684,7 +1684,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   display: flex;
   flex-direction: column;
   gap: 0;
-  font-size: 0.85em;
 }
 
 .stwid--characterFilterRow,
@@ -1692,7 +1691,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   display: flex;
   align-items: center;
   gap: 0.4em;
-  font-size: 0.85em;
 }
 
 .stwid--characterFilterRow--include {
