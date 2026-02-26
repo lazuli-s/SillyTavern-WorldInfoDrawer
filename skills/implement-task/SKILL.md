@@ -39,16 +39,7 @@ frontend extension. Prioritize correctness and minimal-diff changes over clevern
 
 ## Step 2: Load authoritative docs (mandatory — do this before reading the task file)
 
-Read all of the following:
-
-1. `ARCHITECTURE.md` — module responsibilities and boundaries
-2. `FEATURE_MAP.md` — where each feature lives in the codebase
-3. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — integration contract (what ST owns vs. extension)
-4. `.claude/skills/st-js-best-practices/references/patterns.md` — JS best practices (SEC/PERF/COMPAT rules)
-5. `.claude/skills/st-world-info-api/references/wi-api.md` — WI API reference and anti-patterns
-
-If the task involves WI books, entries, or events, also load:
-- `vendor/SillyTavern/public/scripts/st-context.js` (ST API shape confirmation)
+Read `skills/doc-guide/SKILL.md` and load the docs it prescribes for this task.
 
 ---
 

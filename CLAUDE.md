@@ -29,37 +29,10 @@ See the `file-naming` skill for the authoritative rules on task file names, fold
 
 ## 3. Authoritative Documentation
 
-Read only what is relevant to the task. Do NOT read all docs every time — that wastes context window space and slows work down.
-
-### Always read first
-
-- `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
-- `FEATURE_MAP.md` — where each extension feature/behavior is implemented
-
-### When writing or modifying any JavaScript
-
-- `.claude/skills/st-js-best-practices/references/patterns.md`
-  (JS best practices — Security: SEC-01–03, Performance: PERF-01–03, API Compatibility: COMPAT-01–04)
-
-### When reading or writing World Info books or entries
-
-- `.claude/skills/st-world-info-api/references/wi-api.md`
-  (Compact WI API reference — book/entry CRUD, entry shape, enums, events, anti-patterns)
-- `vendor/SillyTavern/public/scripts/st-context.js`
-  (What `SillyTavern.getContext()` exposes vs. what requires a direct import)
-
-### When uncertain about what belongs in ST vs. this extension
-
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-  (Ownership boundaries, integration contract, and safe hook points)
-
----
-
-SillyTavern source is available as a **reference-only submodule** under: `vendor/SillyTavern`
-
-Note: if you don't see that folder, the git submodule is probably not initialized.
-
-**DO NOT modify anything under `vendor/SillyTavern`.**
+Before starting any task, invoke the `doc-guide` skill. It is the single source
+of truth for which docs to load and when — always-load docs plus conditional
+loading based on task type (writing JS, reading/writing WI, ownership questions,
+code review).
 
 ## 4. Dependencies and Imports
 

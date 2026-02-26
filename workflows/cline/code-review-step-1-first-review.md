@@ -31,17 +31,9 @@ Do not write workflow/review markdown content through shell text output commands
 
 ## 2. Mandatory "before anything": load authoritative docs
 
-1. Use `read_file` on:
-    1. `AGENTS.md` (mandatory constraints)
-    2. `FEATURE_MAP.md` (feature ownership / locating)
-    3. `ARCHITECTURE.md` (module responsibilities)
-    4. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` (integration contract)
-    5. `.claude/skills/st-js-best-practices/references/patterns.md` (JS best practices rules + patterns)
-
-2. If `TARGET_FILE` imports from `world-info.js` or uses WI APIs (e.g., `loadWorldInfo`, `saveWorldInfo`, `worldInfoCache`, `WORLDINFO_UPDATED`): also load `.claude/skills/st-world-info-api/references/wi-api.md`.
-
-3. If needed, load SillyTavern "ST Context" reference from:
-    - `vendor/SillyTavern/public/scripts/st-context.js`
+Use `read_file` on `skills/doc-guide/SKILL.md` and load the docs it prescribes
+for this task (code review variant). The skill defines which docs are always-load
+vs. conditional on whether `TARGET_FILE` uses WI APIs or ST globals.
 
 ## 3. Scan the target file (and only referenced helpers as needed)
 

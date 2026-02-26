@@ -38,20 +38,10 @@ Check the `tasks/` folder first — if a relevant task file already exists, upda
 
 ## 3. Authoritative Documentation
 
-Before making changes, always analyze these files to understand how the code works **without scanning everything** and wasting tokens on unnecessary context:
-
-- `ARCHITECTURE.md`
-  (module boundaries, responsibilities, and runtime model)
-- `FEATURE_MAP.md`
-  (where each extension feature/behavior is implemented)
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-  (ownership boundaries, integration contract, and safe hook points)
-- `.claude/skills/st-js-best-practices/references/patterns.md`
-  (JS best practices rules with concrete good/bad examples — Security: SEC-01–03, Performance: PERF-01–03, API Compatibility: COMPAT-01–04; consult before writing any JS)
-- `.claude/skills/st-world-info-api/references/wi-api.md`
-  (Compact WI API reference — book/entry CRUD, entry shape, enums, events, ownership rules, and anti-patterns; consult before writing any code that reads or writes WI books or entries)
-- `vendor/SillyTavern/public/scripts/st-context.js`
-  (Authoritative list of what `SillyTavern.getContext()` exposes — consult when you need to know whether a ST API, state value, helper, or event is available on the context object vs. requires a direct import)
+Before starting any task, read `skills/doc-guide/SKILL.md` and load the docs
+it prescribes for this task type. It is the single source of truth for which
+docs to load and when — always-load docs plus conditional loading based on
+task type (writing JS, reading/writing WI, ownership questions, code review).
 
 SillyTavern source is available as a **reference-only submodule** under: `vendor/SillyTavern`
 

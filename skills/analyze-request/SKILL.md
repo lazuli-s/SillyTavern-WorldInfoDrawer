@@ -40,14 +40,7 @@ extension. Prioritize clarity and shared understanding over solutions.
 
 ## Step 1: Load Authoritative Documentation (Do This First)
 
-Before asking any questions, read these files in full:
-
-1. `AGENTS.md` — agent rules, naming conventions, commit style, and task file format
-2. `FEATURE_MAP.md` — where each feature/behavior is implemented in the codebase
-3. `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
-4. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — what ST owns vs. what this extension owns
-5. `.claude/skills/st-js-best-practices/references/patterns.md` — JS best practices rules
-6. `.claude/skills/st-world-info-api/references/wi-api.md` — WI API reference
+Read `skills/doc-guide/SKILL.md` and load the docs it prescribes for this task.
 
 Use this context to ground the interview. The goal is to understand not just *what* the user wants,
 but *where in the existing system* it would live.

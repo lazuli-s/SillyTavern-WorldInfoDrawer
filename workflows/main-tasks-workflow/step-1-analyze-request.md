@@ -14,14 +14,7 @@ Act as an experienced programmer and teacher analyzing this third-party SillyTav
 <detailed_steps>
 ## 1. Load authoritative documentation
 
-Read:
-
-- `AGENTS.md`
-- `FEATURE_MAP.md`
-- `ARCHITECTURE.md`
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-- `.claude/skills/st-js-best-practices/references/patterns.md`
-- `.claude/skills/st-world-info-api/references/wi-api.md`
+Read `skills/doc-guide/SKILL.md` and load the docs it prescribes for this task.
 
 ---
 
