@@ -206,7 +206,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   --stwid-control-height: 2.35em;
   display: flex;
   gap: 0.7em;
-  margin-top: 0;
+  margin-top: 1em;
   align-items: center;
   justify-content: space-evenly;
   flex-wrap: nowrap;
@@ -324,7 +324,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--iconTabBar {
   display: flex;
   border-bottom: 1px solid var(--SmartThemeBorderColor);
-  margin-bottom: 15px;
+  margin-bottom: 0.6em;
 }
 
 .stwid--iconTabButton {
@@ -397,7 +397,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   flex-direction: column;
 }
 
-.stwid--multiselectDropdownMenu {
+.stwid--multiselectDropdownMenu,
+.stwid--bookVisibilityMenu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -412,7 +413,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   min-width: max-content;
 }
 
-.stwid--multiselectDropdownMenu.stwid--state-active {
+.stwid--multiselectDropdownMenu.stwid--state-active,
+.stwid--bookVisibilityMenu.stwid--state-active {
   display: flex;
   width: max-content;
   opacity: 1 !important;
@@ -484,7 +486,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 .stwid--small-multiselect {
-  display: block;
   overflow: hidden;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
