@@ -1,6 +1,6 @@
 ---
 name: css-audit
-description: Comprehensive CSS auditor for the SillyTavern WorldInfoDrawer extension. Reads style.css, evaluates every rule from all five CSS skill families (NAME, FMT, PROP, DGR — css-rules; RESP, BRK, OVF, LAY — css-responsive; ANIM — css-animation; ACC — css-accessibility; ST-REUSE — css-ST), and writes a structured findings report to tasks/CSSAudit_<date>.md. Each finding is rated PASS / FAIL / N/A with a High / Medium / Low fix priority and a corrected snippet for every FAIL. Use when the user invokes /css-audit or asks to audit, review, or check style.css for violations.
+description: Comprehensive CSS auditor for the SillyTavern WorldInfoDrawer extension. Reads style.css, evaluates every rule from all five CSS skill families (NAME, FMT, PROP, DGR — css-rules; RESP, BRK, OVF, LAY — css-responsive; ANIM — css-animation; ACC — css-accessibility; ST-REUSE — css-ST), and writes a structured findings report to tasks/main-tasks/documented/CSSAudit_<date>.md. Each finding is rated PASS / FAIL / N/A with a High / Medium / Low fix priority and a corrected snippet for every FAIL. Use when the user invokes /css-audit or asks to audit, review, or check style.css for violations.
 ---
 
 # CSS Audit
@@ -15,7 +15,7 @@ description: Comprehensive CSS auditor for the SillyTavern WorldInfoDrawer exten
    - `FAIL` — at least one violation exists (note every distinct violation, not just the first)
    - `N/A` — the rule cannot apply because the relevant construct is absent from the file (e.g. ANIM rules when there are no transitions)
 5. **For each FAIL** — Record the exact violating line or snippet, then write the corrected version. Assign priority using the guidance in `references/rules-index.md`. When a single rule has multiple violations, list each one as a sub-item under the same rule row.
-6. **Write the report** — Create `tasks/CSSAudit_<YYYY-MM-DD>.md` using today's date. Follow the structure in `references/report-template.md` exactly.
+6. **Write the report** — Create `tasks/main-tasks/documented/CSSAudit_<YYYY-MM-DD>.md` using today's date. Follow the structure in `references/report-template.md` exactly.
 
 ## Priority assignment
 
