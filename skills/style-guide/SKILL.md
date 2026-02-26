@@ -117,14 +117,3 @@ Maintain the default chip contract:
 - Chips summarize currently active visibility selections/mode.
 - Chips are status indicators only; they are not interactive controls.
 
-## Related CSS Quality Skills
-
-This skill covers ST-specific reuse rules only. For Google CSS Style Guide discipline,
-also run these skills as needed:
-
-| When | Run |
-| --- | --- |
-| Writing new CSS classes or blocks | `css-rules` (naming, formatting, properties, danger) |
-| Writing transitions or animations | `css-animation` (performance tiers, blocked patterns) |
-| Writing CSS for interactive elements | `css-accessibility` (focus styles, motion sensitivity) |
-| Doing a full CSS review of `style.css` | `css-audit` (comprehensive — covers all rule families) |

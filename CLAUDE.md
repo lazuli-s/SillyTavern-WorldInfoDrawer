@@ -87,20 +87,7 @@ Main shared libs include:
 
 ## 5. Style Guide Compliance
 
-Before making any UI or CSS change, always run **both** the `style-guide` skill and the `css-responsive` skill.
-
-Style guide requirements are mandatory:
-
-- Reuse existing SillyTavern styles first
-- Only add new extension CSS when no suitable existing style is available
-- Keep styling changes small, targeted, and consistent with the guide
-
-Responsive CSS requirements are mandatory (enforced by `css-responsive`):
-
-- Use fluid units for panel widths and heights (RESP rules)
-- Use only ST-mirrored breakpoints — `max-width: 1000px` and `max-width: 768px` (BRK rules)
-- Never allow horizontal overflow at the drawer level (OVF rules)
-- Every new row-direction flex container that holds major panels must include a mobile column-direction override (LAY rules)
+Before making any UI or CSS change, read `workflows/css-workflow.md`. It defines which skills to run, in what order, and includes all extension CSS contracts.
 
 ## 6. Ownership and Integration Contract
 
