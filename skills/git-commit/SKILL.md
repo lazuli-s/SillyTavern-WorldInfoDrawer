@@ -25,7 +25,7 @@ Subject line must be **under 72 characters**.
 | `style` | CSS or visual tweak with no behavior change (colors, spacing, alignment) |
 | `docs` | Documentation or architecture files only |
 | `refactor` | Code restructured without changing behavior |
-| `chore` | Config, tooling, or maintenance (no production code) |
+| `chore` | Config, tooling, maintenance, moving files (no production code) |
 | `code-review` | The review activity itself — planning, findings, tracking, or implementation notes |
 
 ---
@@ -45,22 +45,12 @@ Always pick the narrowest matching scope. Omit scope only when the change is tru
 | `settings` | Extension settings |
 | `state` | State management |
 | `booksView` | Books/world selector view |
-| `code-review` | Code review activity (also used as a type) |
 | `tasks` | Task files and queue management |
 | `architecture` | ARCHITECTURE.md, FEATURE_MAP.md |
-| `skills` | Claude skills under `.claude/skills/` |
+| `skills` | Skills under `skills/` |
 | `workflows` | Workflow definitions and pipelines |
 
 > New scopes may be introduced when a clearly distinct area warrants it. Keep names lowercase and hyphenated.
-
----
-
-## Message Rules
-
-- Lowercase after the colon
-- Imperative mood: "add", "fix", "remove", "update" — not "added" or "fixing"
-- No period at the end
-- Under 72 characters
 
 ---
 

@@ -1,14 +1,6 @@
 ---
 name: changelog-generator
-description: >-
-  Automatically creates user-facing changelogs from git commits by analyzing
-  commit history, categorizing changes, and transforming technical commits into
-  clear, customer-friendly release notes. Turns hours of manual changelog
-  writing into minutes of automated generation.
-metadata:
-  sync:
-    version: 2
-    hash: sha256-6eb40a7359e5f17255a7661e65a68c258a6a59ef7199903a610834817e1fbb43
+description: Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes. Turns hours of manual changelog writing into minutes of automated generation.
 ---
 
 # Changelog Generator
