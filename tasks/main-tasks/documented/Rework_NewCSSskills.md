@@ -159,7 +159,6 @@ via a separate refactoring task.
 
 ## Skill 3: `css-accessibility`
 
-
 ### Frontmatter description (trigger text)
 
 Authoring companion and review tool enforcing accessibility rules for this SillyTavern
@@ -274,6 +273,6 @@ None — all decisions captured above.
 - [x] Planning complete — all decisions made
 - [x] `css-rules` skill created
 - [x] `css-animation` skill created
-- [ ] `css-accessibility` skill created (includes ACC-01 through ACC-05)
+- [x] `css-accessibility` skill created (includes ACC-01 through ACC-05)
 - [ ] `.agents/skills/fixing-accessibility/` deleted (rules absorbed into `css-accessibility`)
 - [ ] `.agents/skills/fixing-motion-performance/` deleted (superseded by `css-animation`)
