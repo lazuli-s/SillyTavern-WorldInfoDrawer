@@ -228,7 +228,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   flex-wrap: nowrap;
 }
 
-.stwid--sortingRow .stwid--thinContainer {
+.stwid--sortingRow .stwid--thinContainer,
+.stwid--visibilityRow .stwid--thinContainer {
   gap: 1.1em;
   min-width: 45%;
   flex-wrap: wrap;
@@ -871,7 +872,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
     justify-content: flex-start;
   }
 
-  .stwid--sortingRow .stwid--thinContainer {
+  .stwid--sortingRow .stwid--thinContainer,
+  .stwid--visibilityRow .stwid--thinContainer {
     min-width: 100%;
   }
 

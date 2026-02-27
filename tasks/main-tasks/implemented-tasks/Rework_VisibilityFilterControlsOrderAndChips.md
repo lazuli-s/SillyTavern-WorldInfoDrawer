@@ -67,3 +67,19 @@
 - Updated `style.css` spacing to match requested control density:
   - `.stwid--iconTabBar { margin-bottom: 0.6em; }`
   - `.stwid--sortingRow { margin-top: 1em; }`
+
+## Follow-up Adjustment 11
+
+- Updated `src/listPanel.filterBar.js` to split the visibility tab row into two labeled `.stwid--thinContainer` groups:
+  - `Helper` group for the Order Helper button.
+  - `Visibility` group for the visibility dropdown button and active chips.
+- Added hint icons/titles to both new group labels, matching the existing thin-container label hint pattern used in controls/sorting rows.
+- Updated `style.css` so `.stwid--visibilityRow .stwid--thinContainer` now uses the same container layout settings as `.stwid--sortingRow .stwid--thinContainer`:
+  - `gap: 1.1em`
+  - `min-width: 45%`
+  - `flex-wrap: wrap`
+  - `row-gap: 0.55em`
+  - `padding-top: 0.7em`
+  - `display: flex`
+  - `justify-content: space-around`
+- Added matching mobile override so visibility-row thin containers use `min-width: 100%` at `max-width: 1000px`.

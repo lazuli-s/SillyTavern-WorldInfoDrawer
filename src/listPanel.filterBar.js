@@ -429,6 +429,28 @@ const createFilterBarSlice = ({
             };
             setApplyActiveFilter(applyActiveFilter);
             {
+                const helperContainer = document.createElement('div');
+                helperContainer.classList.add('stwid--thinContainer', 'stwid--visibilityHelper');
+                const helperContainerLabel = document.createElement('span');
+                helperContainerLabel.classList.add('stwid--thinContainerLabel');
+                helperContainerLabel.textContent = 'Helper';
+                const helperContainerHint = document.createElement('i');
+                helperContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                helperContainerHint.title = 'Open Order Helper for the books currently shown by Visibility filters.';
+                helperContainerLabel.append(helperContainerHint);
+                helperContainer.append(helperContainerLabel);
+
+                const visibilityContainer = document.createElement('div');
+                visibilityContainer.classList.add('stwid--thinContainer', 'stwid--visibilityFilters');
+                const visibilityContainerLabel = document.createElement('span');
+                visibilityContainerLabel.classList.add('stwid--thinContainerLabel');
+                visibilityContainerLabel.textContent = 'Visibility';
+                const visibilityContainerHint = document.createElement('i');
+                visibilityContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                visibilityContainerHint.title = 'Pick which sources are visible and review the active filter chips.';
+                visibilityContainerLabel.append(visibilityContainerHint);
+                visibilityContainer.append(visibilityContainerLabel);
+
                 const menuWrap = document.createElement('div');
                 menuWrap.classList.add('stwid--multiselectDropdownWrap');
 
@@ -503,9 +525,10 @@ const createFilterBarSlice = ({
                 listPanelState.bookVisibilityChips = chips;
                 const orderHelperToggle = runtime?.dom?.order?.toggle;
                 if (orderHelperToggle instanceof HTMLElement) {
-                    visibilityRow.append(orderHelperToggle);
+                    helperContainer.append(orderHelperToggle);
                 }
-                visibilityRow.append(menuWrap, chips);
+                visibilityContainer.append(menuWrap, chips);
+                visibilityRow.append(helperContainer, visibilityContainer);
 
                 const onDocClickCloseMenu = (evt)=>{
                     if (!menu.classList.contains('stwid--state-active')) return;
