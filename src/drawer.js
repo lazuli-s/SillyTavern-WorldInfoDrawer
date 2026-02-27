@@ -844,7 +844,7 @@ export const initDrawer = ({
                         const isMobile = isMobileLayout();
                         if (isMobile === lastLayoutIsMobile) return;
                         lastLayoutIsMobile = isMobile;
-                        applyOrientationDefault(isMobile);
+                        restoreSplitterForCurrentLayout();
                     }, 120);
                     window.addEventListener('resize', onLayoutResize);
                     globalThis.addEventListener?.('beforeunload', ()=>{

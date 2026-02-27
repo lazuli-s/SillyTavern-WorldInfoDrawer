@@ -2,7 +2,7 @@
 *Created: 2026-02-27*
 
 **Type:** ISSUE
-**Status:** ISSUES_FOUND
+**Status:** FINISHED
 
 ---
 
@@ -62,8 +62,17 @@ Reviewed: February 27, 2026
 - **Fix risk:** Low 🟢 — The fix is a one-line swap inside `onLayoutResize`. `restoreSplitterForCurrentLayout` is already in scope at that point, and its logic already handles both the "stored value exists" and "no stored value" cases correctly.
 
 - **Fix Plan:**
-  - [ ] In `src/drawer.js`, inside the `onLayoutResize` debounce callback (around line 847), replace the call `applyOrientationDefault(isMobile)` with `restoreSplitterForCurrentLayout()`.
-  - [ ] Verify that `restoreSplitterForCurrentLayout` is declared before `onLayoutResize` in the same scope (it is — line 714 vs line 843), so no hoisting issues arise.
+  - [x] In `src/drawer.js`, inside the `onLayoutResize` debounce callback (around line 847), replace the call `applyOrientationDefault(isMobile)` with `restoreSplitterForCurrentLayout()`.
+  - [x] Verify that `restoreSplitterForCurrentLayout` is declared before `onLayoutResize` in the same scope (it is — line 714 vs line 843), so no hoisting issues arise.
   - [ ] Manually test: set a custom splitter size, resize the window across the 1000 px breakpoint, resize back, and confirm the original size is restored rather than the default.
 
 - **Requires human judgment:** No
+
+---
+
+## Post-Implementation Fixes
+
+Implemented: February 27, 2026
+
+- [x] **PIR-01**: Layout switch overwrites saved splitter size
+  - **What changed**: When the browser window crossed the mobile/desktop size boundary, the code was resetting the splitter to its default size and saving that default over the user's custom size. Changed the resize handler to call the existing restore function instead, which reads the saved size first and only falls back to the default when nothing is stored. User-selected sizes are now preserved across layout switches.
