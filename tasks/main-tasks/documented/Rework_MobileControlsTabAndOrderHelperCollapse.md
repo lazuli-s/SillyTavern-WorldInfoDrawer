@@ -183,13 +183,13 @@ panel while the book list scrolls below it.
 
 **File: `style.css`**
 
-- [ ] Find the existing `@media (max-width: 1000px)` block that covers the list
+- [x] Find the existing `@media (max-width: 1000px)` block that covers the list
   panel (Section 2 — List Panel).
 
-- [ ] Check whether `.stwid--iconTabBar` already has `position: sticky` or an
+- [x] Check whether `.stwid--iconTabBar` already has `position: sticky` or an
   equivalent rule that keeps it visible while the book list scrolls.
 
-- [ ] If no sticky rule exists, add one inside the mobile block:
+- [x] If no sticky rule exists, add one inside the mobile block:
   ```css
   .stwid--iconTabBar {
       position: sticky;

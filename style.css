@@ -843,6 +843,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
     height: auto;
   }
 
+  .stwid--iconTabBar {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  }
+
   .stwid--controls .stwid--controlsRow,
   .stwid--controls .stwid--visibilityAndSettingsRow,
   .stwid--sortingRow,
