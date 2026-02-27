@@ -2,7 +2,7 @@
 *Created: 2026-02-27*
 
 **Type:** REFACTORING
-**Status:** IMPLEMENTED
+**Status:** DOCUMENTED
 **Source:** CSSAudit_2026-02-27.md
 
 ---
@@ -334,37 +334,37 @@ Issue 4 (add new block at end).
 
 ### Step 1 — Fix Issue 1: add override comments to `!important` declarations
 
-- [x] Open `style.css`.
-- [x] **Line 60**: add the override comment inline after `display: flex !important;`
+- [ ] Open `style.css`.
+- [ ] **Line 60**: add the override comment inline after `display: flex !important;`
       (see Issue 1 › Violation 1 for exact text).
-- [x] **Line 87**: add the override comment inline after `backdrop-filter: blur(4px) !important;`
+- [ ] **Line 87**: add the override comment inline after `backdrop-filter: blur(4px) !important;`
       (see Issue 1 › Violation 2 for exact text).
-- [x] **Line 432**: add the override comment inline after `opacity: 1 !important;`
+- [ ] **Line 432**: add the override comment inline after `opacity: 1 !important;`
       (see Issue 1 › Violations 3–5 for exact text).
-- [x] **Line 433**: add the override comment inline after the `background-color !important;` line.
-- [x] **Line 434**: add the override comment inline after the `backdrop-filter !important;` line.
-- [x] **Line 459**: add the override comment inline after `color: var(--customThemeColor) !important;`
+- [ ] **Line 433**: add the override comment inline after the `background-color !important;` line.
+- [ ] **Line 434**: add the override comment inline after the `backdrop-filter !important;` line.
+- [ ] **Line 459**: add the override comment inline after `color: var(--customThemeColor) !important;`
       (see Issue 1 › Violation 6 for exact text).
-- [x] **Line 1063**: add the block comment *above* the `.stwid--editor [name='contentAndCharFilterBlock']`
+- [ ] **Line 1063**: add the block comment *above* the `.stwid--editor [name='contentAndCharFilterBlock']`
       rule (see Issue 1 › Violation 7 for exact text).
 
 ---
 
 ### Step 2 — Fix Issue 5: replace hardcoded hex colors
 
-- [x] **Token block** (inside `body.stwid-- #WorldInfo { }`, around line 46): add the new
+- [ ] **Token block** (inside `body.stwid-- #WorldInfo { }`, around line 46): add the new
       `--stwid-warning-color` token on a new line after the last existing token
       (see Issue 5 › Violation 1 › Step A for exact text).
-- [x] **Line ~1584**: replace `color: var(--warning-color, #e8a97f);` with
+- [ ] **Line ~1584**: replace `color: var(--warning-color, #e8a97f);` with
       `color: var(--stwid-warning-color);`
-- [x] **Line ~1855**: replace `color: var(--SmartThemeErrorColor, #e57373);` with
+- [ ] **Line ~1855**: replace `color: var(--SmartThemeErrorColor, #e57373);` with
       `color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));`
 
 ---
 
 ### Step 3 — Fix Issue 2: replace fixed panel width on `.stwid--list`
 
-- [x] **Lines 139–147**: in the `.stwid--list` rule, replace `width: 300px;` with
+- [ ] **Lines 139–147**: in the `.stwid--list` rule, replace `width: 300px;` with
       `width: 20vw;`, add `min-width: 220px;` on a new line below it, and add
       `max-width: 100%;` on a new line below that.
       (see Issue 2 for the complete corrected block).
@@ -373,18 +373,18 @@ Issue 4 (add new block at end).
 
 ### Step 4 — Fix Issue 3: remove layout-reflow transitions
 
-- [x] **Line ~1470**: in `.stwid--RowTitle { }`, delete the line
+- [ ] **Line ~1470**: in `.stwid--RowTitle { }`, delete the line
       `transition: margin-bottom 250ms ease;` entirely.
-- [x] **Line ~1496**: in `.stwid--rowContentWrap { }`, delete the line
+- [ ] **Line ~1496**: in `.stwid--rowContentWrap { }`, delete the line
       `transition: max-height 250ms ease;` entirely.
-- [x] Confirm that **`.stwid--collapseChevron { transition: transform 250ms ease; }`** is
+- [ ] Confirm that **`.stwid--collapseChevron { transition: transform 250ms ease; }`** is
       untouched (this transition is safe and must stay).
 
 ---
 
 ### Step 5 — Fix Issue 4: add `prefers-reduced-motion` block
 
-- [x] At the very end of `style.css` (after line 2071, the current last line), add the new
+- [ ] At the very end of `style.css` (after line 2071, the current last line), add the new
       Section 8 block (see Issue 4 for the exact block to insert).
 
 ---
@@ -406,27 +406,13 @@ Issue 4 (add new block at end).
 
 ## After Implementation
 
-*Implemented: February 27, 2026*
+*(To be filled in after the changes are applied.)*
 
 ### What changed
-
-`style.css`
-- Added required inline explanation comments for all targeted `!important` overrides.
-- Replaced hardcoded fallback colors with theme-backed variables and introduced `--stwid-warning-color`.
-- Updated the list panel width block, removed two layout-heavy transitions, and added a reduced-motion media block at the end of the file.
-
-`tasks/main-tasks/documented/Refactoring_stylecssHighPriorityAuditFixes.md`
-- Marked Steps 1-5 checklist items complete as each code change was applied.
-- Updated task status to `IMPLEMENTED`.
-- Replaced this section with implementation notes, risks, and manual checks.
+*(List each file and each specific change made.)*
 
 ### Risks / What might break
-- This touches list panel sizing, so the panel may feel wider or narrower than expected on some desktop widths.
-- This removes one spacing animation, so the controls row collapse behavior may feel more abrupt than before.
-- The reduced-motion block is global within this stylesheet, so users with reduced-motion enabled will lose all transitions in this extension UI.
+*(List anything that could have gone wrong.)*
 
-### Manual checks
-- Not run in this environment: reload the World Info drawer and confirm the list panel still appears at a usable width and remains resizable.
-- Not run in this environment: open and close collapsible control rows and confirm chevron rotation still animates while spacing changes instantly.
-- Not run in this environment: verify dropdown hover color, Order Helper dirty Apply color, character exclude color, and loading blur still match theme behavior.
-- Optional check not run in this environment: with OS reduced-motion enabled, confirm transitions/animations are effectively disabled.
+### Manual checks performed
+*(List each check done and whether it passed.)*

@@ -45,9 +45,6 @@ body.stwid-- #WorldInfo {
   --stwid-state-hover-bg: var(--white20a);
   --stwid-state-disabled-opacity: 0.5;
 
-  /* Semantic tokens */
-  --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
-
   /* Phase 3: layout stability (inner content scrolls) */
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
@@ -60,7 +57,7 @@ body.stwid-- #WorldInfo {
 
 /* Show drawer when ST sets openDrawer */
 body.stwid-- #WorldInfo.openDrawer {
-  display: flex !important; /* override: ST's inline-drawer sets display:none by default; must force flex when openDrawer class is applied */
+  display: flex !important;
 }
 
 /* Hide the vanilla WI UI when drawer is active */
@@ -87,7 +84,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   content: 'Loading...';
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(4px) !important; /* override: loading overlay must blur regardless of parent backdrop-filter reset */
+  backdrop-filter: blur(4px) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,9 +141,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  width: 20vw;
-  min-width: 220px;
-  max-width: 100%;
+  width: 300px;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -433,9 +429,9 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--bookVisibilityMenu.stwid--state-active {
   display: flex;
   width: max-content;
-  opacity: 1 !important; /* override: ST menu styles set opacity:0 on hidden menus; force visible when state-active */
-  background-color: var(--SmartThemeBlurTintColor) !important; /* override: ST button resets may override menu background; force theme blur tint */
-  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important; /* override: parent backdrop-filter context may be cleared; force blur on menu */
+  opacity: 1 !important;
+  background-color: var(--SmartThemeBlurTintColor) !important;
+  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
   border: 1px solid var(--SmartThemeBorderColor);
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
@@ -460,7 +456,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 .stwid--multiselectDropdownOption:hover {
-  color: var(--customThemeColor) !important; /* override: ST menu_button hover styles may override color; force theme color on hover */
+  color: var(--customThemeColor) !important;
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
@@ -1064,55 +1060,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: none;
 }
 
-/* Additional Matching Sources collapsible section card */
-.stwid--entry-section {
-  border: 1px solid color-mix(in srgb, var(--SmartThemeBodyColor) 25%, transparent);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.stwid--entry-section > .inline-drawer-toggle {
-  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 10%, transparent);
-  padding: 5px 12px;
-  pointer-events: auto;
-  cursor: pointer;
-  user-select: none;
-}
-
-.stwid--entry-section.stwid--expanded > .inline-drawer-toggle {
-  border-bottom: 1px solid color-mix(in srgb, var(--SmartThemeBodyColor) 25%, transparent);
-}
-
-.stwid--entry-section > .inline-drawer-toggle > .inline-drawer-icon {
-  display: flex;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stwid--entry-section.stwid--expanded > .inline-drawer-toggle > .inline-drawer-icon {
-  transform: rotate(180deg);
-}
-
-/* override: AMS content uses max-height animation; block display prevents ST's jQuery from collapsing it */
-.stwid--entry-section > .inline-drawer-content {
-  display: block !important;
-  flex: none;
-  max-height: 0;
-  overflow: hidden;
-  padding: 0 10px;
-  opacity: 0;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stwid--entry-section.stwid--expanded > .inline-drawer-content {
-  max-height: 2000px;
-  padding: 10px;
-  opacity: 1;
-}
-
-/* override: vanilla ST sets a conflicting flex value on [name='contentAndCharFilterBlock'];
-   flex:1 is required so the content textarea fills the remaining editor height */
 .stwid--editor [name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
   min-height: 0;
@@ -1520,6 +1467,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   color: var(--SmartThemeEmColor);
   opacity: 1;
   margin-bottom: 0.5em;
+  transition: margin-bottom 250ms ease;
 }
 
 .stwid--collapsed .stwid--RowTitle {
@@ -1545,6 +1493,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: flex;
   flex-wrap: wrap;
   gap: inherit;
+  transition: max-height 250ms ease;
 }
 
 .stwid--RowTitle::after {
@@ -1632,7 +1581,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 
 /* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
 .stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .stwid--applyDirty {
-  color: var(--stwid-warning-color);
+  color: var(--warning-color, #e8a97f);
 }
 
 .stwid--columnVisibilityLabel {
@@ -1903,7 +1852,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 }
 
 .stwid--characterFilterRow--exclude {
-  color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));
+  color: var(--SmartThemeErrorColor, #e57373);
 }
 
 /* override: FA icon checkbox defaults are too large for the compact recursion options row */
@@ -2118,20 +2067,5 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 @media screen and (max-width: 1000px) {
   .stwid--helpToast {
     overflow-wrap: anywhere;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 8) Accessibility                                                           */
-
-/* -------------------------------------------------------------------------- */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
-    animation-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
   }
 }
