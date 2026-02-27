@@ -58,6 +58,7 @@ Where each feature or behavior is implemented in the codebase.
 - Editor reset/clear and active-row highlight control → src/editorPanel.js
 - Focus/unfocus editor UI toggles → src/editorPanel.js
 - Global activation settings panel embedding/toggling (`#wiActivationSettings`) → src/editorPanel.js
+- Additional Matching Sources checkboxes (`matchCharacterDescription`, `matchCharacterPersonality`, `matchScenario`, `matchPersonaDescription`, `matchCharacterDepthPrompt`, `matchCreatorNotes`) surfaced in entry editor via CSS un-hide → style.css; wiring via vanilla ST `getWorldEntry` in extension render flow → src/editorPanel.js
 - Duplicate-entry button refresh queue/reopen behavior → src/wiUpdateHandler.js, src/drawer.js
 
 ## Selection & interaction
