@@ -1,3 +1,8 @@
+import {
+    ORDER_HELPER_RECURSION_OPTIONS,
+    ORDER_HELPER_TOGGLE_COLUMNS,
+} from './constants.js';
+
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
 const ORDER_HELPER_COLUMNS_STORAGE_KEY = 'stwid--order-helper-columns';
@@ -46,17 +51,27 @@ const getPositionOptions = ()=>{
 const getPositionValues = ()=>getPositionOptions().map((option)=>option.value);
 
 const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
-    const recursionValues = [
-        'excludeRecursion',
-        'preventRecursion',
-        'delayUntilRecursion',
-    ];
+    const recursionValues = ORDER_HELPER_RECURSION_OPTIONS.map(({ value })=>value);
+    const schemaKeys = ORDER_HELPER_TOGGLE_COLUMNS.map(({ key })=>key);
+    const schemaKeySet = new Set(schemaKeys);
+    const defaultKeys = Object.keys(ORDER_HELPER_DEFAULT_COLUMNS);
+    const missingInDefaults = schemaKeys.filter((key)=>!Object.hasOwn(ORDER_HELPER_DEFAULT_COLUMNS, key));
+    const extraInDefaults = defaultKeys.filter((key)=>!schemaKeySet.has(key));
+    if (missingInDefaults.length > 0 || extraInDefaults.length > 0) {
+        console.warn('[STWID orderHelperState] Column schema mismatch detected.', { missingInDefaults, extraInDefaults });
+    }
+    const canonicalDefaultColumns = { ...ORDER_HELPER_DEFAULT_COLUMNS };
+    for (const key of schemaKeys) {
+        if (typeof canonicalDefaultColumns[key] !== 'boolean') {
+            canonicalDefaultColumns[key] = false;
+        }
+    }
     const state = {
         sort: SORT.TITLE,
         direction: SORT_DIRECTION.ASCENDING,
         book: null,
         hideKeys: false,
-        columns: { ...ORDER_HELPER_DEFAULT_COLUMNS },
+        columns: { ...canonicalDefaultColumns },
         filters: {
             strategy: getStrategyValues(),
             position: getPositionValues(),
@@ -85,7 +100,8 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
     try {
         const storedColumns = JSON.parse(localStorage.getItem(ORDER_HELPER_COLUMNS_STORAGE_KEY));
         if (storedColumns && typeof storedColumns === 'object') {
-            for (const [key, value] of Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)) {
+            for (const key of schemaKeys) {
+                const value = canonicalDefaultColumns[key];
                 if (typeof storedColumns[key] === 'boolean') {
                     state.columns[key] = storedColumns[key];
                 } else {

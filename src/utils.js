@@ -57,9 +57,86 @@ const appendSortOptions = (select, currentSort, currentDirection)=>{
     }
 };
 
+let slashCommandParserCtor = null;
+let slashCommandParserCtorResolved = false;
+const getSlashCommandParserCtor = async()=>{
+    if (slashCommandParserCtorResolved) return slashCommandParserCtor;
+
+    const runtimeCtor = globalThis.SlashCommandParser;
+    if (typeof runtimeCtor === 'function') {
+        slashCommandParserCtor = runtimeCtor;
+        slashCommandParserCtorResolved = true;
+        return slashCommandParserCtor;
+    }
+
+    // Fallback for ST versions that do not expose the parser constructor globally.
+    try {
+        const module = await import('../../../../slash-commands/SlashCommandParser.js');
+        slashCommandParserCtor = typeof module?.SlashCommandParser === 'function'
+            ? module.SlashCommandParser
+            : null;
+    } catch (error) {
+        console.error('Failed to resolve SlashCommandParser', error);
+        slashCommandParserCtor = null;
+    }
+    slashCommandParserCtorResolved = true;
+    return slashCommandParserCtor;
+};
+
+const executeSlashCommand = async(command)=>{
+    try {
+        const SlashCommandParser = await getSlashCommandParserCtor();
+        if (typeof SlashCommandParser !== 'function') {
+            console.error('Failed to execute slash command: SlashCommandParser is unavailable.');
+            return false;
+        }
+
+        const parser = new SlashCommandParser();
+        const closure = parser.parse(command);
+        if (!closure || typeof closure.execute !== 'function') {
+            console.error('Failed to execute slash command: parser returned an invalid command closure.');
+            return false;
+        }
+
+        await closure.execute();
+        return true;
+    } catch (error) {
+        console.error('Failed to execute slash command', error);
+        return false;
+    }
+};
+
+/**
+ * Parses a potentially non-boolean setting value tolerantly.
+ * Accepts native booleans, the strings "true"/"false", and the numbers 1/0.
+ * Returns `defaultValue` for all other unrecognized inputs, ensuring the
+ * caller's intended default is preserved even when serialization coerces types.
+ * @param {*} value
+ * @param {boolean} defaultValue
+ * @returns {boolean}
+ */
+const parseBooleanSetting = (value, defaultValue) => {
+    if (typeof value === 'boolean') return value;
+    if (value === 'true' || value === 1) return true;
+    if (value === 'false' || value === 0) return false;
+    return defaultValue;
+};
+
+const getOutletPositionValue = ()=>document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
+
+const isOutletPosition = (position)=>{
+    const outletValue = getOutletPositionValue();
+    if (outletValue === undefined) return false;
+    return String(position) === String(outletValue);
+};
+
 export {
     appendSortOptions,
     createDeferred,
+    executeSlashCommand,
+    getOutletPositionValue,
     getSortLabel,
+    isOutletPosition,
+    parseBooleanSetting,
     safeToSorted,
 };

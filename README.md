@@ -29,6 +29,7 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 ### 📁 Lorebook folders
 - Organize your lorebooks into folders to keep large projects clean and easy to navigate.
 - Import or export whole folder groups to move sets of books in one step.
+- Use the top list controls to collapse or expand all folders at once.
 - Use folder actions (rename, delete, export, import, create book) from one menu.
 - Run Order Helper on a single folder scope when you only want to reorder books in that folder.
 
