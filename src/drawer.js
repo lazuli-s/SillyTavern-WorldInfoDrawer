@@ -183,14 +183,32 @@ export const initDrawer = ({
 
         document.body.classList.add('stwid--');
         const drawerContent = document.querySelector('#WorldInfo'); {
-            const DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--list-width';
-            const MOBILE_SPLITTER_STORAGE_KEY = 'stwid--list-height';
+            const DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--splitter-size';
+            const MOBILE_SPLITTER_STORAGE_KEY = 'stwid--splitter-size-mobile';
+            const LEGACY_DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--list-width';
+            const LEGACY_MOBILE_SPLITTER_STORAGE_KEY = 'stwid--list-height';
             const MOBILE_LAYOUT_BREAKPOINT = 1000;
             const MIN_LIST_WIDTH = 150;
             const MIN_EDITOR_WIDTH = 300;
             const MIN_LIST_HEIGHT = 150;
             const MIN_EDITOR_HEIGHT = 150;
             const isMobileLayout = ()=>window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
+            const getStoredSplitterSize = (primaryKey, legacyKey)=>{
+                const primaryValue = Number.parseInt(localStorage.getItem(primaryKey) ?? '', 10);
+                if (!Number.isNaN(primaryValue)) return primaryValue;
+
+                const legacyValue = Number.parseInt(localStorage.getItem(legacyKey) ?? '', 10);
+                if (Number.isNaN(legacyValue)) return Number.NaN;
+
+                localStorage.setItem(primaryKey, String(Math.round(legacyValue)));
+                return legacyValue;
+            };
+            const saveSplitterSize = (primaryKey, legacyKey, value)=>{
+                const roundedValue = String(Math.round(value));
+                localStorage.setItem(primaryKey, roundedValue);
+                // Keep writing legacy keys so older builds still restore the last size.
+                localStorage.setItem(legacyKey, roundedValue);
+            };
             const body = document.createElement('div'); {
                 dom.drawer.body = body;
                 body.classList.add('stwid--body');
@@ -686,16 +704,16 @@ export const initDrawer = ({
                     const applyOrientationDefault = (mobileLayout)=>{
                         if (mobileLayout) {
                             const defaultHeight = applyMobileHeightWithBounds(getDefaultMobileHeight());
-                            localStorage.setItem(MOBILE_SPLITTER_STORAGE_KEY, String(Math.round(defaultHeight)));
+                            saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, defaultHeight);
                             return;
                         }
                         const defaultWidth = applyDesktopWidthWithBounds(getDefaultDesktopWidth());
-                        localStorage.setItem(DESKTOP_SPLITTER_STORAGE_KEY, String(Math.round(defaultWidth)));
+                        saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, defaultWidth);
                     };
 
                     restoreSplitterForCurrentLayout = ()=>{
                         if (isMobileLayout()) {
-                            const storedHeight = Number.parseInt(localStorage.getItem(MOBILE_SPLITTER_STORAGE_KEY) ?? '', 10);
+                            const storedHeight = getStoredSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY);
                             if (Number.isNaN(storedHeight)) {
                                 applyOrientationDefault(true);
                                 return;
@@ -704,7 +722,7 @@ export const initDrawer = ({
                             return;
                         }
 
-                        const storedWidth = Number.parseInt(localStorage.getItem(DESKTOP_SPLITTER_STORAGE_KEY) ?? '', 10);
+                        const storedWidth = getStoredSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY);
                         if (Number.isNaN(storedWidth)) {
                             applyOrientationDefault(false);
                             return;
@@ -754,7 +772,7 @@ export const initDrawer = ({
                                 appliedListWidth = applyDesktopWidthWithBounds(pendingWidth);
                             }
 
-                            localStorage.setItem(DESKTOP_SPLITTER_STORAGE_KEY, String(Math.round(appliedListWidth)));
+                            saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, appliedListWidth);
                         };
 
                         const onUp = (upEvt)=>cleanupDrag(upEvt);
@@ -809,7 +827,7 @@ export const initDrawer = ({
                                 appliedListHeight = applyMobileHeightWithBounds(pendingHeight);
                             }
 
-                            localStorage.setItem(MOBILE_SPLITTER_STORAGE_KEY, String(Math.round(appliedListHeight)));
+                            saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, appliedListHeight);
                         };
 
                         const onUp = (upEvt)=>cleanupDrag(upEvt);

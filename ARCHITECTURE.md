@@ -177,8 +177,8 @@ Key keys:
 - `stwid--order-helper-hide-keys`
 - `stwid--order-helper-columns`
 - `stwid--order-start`, `stwid--order-step`, `stwid--order-direction`, `stwid--order-filter`
-- `stwid--list-width`
-- `stwid--list-height`
+- `stwid--splitter-size` (desktop splitter width; legacy mirror: `stwid--list-width`)
+- `stwid--splitter-size-mobile` (mobile splitter height; legacy mirror: `stwid--list-height`)
 
 ### 4.3. Runtime In-Memory State
 
