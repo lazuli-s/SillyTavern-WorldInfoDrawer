@@ -507,3 +507,21 @@ Issue 4 (add new block at end).
 
 - Not run in this environment: browser reload and visual confirmation that the Order Helper visibility row now shows three labeled thin containers (`Keys`, `Columns`, `Table Sorting`) with working hint icons.
 - Not run in this environment: browser reload and confirmation that key toggle, column visibility menu, and table sorting behavior are unchanged functionally.
+
+## Follow-up Tweaks (2026-02-27, bulk edit container cleanup)
+
+### What changed
+
+- Updated `style.css` so `.stwid--order-action-bar, .stwid--bulkEditRow` now uses `gap: 0.9em`.
+- Removed all `:is(.stwid--thinContainer, .stwid--bulkEditContainer)` selectors in `style.css` and kept only `.stwid--thinContainer`.
+- Updated `src/orderHelperRender.actionBar.js` so bulk-edit groups now add only `stwid--thinContainer` (removed `stwid--bulkEditContainer` from all container class assignments).
+
+### Why it changed
+
+- Requested cleanup to fully retire the transition-era `stwid--bulkEditContainer` class and rely on the unified `stwid--thinContainer` class.
+- Requested tighter, consistent spacing for Order Helper action and bulk-edit rows.
+
+### Verification status
+
+- Not run in this environment: browser reload and visual confirmation that Order Helper action-bar and bulk-edit row spacing now reflects the `0.9em` gap baseline.
+- Not run in this environment: browser reload and confirmation that bulk edit controls keep the same behavior/styling after removing `stwid--bulkEditContainer`.
