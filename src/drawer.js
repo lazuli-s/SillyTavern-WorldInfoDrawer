@@ -207,6 +207,10 @@ export const initDrawer = ({
                         const lorebooksGroupLabel = document.createElement('span');
                         lorebooksGroupLabel.classList.add('stwid--thinContainerLabel');
                         lorebooksGroupLabel.textContent = 'Lorebooks';
+                        const lorebooksGroupHint = document.createElement('i');
+                        lorebooksGroupHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                        lorebooksGroupHint.title = 'Create, import, or collapse lorebooks';
+                        lorebooksGroupLabel.append(lorebooksGroupHint);
                         lorebooksGroup.append(lorebooksGroupLabel);
                         controlsPrimary.append(lorebooksGroup);
                         const foldersGroup = document.createElement('div');
@@ -225,6 +229,10 @@ export const initDrawer = ({
                         const settingsGroupLabel = document.createElement('span');
                         settingsGroupLabel.classList.add('stwid--thinContainerLabel');
                         settingsGroupLabel.textContent = 'Settings';
+                        const settingsGroupHint = document.createElement('i');
+                        settingsGroupHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                        settingsGroupHint.title = 'Open activation settings or refresh the list';
+                        settingsGroupLabel.append(settingsGroupHint);
                         settingsGroup.append(settingsGroupLabel);
                         controlsPrimary.append(settingsGroup);
                         const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {

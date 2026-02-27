@@ -430,3 +430,20 @@ Issue 4 (add new block at end).
 - Not run in this environment: open and close collapsible control rows and confirm chevron rotation still animates while spacing changes instantly.
 - Not run in this environment: verify dropdown hover color, Order Helper dirty Apply color, character exclude color, and loading blur still match theme behavior.
 - Optional check not run in this environment: with OS reduced-motion enabled, confirm transitions/animations are effectively disabled.
+
+## Follow-up Tweaks (2026-02-27)
+
+### What changed
+
+- Added the existing thin-container hint icon (`fa-solid fa-fw fa-circle-question stwid--thinContainerLabelHint`) to the `Lorebooks` and `Settings` control groups in `src/drawer.js`, matching the existing `Folders` pattern.
+- Updated `.stwid--small-check-row` to `font-size: 0.85em;` in `style.css`.
+- Updated `.stwid--comment` to `font-size: 1.03em;` in `style.css`, and aligned the Order Helper comment-link override to the same size.
+
+### Why it changed
+
+- Requested UI consistency: all three top control groups now include the same help hint icon treatment.
+- Requested typography tuning for compact check rows and comment text readability.
+
+### Verification status
+
+- Not run in this environment: browser reload and visual confirmation of the new Lorebooks/Settings hint icons and the two font-size adjustments.

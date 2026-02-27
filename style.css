@@ -819,6 +819,10 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   white-space: nowrap;
 }
 
+.stwid--comment {
+  font-size: 1.03em;
+}
+
 .stwid--books .stwid--entry .stwid--body .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
@@ -1833,6 +1837,10 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   gap: 0.4em;
 }
 
+.stwid--small-check-row {
+  font-size: 0.85em;
+}
+
 .stwid--characterFilterRow--include {
   color: var(--SmartThemeQuoteColor);
 }
@@ -1945,7 +1953,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 }
 
 .stwid--orderTable tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
-  font-size: 1.1em;
+  font-size: 1.03em;
   font-weight: 500;
 }
 
