@@ -49,6 +49,7 @@ import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './c
  *   getAutomationIdValues: function,
  *   getGroupValues: function,
  *   filterIndicatorRefs: object,
+ *   initialCollapsed: boolean,
  * }} ctx
  * @returns {{ element: HTMLElement, refresh: function }}
  */
@@ -88,6 +89,7 @@ export function buildVisibilityRow({
     getAutomationIdValues,
     getGroupValues,
     filterIndicatorRefs,
+    initialCollapsed = false,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--order-action-bar');
@@ -461,6 +463,15 @@ export function buildVisibilityRow({
         }
     });
 
+    if (initialCollapsed) {
+        row.dataset.collapsed = 'true';
+        row.classList.add('stwid--collapsed');
+        contentWrap.style.overflow = 'hidden';
+        contentWrap.style.maxHeight = '0';
+        collapseChevron.classList.remove('fa-chevron-down');
+        collapseChevron.classList.add('fa-chevron-right');
+    }
+
     return { element: row, refresh };
 }
 
@@ -489,6 +500,7 @@ export function buildVisibilityRow({
  *   syncOrderHelperOutletFilters: function,
  *   filterIndicatorRefs: object,
  *   applyOrderHelperRecursionFilterToRow: function,
+ *   initialCollapsed: boolean,
  * }} ctx
  * @returns {{ element: HTMLElement, refreshSelectionCount: function, cleanup: function }}
  */
@@ -512,6 +524,7 @@ export function buildBulkEditRow({
     syncOrderHelperOutletFilters,
     filterIndicatorRefs,
     applyOrderHelperRecursionFilterToRow,
+    initialCollapsed = false,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
@@ -1650,6 +1663,15 @@ export function buildBulkEditRow({
             collapseChevron.classList.add('fa-chevron-right');
         }
     });
+
+    if (initialCollapsed) {
+        row.dataset.collapsed = 'true';
+        row.classList.add('stwid--collapsed');
+        contentWrap.style.overflow = 'hidden';
+        contentWrap.style.maxHeight = '0';
+        collapseChevron.classList.remove('fa-chevron-down');
+        collapseChevron.classList.add('fa-chevron-right');
+    }
 
     return { element: row, refreshSelectionCount, cleanup };
 }

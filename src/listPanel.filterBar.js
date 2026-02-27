@@ -103,6 +103,10 @@ const createFilterBarSlice = ({
 
     let docClickHandler = null;
     const setupFilter = (list)=>{
+        const controlsRowEl = runtime?.dom?.controlsRow instanceof HTMLElement
+            ? runtime.dom.controlsRow
+            : null;
+        const isMobile = window.innerWidth <= 1000;
         const filter = document.createElement('div'); {
             const searchRow = document.createElement('div');
             searchRow.classList.add('stwid--searchRow');
@@ -232,6 +236,9 @@ const createFilterBarSlice = ({
                     { id:'sorting', icon:'fa-arrow-down-wide-short', label:'Sorting' },
                     { id:'search', icon:'fa-magnifying-glass', label:'Search' },
                 ];
+                if (isMobile && controlsRowEl) {
+                    panelTabs.unshift({ id:'controls', icon:'fa-sliders', label:'Controls' });
+                }
                 const tabButtons = [];
                 const tabContents = [];
                 const tabContentsById = new Map();
@@ -273,6 +280,16 @@ const createFilterBarSlice = ({
 
                     button.addEventListener('click', ()=>setActivePlaceholderTab(tab.id));
                 }
+                if (isMobile && controlsRowEl) {
+                    const controlsTabContent = tabContentsById.get('controls');
+                    if (controlsTabContent) {
+                        const originalParent = controlsRowEl.parentElement;
+                        controlsTabContent.append(controlsRowEl);
+                        if (originalParent) {
+                            originalParent.style.display = 'none';
+                        }
+                    }
+                }
                 const visibilityTabContent = tabContentsById.get('visibility');
                 if (visibilityTabContent) {
                     visibilityTabContent.append(visibilityRow);
@@ -286,7 +303,8 @@ const createFilterBarSlice = ({
                     searchTabContent.append(searchRow);
                 }
                 iconTab.prepend(iconTabBar);
-                setActivePlaceholderTab(panelTabs[0].id);
+                const defaultTabId = (isMobile && controlsRowEl) ? 'controls' : (panelTabs[0]?.id ?? 'visibility');
+                setActivePlaceholderTab(defaultTabId);
             }
             const getBookVisibilityOption = (mode)=>
                 BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
