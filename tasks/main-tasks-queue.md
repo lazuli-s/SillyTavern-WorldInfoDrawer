@@ -4,6 +4,8 @@
 
 *Folder: `tasks/main-tasks/documented/`*
 
+- `tasks/main-tasks/documented/Refactoring_stylecssHighPriorityAuditFixes.md`
+
 
 ## Implemented tasks
 
