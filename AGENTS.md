@@ -75,7 +75,7 @@ Main shared libs include:
 
 ## 5. Style Guide Compliance
 
-Before making any UI or CSS change, always run the `css-ST` skill.
+Before making any UI or CSS change, always run the `css-ST` and `css-responsive` skills.
 
 Style guide requirements are mandatory:
 

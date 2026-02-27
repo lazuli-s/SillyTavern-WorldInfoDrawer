@@ -60,7 +60,7 @@ Main shared libs include:
 
 ## 5. Style Guide Compliance
 
-Before making any UI or CSS change, read `workflows/css-workflow.md`. It defines which skills to run, in what order, and includes all extension CSS contracts.
+Before making any UI or CSS change, always run the `css-ST` and `css-responsive` skills.
 
 ## 6. Ownership and Integration Contract
 

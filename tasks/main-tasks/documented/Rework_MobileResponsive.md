@@ -118,9 +118,9 @@ Validated during implementation: these files already existed and matched the pha
 
 ### Phase 2 — Register `css-responsive` as a mandatory pre-CSS check
 
-- [ ] In `CLAUDE.md` section 5 (Style Guide Compliance), add `css-responsive` to the
+- [x] In `CLAUDE.md` section 5 (Style Guide Compliance), add `css-responsive` to the
   "before making any UI or CSS change, run..." list alongside `style-guide`
-- [ ] In `AGENTS.md` section 5, add the same line so both instruction files stay in sync
+- [x] In `AGENTS.md` section 5, add the same line so both instruction files stay in sync
 
 ### Phase 3 — Implement mobile CSS in `style.css`
 
