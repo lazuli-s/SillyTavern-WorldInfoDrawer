@@ -59,10 +59,7 @@ newly surfaced editor behavior.
 
 ## Out of Scope
 
-- Making the section collapsible (requires a larger CSS refactor of the global inline-drawer
-  system; the extension globally hides all `.inline-drawer-toggle` elements and forces all
-  `.inline-drawer-content` to `display: flex !important` — proper collapse/expand behavior
-  conflicts with that architecture). A follow-up task can address this if desired.
+- ~~Making the section collapsible~~ — addressed in the follow-up rework below (Feb 27 2026).
 
 ---
 
@@ -161,3 +158,36 @@ In the `## Editor behavior` section, add a new line:
   Success looks like each checkbox keeping the state you set.
 - Open a few different entries (including one with long content) and scroll through the editor.
   Success looks like normal scrolling and no oversized empty block where the section appears.
+
+---
+
+## Rework: Make section a collapsible animated card
+*Implemented: February 27, 2026*
+
+### What changed
+
+- `style.css`
+  - Added `.stwid--entry-section` block — border (1px, 25% opacity body color), border-radius 5px, overflow:hidden.
+  - Added toggle header overrides: pointer-events, cursor, user-select, background (10% opacity), padding. Existing non-interactive rules for all inner toggles continue to apply to any other future inner sections.
+  - Added chevron re-show rule for `.stwid--entry-section > .inline-drawer-toggle > .inline-drawer-icon` (overrides the blanket hide). Chevron rotates 180° via CSS transform when `.stwid--expanded` is present.
+  - Added collapsed state for `.stwid--entry-section > .inline-drawer-content`: `display: block !important` (overrides the outer `display: flex !important` by being later in the file at equal specificity), `max-height: 0`, `overflow: hidden`, `opacity: 0`, transition on max-height / padding / opacity.
+  - Added expanded state for `.stwid--entry-section.stwid--expanded > .inline-drawer-content`: `max-height: 2000px`, `padding: 10px`, `opacity: 1`.
+  - Border-bottom on the toggle header only appears when expanded (`.stwid--entry-section.stwid--expanded > .inline-drawer-toggle`) to avoid a double-border visual artefact when collapsed.
+
+- `src/editorPanel.js` — `openEntryEditor`
+  - After appending `editDom`, queries for `.userSettingsInnerExpandable` to locate the AMS toggle.
+  - Finds the closest `.inline-drawer` parent and adds `.stwid--entry-section` to it.
+  - Adds a `click` listener that calls `e.stopPropagation()` (prevents ST's document-level `inline-drawer-toggle` handler from firing) and toggles `.stwid--expanded` on the section wrapper.
+  - Section starts collapsed (no `.stwid--expanded` on load).
+
+### Why `display: block !important` wins
+
+The outer rule `.stwid--editor .inline-drawer-content { display: flex !important }` has specificity 0,2,0 (inside `#WorldInfo`, both rules inherit the same ID anchor). The new rule `.stwid--entry-section > .inline-drawer-content { display: block !important }` has the same specificity. When two `!important` declarations share the same specificity, the later one in the file wins — the new rule appears after the outer rule, so it wins.
+
+### Manual checks
+
+- Open any entry: the Additional Matching Sources section should appear as a bordered card with a dimmed header and chevron pointing down, content hidden.
+- Click the header: the section expands smoothly, the chevron rotates 180° to point up, the border-bottom separator appears between header and content.
+- Click again: it collapses smoothly.
+- Open a different entry: the section starts collapsed again (state is per-entry-load, not persisted).
+- Check all 6 checkboxes work when the section is expanded.
