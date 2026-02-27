@@ -145,20 +145,20 @@ after its source section to keep related rules co-located:
 
 ### Phase 4 — Adapt the splitter in `src/drawer.js`
 
-- [ ] After the splitter element is created (around line 612), add a mobile-detection helper
+- [x] After the splitter element is created (around line 612), add a mobile-detection helper
   — a function `isMobileLayout()` that returns `window.innerWidth <= 1000`
-- [ ] Create a second splitter element `.stwid--splitter-h` (horizontal bar) and insert it
+- [x] Create a second splitter element `.stwid--splitter-h` (horizontal bar) and insert it
   into the drawer DOM alongside the existing `.stwid--splitter`; CSS from Phase 3 will
   show/hide each one based on the breakpoint
-- [ ] On `pointerdown` on `.stwid--splitter-h`: read `evt.clientY` as the drag origin and
+- [x] On `pointerdown` on `.stwid--splitter-h`: read `evt.clientY` as the drag origin and
   resize the list panel's `height` (instead of width) as the pointer moves; mirror the
   existing pointer-capture + lost-capture cleanup pattern from the horizontal splitter
-- [ ] Clamp the mobile splitter: define `MIN_LIST_HEIGHT` and `MIN_EDITOR_HEIGHT` constants
+- [x] Clamp the mobile splitter: define `MIN_LIST_HEIGHT` and `MIN_EDITOR_HEIGHT` constants
   (e.g. 150 px each) and use them as floor/ceiling during drag, analogous to the existing
   `MIN_LIST_WIDTH` / `MIN_EDITOR_WIDTH` constants
-- [ ] Save the mobile list height to `localStorage` under key `stwid--list-height` on drag end
-- [ ] Restore the saved mobile list height on drawer open when `isMobileLayout()` is true
-- [ ] Add a `window.addEventListener('resize', ...)` listener (debounced) that detects when
+- [x] Save the mobile list height to `localStorage` under key `stwid--list-height` on drag end
+- [x] Restore the saved mobile list height on drawer open when `isMobileLayout()` is true
+- [x] Add a `window.addEventListener('resize', ...)` listener (debounced) that detects when
   the viewport crosses the 1000 px threshold and resets the splitter to a sensible default
   for whichever orientation just became active
 
