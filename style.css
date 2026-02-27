@@ -1358,7 +1358,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--bulkEditRow {
   flex: 0 0 auto;
   display: flex;
-  gap: 1.25em;
+  gap: 0.9em;
   justify-content: flex-start;
   align-items: center;
   background-color: var(--SmartThemeBlurTintColor);
@@ -1443,7 +1443,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 /* Bulk edit row */
 .stwid--bulkEditRow {
   flex-wrap: wrap;
-  gap: 0.75em;
   padding: 0.4em 0.5em;
 }
 
@@ -1490,7 +1489,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: var(--SmartThemeBorderColor);
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) {
+.stwid--orderHelper .stwid--thinContainer {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -1528,15 +1527,15 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 4em;
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .killSwitch.fa-toggle-on {
+.stwid--orderHelper .stwid--thinContainer .killSwitch.fa-toggle-on {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .killSwitch.fa-toggle-off {
+.stwid--orderHelper .stwid--thinContainer .killSwitch.fa-toggle-off {
   color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer).stwid--state-disabled {
+.stwid--orderHelper .stwid--thinContainer.stwid--state-disabled {
   opacity: var(--stwid-state-disabled-opacity);
   pointer-events: none;
 }
@@ -1549,7 +1548,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 3.5em;
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="outlet"] .stwid--input {
+.stwid--orderHelper .stwid--thinContainer[data-field="outlet"] .stwid--input {
   width: 8em;
   font-size: 0.85em;
 }
@@ -1561,12 +1560,12 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   align-items: flex-start;
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="applyAll"] {
+.stwid--orderHelper .stwid--thinContainer[data-field="applyAll"] {
   min-width: 5em;
 }
 
 /* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .stwid--applyDirty {
+.stwid--orderHelper .stwid--thinContainer .stwid--applyDirty {
   color: var(--stwid-warning-color);
 }
 

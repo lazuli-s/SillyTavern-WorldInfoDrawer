@@ -554,7 +554,7 @@ export function buildBulkEditRow({
 
     // ── Select container ──────────────────────────────────────────────────
     const selectContainer = document.createElement('div');
-    selectContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    selectContainer.classList.add('stwid--thinContainer');
     selectContainer.dataset.field = 'select';
 
     const selectLabel = document.createElement('span');
@@ -660,7 +660,7 @@ export function buildBulkEditRow({
 
     // ── Toggle Active State container ─────────────────────────────────────
     const activeStateContainer = document.createElement('div');
-    activeStateContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    activeStateContainer.classList.add('stwid--thinContainer');
     activeStateContainer.dataset.field = 'activeState';
 
     const activeStateLabel = document.createElement('span');
@@ -731,7 +731,7 @@ export function buildBulkEditRow({
 
     // ── Strategy container ────────────────────────────────────────────────
     const strategyContainer = document.createElement('div');
-    strategyContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    strategyContainer.classList.add('stwid--thinContainer');
     strategyContainer.dataset.field = 'strategy';
 
     const strategyLabel = document.createElement('span');
@@ -805,7 +805,7 @@ export function buildBulkEditRow({
 
     // ── Position container ────────────────────────────────────────────────
     const positionContainer = document.createElement('div');
-    positionContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    positionContainer.classList.add('stwid--thinContainer');
     positionContainer.dataset.field = 'position';
 
     const positionLabel = document.createElement('span');
@@ -869,7 +869,7 @@ export function buildBulkEditRow({
 
     // ── Depth container ───────────────────────────────────────────────────
     const depthContainer = document.createElement('div');
-    depthContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    depthContainer.classList.add('stwid--thinContainer');
     depthContainer.dataset.field = 'depth';
 
     const depthLabel = document.createElement('span');
@@ -938,7 +938,7 @@ export function buildBulkEditRow({
 
     // ── Outlet container ──────────────────────────────────────────────────
     const outletContainer = document.createElement('div');
-    outletContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    outletContainer.classList.add('stwid--thinContainer');
     outletContainer.dataset.field = 'outlet';
 
     const outletLabel = document.createElement('span');
@@ -1073,7 +1073,7 @@ export function buildBulkEditRow({
 
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
-    orderContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    orderContainer.classList.add('stwid--thinContainer');
     orderContainer.dataset.field = 'order';
 
     const orderLabel = document.createElement('span');
@@ -1227,7 +1227,7 @@ export function buildBulkEditRow({
 
     // ── Recursion container ────────────────────────────────────────────────
     const recursionContainer = document.createElement('div');
-    recursionContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    recursionContainer.classList.add('stwid--thinContainer');
     recursionContainer.dataset.field = 'recursion';
 
     const recursionLabel = document.createElement('span');
@@ -1295,7 +1295,7 @@ export function buildBulkEditRow({
 
     // ── Budget container ───────────────────────────────────────────────────
     const budgetContainer = document.createElement('div');
-    budgetContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    budgetContainer.classList.add('stwid--thinContainer');
     budgetContainer.dataset.field = 'budget';
 
     const budgetLabel = document.createElement('span');
@@ -1353,7 +1353,7 @@ export function buildBulkEditRow({
 
     // ── Probability container ──────────────────────────────────────────────
     const probabilityContainer = document.createElement('div');
-    probabilityContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    probabilityContainer.classList.add('stwid--thinContainer');
     probabilityContainer.dataset.field = 'probability';
 
     const probabilityLabel = document.createElement('span');
@@ -1417,7 +1417,7 @@ export function buildBulkEditRow({
 
     // ── Sticky container ───────────────────────────────────────────────────
     const stickyContainer = document.createElement('div');
-    stickyContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    stickyContainer.classList.add('stwid--thinContainer');
     stickyContainer.dataset.field = 'sticky';
 
     const stickyLabel = document.createElement('span');
@@ -1480,7 +1480,7 @@ export function buildBulkEditRow({
 
     // ── Cooldown container ─────────────────────────────────────────────────
     const cooldownContainer = document.createElement('div');
-    cooldownContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    cooldownContainer.classList.add('stwid--thinContainer');
     cooldownContainer.dataset.field = 'cooldown';
 
     const cooldownLabel = document.createElement('span');
@@ -1543,7 +1543,7 @@ export function buildBulkEditRow({
 
     // ── Delay container ────────────────────────────────────────────────────
     const bulkDelayContainer = document.createElement('div');
-    bulkDelayContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    bulkDelayContainer.classList.add('stwid--thinContainer');
     bulkDelayContainer.dataset.field = 'bulkDelay';
 
     const bulkDelayLabel = document.createElement('span');
@@ -1606,7 +1606,7 @@ export function buildBulkEditRow({
 
     // ── Apply All Changes container ────────────────────────────────────────
     const applyAllContainer = document.createElement('div');
-    applyAllContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    applyAllContainer.classList.add('stwid--thinContainer');
     applyAllContainer.dataset.field = 'applyAll';
 
     const applyAllLabel = document.createElement('span');
