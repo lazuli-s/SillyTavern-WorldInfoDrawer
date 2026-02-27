@@ -1041,26 +1041,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   min-height: 0;
 }
 
-/* override: inner section drawers inside world_entry_edit use natural height, not full-height fill */
-.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer {
-  height: auto;
-  flex-shrink: 0;
-}
-
-/* override: inner drawer content area uses natural sizing (not the flex-fill rule above) */
-.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer > .inline-drawer-content {
-  flex: none;
-}
-
-/* override: show the inner section header label as non-interactive text (toggle button stays hidden for the outer entry card) */
-.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer > .inline-drawer-toggle {
-  display: flex;
-  pointer-events: none;
-  cursor: default;
-}
-
-/* hide the chevron icon - collapsing is not supported in this layout */
-.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer > .inline-drawer-toggle > .inline-drawer-icon {
+/* override: hide the nested "User Settings" inline-drawer that appears inside the WI entry - not needed in the drawer UI */
+.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer:has(> .userSettingsInnerExpandable) {
   display: none;
 }
 

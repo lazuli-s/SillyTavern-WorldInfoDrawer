@@ -2,7 +2,7 @@
 *Created: February 27, 2026*
 
 **Type:** NEW_FEATURE
-**Status:** IMPLEMENTED
+**Status:** DOCUMENTED
 
 ---
 
@@ -68,7 +68,7 @@ newly surfaced editor behavior.
 
 ## Implementation Plan
 
-- [x] Step 1 — Remove the CSS hide rule (`style.css`)
+### Step 1 — Remove the CSS hide rule (`style.css`)
 
 Remove these 4 lines from `style.css` entirely:
 
@@ -79,7 +79,7 @@ Remove these 4 lines from `style.css` entirely:
 }
 ```
 
-- [x] Step 2 — Fix layout of the inner drawer container (`style.css`)
+### Step 2 — Fix layout of the inner drawer container (`style.css`)
 
 The global rule `.stwid--editor .inline-drawer { height: 100%; }` would cause the inner
 "Additional Matching Sources" drawer to try to fill its parent height. Add a targeted override
@@ -99,7 +99,7 @@ adjacent inner-drawer CSS overrides):
 }
 ```
 
-- [x] Step 3 — Show "Additional Matching Sources" as a non-interactive section label (`style.css`)
+### Step 3 — Show "Additional Matching Sources" as a non-interactive section label (`style.css`)
 
 The extension globally hides `.stwid--editor .inline-drawer-toggle { display: none; }`.
 The toggle div contains the "Additional Matching Sources" label text. Add a targeted override to
@@ -119,7 +119,7 @@ show this label as a static section header (non-interactive — no collapse beha
 }
 ```
 
-- [x] Step 4 — Update `FEATURE_MAP.md`
+### Step 4 — Update `FEATURE_MAP.md`
 
 In the `## Editor behavior` section, add a new line:
 
@@ -129,35 +129,3 @@ In the `## Editor behavior` section, add a new line:
   in entry editor → style.css (CSS un-hide); wiring via vanilla ST getWorldEntry →
   src/editorPanel.js (no JS changes needed)
 ```
-
----
-
-## After Implementation
-*Implemented: February 27, 2026*
-
-### What changed
-
-- `style.css`
-  - Removed the CSS rule that hid the nested User Settings drawer inside the entry editor.
-  - Added scoped inner-drawer sizing overrides so the Additional Matching Sources section uses natural height.
-  - Added a scoped override to show the section title as static text and hide only its chevron icon.
-- `FEATURE_MAP.md`
-  - Added an Editor behavior line documenting that Additional Matching Sources checkboxes are now surfaced by CSS.
-- `tasks/main-tasks/documented/NewFeature_AdditionalMatchingSources.md`
-  - Marked all implementation plan steps as completed.
-  - Updated task status to IMPLEMENTED and recorded this implementation summary.
-
-### Risks / What might break
-
-- This touches editor drawer layout CSS, so other nested inline-drawer sections inside entries could inherit the new natural-height behavior.
-- This touches toggle visibility CSS, so if another inner section relies on hidden toggle text, its header could now appear.
-- This touches shared editor CSS selectors, so upstream template class changes in SillyTavern could make these overrides stop matching.
-
-### Manual checks
-
-- Open any entry in the extension editor and confirm the "Additional Matching Sources" title and 6 checkboxes are visible.
-  Success looks like all six options are shown below the section title.
-- Toggle each of the six checkboxes on and off, close the entry, then reopen it.
-  Success looks like each checkbox keeping the state you set.
-- Open a few different entries (including one with long content) and scroll through the editor.
-  Success looks like normal scrolling and no oversized empty block where the section appears.
