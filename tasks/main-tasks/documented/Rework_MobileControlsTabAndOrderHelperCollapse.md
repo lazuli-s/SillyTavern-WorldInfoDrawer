@@ -130,7 +130,7 @@ panel while the book list scrolls below it.
 
 **File: `src/listPanel.filterBar.js`** — inside `setupFilter`
 
-- [ ] At the very top of the `setupFilter` function body (before the `filter`
+- [x] At the very top of the `setupFilter` function body (before the `filter`
   element is created), add:
   ```js
   const controlsRowEl = runtime?.dom?.controlsRow instanceof HTMLElement
@@ -139,7 +139,7 @@ panel while the book list scrolls below it.
   const isMobile = window.innerWidth <= 1000;
   ```
 
-- [ ] Find the `panelTabs` array definition:
+- [x] Find the `panelTabs` array definition:
   ```js
   const panelTabs = [
       { id:'visibility', icon:'fa-eye', label:'Visibility' },
@@ -153,7 +153,7 @@ panel while the book list scrolls below it.
   }
   ```
 
-- [ ] After the `for (const tab of panelTabs)` loop that builds buttons and content
+- [x] After the `for (const tab of panelTabs)` loop that builds buttons and content
   panels (and after `tabContentsById` is fully populated), add a block that moves
   the controls row element into the Controls tab content and hides its original
   parent wrapper:
@@ -170,7 +170,7 @@ panel while the book list scrolls below it.
   }
   ```
 
-- [ ] Find the `setActivePlaceholderTab` call that sets the initial active tab
+- [x] Find the `setActivePlaceholderTab` call that sets the initial active tab
   (currently `setActivePlaceholderTab(panelTabs[0].id)`). Replace it with:
   ```js
   const defaultTabId = (isMobile && controlsRowEl) ? 'controls' : (panelTabs[0]?.id ?? 'visibility');
