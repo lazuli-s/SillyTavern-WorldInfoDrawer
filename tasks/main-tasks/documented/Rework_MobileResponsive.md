@@ -2,7 +2,7 @@
 *Created: February 25, 2026*
 
 **Type:** REWORK
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -164,14 +164,45 @@ after its source section to keep related rules co-located:
 
 ### Phase 5 — Update documentation
 
-- [ ] Update `ARCHITECTURE.md` section on `drawer.js` to note the mobile splitter addition
-- [ ] Update `FEATURE_MAP.md` "Bootstrap & runtime sync" and "Splitter" entries to note
+- [x] Update `ARCHITECTURE.md` section on `drawer.js` to note the mobile splitter addition
+- [x] Update `FEATURE_MAP.md` "Bootstrap & runtime sync" and "Splitter" entries to note
   the mobile vertical splitter behavior and the new `stwid--list-height` persistence key
-- [ ] Update `ARCHITECTURE.md` data stores section with the new `stwid--list-height`
+- [x] Update `ARCHITECTURE.md` data stores section with the new `stwid--list-height`
   localStorage key
 
 ---
 
 ## After Implementation
 
-*To be filled in after implementation is complete.*
+*Implemented: February 27, 2026*
+
+### What changed
+
+- `.claude/skills/css-responsive/SKILL.md` and `.claude/skills/css-responsive/references/examples.md`
+  - Confirmed both files already existed and matched this task's responsive-skill requirements.
+- `AGENTS.md` and `CLAUDE.md`
+  - Updated both files so CSS/UI edits now require running `css-ST` and `css-responsive`.
+- `style.css`
+  - Added responsive media blocks for all seven sections of the stylesheet.
+  - Mobile now stacks list above editor/order helper, toggles splitter visibility for orientation, and constrains menu/dialog widths.
+  - Order Helper table now scrolls horizontally in its own wrapper on narrow screens.
+- `src/drawer.js`
+  - Added `isMobileLayout()` (`window.innerWidth <= 1000`), a mobile horizontal splitter element (`.stwid--splitter-h`), and vertical drag-resize logic for list height.
+  - Added separate mobile splitter persistence key `stwid--list-height`.
+  - Added debounced resize handling that detects breakpoint crossing and resets splitter defaults for the active orientation.
+- `ARCHITECTURE.md` and `FEATURE_MAP.md`
+  - Updated docs to include dual-orientation splitter behavior and the new `stwid--list-height` persistence key.
+
+### Risks / What might break
+
+- This touches drawer layout behavior, so repeated viewport resizing may reveal edge-case panel sizing issues.
+- This touches pointer drag logic, so touch devices may expose interaction differences not visible on desktop.
+- This touches Order Helper table sizing, so extremely wide column combinations may still need further tuning.
+
+### Manual checks
+
+- Open drawer on desktop (greater than 1000 px), drag the vertical splitter, close/reopen drawer, and confirm list width persists.
+- Resize to 1000 px or less, confirm top/bottom stacked layout, drag the horizontal splitter, close/reopen drawer, and confirm list height persists.
+- Resize back and forth across 1000 px and confirm splitter orientation and default sizing reset cleanly each time.
+- Open Order Helper on mobile-width layout and confirm horizontal scrolling stays inside the table wrapper (no page-level sideways overflow).
+- Open dropdown/context menus and Move Book dialog on narrow width and confirm controls stay inside the viewport without clipping.

@@ -15,7 +15,7 @@ Where each feature or behavior is implemented in the codebase.
 - Source-link icon rendering on book rows, including attribution tooltips/aria labels for character/persona links → src/listPanel.js
 - Jump-to-entry API (open book, scroll, focus editor) → index.js
 - Drawer keyboard handling for selected-entry delete → src/drawer.js
-- List/editor splitter drag resize + saved width → src/drawer.js
+- List/editor splitter drag resize (desktop width + mobile top/bottom height) and saved splitter state (`stwid--list-width`, `stwid--list-height`) → src/drawer.js
 
 ## Book-level behavior
 
@@ -90,7 +90,7 @@ Where each feature or behavior is implemented in the codebase.
 - Folder collapse state storage → src/listPanel.state.js
 - Order Helper persisted state keys (`sort`, `hide-keys`, `columns`) → src/orderHelperState.js
 - Order Helper local state keys (`start`, `step`, `direction`, `filter`) → src/orderHelperRender.js
-- List panel width persistence (`stwid--list-width`) → src/drawer.js
+- List panel width persistence (`stwid--list-width`) and mobile list height persistence (`stwid--list-height`) → src/drawer.js
 
 ## Integration with SillyTavern
 
