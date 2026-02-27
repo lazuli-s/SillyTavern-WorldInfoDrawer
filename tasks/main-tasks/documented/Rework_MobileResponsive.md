@@ -127,20 +127,20 @@ Validated during implementation: these files already existed and matched the pha
 Add one `@media (max-width: 1000px)` block per major section; place each block directly
 after its source section to keep related rules co-located:
 
-- [ ] **Section 1 (Drawer)**: Switch drawer flex direction to `column`; set drawer to fill
+- [x] **Section 1 (Drawer)**: Switch drawer flex direction to `column`; set drawer to fill
   full viewport width and height; hide the desktop-only horizontal splitter
-- [ ] **Section 2 (List Panel)**: `width: 100%`, `max-width: none`, `height: auto` (shrinks
+- [x] **Section 2 (List Panel)**: `width: 100%`, `max-width: none`, `height: auto` (shrinks
   to content or the mobile splitter position); filter/sort/search bar rows wrap on narrow
   widths using `flex-wrap: wrap`
-- [ ] **Section 3 (Splitter)**: Hide `.stwid--splitter` (the vertical bar); show a new
+- [x] **Section 3 (Splitter)**: Hide `.stwid--splitter` (the vertical bar); show a new
   `.stwid--splitter-h` horizontal bar for top/bottom resizing on mobile (see Phase 4 for JS)
-- [ ] **Section 4 (Editor Panel)**: `width: 100%`; positioned naturally below list in the
+- [x] **Section 4 (Editor Panel)**: `width: 100%`; positioned naturally below list in the
   column-direction drawer; height fills the remaining space
-- [ ] **Section 5 (Context Menus / Modals)**: Constrain dropdown/popup widths to
+- [x] **Section 5 (Context Menus / Modals)**: Constrain dropdown/popup widths to
   `max-width: calc(100vw - 2rem)`; ensure menus don't overflow the right edge of the screen
-- [ ] **Section 6 (Order Helper)**: `width: 100%`; wrap the Order Helper table in
+- [x] **Section 6 (Order Helper)**: `width: 100%`; wrap the Order Helper table in
   `overflow-x: auto` so the multi-column table scrolls horizontally without breaking layout
-- [ ] **Section 7 (Misc)**: Scan for any remaining fixed-pixel width declarations not covered
+- [x] **Section 7 (Misc)**: Scan for any remaining fixed-pixel width declarations not covered
   above and add `max-width: 100%` overrides in the mobile block
 
 ### Phase 4 — Adapt the splitter in `src/drawer.js`

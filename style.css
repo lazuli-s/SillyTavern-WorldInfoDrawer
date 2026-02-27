@@ -91,6 +91,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   font-size: 5em;
 }
 
+@media screen and (max-width: 1000px) {
+  body.stwid-- #WorldInfo {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  body.stwid-- #WorldInfo > .stwid--body {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* Panel: all extension-owned elements inside WorldInfo root */
@@ -823,6 +835,53 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   cursor: pointer;
 }
 
+@media screen and (max-width: 1000px) {
+  .stwid--list {
+    width: 100%;
+    max-width: none;
+    flex-basis: auto;
+    height: auto;
+  }
+
+  .stwid--controls .stwid--controlsRow,
+  .stwid--controls .stwid--visibilityAndSettingsRow,
+  .stwid--sortingRow,
+  .stwid--list .stwid--searchRow,
+  .stwid--list .stwid--visibilityRow,
+  .stwid--visibilityRow {
+    flex-wrap: wrap;
+  }
+
+  .stwid--sortingRow {
+    justify-content: flex-start;
+  }
+
+  .stwid--sortingRow .stwid--thinContainer {
+    min-width: 100%;
+  }
+
+  .stwid--multiselectDropdownMenu,
+  .stwid--bookVisibilityMenu {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--sortingRow .stwid--perBookSortButtons {
+    width: 100%;
+  }
+
+  .stwid--sortingRow .stwid--bookSortToggle,
+  .stwid--sortingRow .stwid--clearBookSorts {
+    flex: 1 1 auto;
+  }
+
+  .stwid--list .stwid--searchRow .stwid--search {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* 3) Splitter                                                                */
@@ -842,6 +901,33 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--splitter:hover,
 .stwid--splitter:active {
   opacity: 1;
+}
+
+.stwid--splitter-h {
+  display: none;
+  flex: 0 0 auto;
+  height: var(--stwid-splitter-width);
+  margin: var(--stwid-splitter-margin-x) 0;
+  cursor: row-resize;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.stwid--splitter-h:hover,
+.stwid--splitter-h:active {
+  opacity: 1;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--splitter {
+    display: none;
+  }
+
+  .stwid--splitter-h {
+    display: block;
+    width: 100%;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -962,6 +1048,18 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 
 .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--editor {
+    width: 100%;
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .stwid--editor #wiActivationSettings {
+    flex-wrap: wrap;
+  }
 }
 
 
@@ -1111,6 +1209,37 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   height: 100%;
   margin:  0;
   font-size: 1em;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--moveBookContent {
+    width: min(100%, 38rem);
+  }
+
+  .stwid--moveBookContent .stwid--moveBookRow {
+    flex-wrap: wrap;
+  }
+
+  .stwid--moveBookContent .stwid--moveBookQuickActions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .stwid--blocker .stwid--listDropdownMenu {
+    max-width: calc(100vw - 2rem);
+  }
+
+  .stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+    min-width: 2em;
+  }
 }
 
 /* Flex-column fill shell - grows to fill parent, scrolls internally */
@@ -1860,6 +1989,44 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   cursor: pointer;
 }
 
+@media screen and (max-width: 1000px) {
+  .stwid--orderHelper {
+    width: 100%;
+    max-width: none;
+  }
+
+  .stwid--script-filter {
+    flex-direction: column;
+    height: auto;
+    min-height: 20vh;
+  }
+
+  .stwid--script-filter .stwid--preview {
+    max-width: none;
+    width: 100%;
+    max-height: 16em;
+  }
+
+  .stwid--orderTableWrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stwid--orderTable {
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--order-action-bar,
+  .stwid--bulkEditRow {
+    gap: 0.6em;
+    padding-inline: 0.35em;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* 7) Misc                                                                    */
@@ -1870,4 +2037,10 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   margin: 0;
   padding-left: 0.5em;
   font-size: small;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--helpToast {
+    overflow-wrap: anywhere;
+  }
 }
