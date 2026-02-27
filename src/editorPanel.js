@@ -255,21 +255,6 @@
         if (header) dom.editor.append(header);
         dom.editor.append(editDom);
 
-        // Wire up Additional Matching Sources section as an animated collapsible card.
-        // Starts collapsed; click toggles .stwid--expanded which drives the CSS animation.
-        // stopPropagation prevents ST's document-level inline-drawer-toggle handler from firing.
-        const amsToggle = editDom.querySelector('.userSettingsInnerExpandable');
-        if (amsToggle) {
-            const amsSection = amsToggle.closest('.inline-drawer');
-            if (amsSection) {
-                amsSection.classList.add('stwid--entry-section');
-                amsToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    amsSection.classList.toggle('stwid--expanded');
-                });
-            }
-        }
-
         // initScrollHeight runs inside getWorldEntry before the element is in the DOM,
         // so scrollHeight is 0 and height correction does nothing. Fix heights now that
         // the textareas are live in the document.
