@@ -1,6 +1,6 @@
 ---
 name: code-review-first-review
-description: Runs a structured first-pass code review on the next file from the code-review queue. Reads tasks/code-reviews/queue-code-review.md "Files Pending Review", picks the first entry, loads authoritative docs via doc-guide, reviews the file across six axes (data integrity, race conditions, UI correctness, performance, redundancy, JS best practices), writes tasks/code-reviews/CodeReview_<filename>.md with structured findings, and updates the queue and REVIEW_TRACKER.md. Use when the user invokes /code-review-first-review, says "do a code review", "review the next file", "start a code review", "run a first review", or names a specific source file to review.
+description: Runs a structured first-pass code review on the next file from the code-review queue. Reads tasks/code-review-queue.md "Files Pending Review", picks the first entry, loads authoritative docs via doc-guide, reviews the file across six axes (data integrity, race conditions, UI correctness, performance, redundancy, JS best practices), writes tasks/code-reviews/CodeReview_<filename>.md with structured findings, and updates the queue and REVIEW_TRACKER.md. Use when the user invokes /code-review-first-review, says "do a code review", "review the next file", "start a code review", "run a first review", or names a specific source file to review.
 ---
 
 # code-review-first-review
@@ -8,14 +8,14 @@ description: Runs a structured first-pass code review on the next file from the 
 Reviews exactly one file per invocation, then stops.
 
 **Two modes:**
-- **Queue mode** (no file specified): read `tasks/code-reviews/queue-code-review.md`, pick the first entry under `## Files Pending Review`.
+- **Queue mode** (no file specified): read `tasks/code-review-queue.md`, pick the first entry under `## Files Pending Review`.
 - **Direct mode** (user names a file): use that path as `TARGET_FILE`. Skip queue lookup.
 
 ---
 
 ## 1. Select target
 
-**Queue mode:** Read `tasks/code-reviews/queue-code-review.md`. Under `## Files Pending Review`, pick the first bullet item and set it as `TARGET_FILE`. If the list is empty: report "No files pending review" and stop.
+**Queue mode:** Read `tasks/code-review-queue.md`. Under `## Files Pending Review`, pick the first bullet item and set it as `TARGET_FILE`. If the list is empty: report "No files pending review" and stop.
 
 **Direct mode:** Set `TARGET_FILE` to the path the user provided.
 
@@ -78,7 +78,7 @@ Review `TARGET_FILE` across six axes:
 Apply all three updates. Keep separators, blank lines, and indentation consistent with existing entries.
 
 **A. Remove from pending review**
-In `tasks/code-reviews/queue-code-review.md`: remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
+In `tasks/code-review-queue.md`: remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
 
 **B. Add to reviewed files in tracker**
 In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new section following the format of existing entries:
@@ -96,7 +96,7 @@ In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new 
 ```
 
 **C. Add to pending meta-review**
-In `tasks/code-reviews/queue-code-review.md`: add `tasks/code-reviews/CodeReview_<BASENAME>.md` as a new bullet under `## Files Pending Meta-Review`.
+In `tasks/code-review-queue.md`: add `tasks/code-reviews/CodeReview_<BASENAME>.md` as a new bullet under `## Files Pending Meta-Review`.
 
 ---
 
