@@ -2,7 +2,7 @@
 *Created: February 26, 2026*
 
 **Type:** REWORK
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -205,10 +205,50 @@ panel while the book list scrolls below it.
 
 ### Phase 5 — Update FEATURE_MAP.md
 
-- [ ] In the "Selection & interaction" section, find the entry for
+- [x] In the "Selection & interaction" section, find the entry for
   "List-panel icon tabs" and append a note that on mobile (≤ 1000 px), a
   "Controls" tab is prepended as the default first tab and contains the
   `stwid--controlsRow` element.
 
-- [ ] In the "Book-level behavior" section, find the "Top control row" entry and
+- [x] In the "Book-level behavior" section, find the "Top control row" entry and
   append a note that on mobile the control row is moved into the Controls tab.
+
+---
+
+## After Implementation
+*Implemented: February 27, 2026*
+
+### What changed
+
+- `src/orderHelperRender.actionBar.js`
+  - Added a new `initialCollapsed` option to both Order Helper action rows.
+  - Applied collapsed startup state when requested, including chevron state and hidden row content.
+- `src/orderHelperRender.js`
+  - Detects mobile width (`<= 1000`) when rendering Order Helper.
+  - Passes that mobile check into both action-row builders so each open starts collapsed on mobile.
+- `src/drawer.js`
+  - Exposed the top controls row through `dom.controlsRow` so other modules can place it in tabs.
+- `src/listPanel.filterBar.js`
+  - Added a mobile-only `Controls` tab at the front of the tab bar.
+  - Moves the top controls row into that tab and hides its old wrapper on mobile.
+  - Makes `Controls` the default active tab on mobile.
+- `style.css`
+  - Added a mobile sticky rule for `.stwid--iconTabBar` so tabs stay visible while the list scrolls.
+  - Set tab-bar background to the panel theme color to prevent visual bleed-through.
+- `FEATURE_MAP.md`
+  - Documented that mobile icon tabs now include `Controls` as the first/default tab.
+  - Documented that `stwid--controlsRow` moves into the `Controls` tab on mobile.
+
+### Risks / What might break
+
+- This touches tab mounting and DOM moves, so mobile tab content order could be wrong if the controls row is unavailable at setup time.
+- This touches mobile-only CSS stickiness, so tab bar layering could overlap dropdown menus in edge cases.
+- This touches Order Helper row initialization, so row expand/collapse animation could behave unexpectedly on first open.
+
+### Manual checks
+
+- Open the drawer at width `<= 1000`, open Order Helper, and confirm both `Visibility` and `Bulk Editor` rows start collapsed with right-pointing chevrons.
+- On the same mobile width, confirm the tab bar starts on `Controls`, and Lorebooks/Folders/Settings buttons appear inside that tab.
+- Switch to `Sorting` and `Search` tabs and confirm controls switch correctly with no missing rows.
+- Scroll the book list on mobile and confirm the tab bar stays visible at the top of the list panel.
+- Open the drawer at width `> 1000` and confirm no `Controls` tab appears and top controls remain above the tab strip.
