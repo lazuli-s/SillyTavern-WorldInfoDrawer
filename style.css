@@ -1378,7 +1378,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 
-.stwid--order-action-bar .stwid--inputWrap,
+.stwid--order-action-bar .stwid--table-sort,
 .stwid--order-action-bar .stwid--columnVisibility {
   display: flex;
   align-items: center;
@@ -1388,16 +1388,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 
 .stwid--order-action-bar .stwid--columnVisibility {
   position: relative;
-}
-
-.stwid--order-action-bar .stwid--columnVisibility .stwid--columnVisibilityLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.35em;
-}
-
-.stwid--order-action-bar .stwid--columnVisibility .stwid--columnVisibilityText {
-  line-height: 1.1;
 }
 
 /* Visibility row - right side */
@@ -1569,7 +1559,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.1em;
 }
 
 .stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="applyAll"] {
@@ -1579,11 +1568,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 /* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
 .stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .stwid--applyDirty {
   color: var(--stwid-warning-color);
-}
-
-.stwid--columnVisibilityLabel {
-  padding: 2px 4px;
-  border-radius: var(--stwid-radius-s);
 }
 
 /* Filters */

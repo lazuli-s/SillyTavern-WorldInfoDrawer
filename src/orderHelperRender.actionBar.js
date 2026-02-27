@@ -105,7 +105,25 @@ export function buildVisibilityRow({
     row.dataset.collapsed = 'false';
     row.append(rowTitle);
 
+    const createActionThinContainer = (labelText, hintText)=>{
+        const container = document.createElement('div');
+        container.classList.add('stwid--thinContainer');
+
+        const containerLabel = document.createElement('div');
+        containerLabel.classList.add('stwid--thinContainerLabel');
+        containerLabel.textContent = labelText;
+
+        const containerHint = document.createElement('i');
+        containerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+        setTooltip(containerHint, hintText);
+        containerLabel.append(containerHint);
+
+        container.append(containerLabel);
+        return container;
+    };
+
     // ── Key column visibility toggle ──────────────────────────────────────
+    const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
     const keyToggle = document.createElement('div'); {
         keyToggle.classList.add('menu_button');
         keyToggle.classList.add('fa-solid', 'fa-fw');
@@ -123,21 +141,14 @@ export function buildVisibilityRow({
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
             applyKeyToggleStyle();
         });
-        row.append(keyToggle);
+        keyToggleContainer.append(keyToggle);
     }
+    row.append(keyToggleContainer);
 
     // ── Column visibility dropdown ────────────────────────────────────────
+    const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
     const columnVisibilityWrap = document.createElement('div'); {
         columnVisibilityWrap.classList.add('stwid--columnVisibility');
-        const labelWrap = document.createElement('div'); {
-            labelWrap.classList.add('stwid--columnVisibilityLabel');
-            const labelText = document.createElement('div'); {
-                labelText.classList.add('stwid--columnVisibilityText');
-                labelText.innerHTML = 'Column<br>Visibility:';
-                labelWrap.append(labelText);
-            }
-            columnVisibilityWrap.append(labelWrap);
-        }
         const menuWrap = document.createElement('div'); {
             menuWrap.classList.add('stwid--multiselectDropdownWrap');
             const menuButton = document.createElement('div'); {
@@ -232,21 +243,21 @@ export function buildVisibilityRow({
             }
             columnVisibilityWrap.append(menuWrap);
         }
-        row.append(columnVisibilityWrap);
+        columnVisibilityContainer.append(columnVisibilityWrap);
     }
+    row.append(columnVisibilityContainer);
 
     const addDivider = ()=>{
         const divider = document.createElement('div');
         divider.classList.add('stwid--actionsDivider');
         row.append(divider);
     };
-    addDivider();
 
     // ── Sort select ───────────────────────────────────────────────────────
+    const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
     const sortWrap = document.createElement('label'); {
-        sortWrap.classList.add('stwid--inputWrap');
+        sortWrap.classList.add('stwid--table-sort');
         setTooltip(sortWrap, 'Sort rows in the table');
-        sortWrap.append('Sort: ');
         const sortSel = document.createElement('select'); {
             sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
             setTooltip(sortSel, 'Sort rows in the table');
@@ -265,8 +276,9 @@ export function buildVisibilityRow({
             });
             sortWrap.append(sortSel);
         }
-        row.append(sortWrap);
+        tableSortContainer.append(sortWrap);
     }
+    row.append(tableSortContainer);
     addDivider();
 
     // ── Filter panel toggle ───────────────────────────────────────────────

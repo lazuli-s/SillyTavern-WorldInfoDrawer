@@ -480,3 +480,30 @@ Issue 4 (add new block at end).
 ### Verification status
 
 - Not run in this environment: browser reload and visual confirmation of updated spacing, select widths, and visibility-row top margin.
+
+## Follow-up Tweaks (2026-02-27, order helper visibility containers)
+
+### What changed
+
+- `src/orderHelperRender.actionBar.js`
+  - Wrapped the Keys eye-toggle control in a `.stwid--thinContainer` group with a `Keys` label and hint icon.
+  - Wrapped the column-visibility dropdown in a `.stwid--thinContainer` group with a `Columns` label and hint icon.
+  - Wrapped the table-sort select in a `.stwid--thinContainer` group with a `Table Sorting` label and hint icon.
+  - Renamed the visibility-row sort label wrapper class from `.stwid--inputWrap` to `.stwid--table-sort`.
+  - Removed the inline `Column Visibility` text block so the new thin-container label is the single label for that control.
+- `style.css`
+  - Kept `.stwid--sortingRow .stwid--smallSelectTextPole { width: 9em; }` scoped to sorting row controls.
+  - Updated Order Helper visibility-row styling to target `.stwid--table-sort` instead of `.stwid--inputWrap`.
+  - Removed now-unused `.stwid--columnVisibilityLabel` / `.stwid--columnVisibilityText` visibility-row styling.
+  - Removed `gap: 0.1em;` from `.stwid--orderStartSpacingPair`.
+
+### Why it changed
+
+- Requested UI grouping: Keys, Columns, and Table Sorting controls should use the same thin-container + label + hint pattern used elsewhere in the extension.
+- Requested selector/class targeting updates for the visibility-row sorting control.
+- Requested cleanup of spacing (`.stwid--orderStartSpacingPair`) and obsolete visibility-row label styles.
+
+### Verification status
+
+- Not run in this environment: browser reload and visual confirmation that the Order Helper visibility row now shows three labeled thin containers (`Keys`, `Columns`, `Table Sorting`) with working hint icons.
+- Not run in this environment: browser reload and confirmation that key toggle, column visibility menu, and table sorting behavior are unchanged functionally.
