@@ -248,7 +248,7 @@ export function buildVisibilityRow({
         setTooltip(sortWrap, 'Sort rows in the table');
         sortWrap.append('Sort: ');
         const sortSel = document.createElement('select'); {
-            sortSel.classList.add('text_pole');
+            sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
             setTooltip(sortSel, 'Sort rows in the table');
             dom.order.sortSelect = sortSel;
             appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
@@ -732,7 +732,7 @@ export function buildBulkEditRow({
     strategyContainer.append(strategyLabel);
 
     const strategySelect = document.createElement('select'); {
-        strategySelect.classList.add('stwid--input', 'text_pole');
+        strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
         setTooltip(strategySelect, 'Strategy to apply to selected entries');
         for (const opt of getStrategyOptions()) {
             const option = document.createElement('option');
@@ -806,7 +806,7 @@ export function buildBulkEditRow({
     positionContainer.append(positionLabel);
 
     const positionSelect = document.createElement('select'); {
-        positionSelect.classList.add('stwid--input', 'text_pole');
+        positionSelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
         setTooltip(positionSelect, 'Position to apply to selected entries');
         for (const opt of getPositionOptions()) {
             const option = document.createElement('option');

@@ -438,12 +438,16 @@ Issue 4 (add new block at end).
 - Added the existing thin-container hint icon (`fa-solid fa-fw fa-circle-question stwid--thinContainerLabelHint`) to the `Lorebooks` and `Settings` control groups in `src/drawer.js`, matching the existing `Folders` pattern.
 - Updated `.stwid--small-check-row` to `font-size: 0.85em;` in `style.css`.
 - Updated `.stwid--comment` to `font-size: 1.03em;` in `style.css`, and aligned the Order Helper comment-link override to the same size.
+- Applied `.stwid--smallSelectTextPole` to the five requested Order Helper selects in `src/orderHelperRender.actionBar.js` and `src/orderHelperRender.tableBody.js` (action-bar sort select, bulk Strategy select, bulk Position select, row Strategy select, row Position select).
+- Updated `style.css` so `.stwid--smallSelectTextPole` is class-scoped (not limited to the sorting row), allowing the same compact select sizing wherever the class is applied.
 
 ### Why it changed
 
 - Requested UI consistency: all three top control groups now include the same help hint icon treatment.
 - Requested typography tuning for compact check rows and comment text readability.
+- Requested consistent compact sizing for those five specific Order Helper dropdown controls.
 
 ### Verification status
 
 - Not run in this environment: browser reload and visual confirmation of the new Lorebooks/Settings hint icons and the two font-size adjustments.
+- Not run in this environment: browser reload and visual confirmation that the five targeted Order Helper selects now share the `.stwid--smallSelectTextPole` compact sizing.

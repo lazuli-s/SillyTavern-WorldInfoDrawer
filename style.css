@@ -279,7 +279,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   box-sizing: border-box;
 }
 
-.stwid--sortingRow .stwid--globalSorting .stwid--smallSelectTextPole {
+.stwid--smallSelectTextPole {
   width: 9em;
   max-width: 9em;
   font-size: 0.9em;
