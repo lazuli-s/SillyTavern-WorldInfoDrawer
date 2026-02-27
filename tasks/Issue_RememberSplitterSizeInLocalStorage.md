@@ -2,7 +2,7 @@
 *Created: 2026-02-27*
 
 **Type:** ISSUE
-**Status:** IMPLEMENTED
+**Status:** ISSUES_FOUND
 
 ---
 
@@ -30,3 +30,40 @@ The request specifically asked to remember splitter size in local storage.
 
 - Not run in this environment.
 - Reload the browser tab and confirm splitter size is preserved for desktop and mobile layouts.
+
+---
+
+## Post-Implementation Review
+
+Reviewed: February 27, 2026
+
+### Files Inspected
+
+*No `Files Changed` section was present in the task file. File inferred from the implementation description.*
+
+- `src/drawer.js`
+
+### Findings
+
+#### PIR-01: Layout switch overwrites saved splitter size
+
+- **Category:** Bug
+
+- **Severity:** Medium ❗
+
+- **Location:** `src/drawer.js` — `onLayoutResize` / `applyOrientationDefault()` (lines 704–712, 843–848)
+
+- **Summary:** When the browser window is resized across the 1000 px mobile/desktop breakpoint, `onLayoutResize` calls `applyOrientationDefault(isMobile)`. That function computes the *default* size for the new orientation and immediately saves it to `localStorage`, overwriting any previously stored value. So if a user has dragged the splitter on mobile, then resizes the browser to a desktop width and back again, their saved mobile size is replaced with the default. This directly contradicts the feature goal of remembering user-selected sizes.
+
+  The existing `restoreSplitterForCurrentLayout()` function already handles this correctly: it reads the stored value first and only falls back to the default if nothing is stored. The resize handler should call that function instead of `applyOrientationDefault`.
+
+- **Confidence:** High 😀 — The overwrite path is fully traceable in code with no runtime assumptions needed.
+
+- **Fix risk:** Low 🟢 — The fix is a one-line swap inside `onLayoutResize`. `restoreSplitterForCurrentLayout` is already in scope at that point, and its logic already handles both the "stored value exists" and "no stored value" cases correctly.
+
+- **Fix Plan:**
+  - [ ] In `src/drawer.js`, inside the `onLayoutResize` debounce callback (around line 847), replace the call `applyOrientationDefault(isMobile)` with `restoreSplitterForCurrentLayout()`.
+  - [ ] Verify that `restoreSplitterForCurrentLayout` is declared before `onLayoutResize` in the same scope (it is — line 714 vs line 843), so no hoisting issues arise.
+  - [ ] Manually test: set a custom splitter size, resize the window across the 1000 px breakpoint, resize back, and confirm the original size is restored rather than the default.
+
+- **Requires human judgment:** No
