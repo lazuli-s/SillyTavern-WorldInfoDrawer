@@ -65,7 +65,7 @@
 | Module | Design Intent |
 | --- | --- |
 | `index.js` | Extension entry point; composes module initialization and exposes `jumpToEntry` public API |
-| `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, and global interaction wiring |
+| `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, desktop/mobile splitter behavior, and global interaction wiring |
 | `bookSourceLinks.js` | Derives and tracks lorebook source links (character/chat/persona); refreshes icons and filters |
 | `wiUpdateHandler.js` | Owns WORLDINFO event handling, incremental cache sync, update-wait primitives, and duplicate-refresh queue |
 | `listPanel.js` | Composes list panel slices and shared orchestration; exposes consolidated list-panel API |
@@ -177,7 +177,8 @@ Key keys:
 - `stwid--order-helper-hide-keys`
 - `stwid--order-helper-columns`
 - `stwid--order-start`, `stwid--order-step`, `stwid--order-direction`, `stwid--order-filter`
-- `stwid--list-width`
+- `stwid--splitter-size` (desktop splitter width; legacy mirror: `stwid--list-width`)
+- `stwid--splitter-size-mobile` (mobile splitter height; legacy mirror: `stwid--list-height`)
 
 ### 4.3. Runtime In-Memory State
 

@@ -103,6 +103,10 @@ const createFilterBarSlice = ({
 
     let docClickHandler = null;
     const setupFilter = (list)=>{
+        const controlsRowEl = runtime?.dom?.controlsRow instanceof HTMLElement
+            ? runtime.dom.controlsRow
+            : null;
+        const isMobile = window.innerWidth <= 1000;
         const filter = document.createElement('div'); {
             const searchRow = document.createElement('div');
             searchRow.classList.add('stwid--searchRow');
@@ -232,6 +236,9 @@ const createFilterBarSlice = ({
                     { id:'sorting', icon:'fa-arrow-down-wide-short', label:'Sorting' },
                     { id:'search', icon:'fa-magnifying-glass', label:'Search' },
                 ];
+                if (isMobile && controlsRowEl) {
+                    panelTabs.unshift({ id:'controls', icon:'fa-sliders', label:'Controls' });
+                }
                 const tabButtons = [];
                 const tabContents = [];
                 const tabContentsById = new Map();
@@ -273,6 +280,16 @@ const createFilterBarSlice = ({
 
                     button.addEventListener('click', ()=>setActivePlaceholderTab(tab.id));
                 }
+                if (isMobile && controlsRowEl) {
+                    const controlsTabContent = tabContentsById.get('controls');
+                    if (controlsTabContent) {
+                        const originalParent = controlsRowEl.parentElement;
+                        controlsTabContent.append(controlsRowEl);
+                        if (originalParent) {
+                            originalParent.style.display = 'none';
+                        }
+                    }
+                }
                 const visibilityTabContent = tabContentsById.get('visibility');
                 if (visibilityTabContent) {
                     visibilityTabContent.append(visibilityRow);
@@ -286,7 +303,8 @@ const createFilterBarSlice = ({
                     searchTabContent.append(searchRow);
                 }
                 iconTab.prepend(iconTabBar);
-                setActivePlaceholderTab(panelTabs[0].id);
+                const defaultTabId = (isMobile && controlsRowEl) ? 'controls' : (panelTabs[0]?.id ?? 'visibility');
+                setActivePlaceholderTab(defaultTabId);
             }
             const getBookVisibilityOption = (mode)=>
                 BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
@@ -411,6 +429,28 @@ const createFilterBarSlice = ({
             };
             setApplyActiveFilter(applyActiveFilter);
             {
+                const helperContainer = document.createElement('div');
+                helperContainer.classList.add('stwid--thinContainer', 'stwid--visibilityHelper');
+                const helperContainerLabel = document.createElement('span');
+                helperContainerLabel.classList.add('stwid--thinContainerLabel');
+                helperContainerLabel.textContent = 'Helper';
+                const helperContainerHint = document.createElement('i');
+                helperContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                helperContainerHint.title = 'Open Order Helper for the books currently shown by Visibility filters.';
+                helperContainerLabel.append(helperContainerHint);
+                helperContainer.append(helperContainerLabel);
+
+                const visibilityContainer = document.createElement('div');
+                visibilityContainer.classList.add('stwid--thinContainer', 'stwid--visibilityFilters');
+                const visibilityContainerLabel = document.createElement('span');
+                visibilityContainerLabel.classList.add('stwid--thinContainerLabel');
+                visibilityContainerLabel.textContent = 'Visibility';
+                const visibilityContainerHint = document.createElement('i');
+                visibilityContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+                visibilityContainerHint.title = 'Pick which sources are visible and review the active filter chips.';
+                visibilityContainerLabel.append(visibilityContainerHint);
+                visibilityContainer.append(visibilityContainerLabel);
+
                 const menuWrap = document.createElement('div');
                 menuWrap.classList.add('stwid--multiselectDropdownWrap');
 
@@ -485,9 +525,10 @@ const createFilterBarSlice = ({
                 listPanelState.bookVisibilityChips = chips;
                 const orderHelperToggle = runtime?.dom?.order?.toggle;
                 if (orderHelperToggle instanceof HTMLElement) {
-                    visibilityRow.append(orderHelperToggle);
+                    helperContainer.append(orderHelperToggle);
                 }
-                visibilityRow.append(menuWrap, chips);
+                visibilityContainer.append(menuWrap, chips);
+                visibilityRow.append(helperContainer, visibilityContainer);
 
                 const onDocClickCloseMenu = (evt)=>{
                     if (!menu.classList.contains('stwid--state-active')) return;

@@ -121,6 +121,8 @@ const createOrderHelperRenderer = ({
 
         const filterIndicatorRefs = {};
 
+        const initialActionRowCollapsed = window.innerWidth <= 1000;
+
         const { element: visibilityRowEl, refresh: refreshVisibilityRow } = buildVisibilityRow({
             body,
             orderHelperState,
@@ -157,6 +159,7 @@ const createOrderHelperRenderer = ({
             getAutomationIdValues,
             getGroupValues,
             filterIndicatorRefs,
+            initialCollapsed: initialActionRowCollapsed,
         });
 
         const { element: bulkEditRowEl, refreshSelectionCount, cleanup } = buildBulkEditRow({
@@ -179,6 +182,7 @@ const createOrderHelperRenderer = ({
             syncOrderHelperOutletFilters,
             filterIndicatorRefs,
             applyOrderHelperRecursionFilterToRow,
+            initialCollapsed: initialActionRowCollapsed,
         });
         cleanupBulkEditRow = cleanup;
 

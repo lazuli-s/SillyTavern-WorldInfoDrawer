@@ -2,7 +2,7 @@
 *Created: February 25, 2026*
 
 **Type:** REWORK
-**Status:** DOCUMENTED
+**Status:** NO_ISSUES
 
 ---
 
@@ -104,72 +104,118 @@ Nothing — all UI areas are included.
 
 ### Phase 1 — Create the `css-responsive` skill
 
-- [ ] Create the folder `.claude/skills/css-responsive/`
-- [ ] Write `.claude/skills/css-responsive/SKILL.md`:
+- [x] Create the folder `.claude/skills/css-responsive/`
+- [x] Write `.claude/skills/css-responsive/SKILL.md`:
   - Frontmatter trigger description: activates when any CSS is added or changed
   - Document the four rule families (RESP, BRK, OVF, LAY) with IDs, rule text, good/bad
     examples, and PASS/FAIL/N/A review instructions matching the format of `css-rules`
   - List the two ST-mirrored breakpoints with exact pixel values and their ST source reference
   - Define Guide mode (apply rules when authoring) and Review mode (flag violations in audits)
-- [ ] Create `.claude/skills/css-responsive/references/examples.md` with before/after CSS
+- [x] Create `.claude/skills/css-responsive/references/examples.md` with before/after CSS
   snippets illustrating each rule (one example per rule ID minimum)
+
+Validated during implementation: these files already existed and matched the phase requirements.
 
 ### Phase 2 — Register `css-responsive` as a mandatory pre-CSS check
 
-- [ ] In `CLAUDE.md` section 5 (Style Guide Compliance), add `css-responsive` to the
+- [x] In `CLAUDE.md` section 5 (Style Guide Compliance), add `css-responsive` to the
   "before making any UI or CSS change, run..." list alongside `style-guide`
-- [ ] In `AGENTS.md` section 5, add the same line so both instruction files stay in sync
+- [x] In `AGENTS.md` section 5, add the same line so both instruction files stay in sync
 
 ### Phase 3 — Implement mobile CSS in `style.css`
 
 Add one `@media (max-width: 1000px)` block per major section; place each block directly
 after its source section to keep related rules co-located:
 
-- [ ] **Section 1 (Drawer)**: Switch drawer flex direction to `column`; set drawer to fill
+- [x] **Section 1 (Drawer)**: Switch drawer flex direction to `column`; set drawer to fill
   full viewport width and height; hide the desktop-only horizontal splitter
-- [ ] **Section 2 (List Panel)**: `width: 100%`, `max-width: none`, `height: auto` (shrinks
+- [x] **Section 2 (List Panel)**: `width: 100%`, `max-width: none`, `height: auto` (shrinks
   to content or the mobile splitter position); filter/sort/search bar rows wrap on narrow
   widths using `flex-wrap: wrap`
-- [ ] **Section 3 (Splitter)**: Hide `.stwid--splitter` (the vertical bar); show a new
+- [x] **Section 3 (Splitter)**: Hide `.stwid--splitter` (the vertical bar); show a new
   `.stwid--splitter-h` horizontal bar for top/bottom resizing on mobile (see Phase 4 for JS)
-- [ ] **Section 4 (Editor Panel)**: `width: 100%`; positioned naturally below list in the
+- [x] **Section 4 (Editor Panel)**: `width: 100%`; positioned naturally below list in the
   column-direction drawer; height fills the remaining space
-- [ ] **Section 5 (Context Menus / Modals)**: Constrain dropdown/popup widths to
+- [x] **Section 5 (Context Menus / Modals)**: Constrain dropdown/popup widths to
   `max-width: calc(100vw - 2rem)`; ensure menus don't overflow the right edge of the screen
-- [ ] **Section 6 (Order Helper)**: `width: 100%`; wrap the Order Helper table in
+- [x] **Section 6 (Order Helper)**: `width: 100%`; wrap the Order Helper table in
   `overflow-x: auto` so the multi-column table scrolls horizontally without breaking layout
-- [ ] **Section 7 (Misc)**: Scan for any remaining fixed-pixel width declarations not covered
+- [x] **Section 7 (Misc)**: Scan for any remaining fixed-pixel width declarations not covered
   above and add `max-width: 100%` overrides in the mobile block
 
 ### Phase 4 — Adapt the splitter in `src/drawer.js`
 
-- [ ] After the splitter element is created (around line 612), add a mobile-detection helper
+- [x] After the splitter element is created (around line 612), add a mobile-detection helper
   — a function `isMobileLayout()` that returns `window.innerWidth <= 1000`
-- [ ] Create a second splitter element `.stwid--splitter-h` (horizontal bar) and insert it
+- [x] Create a second splitter element `.stwid--splitter-h` (horizontal bar) and insert it
   into the drawer DOM alongside the existing `.stwid--splitter`; CSS from Phase 3 will
   show/hide each one based on the breakpoint
-- [ ] On `pointerdown` on `.stwid--splitter-h`: read `evt.clientY` as the drag origin and
+- [x] On `pointerdown` on `.stwid--splitter-h`: read `evt.clientY` as the drag origin and
   resize the list panel's `height` (instead of width) as the pointer moves; mirror the
   existing pointer-capture + lost-capture cleanup pattern from the horizontal splitter
-- [ ] Clamp the mobile splitter: define `MIN_LIST_HEIGHT` and `MIN_EDITOR_HEIGHT` constants
+- [x] Clamp the mobile splitter: define `MIN_LIST_HEIGHT` and `MIN_EDITOR_HEIGHT` constants
   (e.g. 150 px each) and use them as floor/ceiling during drag, analogous to the existing
   `MIN_LIST_WIDTH` / `MIN_EDITOR_WIDTH` constants
-- [ ] Save the mobile list height to `localStorage` under key `stwid--list-height` on drag end
-- [ ] Restore the saved mobile list height on drawer open when `isMobileLayout()` is true
-- [ ] Add a `window.addEventListener('resize', ...)` listener (debounced) that detects when
+- [x] Save the mobile list height to `localStorage` under key `stwid--list-height` on drag end
+- [x] Restore the saved mobile list height on drawer open when `isMobileLayout()` is true
+- [x] Add a `window.addEventListener('resize', ...)` listener (debounced) that detects when
   the viewport crosses the 1000 px threshold and resets the splitter to a sensible default
   for whichever orientation just became active
 
 ### Phase 5 — Update documentation
 
-- [ ] Update `ARCHITECTURE.md` section on `drawer.js` to note the mobile splitter addition
-- [ ] Update `FEATURE_MAP.md` "Bootstrap & runtime sync" and "Splitter" entries to note
+- [x] Update `ARCHITECTURE.md` section on `drawer.js` to note the mobile splitter addition
+- [x] Update `FEATURE_MAP.md` "Bootstrap & runtime sync" and "Splitter" entries to note
   the mobile vertical splitter behavior and the new `stwid--list-height` persistence key
-- [ ] Update `ARCHITECTURE.md` data stores section with the new `stwid--list-height`
+- [x] Update `ARCHITECTURE.md` data stores section with the new `stwid--list-height`
   localStorage key
 
 ---
 
 ## After Implementation
 
-*To be filled in after implementation is complete.*
+*Implemented: February 27, 2026*
+
+### What changed
+
+- `.claude/skills/css-responsive/SKILL.md` and `.claude/skills/css-responsive/references/examples.md`
+  - Confirmed both files already existed and matched this task's responsive-skill requirements.
+- `AGENTS.md` and `CLAUDE.md`
+  - Updated both files so CSS/UI edits now require running `css-ST` and `css-responsive`.
+- `style.css`
+  - Added responsive media blocks for all seven sections of the stylesheet.
+  - Mobile now stacks list above editor/order helper, toggles splitter visibility for orientation, and constrains menu/dialog widths.
+  - Order Helper table now scrolls horizontally in its own wrapper on narrow screens.
+- `src/drawer.js`
+  - Added `isMobileLayout()` (`window.innerWidth <= 1000`), a mobile horizontal splitter element (`.stwid--splitter-h`), and vertical drag-resize logic for list height.
+  - Added separate mobile splitter persistence key `stwid--list-height`.
+  - Added debounced resize handling that detects breakpoint crossing and resets splitter defaults for the active orientation.
+- `ARCHITECTURE.md` and `FEATURE_MAP.md`
+  - Updated docs to include dual-orientation splitter behavior and the new `stwid--list-height` persistence key.
+
+### Risks / What might break
+
+- This touches drawer layout behavior, so repeated viewport resizing may reveal edge-case panel sizing issues.
+- This touches pointer drag logic, so touch devices may expose interaction differences not visible on desktop.
+- This touches Order Helper table sizing, so extremely wide column combinations may still need further tuning.
+
+### Manual checks
+
+- Open drawer on desktop (greater than 1000 px), drag the vertical splitter, close/reopen drawer, and confirm list width persists.
+- Resize to 1000 px or less, confirm top/bottom stacked layout, drag the horizontal splitter, close/reopen drawer, and confirm list height persists.
+- Resize back and forth across 1000 px and confirm splitter orientation and default sizing reset cleanly each time.
+- Open Order Helper on mobile-width layout and confirm horizontal scrolling stays inside the table wrapper (no page-level sideways overflow).
+- Open dropdown/context menus and Move Book dialog on narrow width and confirm controls stay inside the viewport without clipping.
+
+---
+
+## Post-Implementation Review
+*Reviewed: February 27, 2026*
+
+### Files Inspected
+- `src/drawer.js`
+- `style.css`
+
+Files inferred from description; no `Files Changed` section present.
+
+### No Issues Found

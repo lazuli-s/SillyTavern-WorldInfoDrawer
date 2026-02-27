@@ -49,6 +49,7 @@ import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './c
  *   getAutomationIdValues: function,
  *   getGroupValues: function,
  *   filterIndicatorRefs: object,
+ *   initialCollapsed: boolean,
  * }} ctx
  * @returns {{ element: HTMLElement, refresh: function }}
  */
@@ -88,6 +89,7 @@ export function buildVisibilityRow({
     getAutomationIdValues,
     getGroupValues,
     filterIndicatorRefs,
+    initialCollapsed = false,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--order-action-bar');
@@ -103,7 +105,25 @@ export function buildVisibilityRow({
     row.dataset.collapsed = 'false';
     row.append(rowTitle);
 
+    const createActionThinContainer = (labelText, hintText)=>{
+        const container = document.createElement('div');
+        container.classList.add('stwid--thinContainer');
+
+        const containerLabel = document.createElement('div');
+        containerLabel.classList.add('stwid--thinContainerLabel');
+        containerLabel.textContent = labelText;
+
+        const containerHint = document.createElement('i');
+        containerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+        setTooltip(containerHint, hintText);
+        containerLabel.append(containerHint);
+
+        container.append(containerLabel);
+        return container;
+    };
+
     // ── Key column visibility toggle ──────────────────────────────────────
+    const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
     const keyToggle = document.createElement('div'); {
         keyToggle.classList.add('menu_button');
         keyToggle.classList.add('fa-solid', 'fa-fw');
@@ -121,21 +141,14 @@ export function buildVisibilityRow({
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
             applyKeyToggleStyle();
         });
-        row.append(keyToggle);
+        keyToggleContainer.append(keyToggle);
     }
+    row.append(keyToggleContainer);
 
     // ── Column visibility dropdown ────────────────────────────────────────
+    const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
     const columnVisibilityWrap = document.createElement('div'); {
         columnVisibilityWrap.classList.add('stwid--columnVisibility');
-        const labelWrap = document.createElement('div'); {
-            labelWrap.classList.add('stwid--columnVisibilityLabel');
-            const labelText = document.createElement('div'); {
-                labelText.classList.add('stwid--columnVisibilityText');
-                labelText.innerHTML = 'Column<br>Visibility:';
-                labelWrap.append(labelText);
-            }
-            columnVisibilityWrap.append(labelWrap);
-        }
         const menuWrap = document.createElement('div'); {
             menuWrap.classList.add('stwid--multiselectDropdownWrap');
             const menuButton = document.createElement('div'); {
@@ -230,23 +243,23 @@ export function buildVisibilityRow({
             }
             columnVisibilityWrap.append(menuWrap);
         }
-        row.append(columnVisibilityWrap);
+        columnVisibilityContainer.append(columnVisibilityWrap);
     }
+    row.append(columnVisibilityContainer);
 
     const addDivider = ()=>{
         const divider = document.createElement('div');
         divider.classList.add('stwid--actionsDivider');
         row.append(divider);
     };
-    addDivider();
 
     // ── Sort select ───────────────────────────────────────────────────────
+    const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
     const sortWrap = document.createElement('label'); {
-        sortWrap.classList.add('stwid--inputWrap');
+        sortWrap.classList.add('stwid--table-sort');
         setTooltip(sortWrap, 'Sort rows in the table');
-        sortWrap.append('Sort: ');
         const sortSel = document.createElement('select'); {
-            sortSel.classList.add('text_pole');
+            sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
             setTooltip(sortSel, 'Sort rows in the table');
             dom.order.sortSelect = sortSel;
             appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
@@ -263,8 +276,9 @@ export function buildVisibilityRow({
             });
             sortWrap.append(sortSel);
         }
-        row.append(sortWrap);
+        tableSortContainer.append(sortWrap);
     }
+    row.append(tableSortContainer);
     addDivider();
 
     // ── Filter panel toggle ───────────────────────────────────────────────
@@ -461,6 +475,15 @@ export function buildVisibilityRow({
         }
     });
 
+    if (initialCollapsed) {
+        row.dataset.collapsed = 'true';
+        row.classList.add('stwid--collapsed');
+        contentWrap.style.overflow = 'hidden';
+        contentWrap.style.maxHeight = '0';
+        collapseChevron.classList.remove('fa-chevron-down');
+        collapseChevron.classList.add('fa-chevron-right');
+    }
+
     return { element: row, refresh };
 }
 
@@ -489,6 +512,7 @@ export function buildVisibilityRow({
  *   syncOrderHelperOutletFilters: function,
  *   filterIndicatorRefs: object,
  *   applyOrderHelperRecursionFilterToRow: function,
+ *   initialCollapsed: boolean,
  * }} ctx
  * @returns {{ element: HTMLElement, refreshSelectionCount: function, cleanup: function }}
  */
@@ -512,6 +536,7 @@ export function buildBulkEditRow({
     syncOrderHelperOutletFilters,
     filterIndicatorRefs,
     applyOrderHelperRecursionFilterToRow,
+    initialCollapsed = false,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
@@ -529,7 +554,7 @@ export function buildBulkEditRow({
 
     // ── Select container ──────────────────────────────────────────────────
     const selectContainer = document.createElement('div');
-    selectContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    selectContainer.classList.add('stwid--thinContainer');
     selectContainer.dataset.field = 'select';
 
     const selectLabel = document.createElement('span');
@@ -635,7 +660,7 @@ export function buildBulkEditRow({
 
     // ── Toggle Active State container ─────────────────────────────────────
     const activeStateContainer = document.createElement('div');
-    activeStateContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    activeStateContainer.classList.add('stwid--thinContainer');
     activeStateContainer.dataset.field = 'activeState';
 
     const activeStateLabel = document.createElement('span');
@@ -706,7 +731,7 @@ export function buildBulkEditRow({
 
     // ── Strategy container ────────────────────────────────────────────────
     const strategyContainer = document.createElement('div');
-    strategyContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    strategyContainer.classList.add('stwid--thinContainer');
     strategyContainer.dataset.field = 'strategy';
 
     const strategyLabel = document.createElement('span');
@@ -719,7 +744,7 @@ export function buildBulkEditRow({
     strategyContainer.append(strategyLabel);
 
     const strategySelect = document.createElement('select'); {
-        strategySelect.classList.add('stwid--input', 'text_pole');
+        strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
         setTooltip(strategySelect, 'Strategy to apply to selected entries');
         for (const opt of getStrategyOptions()) {
             const option = document.createElement('option');
@@ -780,7 +805,7 @@ export function buildBulkEditRow({
 
     // ── Position container ────────────────────────────────────────────────
     const positionContainer = document.createElement('div');
-    positionContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    positionContainer.classList.add('stwid--thinContainer');
     positionContainer.dataset.field = 'position';
 
     const positionLabel = document.createElement('span');
@@ -793,7 +818,7 @@ export function buildBulkEditRow({
     positionContainer.append(positionLabel);
 
     const positionSelect = document.createElement('select'); {
-        positionSelect.classList.add('stwid--input', 'text_pole');
+        positionSelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
         setTooltip(positionSelect, 'Position to apply to selected entries');
         for (const opt of getPositionOptions()) {
             const option = document.createElement('option');
@@ -844,7 +869,7 @@ export function buildBulkEditRow({
 
     // ── Depth container ───────────────────────────────────────────────────
     const depthContainer = document.createElement('div');
-    depthContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    depthContainer.classList.add('stwid--thinContainer');
     depthContainer.dataset.field = 'depth';
 
     const depthLabel = document.createElement('span');
@@ -913,7 +938,7 @@ export function buildBulkEditRow({
 
     // ── Outlet container ──────────────────────────────────────────────────
     const outletContainer = document.createElement('div');
-    outletContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    outletContainer.classList.add('stwid--thinContainer');
     outletContainer.dataset.field = 'outlet';
 
     const outletLabel = document.createElement('span');
@@ -1048,7 +1073,7 @@ export function buildBulkEditRow({
 
     // ── Order container ───────────────────────────────────────────────────
     const orderContainer = document.createElement('div');
-    orderContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    orderContainer.classList.add('stwid--thinContainer');
     orderContainer.dataset.field = 'order';
 
     const orderLabel = document.createElement('span');
@@ -1202,7 +1227,7 @@ export function buildBulkEditRow({
 
     // ── Recursion container ────────────────────────────────────────────────
     const recursionContainer = document.createElement('div');
-    recursionContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    recursionContainer.classList.add('stwid--thinContainer');
     recursionContainer.dataset.field = 'recursion';
 
     const recursionLabel = document.createElement('span');
@@ -1270,7 +1295,7 @@ export function buildBulkEditRow({
 
     // ── Budget container ───────────────────────────────────────────────────
     const budgetContainer = document.createElement('div');
-    budgetContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    budgetContainer.classList.add('stwid--thinContainer');
     budgetContainer.dataset.field = 'budget';
 
     const budgetLabel = document.createElement('span');
@@ -1328,7 +1353,7 @@ export function buildBulkEditRow({
 
     // ── Probability container ──────────────────────────────────────────────
     const probabilityContainer = document.createElement('div');
-    probabilityContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    probabilityContainer.classList.add('stwid--thinContainer');
     probabilityContainer.dataset.field = 'probability';
 
     const probabilityLabel = document.createElement('span');
@@ -1392,7 +1417,7 @@ export function buildBulkEditRow({
 
     // ── Sticky container ───────────────────────────────────────────────────
     const stickyContainer = document.createElement('div');
-    stickyContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    stickyContainer.classList.add('stwid--thinContainer');
     stickyContainer.dataset.field = 'sticky';
 
     const stickyLabel = document.createElement('span');
@@ -1455,7 +1480,7 @@ export function buildBulkEditRow({
 
     // ── Cooldown container ─────────────────────────────────────────────────
     const cooldownContainer = document.createElement('div');
-    cooldownContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    cooldownContainer.classList.add('stwid--thinContainer');
     cooldownContainer.dataset.field = 'cooldown';
 
     const cooldownLabel = document.createElement('span');
@@ -1518,7 +1543,7 @@ export function buildBulkEditRow({
 
     // ── Delay container ────────────────────────────────────────────────────
     const bulkDelayContainer = document.createElement('div');
-    bulkDelayContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    bulkDelayContainer.classList.add('stwid--thinContainer');
     bulkDelayContainer.dataset.field = 'bulkDelay';
 
     const bulkDelayLabel = document.createElement('span');
@@ -1581,7 +1606,7 @@ export function buildBulkEditRow({
 
     // ── Apply All Changes container ────────────────────────────────────────
     const applyAllContainer = document.createElement('div');
-    applyAllContainer.classList.add('stwid--thinContainer', 'stwid--bulkEditContainer');
+    applyAllContainer.classList.add('stwid--thinContainer');
     applyAllContainer.dataset.field = 'applyAll';
 
     const applyAllLabel = document.createElement('span');
@@ -1650,6 +1675,15 @@ export function buildBulkEditRow({
             collapseChevron.classList.add('fa-chevron-right');
         }
     });
+
+    if (initialCollapsed) {
+        row.dataset.collapsed = 'true';
+        row.classList.add('stwid--collapsed');
+        contentWrap.style.overflow = 'hidden';
+        contentWrap.style.maxHeight = '0';
+        collapseChevron.classList.remove('fa-chevron-down');
+        collapseChevron.classList.add('fa-chevron-right');
+    }
 
     return { element: row, refreshSelectionCount, cleanup };
 }

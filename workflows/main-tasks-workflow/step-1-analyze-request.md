@@ -14,14 +14,7 @@ Act as an experienced programmer and teacher analyzing this third-party SillyTav
 <detailed_steps>
 ## 1. Load authoritative documentation
 
-Read:
-
-- `AGENTS.md`
-- `FEATURE_MAP.md`
-- `ARCHITECTURE.md`
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-- `.claude/skills/st-js-best-practices/references/patterns.md`
-- `.claude/skills/st-world-info-api/references/wi-api.md`
+Read `skills/doc-guide/SKILL.md` and load the docs it prescribes for this task.
 
 ---
 
@@ -68,14 +61,7 @@ When the interview is complete and a precise understanding has been agreed on:
 
 ### Step 1: Choose the file name
 
-Use the naming conventions from `AGENTS.md`:
-
-| Type of work | File path |
-| --- | --- |
-| Bug or issue | `tasks/Issue_<NameHereWithNoUnderscores>.md` |
-| New feature | `tasks/NewFeature_<NameHereWithNoUnderscores>.md` |
-| Rework of existing feature | `tasks/Rework_<NameHereWithNoUnderscores>.md` |
-| Refactoring | `tasks/Refactoring_<NameOfFileToBeRefactored>.md` |
+Use the file-naming skill.
 
 ### Step 2: Write the task file
 

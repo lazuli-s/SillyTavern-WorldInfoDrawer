@@ -12,16 +12,7 @@
 
 ## 2. Load authoritative documentation
 
-Read:
-- `AGENTS.md`
-- `FEATURE_MAP.md`
-- `ARCHITECTURE.md`
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-- `.claude/skills/st-js-best-practices/references/patterns.md`
-- `.claude/skills/st-world-info-api/references/wi-api.md`
-
-If any inspected source uses `SillyTavern.getContext()` or unfamiliar ST globals:
-- read `vendor/SillyTavern/public/scripts/st-context.js`
+Read `skills/doc-guide/SKILL.md` and load the docs it prescribes for this task.
 
 ## 3. Parse TARGET_TASK_FILE
 

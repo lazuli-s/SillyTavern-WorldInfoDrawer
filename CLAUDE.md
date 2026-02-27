@@ -29,37 +29,10 @@ See the `file-naming` skill for the authoritative rules on task file names, fold
 
 ## 3. Authoritative Documentation
 
-Read only what is relevant to the task. Do NOT read all docs every time — that wastes context window space and slows work down.
-
-### Always read first
-
-- `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
-- `FEATURE_MAP.md` — where each extension feature/behavior is implemented
-
-### When writing or modifying any JavaScript
-
-- `.claude/skills/st-js-best-practices/references/patterns.md`
-  (JS best practices — Security: SEC-01–03, Performance: PERF-01–03, API Compatibility: COMPAT-01–04)
-
-### When reading or writing World Info books or entries
-
-- `.claude/skills/st-world-info-api/references/wi-api.md`
-  (Compact WI API reference — book/entry CRUD, entry shape, enums, events, anti-patterns)
-- `vendor/SillyTavern/public/scripts/st-context.js`
-  (What `SillyTavern.getContext()` exposes vs. what requires a direct import)
-
-### When uncertain about what belongs in ST vs. this extension
-
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-  (Ownership boundaries, integration contract, and safe hook points)
-
----
-
-SillyTavern source is available as a **reference-only submodule** under: `vendor/SillyTavern`
-
-Note: if you don't see that folder, the git submodule is probably not initialized.
-
-**DO NOT modify anything under `vendor/SillyTavern`.**
+Before starting any task, invoke the `doc-guide` skill. It is the single source
+of truth for which docs to load and when — always-load docs plus conditional
+loading based on task type (writing JS, reading/writing WI, ownership questions,
+code review).
 
 ## 4. Dependencies and Imports
 
@@ -87,7 +60,7 @@ Main shared libs include:
 
 ## 5. Style Guide Compliance
 
-Before making any UI or CSS change, read `workflows/css-workflow.md`. It defines which skills to run, in what order, and includes all extension CSS contracts.
+Before making any UI or CSS change, always run the `css-ST` and `css-responsive` skills.
 
 ## 6. Ownership and Integration Contract
 
@@ -142,17 +115,3 @@ When implementing or modifying behavior, follow the ownership boundary document:
 Only commit when **explicitly asked** by the user.
 
 **Always run the `git-commit` skill before writing any commit message.** It defines the required format, allowed types, canonical scope list, body/footer rules, and breaking-change notation for this project.
-
-## 11. Definition of Done
-
-A task is complete when **all of the following are true**:
-
-1. **Code is written** — all changes are saved and in their final state.
-2. **Task file is updated** — the relevant `tasks/` file reflects what was done, what changed, and why.
-3. **Architecture docs are updated** — if the task added, removed, or moved a feature, `ARCHITECTURE.md` and/or `FEATURE_MAP.md` are updated to reflect the new state.
-
-Do NOT consider a task done if:
-
-- The implementation is partial or a placeholder remains
-- The task file was not updated
-- A feature was added or moved but the architecture docs were not updated
