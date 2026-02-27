@@ -663,15 +663,15 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 /* Action icon affordance - dim until hovered */
-.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action,
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
+.stwid--folder .stwid--actions .stwid--action,
+.stwid--book .stwid--actions .stwid--action {
   cursor: pointer;
   opacity: 0.5;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
-.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover,
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
+.stwid--folder .stwid--actions .stwid--action:hover,
+.stwid--book .stwid--actions .stwid--action:hover {
   opacity: 1;
 }
 
@@ -734,13 +734,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   align-items: center;
 }
 
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
+.stwid--book .stwid--actions .stwid--sourceLinks {
   display: inline-flex;
   gap: 0.1em;
   align-items: center;
 }
 
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--state-empty {
+.stwid--book .stwid--actions .stwid--sourceLinks.stwid--state-empty {
   display: none;
 }
 
@@ -760,7 +760,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
   margin-left: 0.25em;
   overflow: hidden;
-  transition: 200ms;
+  transition: background-color 200ms ease;
 }
 
 .stwid--books .stwid--entry:is(.stwid--state-dragging .stwid--entry:not(.stwid--state-selected)) {
@@ -803,7 +803,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: flex;
   align-items: center;
   opacity: 0.25;
-  transition: 200ms;
+  transition: opacity 200ms ease;
   cursor: pointer;
 }
 
@@ -818,8 +818,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 /* Entry text truncation - one line, ellipsis if overflow */
-.stwid--books .stwid--entry .stwid--body .stwid--comment,
-.stwid--books .stwid--entry .stwid--body .stwid--key {
+.stwid--entry .stwid--body .stwid--comment,
+.stwid--entry .stwid--body .stwid--key {
   height: 1lh;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -830,7 +830,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   font-size: 1.03em;
 }
 
-.stwid--books .stwid--entry .stwid--body .stwid--key {
+.stwid--entry .stwid--body .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
   font-style: italic;
@@ -842,7 +842,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   gap: 0.5em;
   align-items: baseline;
   opacity: 0.5;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
 .stwid--books .stwid--entry .stwid--status .stwid--enabled {
@@ -1203,13 +1203,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
   flex: 1 1 auto;
   min-width: fit-content;
 }
@@ -1255,7 +1255,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
     max-width: calc(100vw - 2rem);
   }
 
-  .stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
     min-width: 0;
     overflow-wrap: anywhere;
   }
@@ -1654,12 +1654,11 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   caret-color: var(--ac-style-color-text);
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar,
-.stwid--script-filter
-  .stwid--main
-  .stwid--script
-  .stwid--input::-webkit-scrollbar-thumb {
-  visibility: hidden;
+.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+  scrollbar-width: none; /* Firefox */
+}
+.stwid--script-filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
@@ -1704,7 +1703,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 
 .stwid--orderTable tr {
   border-bottom: 5px solid var(--SmartThemeBorderColor);
-  transition: 200ms;
+  transition: background-color 200ms ease;
   background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
 }
 
@@ -1860,7 +1859,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   opacity: 0.5;
   padding: 2px;
   font-size: 0.85em;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
 .stwid--orderTable tr td .stwid--sortableHandle:hover {
@@ -1910,7 +1909,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   align-items: center;
   justify-content: center;
   gap: 0.25em;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
 .stwid--orderTable tr td .stwid--orderSelect:hover {
@@ -2020,7 +2019,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   .stwid--orderTableWrap {
     width: 100%;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   .stwid--orderTable {
