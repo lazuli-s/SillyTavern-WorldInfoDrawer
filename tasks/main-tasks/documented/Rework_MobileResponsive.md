@@ -104,15 +104,17 @@ Nothing — all UI areas are included.
 
 ### Phase 1 — Create the `css-responsive` skill
 
-- [ ] Create the folder `.claude/skills/css-responsive/`
-- [ ] Write `.claude/skills/css-responsive/SKILL.md`:
+- [x] Create the folder `.claude/skills/css-responsive/`
+- [x] Write `.claude/skills/css-responsive/SKILL.md`:
   - Frontmatter trigger description: activates when any CSS is added or changed
   - Document the four rule families (RESP, BRK, OVF, LAY) with IDs, rule text, good/bad
     examples, and PASS/FAIL/N/A review instructions matching the format of `css-rules`
   - List the two ST-mirrored breakpoints with exact pixel values and their ST source reference
   - Define Guide mode (apply rules when authoring) and Review mode (flag violations in audits)
-- [ ] Create `.claude/skills/css-responsive/references/examples.md` with before/after CSS
+- [x] Create `.claude/skills/css-responsive/references/examples.md` with before/after CSS
   snippets illustrating each rule (one example per rule ID minimum)
+
+Validated during implementation: these files already existed and matched the phase requirements.
 
 ### Phase 2 — Register `css-responsive` as a mandatory pre-CSS check
 
