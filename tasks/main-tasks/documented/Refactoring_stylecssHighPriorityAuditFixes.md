@@ -451,3 +451,32 @@ Issue 4 (add new block at end).
 
 - Not run in this environment: browser reload and visual confirmation of the new Lorebooks/Settings hint icons and the two font-size adjustments.
 - Not run in this environment: browser reload and visual confirmation that the five targeted Order Helper selects now share the `.stwid--smallSelectTextPole` compact sizing.
+
+## Follow-up Tweaks (2026-02-27, sorting/visibility spacing)
+
+### What changed
+
+- Removed `font-size: smaller;` from the shared Order Helper action-bar wrapper rule:
+  `.stwid--order-action-bar .stwid--inputWrap, .stwid--order-action-bar .stwid--columnVisibility`.
+- Updated `.stwid--smallSelectTextPole` so `width: 9em` is no longer global.
+- Added a sorting-row-only width rule:
+  `.stwid--sortingRow .stwid--smallSelectTextPole { width: 9em; }`
+- Updated sorting/visibility thin-container spacing in `style.css`:
+  - kept `gap: 1.1em`
+  - removed `min-width: 45%`
+  - changed to `flex-wrap: nowrap`
+  - added `padding-left: 1.5em` and `padding-right: 1.5em`
+- Updated list filter row spacing:
+  `.stwid--list .stwid--searchRow, .stwid--list .stwid--visibilityRow`
+  now uses `gap: 1.5em` and `justify-content: center`.
+- Added `margin-top: 1em` to `.stwid--visibilityRow`.
+
+### Why it changed
+
+- Requested UI tuning for tighter control over where compact select widths apply.
+- Requested more horizontal breathing room and centered layout in sorting/search/visibility rows.
+- Requested removal of smaller text sizing in the specific Order Helper action-bar grouping rule.
+
+### Verification status
+
+- Not run in this environment: browser reload and visual confirmation of updated spacing, select widths, and visibility-row top margin.
