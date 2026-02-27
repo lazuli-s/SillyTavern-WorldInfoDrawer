@@ -39,6 +39,8 @@ export const initDrawer = ({
         /**@type {HTMLElement} */
         visibilityAndSettingsRow: undefined,
         /**@type {HTMLElement} */
+        controlsRow: undefined,
+        /**@type {HTMLElement} */
         sortingRow: undefined,
         order: {
             /**@type {HTMLElement} */
@@ -199,6 +201,7 @@ export const initDrawer = ({
                         controls.classList.add('stwid--controls');
                         const controlsPrimary = document.createElement('div');
                         controlsPrimary.classList.add('stwid--controlsRow');
+                        dom.controlsRow = controlsPrimary;
                         const lorebooksGroup = document.createElement('div');
                         lorebooksGroup.classList.add('stwid--thinContainer');
                         const lorebooksGroupLabel = document.createElement('span');

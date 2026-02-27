@@ -113,7 +113,7 @@ panel while the book list scrolls below it.
 
 **File: `src/drawer.js`**
 
-- [ ] Locate where `controlsPrimary` is created:
+- [x] Locate where `controlsPrimary` is created:
   ```js
   const controlsPrimary = document.createElement('div');
   controlsPrimary.classList.add('stwid--controlsRow');
