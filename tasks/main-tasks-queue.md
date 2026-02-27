@@ -9,6 +9,9 @@
 
 *Folder: `tasks/main-tasks/implemented-tasks/`*
 
+- `tasks/main-tasks/implemented-tasks/NewFeature_DocGuideSkill.md`
+- `tasks/main-tasks/implemented-tasks/Rework_MobileControlsTabAndOrderHelperCollapse.md`
+- `tasks/main-tasks/implemented-tasks/Rework_MobileResponsive.md`
 
 ## Tasks pending review
 
