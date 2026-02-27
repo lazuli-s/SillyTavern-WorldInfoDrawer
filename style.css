@@ -1064,6 +1064,53 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: none;
 }
 
+/* Additional Matching Sources collapsible section card */
+.stwid--entry-section {
+  border: 1px solid color-mix(in srgb, var(--SmartThemeBodyColor) 25%, transparent);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.stwid--entry-section > .inline-drawer-toggle {
+  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 10%, transparent);
+  padding: 5px 12px;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+.stwid--entry-section.stwid--expanded > .inline-drawer-toggle {
+  border-bottom: 1px solid color-mix(in srgb, var(--SmartThemeBodyColor) 25%, transparent);
+}
+
+.stwid--entry-section > .inline-drawer-toggle > .inline-drawer-icon {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stwid--entry-section.stwid--expanded > .inline-drawer-toggle > .inline-drawer-icon {
+  transform: rotate(180deg);
+}
+
+/* override: AMS content uses max-height animation; block display prevents ST's jQuery from collapsing it */
+.stwid--entry-section > .inline-drawer-content {
+  display: block !important;
+  flex: none;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 10px;
+  opacity: 0;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stwid--entry-section.stwid--expanded > .inline-drawer-content {
+  max-height: 2000px;
+  padding: 10px;
+  opacity: 1;
+}
+
 /* override: vanilla ST sets a conflicting flex value on [name='contentAndCharFilterBlock'];
    flex:1 is required so the content textarea fills the remaining editor height */
 .stwid--editor [name='contentAndCharFilterBlock'] {
