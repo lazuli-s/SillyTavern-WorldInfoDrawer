@@ -61,14 +61,7 @@ When the interview is complete and a precise understanding has been agreed on:
 
 ### Step 1: Choose the file name
 
-Use the naming conventions from `AGENTS.md`:
-
-| Type of work | File path |
-| --- | --- |
-| Bug or issue | `tasks/Issue_<NameHereWithNoUnderscores>.md` |
-| New feature | `tasks/NewFeature_<NameHereWithNoUnderscores>.md` |
-| Rework of existing feature | `tasks/Rework_<NameHereWithNoUnderscores>.md` |
-| Refactoring | `tasks/Refactoring_<NameOfFileToBeRefactored>.md` |
+Use the file-naming skill.
 
 ### Step 2: Write the task file
 
