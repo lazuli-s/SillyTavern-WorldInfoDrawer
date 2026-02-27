@@ -2,8 +2,6 @@
 
 ## Files Pending Review
 
-- `index.js`
-- `src/bookSourceLinks.js`
 - `src/constants.js`
 - `src/drawer.js`
 - `src/editorPanel.js`
@@ -37,7 +35,8 @@
 
 ## Files Pending Meta-Review
 
--
+- `tasks/code-reviews/CodeReview_index.js.md`
+- `tasks/code-reviews/CodeReview_bookSourceLinks.js.md`
 
 ## Files Pending Implementation
 
