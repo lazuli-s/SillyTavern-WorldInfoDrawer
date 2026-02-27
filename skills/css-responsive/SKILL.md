@@ -1,12 +1,6 @@
 ---
 name: css-responsive
-description: >-
-  Authoring companion and review tool enforcing responsive/mobile CSS rules for
-  this SillyTavern WorldInfoDrawer extension. Covers four rule families:
-  Responsive Units (RESP), Breakpoints (BRK), Overflow (OVF), and Layout (LAY).
-  Use when writing new CSS, modifying existing CSS, or auditing style.css for
-  mobile/responsive violations. Triggers automatically every time any CSS is
-  added or changed — run alongside the style-guide skill.
+description: Authoring companion and review tool enforcing responsive/mobile CSS rules for this SillyTavern WorldInfoDrawer extension. Covers four rule families: Responsive Units (RESP), Breakpoints (BRK), Overflow (OVF), and Layout (LAY). Use when writing new CSS, modifying existing CSS, or auditing style.css for mobile/responsive violations. Triggers automatically every time any CSS is added or changed — run alongside the css-ST skill.
 metadata:
   sync:
     version: 2

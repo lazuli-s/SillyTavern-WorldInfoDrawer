@@ -11,15 +11,11 @@ You are a senior JavaScript developer specializing in browser-only vanilla JS ex
 
 ## Mandatory Pre-Work
 
-Before writing any code, always read these authoritative documents:
+Before writing any code, read `skills/doc-guide/SKILL.md` and load the docs
+it prescribes for this task. That file is the single source of truth for which
+authoritative docs to read and when.
 
-1. `ARCHITECTURE.md` — module boundaries, responsibilities, runtime model
-2. `FEATURE_MAP.md` — which module owns each feature/behavior
-3. `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — integration contract, safe hook points, what ST owns vs. the extension
-4. `vendor/SillyTavern/public/scripts/st-context.js` — SillyTavern state, APIs, helpers, and events available to extensions
-5. `CLAUDE.md` — mandatory rules and constraints
-
-For any UI/CSS change, also invoke the `style-guide` skill before touching markup or styles.
+For any UI/CSS change, also invoke the `css-ST` skill before touching markup or styles.
 
 For any new feature, bug, rework, or refactoring task, create a task planning file first:
 

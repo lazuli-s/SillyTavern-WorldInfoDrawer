@@ -1,7 +1,7 @@
 <task name="Code Review - Step 3: Implementation">
 
 <task_objective>
-Process `tasks/code-reviews/queue-code-review.md` "Files Pending Implementation": for the first pending `tasks/code-reviews/CodeReview_*.md`, load authoritative docs, scan the review and its source file, check whether each finding is already fixed (via changelog + source inspection), overwrite the `#### Implementation Checklist` with an "Already fixed" note when applicable, implement all actionable findings in order (checking off `[ ]` items as they complete), update the code review file with a `### STEP 3: IMPLEMENTATION` section containing `#### Implementation Notes`, update `REVIEW_TRACKER.md`, create/update `CODE_REVIEW_CHANGELOG.md`, remove from pending implementation in the queue file. Only output the created/updated files. Output proper emojis.
+Process `tasks/code-reviews/queue-code-review.md` "Files Pending Implementation": for the first pending `tasks/code-reviews/CodeReview_*.md`, load authoritative docs, scan the review and its source file, check whether each finding is already fixed (via changelog + source inspection), overwrite the `#### Implementation Checklist` with an "Already fixed" note when applicable, implement all actionable findings in order (checking off `[ ]` items as they complete), update the code review file with a `### STEP 3: IMPLEMENTATION` section containing `#### Implementation Notes`, update `REVIEW_TRACKER.md`, move the file to "Files Pending Changelog" in the queue. Only output the created/updated files. Output proper emojis.
 </task_objective>
 
 <detailed_sequence_steps>
@@ -223,63 +223,16 @@ Do **not** modify the `Meta-reviewed` or `Verdict` or `Reason` fields.
 
 ---
 
-## 10. Create or update CODE_REVIEW_CHANGELOG.md
+## 10. Move to "Files Pending Changelog" in the queue
 
-1. If `tasks/code-reviews/CODE_REVIEW_CHANGELOG.md` does not exist, create it with a header:
+Use `replace_in_file` on `tasks/code-reviews/queue-code-review.md` to:
 
-    ```markdown
-    # Code Review Implementation Changelog
+1. Remove `TARGET_REVIEW_FILE` from the bullet list under `## Files Pending Implementation`.
+2. Add `TARGET_REVIEW_FILE` to the bullet list under `## Files Pending Changelog`. If the `## Files Pending Changelog` section does not yet exist in the queue file, create it — append a new section at the end of the file, formatted consistently with the rest of the file.
 
-    Changes applied from code review findings across the extension's source files.
+Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
 
-    ---
-    ```
-
-2. Use `read_file` on `CODE_REVIEW_CHANGELOG.md` (if it exists).
-
-3. Prepend a new dated section at the top of the changelog (below the header), in this format:
-
-    ```markdown
-    ## <Month D, YYYY>
-
-    ### `<TARGET_SOURCE_FILE>`
-
-    - **F01** — <Finding title>: <summary of what changed>
-    - **F06** — <Finding title>: <summary of what changed>
-    ```
-
-    > Only include findings that were **implemented** (✅). Do not list skipped or already-fixed findings.
-    >
-    > If no findings were implemented for this file (all were skipped/already fixed), add a note instead:
-    > ```markdown
-    > ### `<TARGET_SOURCE_FILE>`
-    >
-    > *No changes — all findings were skipped or already resolved.*
-    > ```
-
-4. Use `write_to_file` to save the updated changelog.
-
----
-
-## 11. Update queue files (preserve structure)
-
-1. In `tasks/code-reviews/queue-code-review.md`: use `replace_in_file` to remove `TARGET_REVIEW_FILE` from the bullet list under `## Files Pending Implementation`.
-
-2. Keep each file's separators and ordering style (the `---` lines, blank lines, indentation) consistent with existing entries.
-
----
-
-## 12. Move the code review file to the finished folder
-
-1. Use a bash `mv` command to move `TARGET_REVIEW_FILE` into `tasks/code-reviews/finished/`:
-
-    ```bash
-    mv "tasks/code-reviews/CodeReview_<BASENAME>.md" "tasks/code-reviews/finished/CodeReview_<BASENAME>.md"
-    ```
-
-    Substitute the actual filename (e.g. `CodeReview_utils.js.md`) for `<BASENAME>`.
-
-2. Report the file that was processed and stop.
+Report the file that was processed and stop.
 
 </detailed_sequence_steps>
 

@@ -9,12 +9,9 @@ model: opus
 
 You are an expert software architect reviewing changes to the **SillyTavern-WorldInfoDrawer** extension — a browser-only, vanilla JS ESM third-party extension for SillyTavern that replaces the default World Info editor with a full-screen drawer UI.
 
-Before reviewing, read the following authoritative documents to ground your analysis:
-
-- `ARCHITECTURE.md` — module boundaries, responsibilities, and runtime model
-- `FEATURE_MAP.md` — where each extension feature/behavior is implemented
-- `SILLYTAVERN_OWNERSHIP_BOUNDARY.md` — what this extension owns vs. what SillyTavern owns
-- `CLAUDE.md` — mandatory coding rules and constraints for this repo
+Before reviewing, read `skills/doc-guide/SKILL.md` and load the docs it prescribes
+for this task. That file is the single source of truth for which authoritative docs
+to read and when.
 
 ---
 

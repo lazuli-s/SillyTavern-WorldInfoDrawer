@@ -401,7 +401,7 @@ export function buildTableBody({
             const strategy = document.createElement('td'); {
                 strategy.setAttribute('data-col', 'strategy');
                 const strat = /**@type {HTMLSelectElement}*/(strategyTemplate.cloneNode(true)); {
-                    strat.classList.add('stwid--strategy');
+                    strat.classList.add('stwid--strategy', 'stwid--smallSelectTextPole');
                     setTooltip(strat, 'Entry strategy');
                     strat.value = entryState(e.data);
                     strat.addEventListener('change', async()=>{
@@ -441,7 +441,7 @@ export function buildTableBody({
             const position = document.createElement('td'); {
                 position.setAttribute('data-col', 'position');
                 cache[e.book].dom.entry[e.data.uid].position = pos;
-                pos.classList.add('stwid--position');
+                pos.classList.add('stwid--position', 'stwid--smallSelectTextPole');
                 setTooltip(pos, 'Where this entry is inserted');
                 pos.value = e.data.position;
                 pos.addEventListener('change', async()=>{

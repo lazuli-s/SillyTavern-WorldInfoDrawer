@@ -45,6 +45,9 @@ body.stwid-- #WorldInfo {
   --stwid-state-hover-bg: var(--white20a);
   --stwid-state-disabled-opacity: 0.5;
 
+  /* Semantic tokens */
+  --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
+
   /* Phase 3: layout stability (inner content scrolls) */
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
@@ -57,7 +60,7 @@ body.stwid-- #WorldInfo {
 
 /* Show drawer when ST sets openDrawer */
 body.stwid-- #WorldInfo.openDrawer {
-  display: flex !important;
+  display: flex !important; /* override: ST's inline-drawer sets display:none by default; must force flex when openDrawer class is applied */
 }
 
 /* Hide the vanilla WI UI when drawer is active */
@@ -84,11 +87,23 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   content: 'Loading...';
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important; /* override: loading overlay must blur regardless of parent backdrop-filter reset */
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 5em;
+}
+
+@media screen and (max-width: 1000px) {
+  body.stwid-- #WorldInfo {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  body.stwid-- #WorldInfo > .stwid--body {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -129,8 +144,9 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  width: 300px;
-  min-width: 0;
+  width: 20vw;
+  min-width: 220px;
+  max-width: 100%;
   min-height: 0;
 }
 
@@ -212,12 +228,14 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   flex-wrap: nowrap;
 }
 
-.stwid--sortingRow .stwid--thinContainer {
+.stwid--sortingRow .stwid--thinContainer,
+.stwid--visibilityRow .stwid--thinContainer {
   gap: 1.1em;
-  min-width: 45%;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   row-gap: 0.55em;
   padding-top: 0.7em;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
   display: flex;
   justify-content: space-around;
 }
@@ -262,10 +280,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   box-sizing: border-box;
 }
 
-.stwid--sortingRow .stwid--globalSorting .stwid--smallSelectTextPole {
-  width: 9em;
+.stwid--smallSelectTextPole {
   max-width: 9em;
   font-size: 0.9em;
+}
+
+.stwid--sortingRow .stwid--smallSelectTextPole {
+  width: 9em;
 }
 
 .stwid--sortingRow .stwid--bookSortToggle,
@@ -296,7 +317,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--list .stwid--searchRow,
 .stwid--list .stwid--visibilityRow {
   display: flex;
-  gap: 0.75em;
+  gap: 1.5em;
+  justify-content: center;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -370,6 +392,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   gap: 0.35em;
   flex-wrap: nowrap;
   width: 100%;
+  margin-top: 1em;
   flex: 1 1 auto;
 }
 
@@ -417,9 +440,9 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--bookVisibilityMenu.stwid--state-active {
   display: flex;
   width: max-content;
-  opacity: 1 !important;
-  background-color: var(--SmartThemeBlurTintColor) !important;
-  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important;
+  opacity: 1 !important; /* override: ST menu styles set opacity:0 on hidden menus; force visible when state-active */
+  background-color: var(--SmartThemeBlurTintColor) !important; /* override: ST button resets may override menu background; force theme blur tint */
+  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important; /* override: parent backdrop-filter context may be cleared; force blur on menu */
   box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
   border: 1px solid var(--SmartThemeBorderColor);
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
@@ -444,7 +467,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 .stwid--multiselectDropdownOption:hover {
-  color: var(--customThemeColor) !important;
+  color: var(--customThemeColor) !important; /* override: ST menu_button hover styles may override color; force theme color on hover */
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
@@ -640,15 +663,15 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 /* Action icon affordance - dim until hovered */
-.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action,
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action {
+.stwid--folder .stwid--actions .stwid--action,
+.stwid--book .stwid--actions .stwid--action {
   cursor: pointer;
   opacity: 0.5;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
-.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action:hover,
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--action:hover {
+.stwid--folder .stwid--actions .stwid--action:hover,
+.stwid--book .stwid--actions .stwid--action:hover {
   opacity: 1;
 }
 
@@ -711,13 +734,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   align-items: center;
 }
 
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks {
+.stwid--book .stwid--actions .stwid--sourceLinks {
   display: inline-flex;
   gap: 0.1em;
   align-items: center;
 }
 
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks.stwid--state-empty {
+.stwid--book .stwid--actions .stwid--sourceLinks.stwid--state-empty {
   display: none;
 }
 
@@ -737,7 +760,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   border-bottom: 2px solid var(--SmartThemeBorderColor);
   margin-left: 0.25em;
   overflow: hidden;
-  transition: 200ms;
+  transition: background-color 200ms ease;
 }
 
 .stwid--books .stwid--entry:is(.stwid--state-dragging .stwid--entry:not(.stwid--state-selected)) {
@@ -780,7 +803,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: flex;
   align-items: center;
   opacity: 0.25;
-  transition: 200ms;
+  transition: opacity 200ms ease;
   cursor: pointer;
 }
 
@@ -795,15 +818,19 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 /* Entry text truncation - one line, ellipsis if overflow */
-.stwid--books .stwid--entry .stwid--body .stwid--comment,
-.stwid--books .stwid--entry .stwid--body .stwid--key {
+.stwid--entry .stwid--body .stwid--comment,
+.stwid--entry .stwid--body .stwid--key {
   height: 1lh;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stwid--books .stwid--entry .stwid--body .stwid--key {
+.stwid--comment {
+  font-size: 1.03em;
+}
+
+.stwid--entry .stwid--body .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
   font-style: italic;
@@ -815,12 +842,67 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   gap: 0.5em;
   align-items: baseline;
   opacity: 0.5;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
 .stwid--books .stwid--entry .stwid--status .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--list {
+    width: 100%;
+    max-width: none;
+    flex-basis: auto;
+    height: auto;
+  }
+
+  .stwid--iconTabBar {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  }
+
+  .stwid--controls .stwid--controlsRow,
+  .stwid--controls .stwid--visibilityAndSettingsRow,
+  .stwid--sortingRow,
+  .stwid--list .stwid--searchRow,
+  .stwid--list .stwid--visibilityRow,
+  .stwid--visibilityRow {
+    flex-wrap: wrap;
+  }
+
+  .stwid--sortingRow {
+    justify-content: flex-start;
+  }
+
+  .stwid--sortingRow .stwid--thinContainer,
+  .stwid--visibilityRow .stwid--thinContainer {
+    min-width: 100%;
+  }
+
+  .stwid--multiselectDropdownMenu,
+  .stwid--bookVisibilityMenu {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--sortingRow .stwid--perBookSortButtons {
+    width: 100%;
+  }
+
+  .stwid--sortingRow .stwid--bookSortToggle,
+  .stwid--sortingRow .stwid--clearBookSorts {
+    flex: 1 1 auto;
+  }
+
+  .stwid--list .stwid--searchRow .stwid--search {
+    flex-basis: 100%;
+    min-width: 0;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -842,6 +924,33 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--splitter:hover,
 .stwid--splitter:active {
   opacity: 1;
+}
+
+.stwid--splitter-h {
+  display: none;
+  flex: 0 0 auto;
+  height: var(--stwid-splitter-width);
+  margin: var(--stwid-splitter-margin-x) 0;
+  cursor: row-resize;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.stwid--splitter-h:hover,
+.stwid--splitter-h:active {
+  opacity: 1;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--splitter {
+    display: none;
+  }
+
+  .stwid--splitter-h {
+    display: block;
+    width: 100%;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -949,6 +1058,8 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: none;
 }
 
+/* override: vanilla ST sets a conflicting flex value on [name='contentAndCharFilterBlock'];
+   flex:1 is required so the content textarea fills the remaining editor height */
 .stwid--editor [name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
   min-height: 0;
@@ -962,6 +1073,18 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 
 .stwid--editor [name='WIEntryBottomControls'] {
   display: none;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--editor {
+    width: 100%;
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .stwid--editor #wiActivationSettings {
+    flex-wrap: wrap;
+  }
 }
 
 
@@ -1080,13 +1203,13 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
   flex: 1 1 auto;
   min-width: fit-content;
 }
@@ -1111,6 +1234,37 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   height: 100%;
   margin:  0;
   font-size: 1em;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--moveBookContent {
+    width: min(100%, 38rem);
+  }
+
+  .stwid--moveBookContent .stwid--moveBookRow {
+    flex-wrap: wrap;
+  }
+
+  .stwid--moveBookContent .stwid--moveBookQuickActions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .stwid--blocker .stwid--listDropdownMenu {
+    max-width: calc(100vw - 2rem);
+  }
+
+  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+    min-width: 2em;
+  }
 }
 
 /* Flex-column fill shell - grows to fill parent, scrolls internally */
@@ -1204,7 +1358,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 .stwid--bulkEditRow {
   flex: 0 0 auto;
   display: flex;
-  gap: 1.25em;
+  gap: 0.9em;
   justify-content: flex-start;
   align-items: center;
   background-color: var(--SmartThemeBlurTintColor);
@@ -1224,27 +1378,16 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 }
 
 
-.stwid--order-action-bar .stwid--inputWrap,
+.stwid--order-action-bar .stwid--table-sort,
 .stwid--order-action-bar .stwid--columnVisibility {
   display: flex;
   align-items: center;
   gap: 0.5em;
   color: var(--SmartThemeEmColor);
-  font-size: smaller;
 }
 
 .stwid--order-action-bar .stwid--columnVisibility {
   position: relative;
-}
-
-.stwid--order-action-bar .stwid--columnVisibility .stwid--columnVisibilityLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.35em;
-}
-
-.stwid--order-action-bar .stwid--columnVisibility .stwid--columnVisibilityText {
-  line-height: 1.1;
 }
 
 /* Visibility row - right side */
@@ -1300,7 +1443,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
 /* Bulk edit row */
 .stwid--bulkEditRow {
   flex-wrap: wrap;
-  gap: 0.75em;
   padding: 0.4em 0.5em;
 }
 
@@ -1313,7 +1455,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   color: var(--SmartThemeEmColor);
   opacity: 1;
   margin-bottom: 0.5em;
-  transition: margin-bottom 250ms ease;
 }
 
 .stwid--collapsed .stwid--RowTitle {
@@ -1339,7 +1480,6 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   display: flex;
   flex-wrap: wrap;
   gap: inherit;
-  transition: max-height 250ms ease;
 }
 
 .stwid--RowTitle::after {
@@ -1349,7 +1489,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--thinContainerLabelHint {
   background-color: var(--SmartThemeBorderColor);
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) {
+.stwid--orderHelper .stwid--thinContainer {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -1387,15 +1527,15 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 4em;
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .killSwitch.fa-toggle-on {
+.stwid--orderHelper .stwid--thinContainer .killSwitch.fa-toggle-on {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .killSwitch.fa-toggle-off {
+.stwid--orderHelper .stwid--thinContainer .killSwitch.fa-toggle-off {
   color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer).stwid--state-disabled {
+.stwid--orderHelper .stwid--thinContainer.stwid--state-disabled {
   opacity: var(--stwid-state-disabled-opacity);
   pointer-events: none;
 }
@@ -1408,7 +1548,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   width: 3.5em;
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="outlet"] .stwid--input {
+.stwid--orderHelper .stwid--thinContainer[data-field="outlet"] .stwid--input {
   width: 8em;
   font-size: 0.85em;
 }
@@ -1418,21 +1558,15 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.1em;
 }
 
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer)[data-field="applyAll"] {
+.stwid--orderHelper .stwid--thinContainer[data-field="applyAll"] {
   min-width: 5em;
 }
 
 /* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
-.stwid--orderHelper :is(.stwid--thinContainer, .stwid--bulkEditContainer) .stwid--applyDirty {
-  color: var(--warning-color, #e8a97f);
-}
-
-.stwid--columnVisibilityLabel {
-  padding: 2px 4px;
-  border-radius: var(--stwid-radius-s);
+.stwid--orderHelper .stwid--thinContainer .stwid--applyDirty {
+  color: var(--stwid-warning-color);
 }
 
 /* Filters */
@@ -1519,12 +1653,11 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   caret-color: var(--ac-style-color-text);
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar,
-.stwid--script-filter
-  .stwid--main
-  .stwid--script
-  .stwid--input::-webkit-scrollbar-thumb {
-  visibility: hidden;
+.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+  scrollbar-width: none; /* Firefox */
+}
+.stwid--script-filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
@@ -1569,7 +1702,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 
 .stwid--orderTable tr {
   border-bottom: 5px solid var(--SmartThemeBorderColor);
-  transition: 200ms;
+  transition: background-color 200ms ease;
   background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
 }
 
@@ -1693,12 +1826,16 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   gap: 0.4em;
 }
 
+.stwid--small-check-row {
+  font-size: 0.85em;
+}
+
 .stwid--characterFilterRow--include {
   color: var(--SmartThemeQuoteColor);
 }
 
 .stwid--characterFilterRow--exclude {
-  color: var(--SmartThemeErrorColor, #e57373);
+  color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));
 }
 
 /* override: FA icon checkbox defaults are too large for the compact recursion options row */
@@ -1721,7 +1858,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   opacity: 0.5;
   padding: 2px;
   font-size: 0.85em;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
 .stwid--orderTable tr td .stwid--sortableHandle:hover {
@@ -1771,7 +1908,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   align-items: center;
   justify-content: center;
   gap: 0.25em;
-  transition: 200ms;
+  transition: opacity 200ms ease;
 }
 
 .stwid--orderTable tr td .stwid--orderSelect:hover {
@@ -1805,7 +1942,7 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
 }
 
 .stwid--orderTable tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
-  font-size: 1.1em;
+  font-size: 1.03em;
   font-weight: 500;
 }
 
@@ -1860,6 +1997,43 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   cursor: pointer;
 }
 
+@media screen and (max-width: 1000px) {
+  .stwid--orderHelper {
+    width: 100%;
+    max-width: none;
+  }
+
+  .stwid--script-filter {
+    flex-direction: column;
+    height: auto;
+    min-height: 20vh;
+  }
+
+  .stwid--script-filter .stwid--preview {
+    max-width: none;
+    width: 100%;
+    max-height: 16em;
+  }
+
+  .stwid--orderTableWrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .stwid--orderTable {
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--order-action-bar,
+  .stwid--bulkEditRow {
+    gap: 0.6em;
+    padding-inline: 0.35em;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* 7) Misc                                                                    */
@@ -1870,4 +2044,25 @@ i.fa-solid.fa-fw.fa-circle-question.stwid--bulkEditLabelHint {
   margin: 0;
   padding-left: 0.5em;
   font-size: small;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--helpToast {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 8) Accessibility                                                           */
+
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
+    animation-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
+  }
 }

@@ -15,12 +15,12 @@ Where each feature or behavior is implemented in the codebase.
 - Source-link icon rendering on book rows, including attribution tooltips/aria labels for character/persona links → src/listPanel.js
 - Jump-to-entry API (open book, scroll, focus editor) → index.js
 - Drawer keyboard handling for selected-entry delete → src/drawer.js
-- List/editor splitter drag resize + saved width → src/drawer.js
+- List/editor splitter drag resize (desktop width + mobile top/bottom height) and saved splitter state (`stwid--splitter-size`, `stwid--splitter-size-mobile`, with legacy `stwid--list-width`/`stwid--list-height` compatibility) → src/drawer.js
 
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/listPanel.booksView.js
-- Top control row (new book, new folder, import book, import folder, collapse/expand all books, collapse/expand all folders, activation settings, refresh), including thin-container groups: Lorebooks (new/import/collapse-all-books), Folders (new/import/collapse-all-folders), and Settings (activation + refresh) → src/drawer.js, src/listPanel.js
+- Top control row (new book, new folder, import book, import folder, collapse/expand all books, collapse/expand all folders, activation settings, refresh), including thin-container groups: Lorebooks (new/import/collapse-all-books), Folders (new/import/collapse-all-folders), and Settings (activation + refresh). On mobile (<= 1000 px), `stwid--controlsRow` is moved into the `Controls` icon tab and its original wrapper is hidden. → src/drawer.js, src/listPanel.js, src/listPanel.filterBar.js
 - Book active toggle (global active status) → src/listPanel.booksView.js
 - Book collapse/expand and collapse-all behavior → src/listPanel.booksView.js, src/listPanel.js, src/drawer.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/listPanel.booksView.js, src/listPanel.selectionDnD.js, src/listPanel.js
@@ -68,7 +68,7 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/listPanel.selectionDnD.js
 - Delete selected entries (Del key) with save/update propagation → src/drawer.js, src/wiUpdateHandler.js
 - Search books by name and optional entry text search (title/keys) → src/listPanel.filterBar.js
-- List-panel icon tabs (`Visibility`, `Sorting`, `Search`) with active-state switching and real control rows mounted per tab → src/listPanel.filterBar.js, style.css
+- List-panel icon tabs (`Visibility`, `Sorting`, `Search`) with active-state switching and real control rows mounted per tab. On mobile (<= 1000 px), a `Controls` tab is prepended as the first/default tab and contains `stwid--controlsRow`. → src/listPanel.filterBar.js, style.css
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/listPanel.filterBar.js
 - Book visibility control/chip layout (chips wrap inline beside the trigger button; no separate help icon in the row) → style.css
 - Visibility tab row (`stwid--visibilityRow`) groups Order Helper toggle + Book Visibility trigger + chips; activation/refresh actions live in the top `stwid--controlsRow` Settings group (owned by `src/drawer.js`) → src/listPanel.filterBar.js, src/drawer.js, style.css
@@ -90,7 +90,7 @@ Where each feature or behavior is implemented in the codebase.
 - Folder collapse state storage → src/listPanel.state.js
 - Order Helper persisted state keys (`sort`, `hide-keys`, `columns`) → src/orderHelperState.js
 - Order Helper local state keys (`start`, `step`, `direction`, `filter`) → src/orderHelperRender.js
-- List panel width persistence (`stwid--list-width`) → src/drawer.js
+- List panel width persistence (`stwid--splitter-size`) and mobile list height persistence (`stwid--splitter-size-mobile`) with legacy key mirroring (`stwid--list-width`, `stwid--list-height`) → src/drawer.js
 
 ## Integration with SillyTavern
 

@@ -2,6 +2,7 @@
 name: skill-creator
 description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
 ---
+
 # Skill Creator
 
 This skill provides guidance for creating effective skills.
@@ -280,6 +281,7 @@ Added scripts must be tested by actually running them to ensure there are no bug
 #### Update SKILL.md
 
 **Writing Guidelines:** Always use imperative/infinitive form.
+- Avoid unnecessary line breaks in normal paragraphs. Keep prose as complete paragraphs, and only add line breaks where structure requires them (lists, headings, code blocks, tables, or deliberate readability breaks).
 
 ##### Frontmatter
 
