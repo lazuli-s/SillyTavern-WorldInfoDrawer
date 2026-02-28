@@ -2,7 +2,6 @@
 
 ## Files Pending Review
 
-- `src/listPanel.foldersView.js`
 - `src/listPanel.js`
 - `src/listPanel.selectionDnD.js`
 - `src/listPanel.state.js`

@@ -122,3 +122,12 @@ Track all code-review findings across the extension's JS files.
     - Verdict:
     - Reason:
   - Implemented:
+
+### `src/listPanel.foldersView.js`
+[CodeReview_listPanel.foldersView.js.md](tasks/code-reviews/pending-meta-review/CodeReview_listPanel.foldersView.js.md)
+
+- **F01** - Hidden folders processed unnecessarily in active toggle update
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
