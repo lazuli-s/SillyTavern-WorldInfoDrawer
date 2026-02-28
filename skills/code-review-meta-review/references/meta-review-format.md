@@ -11,7 +11,6 @@ This file defines the exact format for the `### STEP 2: META CODE REVIEW` block 
 3. [Fix Quality Audit](#fix-quality-audit)
 4. [Implementation Checklist (appended to STEP 2)](#implementation-checklist)
 5. [Verdict definitions](#verdict-definitions)
-6. [Tracker update format](#tracker-update-format)
 
 ---
 
@@ -144,33 +143,3 @@ Fill in all fields. If a field is not applicable (e.g., no behavioral change, no
 - Requires user input 🚩 is present
 
 > **Note on 🚩 and ❌ findings:** Even with these flags, the file still moves to `pending-implementation/`. The implementer is responsible for handling them. Do not route to a separate queue file.
-
----
-
-## Tracker update format
-
-After meta-review, update each finding bullet in `REVIEW_TRACKER.md` from:
-
-```
-- **F01** — <Title>
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
-```
-
-To:
-
-```
-- **F01** — <Title>
-  - Meta-reviewed: [X]
-    - Verdict: 🟢 / 🟡 / 🔴
-    - Reason: <brief; required for 🟡 and 🔴, "N/A" for 🟢>
-  - Neglect Risk: Low ⭕ / Medium ❗ / High ❗❗ — <short justification>
-  - Implemented:
-```
-
-**Neglect Risk** reflects the risk of leaving the issue unaddressed (not the risk of fixing it). Base it on the worst confirmed finding across the entire file:
-- **High ❗❗** — at least one High-severity confirmed finding with real impact on data integrity, async correctness, or user-visible correctness
-- **Medium ❗** — findings are real but degraded, low-confidence, or limited blast radius; ignoring is tolerable short-term
-- **Low ⭕** — all findings cosmetic, speculative, or negligible impact

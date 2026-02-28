@@ -1,6 +1,6 @@
 ---
 name: code-review-meta-review
-description: Runs a structured meta-review (Step 2) on the next pending code review file. Scans `tasks/code-reviews/pending-meta-review/` for the first CodeReview file, loads authoritative docs, audits each finding for technical accuracy and implementation quality, inserts a `### STEP 2: META CODE REVIEW` section into each finding, updates REVIEW_TRACKER.md, and moves the file to `pending-implementation/`. Use when the user invokes /code-review-meta-review, says "do a meta-review", "run a meta-review", or "meta-review the next file". Processes exactly one file per run, then stops.
+description: Runs a structured meta-review (Step 2) on the next pending code review file. Scans `tasks/code-reviews/pending-meta-review/` for the first CodeReview file, loads authoritative docs, audits each finding for technical accuracy and implementation quality, inserts a `### STEP 2: META CODE REVIEW` section into each finding, and moves the file to `pending-implementation/`. Use when the user invokes /code-review-meta-review, says "do a meta-review", "run a meta-review", or "meta-review the next file". Processes exactly one file per run, then stops.
 ---
 
 # code-review-meta-review
@@ -76,35 +76,12 @@ Apply the edits described in step 4 for every finding before moving on.
 
 ---
 
-## 6. Update REVIEW_TRACKER.md
-
-In `tasks/code-reviews/REVIEW_TRACKER.md`, find the section for `TARGET_SOURCE_FILE` (identified by its `### \`<TARGET_FILE>\`` heading).
-
-For **each** finding bullet:
-
-1. Mark `Meta-reviewed: [X]`.
-2. Fill in:
-   - `Verdict:` — must match the meta-review's Fix Quality Audit verdict (🟢 / 🟡 / 🔴)
-   - `Reason:` — brief; required for 🟡 and 🔴, can be "N/A" for 🟢
-3. Add a **Neglect Risk** line immediately after the Reason line:
-   ```
-   - Neglect Risk: Low ⭕ / Medium ❗ / High ❗❗ — <short justification>
-   ```
-   - **High ❗❗** — at least one High-severity confirmed finding posing real risk to data integrity, async correctness, or user-visible correctness
-   - **Medium ❗** — findings are real but low-confidence or limited blast radius; tolerable short-term
-   - **Low ⭕** — all findings cosmetic, speculative, or negligible impact
-4. Do not modify the `Implemented:` field.
-
-Keep the tracker's separators and ordering consistent with existing entries.
-
----
-
-## 7. Move the file
+## 6. Move the file
 
 Move `TARGET_REVIEW_FILE` from `tasks/code-reviews/pending-meta-review/` to `tasks/code-reviews/pending-implementation/`. Create the destination folder if it does not exist.
 
 ---
 
-## 8. Report and stop
+## 7. Report and stop
 
 Report: the file meta-reviewed, the number of findings processed, and how many got each verdict (🟢 / 🟡 / 🔴). Then stop.

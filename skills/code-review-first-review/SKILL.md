@@ -1,6 +1,6 @@
 ---
 name: code-review-first-review
-description: Runs a structured first-pass code review on the next file from the code-review queue. Picks the first entry from the pending review list, loads authoritative docs via doc-guide, reviews the file across six axes (data integrity, race conditions, UI correctness, performance, redundancy, JS best practices), writes a structured findings report, and updates the queue and review tracker. Use when the user invokes /code-review-first-review, says "do a code review", "review the next file", "start a code review", "run a first review", or names a specific source file to review.
+description: Runs a structured first-pass code review on the next file from the code-review queue. Picks the first entry from the pending review list, loads authoritative docs via doc-guide, reviews the file across six axes (data integrity, race conditions, UI correctness, performance, redundancy, JS best practices), writes a structured findings report, and updates the queue. Use when the user invokes /code-review-first-review, says "do a code review", "review the next file", "start a code review", "run a first review", or names a specific source file to review.
 ---
 
 # code-review-first-review
@@ -70,30 +70,9 @@ Review `TARGET_FILE` across six axes:
 
 ---
 
-## 6. Update queue files and tracker
+## 6. Update the queue
 
-Apply all updates. Keep separators, blank lines, and indentation consistent with existing entries.
-
-**A. Remove from pending review**
 In `tasks/code-reviews/code-review-queue.md`: remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
-
-**B. Add to reviewed files in tracker (findings only)**
-In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new section following the format of existing entries:
-
-```
-### `<TARGET_FILE>`
-[CodeReview_<BASENAME>.md](tasks/code-reviews/pending-meta-review/CodeReview_<BASENAME>.md)
-
-- **F01** — <Title>
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
-  - Implemented:
-  
-(repeat for each finding)
-```
-
-**No-findings case:** If `TARGET_FILE` had no findings, do not add anything to `REVIEW_TRACKER.md`.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: code-review-implement
-description: Implements code review findings from the ready-for-implementation queue. Reads the first file from `tasks/code-reviews/ready-for-implementation/`, loads authoritative docs, verifies each finding against current source (skips Already Fixed ones), implements all verified findings in order (🟢 then 🟡), writes a STEP 3 section for each finding, updates REVIEW_TRACKER.md, and moves the file to `tasks/code-reviews/pending-changelog/`. Processes exactly one file per invocation. Use when the user invokes /code-review-implement, says "implement code review", "implement the next code review", "implement review findings", or provides a specific review file path to implement.
+description: Implements code review findings from the ready-for-implementation queue. Reads the first file from `tasks/code-reviews/ready-for-implementation/`, loads authoritative docs, verifies each finding against current source (skips Already Fixed ones), implements all verified findings in order (🟢 then 🟡), writes a STEP 3 section for each finding, and moves the file to `tasks/code-reviews/pending-changelog/`. Processes exactly one file per invocation. Use when the user invokes /code-review-implement, says "implement code review", "implement the next code review", "implement review findings", or provides a specific review file path to implement.
 ---
 
 # code-review-implement
@@ -38,7 +38,7 @@ Read `TARGET_REVIEW_FILE` in full and classify every finding block:
 | **Stub** | Block has no STEP 1 or STEP 2 — just a title line and `*Finding removed…*` |
 | **Active** | Block contains `### STEP 2: META CODE REVIEW` with an `#### Implementation Checklist` |
 
-**Stub findings:** silently skip — no STEP 3, no tracker update.
+**Stub findings:** silently skip — no STEP 3.
 
 For each **Active** finding, read its STEP 2 verdict:
 - 🟢 `Ready to implement` → eligible for implementation
@@ -142,45 +142,13 @@ Already fixed — <evidence, e.g. "guard added at line 42 of src/drawer.js">
 
 ---
 
-## 7. Update REVIEW_TRACKER.md
-
-After all findings are processed, update `tasks/code-reviews/REVIEW_TRACKER.md`. Find the `### \`<TARGET_SOURCE_FILE>\`` section and update each **active** (non-stub) finding's entry.
-
-**Implemented (✅):**
-```markdown
-  - Implemented: ✅
-    - Implementation Notes: <1-sentence summary of what changed>
-    - **🟥 MANUAL CHECK**:
-      - [ ] <check from STEP 3, copied verbatim>
-```
-Omit the `🟥 MANUAL CHECK` sub-bullet if STEP 3 has no manual check items.
-
-**Already Fixed:**
-```markdown
-  - Implemented: ✅ Already fixed — <evidence>
-    - Implementation Notes: Already fixed — <same evidence>
-```
-
-**Skipped (failed implementation):**
-```markdown
-  - Implemented: ❌ Skipped — <reason>
-    - Implementation Notes: <1-sentence explanation>
-    - **🟥 MANUAL CHECK**:
-      - [ ] <check from STEP 3, copied verbatim>
-```
-
-Do **not** modify `Meta-reviewed`, `Verdict`, `Reason`, or `Neglect Risk` fields.
-Do **not** update tracker entries for stub findings.
-
----
-
-## 8. Move the file
+## 7. Move the file
 
 Move `TARGET_REVIEW_FILE` from `tasks/code-reviews/ready-for-implementation/` to `tasks/code-reviews/pending-changelog/`. Create the destination folder if it does not exist.
 
 ---
 
-## 9. Report and stop
+## 8. Report and stop
 
 Report:
 - File implemented

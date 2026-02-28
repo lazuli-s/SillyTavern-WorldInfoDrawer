@@ -1,6 +1,6 @@
 ---
 name: triage-reviews
-description: Triages the next code review file from pending-implementation by scanning each finding for "Implementation plan discarded". If no discarded findings exist, moves the file to ready-for-implementation. If some are discarded, splits them into a user-review file, stubs them in the original, and moves the original to ready-for-implementation. If all are discarded, renames and moves the whole file to pending-user-review. Updates REVIEW_TRACKER.md for every discarded finding. Use when the user invokes /triage-reviews or says "triage the next review".
+description: Triages the next code review file from pending-implementation by scanning each finding for "Implementation plan discarded". If no discarded findings exist, moves the file to ready-for-implementation. If some are discarded, splits them into a user-review file, stubs them in the original, and moves the original to ready-for-implementation. If all are discarded, renames and moves the whole file to pending-user-review. Use when the user invokes /triage-reviews or says "triage the next review".
 ---
 
 # triage-reviews
@@ -46,39 +46,23 @@ Label each finding as either **discarded** or **retained**.
 
 - Move the file to `tasks/code-reviews/ready-for-implementation/`.
 - No user-review file is created.
-- No tracker changes needed for discarded findings.
 - Report and stop.
 
 ### Case B — All findings discarded
 
 - Rename the file from `CodeReview_<SOURCE_BASENAME>.md` to `user-review__<SOURCE_BASENAME>.md`.
 - Move the renamed file (unchanged) to `tasks/code-reviews/pending-user-review/`.
-- Update REVIEW_TRACKER.md (see step 4).
 - Report and stop.
 
 ### Case C — Mixed (some discarded, some retained)
 
-Proceed to steps 4 and 5.
+Proceed to step 4.
 
 ---
 
-## 4. Update REVIEW_TRACKER.md (Cases B and C)
+## 4. Split the file (Case C only)
 
-In `tasks/code-reviews/REVIEW_TRACKER.md`, find the section for the source file (the `### \`<source>\`` heading).
-
-For each **discarded** finding, update its `Implemented:` line to:
-
-```
-  - Implemented: Pending user review — see [user-review__<SOURCE_BASENAME>.md](tasks/code-reviews/pending-user-review/user-review__<SOURCE_BASENAME>.md)
-```
-
-Do not modify any other fields.
-
----
-
-## 5. Split the file (Case C only)
-
-### 5a. Create the user-review file
+### 4a. Create the user-review file
 
 Create `tasks/code-reviews/pending-user-review/user-review__<SOURCE_BASENAME>.md`.
 
@@ -96,7 +80,7 @@ Structure:
 <full text of each discarded finding, in original order, separated by --->
 ```
 
-### 5b. Replace each discarded finding in the original file
+### 4b. Replace each discarded finding in the original file
 
 For each discarded finding block, replace the entire block (from `## F0X:` through the closing `---`) with this stub:
 
@@ -107,13 +91,13 @@ For each discarded finding block, replace the entire block (from `## F0X:` throu
 ---
 ```
 
-### 5c. Move the trimmed original
+### 4c. Move the trimmed original
 
 Move the modified original file to `tasks/code-reviews/ready-for-implementation/`.
 
 ---
 
-## 6. Report and stop
+## 5. Report and stop
 
 State:
 - File triaged
