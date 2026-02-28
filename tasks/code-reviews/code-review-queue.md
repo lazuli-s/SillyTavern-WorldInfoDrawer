@@ -2,9 +2,6 @@
 
 ## Files Pending Review
 
-- `src/drawer.js`
-- `src/editorPanel.js`
-- `src/listPanel.bookMenu.js`
 - `src/listPanel.booksView.js`
 - `src/listPanel.coreBridge.js`
 - `src/listPanel.filterBar.js`

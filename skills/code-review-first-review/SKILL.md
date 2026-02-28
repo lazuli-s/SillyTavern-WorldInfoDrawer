@@ -89,6 +89,7 @@ In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new 
     - Verdict:
     - Reason:
   - Implemented:
+  
 (repeat for each finding)
 ```
 
