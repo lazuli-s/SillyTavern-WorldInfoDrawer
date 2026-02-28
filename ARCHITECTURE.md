@@ -83,7 +83,7 @@
 | `orderHelperState.js` | Order Helper persisted state (sort/hide-keys/columns) via localStorage |
 | `orderHelperFilters.js` | Filter logic for Order Helper rows (strategy/position/recursion/outlet/group/script) |
 | `orderHelperRender.js` | Orchestrator: init, section assembly, and public `createOrderHelperRenderer`/`renderOrderHelper` API |
-| `orderHelperRender.utils.js` | Shared DOM/utility helpers across orderHelperRender.* slices |
+| `orderHelperRender.utils.js` | Shared DOM/utility helpers across orderHelperRender.* slices, including multiselect dropdown wiring and collapsible row animation |
 | `orderHelperRender.actionBar.js` | Action bar: select-all, hide-keys, column visibility, sort, and apply-order controls |
 | `orderHelperRender.filterPanel.js` | Script-based filter panel with SlashCommandParser, highlight.js, and live preview |
 | `orderHelperRender.tableHeader.js` | `<thead>` with 6 multiselect column filter menus; returns refresh-indicator callbacks |

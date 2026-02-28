@@ -119,5 +119,5 @@ Where each feature or behavior is implemented in the codebase.
 - Live preview panel for script filter context data → src/orderHelper.js, src/orderHelperRender.filterPanel.js
 - Character filter column display (read-only) → src/orderHelperRender.tableBody.js
 - Focus entry in main list/editor from Order Helper row link → src/orderHelper.js, src/orderHelperRender.tableBody.js
-- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox); `closeOpenMultiselectDropdownMenus` closes both multiselect and list dropdown menus and returns focus to trigger → src/orderHelperRender.utils.js
+- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox); `closeOpenMultiselectDropdownMenus` closes both multiselect and list dropdown menus and returns focus to trigger; `wireCollapseRow` wires collapse/expand animation shared by Visibility and Bulk Editor rows → src/orderHelperRender.utils.js
 - Order Helper table column/option schema constants → src/constants.js

@@ -1,11 +1,57 @@
-﻿import {
+import {
     MULTISELECT_DROPDOWN_CLOSE_HANDLER,
     closeOpenMultiselectDropdownMenus,
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
+    wireCollapseRow,
 } from './orderHelperRender.utils.js';
 import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
+
+/**
+ * Creates a `div.stwid--thinContainer` with a labeled hint icon — the shared
+ * scaffolding used by every bulk-edit field container.
+ *
+ * @param {string} fieldKey - Value for `data-field` attribute.
+ * @param {string} labelText - Visible label text.
+ * @param {string} hintText - Tooltip on the hint icon.
+ * @returns {HTMLElement}
+ */
+function createLabeledBulkContainer(fieldKey, labelText, hintText) {
+    const container = document.createElement('div');
+    container.classList.add('stwid--thinContainer');
+    container.dataset.field = fieldKey;
+    const label = document.createElement('span');
+    label.classList.add('stwid--bulkEditLabel');
+    label.textContent = labelText;
+    const hint = document.createElement('i');
+    hint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+    setTooltip(hint, hintText);
+    label.append(hint);
+    container.append(label);
+    return container;
+}
+
+/**
+ * Creates a `div.menu_button.fa-check` apply button, registers it in the
+ * apply registry, and returns it.
+ *
+ * @param {string} tooltip
+ * @param {function(): Promise<void>} runFn
+ * @param {Array<{isDirty: function(): boolean, runApply: function(): Promise<void>}>} applyRegistry
+ * @returns {HTMLElement}
+ */
+function createApplyButton(tooltip, runFn, applyRegistry) {
+    const btn = document.createElement('div');
+    btn.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+    setTooltip(btn, tooltip);
+    btn.addEventListener('click', ()=>runFn());
+    applyRegistry.push({
+        isDirty: ()=>btn.classList.contains('stwid--applyDirty'),
+        runApply: runFn,
+    });
+    return btn;
+}
 
 /**
  * Builds the Order Helper visibility row (Row 1).
@@ -102,7 +148,6 @@ export function buildVisibilityRow({
     collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
     rowTitle.prepend(collapseChevron);
     rowTitle.classList.add('stwid--collapsibleTitle');
-    row.dataset.collapsed = 'false';
     row.append(rowTitle);
 
     const createActionThinContainer = (labelText, hintText)=>{
@@ -445,44 +490,7 @@ export function buildVisibilityRow({
     }
     row.append(contentWrap);
 
-    // Wire collapse toggle
-    rowTitle.addEventListener('click', () => {
-        const isCollapsed = row.dataset.collapsed === 'true';
-        if (isCollapsed) {
-            // Expanding
-            row.dataset.collapsed = 'false';
-            row.classList.remove('stwid--collapsed');
-            contentWrap.style.overflow = 'hidden';
-            contentWrap.style.maxHeight = '1000px';
-            collapseChevron.classList.remove('fa-chevron-right');
-            collapseChevron.classList.add('fa-chevron-down');
-            contentWrap.addEventListener('transitionend', () => {
-                contentWrap.style.overflow = '';
-                contentWrap.style.maxHeight = '';
-            }, { once: true });
-        } else {
-            // Collapsing: close open dropdowns, then animate
-            closeOpenMultiselectDropdownMenus();
-            contentWrap.style.overflow = 'hidden';
-            contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
-            // Force reflow so the browser registers the pinned height before animating
-            void contentWrap.offsetHeight;
-            contentWrap.style.maxHeight = '0';
-            row.dataset.collapsed = 'true';
-            row.classList.add('stwid--collapsed');
-            collapseChevron.classList.remove('fa-chevron-down');
-            collapseChevron.classList.add('fa-chevron-right');
-        }
-    });
-
-    if (initialCollapsed) {
-        row.dataset.collapsed = 'true';
-        row.classList.add('stwid--collapsed');
-        contentWrap.style.overflow = 'hidden';
-        contentWrap.style.maxHeight = '0';
-        collapseChevron.classList.remove('fa-chevron-down');
-        collapseChevron.classList.add('fa-chevron-right');
-    }
+    wireCollapseRow(rowTitle, row, contentWrap, collapseChevron, { initialCollapsed });
 
     return { element: row, refresh };
 }
@@ -549,22 +557,10 @@ export function buildBulkEditRow({
     collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
     rowTitle.prepend(collapseChevron);
     rowTitle.classList.add('stwid--collapsibleTitle');
-    row.dataset.collapsed = 'false';
     row.append(rowTitle);
 
     // ── Select container ──────────────────────────────────────────────────
-    const selectContainer = document.createElement('div');
-    selectContainer.classList.add('stwid--thinContainer');
-    selectContainer.dataset.field = 'select';
-
-    const selectLabel = document.createElement('span');
-    selectLabel.classList.add('stwid--bulkEditLabel');
-    selectLabel.textContent = 'Select';
-    const selectLabelHint = document.createElement('i');
-    selectLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(selectLabelHint, 'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.');
-    selectLabel.append(selectLabelHint);
-    selectContainer.append(selectLabel);
+    const selectContainer = createLabeledBulkContainer('select', 'Select', 'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.');
 
     const selectAll = document.createElement('div'); {
         dom.order.selectAll = selectAll;
@@ -659,18 +655,7 @@ export function buildBulkEditRow({
     const applyRegistry = [];
 
     // ── Toggle Active State container ─────────────────────────────────────
-    const activeStateContainer = document.createElement('div');
-    activeStateContainer.classList.add('stwid--thinContainer');
-    activeStateContainer.dataset.field = 'activeState';
-
-    const activeStateLabel = document.createElement('span');
-    activeStateLabel.classList.add('stwid--bulkEditLabel');
-    activeStateLabel.textContent = 'State';
-    const activeStateLabelHint = document.createElement('i');
-    activeStateLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(activeStateLabelHint, 'Choose enabled or disabled and apply it to all selected entries at once.');
-    activeStateLabel.append(activeStateLabelHint);
-    activeStateContainer.append(activeStateLabel);
+    const activeStateContainer = createLabeledBulkContainer('activeState', 'State', 'Choose enabled or disabled and apply it to all selected entries at once.');
 
     const activeToggle = document.createElement('div'); {
         activeToggle.classList.add('fa-solid', 'killSwitch');
@@ -685,63 +670,46 @@ export function buildBulkEditRow({
             activeToggle.classList.toggle('fa-toggle-off', isOn);
             localStorage.setItem('stwid--bulk-active-value', String(!isOn));
         });
-        activeStateContainer.append(activeToggle);
     }
 
-    const applyActiveState = document.createElement('div'); {
-        applyActiveState.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyActiveState, 'Apply the active state to all selected entries');
-        const runApplyActiveState = async () => {
-            await withApplyButtonLock(applyActiveState, async()=>{
-                const rows = getSafeTbodyRows();
-                if (!rows) return;
+    const runApplyActiveState = async () => {
+        await withApplyButtonLock(applyActiveState, async()=>{
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
 
-                const willDisable = activeToggle.classList.contains('fa-toggle-off');
-                const targets = getBulkTargets(rows);
-                const books = new Set();
-                for (let i = 0; i < targets.length; i++) {
-                    const { tr, bookName, uid, entryData } = targets[i];
-                    books.add(bookName);
-                    entryData.disable = willDisable;
-                    const rowToggle = tr.querySelector('[name="entryKillSwitch"]');
-                    if (rowToggle) {
-                        rowToggle.classList.toggle('fa-toggle-off', willDisable);
-                        rowToggle.classList.toggle('fa-toggle-on', !willDisable);
-                    }
-                    const listToggle = cache?.[bookName]?.dom?.entry?.[uid]?.isEnabled;
-                    if (listToggle) {
-                        listToggle.classList.toggle('fa-toggle-off', willDisable);
-                        listToggle.classList.toggle('fa-toggle-on', !willDisable);
-                    }
-                    if ((i + 1) % 200 === 0) {
-                        await new Promise((resolve)=>setTimeout(resolve, 0));
-                    }
+            const willDisable = activeToggle.classList.contains('fa-toggle-off');
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (let i = 0; i < targets.length; i++) {
+                const { tr, bookName, uid, entryData } = targets[i];
+                books.add(bookName);
+                entryData.disable = willDisable;
+                const rowToggle = tr.querySelector('[name="entryKillSwitch"]');
+                if (rowToggle) {
+                    rowToggle.classList.toggle('fa-toggle-off', willDisable);
+                    rowToggle.classList.toggle('fa-toggle-on', !willDisable);
                 }
-                await saveUpdatedBooks(books);
-                applyActiveState.classList.remove('stwid--applyDirty');
-            });
-        };
-        applyActiveState.addEventListener('click', runApplyActiveState);
-        applyRegistry.push({ isDirty: () => applyActiveState.classList.contains('stwid--applyDirty'), runApply: runApplyActiveState });
-        activeStateContainer.append(applyActiveState);
-    }
+                const listToggle = cache?.[bookName]?.dom?.entry?.[uid]?.isEnabled;
+                if (listToggle) {
+                    listToggle.classList.toggle('fa-toggle-off', willDisable);
+                    listToggle.classList.toggle('fa-toggle-on', !willDisable);
+                }
+                if ((i + 1) % 200 === 0) {
+                    await new Promise((resolve)=>setTimeout(resolve, 0));
+                }
+            }
+            await saveUpdatedBooks(books);
+            applyActiveState.classList.remove('stwid--applyDirty');
+        });
+    };
+    const applyActiveState = createApplyButton('Apply the active state to all selected entries', runApplyActiveState, applyRegistry);
     activeToggle.addEventListener('click', () => applyActiveState.classList.add('stwid--applyDirty'));
+    activeStateContainer.append(activeToggle, applyActiveState);
 
     row.append(activeStateContainer);
 
     // ── Strategy container ────────────────────────────────────────────────
-    const strategyContainer = document.createElement('div');
-    strategyContainer.classList.add('stwid--thinContainer');
-    strategyContainer.dataset.field = 'strategy';
-
-    const strategyLabel = document.createElement('span');
-    strategyLabel.classList.add('stwid--bulkEditLabel');
-    strategyLabel.textContent = 'Strategy';
-    const strategyLabelHint = document.createElement('i');
-    strategyLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(strategyLabelHint, 'Choose a strategy and apply it to all selected entries at once.');
-    strategyLabel.append(strategyLabelHint);
-    strategyContainer.append(strategyLabel);
+    const strategyContainer = createLabeledBulkContainer('strategy', 'Strategy', 'Choose a strategy and apply it to all selected entries at once.');
 
     const strategySelect = document.createElement('select'); {
         strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
@@ -762,60 +730,44 @@ export function buildBulkEditRow({
         strategyContainer.append(strategySelect);
     }
 
-    const applyStrategy = document.createElement('div'); {
-        applyStrategy.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyStrategy, 'Apply selected strategy to all selected entries');
-        const runApplyStrategy = async () => {
-            await withApplyButtonLock(applyStrategy, async()=>{
-                const value = strategySelect.value;
-                if (!value) {
-                    toastr.warning('No strategy selected.');
-                    return;
-                }
-                const rows = getSafeTbodyRows();
-                if (!rows) return;
+    const runApplyStrategy = async () => {
+        await withApplyButtonLock(applyStrategy, async()=>{
+            const value = strategySelect.value;
+            if (!value) {
+                toastr.warning('No strategy selected.');
+                return;
+            }
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
 
-                const targets = getBulkTargets(rows);
-                const books = new Set();
-                for (let i = 0; i < targets.length; i++) {
-                    const { tr, bookName, uid, entryData } = targets[i];
-                    books.add(bookName);
-                    entryData.constant = value === 'constant';
-                    entryData.vectorized = value === 'vectorized';
-                    const rowStrat = /**@type {HTMLSelectElement}*/(tr.querySelector('[name="entryStateSelector"]'));
-                    if (rowStrat) rowStrat.value = value;
-                    const domStrat = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
-                    if (domStrat) domStrat.value = value;
-                    applyOrderHelperStrategyFilterToRow(tr, entryData);
-                    if ((i + 1) % 200 === 0) {
-                        await new Promise((resolve)=>setTimeout(resolve, 0));
-                    }
+            const targets = getBulkTargets(rows);
+            const books = new Set();
+            for (let i = 0; i < targets.length; i++) {
+                const { tr, bookName, uid, entryData } = targets[i];
+                books.add(bookName);
+                entryData.constant = value === 'constant';
+                entryData.vectorized = value === 'vectorized';
+                const rowStrat = /**@type {HTMLSelectElement}*/(tr.querySelector('[name="entryStateSelector"]'));
+                if (rowStrat) rowStrat.value = value;
+                const domStrat = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
+                if (domStrat) domStrat.value = value;
+                applyOrderHelperStrategyFilterToRow(tr, entryData);
+                if ((i + 1) % 200 === 0) {
+                    await new Promise((resolve)=>setTimeout(resolve, 0));
                 }
-                await saveUpdatedBooks(books);
-                applyStrategy.classList.remove('stwid--applyDirty');
-            });
-        };
-        applyStrategy.addEventListener('click', runApplyStrategy);
-        applyRegistry.push({ isDirty: () => applyStrategy.classList.contains('stwid--applyDirty'), runApply: runApplyStrategy });
-        strategyContainer.append(applyStrategy);
-    }
+            }
+            await saveUpdatedBooks(books);
+            applyStrategy.classList.remove('stwid--applyDirty');
+        });
+    };
+    const applyStrategy = createApplyButton('Apply selected strategy to all selected entries', runApplyStrategy, applyRegistry);
     strategySelect.addEventListener('change', () => applyStrategy.classList.add('stwid--applyDirty'));
+    strategyContainer.append(applyStrategy);
 
     row.append(strategyContainer);
 
     // ── Position container ────────────────────────────────────────────────
-    const positionContainer = document.createElement('div');
-    positionContainer.classList.add('stwid--thinContainer');
-    positionContainer.dataset.field = 'position';
-
-    const positionLabel = document.createElement('span');
-    positionLabel.classList.add('stwid--bulkEditLabel');
-    positionLabel.textContent = 'Position';
-    const positionLabelHint = document.createElement('i');
-    positionLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(positionLabelHint, 'Choose a position and apply it to all selected entries at once.');
-    positionLabel.append(positionLabelHint);
-    positionContainer.append(positionLabel);
+    const positionContainer = createLabeledBulkContainer('position', 'Position', 'Choose a position and apply it to all selected entries at once.');
 
     const positionSelect = document.createElement('select'); {
         positionSelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
@@ -836,50 +788,34 @@ export function buildBulkEditRow({
         positionContainer.append(positionSelect);
     }
 
-    const applyPosition = document.createElement('div'); {
-        applyPosition.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyPosition, 'Apply selected position to all selected entries');
-        const runApplyPosition = async () => {
-            const value = positionSelect.value;
-            if (!value) {
-                toastr.warning('No position selected.');
-                return;
-            }
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, uid, entryData } of targets) {
-                books.add(bookName);
-                entryData.position = value;
-                const domPos = cache?.[bookName]?.dom?.entry?.[uid]?.position;
-                if (domPos) domPos.value = value;
-                applyOrderHelperPositionFilterToRow(tr, entryData);
-            }
-            await saveUpdatedBooks(books);
-            applyPosition.classList.remove('stwid--applyDirty');
-        };
-        applyPosition.addEventListener('click', runApplyPosition);
-        applyRegistry.push({ isDirty: () => applyPosition.classList.contains('stwid--applyDirty'), runApply: runApplyPosition });
-        positionContainer.append(applyPosition);
-    }
+    const runApplyPosition = async () => {
+        const value = positionSelect.value;
+        if (!value) {
+            toastr.warning('No position selected.');
+            return;
+        }
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, uid, entryData } of targets) {
+            books.add(bookName);
+            entryData.position = value;
+            const domPos = cache?.[bookName]?.dom?.entry?.[uid]?.position;
+            if (domPos) domPos.value = value;
+            applyOrderHelperPositionFilterToRow(tr, entryData);
+        }
+        await saveUpdatedBooks(books);
+        applyPosition.classList.remove('stwid--applyDirty');
+    };
+    const applyPosition = createApplyButton('Apply selected position to all selected entries', runApplyPosition, applyRegistry);
     positionSelect.addEventListener('change', () => applyPosition.classList.add('stwid--applyDirty'));
+    positionContainer.append(applyPosition);
 
     row.append(positionContainer);
 
     // ── Depth container ───────────────────────────────────────────────────
-    const depthContainer = document.createElement('div');
-    depthContainer.classList.add('stwid--thinContainer');
-    depthContainer.dataset.field = 'depth';
-
-    const depthLabel = document.createElement('span');
-    depthLabel.classList.add('stwid--bulkEditLabel');
-    depthLabel.textContent = 'Depth';
-    const depthLabelHint = document.createElement('i');
-    depthLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(depthLabelHint, 'Apply a Depth value to all selected entries at once. Depth controls how many messages back from the latest the trigger check looks (0 = last message). Leave blank to clear depth.');
-    depthLabel.append(depthLabelHint);
-    depthContainer.append(depthLabel);
+    const depthContainer = createLabeledBulkContainer('depth', 'Depth', 'Apply a Depth value to all selected entries at once. Depth controls how many messages back from the latest the trigger check looks (0 = last message). Leave blank to clear depth.');
 
     const depthInput = document.createElement('input'); {
         depthInput.classList.add('stwid-compactInput', 'text_pole');
@@ -896,34 +832,29 @@ export function buildBulkEditRow({
         depthContainer.append(depthInput);
     }
 
-    const applyDepth = document.createElement('div'); {
-        applyDepth.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyDepth, 'Apply depth value to all selected entries');
-        const runApplyDepth = async () => {
-            const rawValue = depthInput.value.trim();
-            const parsedDepth = rawValue === '' ? undefined : parseInt(rawValue, 10);
-            if (rawValue !== '' && (!Number.isInteger(parsedDepth) || parsedDepth < 0)) {
-                toastr.warning('Depth must be a non-negative whole number, or blank to clear.');
-                return;
-            }
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.depth = parsedDepth;
-                const rowDepth = /**@type {HTMLInputElement}*/(tr.querySelector('[name="depth"]'));
-                if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
-            }
-            await saveUpdatedBooks(books);
-            applyDepth.classList.remove('stwid--applyDirty');
-        };
-        applyDepth.addEventListener('click', runApplyDepth);
-        applyRegistry.push({ isDirty: () => applyDepth.classList.contains('stwid--applyDirty'), runApply: runApplyDepth });
-        depthContainer.append(applyDepth);
-    }
+    const runApplyDepth = async () => {
+        const rawValue = depthInput.value.trim();
+        const parsedDepth = rawValue === '' ? undefined : parseInt(rawValue, 10);
+        if (rawValue !== '' && (!Number.isInteger(parsedDepth) || parsedDepth < 0)) {
+            toastr.warning('Depth must be a non-negative whole number, or blank to clear.');
+            return;
+        }
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.depth = parsedDepth;
+            const rowDepth = /**@type {HTMLInputElement}*/(tr.querySelector('[name="depth"]'));
+            if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
+        }
+        await saveUpdatedBooks(books);
+        applyDepth.classList.remove('stwid--applyDirty');
+    };
+    const applyDepth = createApplyButton('Apply depth value to all selected entries', runApplyDepth, applyRegistry);
     depthInput.addEventListener('change', () => applyDepth.classList.add('stwid--applyDirty'));
+    depthContainer.append(applyDepth);
 
     row.append(depthContainer);
 
@@ -937,18 +868,7 @@ export function buildBulkEditRow({
     applyDepthContainerState();
 
     // ── Outlet container ──────────────────────────────────────────────────
-    const outletContainer = document.createElement('div');
-    outletContainer.classList.add('stwid--thinContainer');
-    outletContainer.dataset.field = 'outlet';
-
-    const outletLabel = document.createElement('span');
-    outletLabel.classList.add('stwid--bulkEditLabel');
-    outletLabel.textContent = 'Outlet';
-    const outletLabelHint = document.createElement('i');
-    outletLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(outletLabelHint, 'Apply an Outlet name to all selected entries at once. Only interactable when Position is set to Outlet.');
-    outletLabel.append(outletLabelHint);
-    outletContainer.append(outletLabel);
+    const outletContainer = createLabeledBulkContainer('outlet', 'Outlet', 'Apply an Outlet name to all selected entries at once. Only interactable when Position is set to Outlet.');
 
     const outletDropdownWrap = document.createElement('div');
     outletDropdownWrap.classList.add('stwid--multiselectDropdownWrap');
@@ -1028,37 +948,32 @@ export function buildBulkEditRow({
     outletDropdownWrap.append(outletInput, outletMenu);
     outletContainer.append(outletDropdownWrap);
 
-    const applyOutlet = document.createElement('div'); {
-        applyOutlet.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyOutlet, 'Apply outlet name to all selected entries');
-        const runApplyOutlet = async () => {
-            const value = outletInput.value.trim();
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            // Pass 1: mutate all entries before syncing the filter snapshot.
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.outletName = value;
-                const rowOutlet = /**@type {HTMLInputElement}*/(tr.querySelector('[name="outletName"]'));
-                if (rowOutlet) rowOutlet.value = value;
-            }
-            // Refresh the snapshot so the new outlet value is included in the allowed list.
-            syncOrderHelperOutletFilters();
-            // Pass 2: apply the updated filter to each row.
-            for (const { tr, entryData } of targets) {
-                applyOrderHelperOutletFilterToRow(tr, entryData);
-            }
-            filterIndicatorRefs.outlet?.();
-            await saveUpdatedBooks(books);
-            applyOutlet.classList.remove('stwid--applyDirty');
-        };
-        applyOutlet.addEventListener('click', runApplyOutlet);
-        applyRegistry.push({ isDirty: () => applyOutlet.classList.contains('stwid--applyDirty'), runApply: runApplyOutlet });
-        outletContainer.append(applyOutlet);
-    }
+    const runApplyOutlet = async () => {
+        const value = outletInput.value.trim();
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        // Pass 1: mutate all entries before syncing the filter snapshot.
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.outletName = value;
+            const rowOutlet = /**@type {HTMLInputElement}*/(tr.querySelector('[name="outletName"]'));
+            if (rowOutlet) rowOutlet.value = value;
+        }
+        // Refresh the snapshot so the new outlet value is included in the allowed list.
+        syncOrderHelperOutletFilters();
+        // Pass 2: apply the updated filter to each row.
+        for (const { tr, entryData } of targets) {
+            applyOrderHelperOutletFilterToRow(tr, entryData);
+        }
+        filterIndicatorRefs.outlet?.();
+        await saveUpdatedBooks(books);
+        applyOutlet.classList.remove('stwid--applyDirty');
+    };
+    const applyOutlet = createApplyButton('Apply outlet name to all selected entries', runApplyOutlet, applyRegistry);
     outletInput.addEventListener('input', () => applyOutlet.classList.add('stwid--applyDirty'));
+    outletContainer.append(applyOutlet);
 
     row.append(outletContainer);
 
@@ -1072,62 +987,44 @@ export function buildBulkEditRow({
     applyOutletContainerState();
 
     // ── Order container ───────────────────────────────────────────────────
-    const orderContainer = document.createElement('div');
-    orderContainer.classList.add('stwid--thinContainer');
-    orderContainer.dataset.field = 'order';
+    const orderContainer = createLabeledBulkContainer('order', 'Order', 'Assign sequential Order numbers to selected entries using the start value, spacing, and direction below.');
 
-    const orderLabel = document.createElement('span');
-    orderLabel.classList.add('stwid--bulkEditLabel');
-    orderLabel.textContent = 'Order';
-    const orderLabelHint = document.createElement('i');
-    orderLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(orderLabelHint, 'Assign sequential Order numbers to selected entries using the start value, spacing, and direction below.');
-    orderLabel.append(orderLabelHint);
-    orderContainer.append(orderLabel);
+    const runApplyOrder = async () => {
+        await withApplyButtonLock(apply, async()=>{
+            const start = Number.parseInt(dom.order.start.value, 10);
+            const step = Number.parseInt(dom.order.step.value, 10);
+            if (!Number.isInteger(start) || start <= 0) {
+                toastr.warning('Start must be a positive whole number.');
+                return;
+            }
+            if (!Number.isInteger(step) || step <= 0) {
+                toastr.warning('Spacing must be a positive whole number.');
+                return;
+            }
+            const rows = getSafeTbodyRows();
+            if (!rows) return;
 
-    // Apply Order button (created before direction radios because the direction
-    // radio listeners reference it to toggle its icon class).
-    const apply = document.createElement('div'); {
-        apply.classList.add('menu_button', 'interactable');
-        apply.classList.add('fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(apply, 'Apply current row order to the Order field');
-        const runApplyOrder = async () => {
-            await withApplyButtonLock(apply, async()=>{
-                const start = Number.parseInt(dom.order.start.value, 10);
-                const step = Number.parseInt(dom.order.step.value, 10);
-                if (!Number.isInteger(start) || start <= 0) {
-                    toastr.warning('Start must be a positive whole number.');
-                    return;
+            const up = dom.order.direction.up.checked;
+            const targets = getBulkTargets(rows, { reverse: up });
+            let order = start;
+            const books = new Set();
+            for (let i = 0; i < targets.length; i++) {
+                const { tr, bookName, entryData } = targets[i];
+                books.add(bookName);
+                entryData.order = order;
+                const orderInput = /**@type {HTMLInputElement | null}*/(tr.querySelector('[name="order"]'));
+                if (orderInput) orderInput.value = order.toString();
+                order += step;
+                if ((i + 1) % 200 === 0) {
+                    await new Promise((resolve)=>setTimeout(resolve, 0));
                 }
-                if (!Number.isInteger(step) || step <= 0) {
-                    toastr.warning('Spacing must be a positive whole number.');
-                    return;
-                }
-                const rows = getSafeTbodyRows();
-                if (!rows) return;
-
-                const up = dom.order.direction.up.checked;
-                const targets = getBulkTargets(rows, { reverse: up });
-                let order = start;
-                const books = new Set();
-                for (let i = 0; i < targets.length; i++) {
-                    const { tr, bookName, entryData } = targets[i];
-                    books.add(bookName);
-                    entryData.order = order;
-                    const orderInput = /**@type {HTMLInputElement | null}*/(tr.querySelector('[name="order"]'));
-                    if (orderInput) orderInput.value = order.toString();
-                    order += step;
-                    if ((i + 1) % 200 === 0) {
-                        await new Promise((resolve)=>setTimeout(resolve, 0));
-                    }
-                }
-                await saveUpdatedBooks(books);
-                apply.classList.remove('stwid--applyDirty');
-            });
-        };
-        apply.addEventListener('click', runApplyOrder);
-        applyRegistry.push({ isDirty: () => apply.classList.contains('stwid--applyDirty'), runApply: runApplyOrder });
-    }
+            }
+            await saveUpdatedBooks(books);
+            apply.classList.remove('stwid--applyDirty');
+        });
+    };
+    // Apply Order button is declared here (after runApplyOrder) and appended after the inputs.
+    const apply = createApplyButton('Apply current row order to the Order field', runApplyOrder, applyRegistry);
 
     // Start + Spacing are stacked vertically inside a sub-wrapper (Feature 1).
     const startSpacingPair = document.createElement('div');
@@ -1226,18 +1123,7 @@ export function buildBulkEditRow({
     row.append(orderContainer);
 
     // ── Recursion container ────────────────────────────────────────────────
-    const recursionContainer = document.createElement('div');
-    recursionContainer.classList.add('stwid--thinContainer');
-    recursionContainer.dataset.field = 'recursion';
-
-    const recursionLabel = document.createElement('span');
-    recursionLabel.classList.add('stwid--bulkEditLabel');
-    recursionLabel.textContent = 'Recursion';
-    const recursionLabelHint = document.createElement('i');
-    recursionLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(recursionLabelHint, 'Set recursion flags on all selected entries. Overwrites the existing values of all three flags.');
-    recursionLabel.append(recursionLabelHint);
-    recursionContainer.append(recursionLabel);
+    const recursionContainer = createLabeledBulkContainer('recursion', 'Recursion', 'Set recursion flags on all selected entries. Overwrites the existing values of all three flags.');
 
     /** @type {Map<string, HTMLInputElement>} */
     const recursionCheckboxes = new Map();
@@ -1260,52 +1146,36 @@ export function buildBulkEditRow({
         recursionContainer.append(recursionOptions);
     }
 
-    const applyRecursion = document.createElement('div'); {
-        applyRecursion.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyRecursion, 'Apply recursion flags to all selected entries, overwriting their current values');
-        const runApplyRecursion = async () => {
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
-                let i = 0;
-                for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
-                    const checked = recursionCheckboxes.get(value).checked;
-                    entryData[value] = checked;
-                    if (domInputs[i]) domInputs[i].checked = checked;
-                    i++;
-                }
-                applyOrderHelperRecursionFilterToRow(tr, entryData);
+    const runApplyRecursion = async () => {
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
+            let i = 0;
+            for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
+                const checked = recursionCheckboxes.get(value).checked;
+                entryData[value] = checked;
+                if (domInputs[i]) domInputs[i].checked = checked;
+                i++;
             }
-            await saveUpdatedBooks(books);
-            applyRecursion.classList.remove('stwid--applyDirty');
-        };
-        applyRecursion.addEventListener('click', runApplyRecursion);
-        applyRegistry.push({ isDirty: () => applyRecursion.classList.contains('stwid--applyDirty'), runApply: runApplyRecursion });
-        recursionContainer.append(applyRecursion);
-    }
+            applyOrderHelperRecursionFilterToRow(tr, entryData);
+        }
+        await saveUpdatedBooks(books);
+        applyRecursion.classList.remove('stwid--applyDirty');
+    };
+    const applyRecursion = createApplyButton('Apply recursion flags to all selected entries, overwriting their current values', runApplyRecursion, applyRegistry);
     for (const input of recursionCheckboxes.values()) {
         input.addEventListener('change', () => applyRecursion.classList.add('stwid--applyDirty'));
     }
+    recursionContainer.append(applyRecursion);
 
     row.append(recursionContainer);
 
     // ── Budget container ───────────────────────────────────────────────────
-    const budgetContainer = document.createElement('div');
-    budgetContainer.classList.add('stwid--thinContainer');
-    budgetContainer.dataset.field = 'budget';
-
-    const budgetLabel = document.createElement('span');
-    budgetLabel.classList.add('stwid--bulkEditLabel');
-    budgetLabel.textContent = 'Budget';
-    const budgetLabelHint = document.createElement('i');
-    budgetLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(budgetLabelHint, 'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.');
-    budgetLabel.append(budgetLabelHint);
-    budgetContainer.append(budgetLabel);
+    const budgetContainer = createLabeledBulkContainer('budget', 'Budget', 'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.');
 
     let budgetIgnoreCheckbox;
     const budgetOptions = document.createElement('div'); {
@@ -1325,45 +1195,29 @@ export function buildBulkEditRow({
         budgetContainer.append(budgetOptions);
     }
 
-    const applyBudget = document.createElement('div'); {
-        applyBudget.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyBudget, 'Apply Ignore Budget to all selected entries, overwriting their current values');
-        const runApplyBudget = async () => {
-            const checked = budgetIgnoreCheckbox.checked;
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.ignoreBudget = checked;
-                const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
-                if (domInput) domInput.checked = checked;
-            }
-            await saveUpdatedBooks(books);
-            applyBudget.classList.remove('stwid--applyDirty');
-        };
-        applyBudget.addEventListener('click', runApplyBudget);
-        applyRegistry.push({ isDirty: () => applyBudget.classList.contains('stwid--applyDirty'), runApply: runApplyBudget });
-        budgetContainer.append(applyBudget);
-    }
+    const runApplyBudget = async () => {
+        const checked = budgetIgnoreCheckbox.checked;
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.ignoreBudget = checked;
+            const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
+            if (domInput) domInput.checked = checked;
+        }
+        await saveUpdatedBooks(books);
+        applyBudget.classList.remove('stwid--applyDirty');
+    };
+    const applyBudget = createApplyButton('Apply Ignore Budget to all selected entries, overwriting their current values', runApplyBudget, applyRegistry);
     budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add('stwid--applyDirty'));
+    budgetContainer.append(applyBudget);
 
     row.append(budgetContainer);
 
     // ── Probability container ──────────────────────────────────────────────
-    const probabilityContainer = document.createElement('div');
-    probabilityContainer.classList.add('stwid--thinContainer');
-    probabilityContainer.dataset.field = 'probability';
-
-    const probabilityLabel = document.createElement('span');
-    probabilityLabel.classList.add('stwid--bulkEditLabel');
-    probabilityLabel.textContent = 'Probability';
-    const probabilityLabelHint = document.createElement('i');
-    probabilityLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(probabilityLabelHint, 'Trigger probability (0–100%). Sets how likely the entry fires when its keywords match. Leave blank to skip.');
-    probabilityLabel.append(probabilityLabelHint);
-    probabilityContainer.append(probabilityLabel);
+    const probabilityContainer = createLabeledBulkContainer('probability', 'Probability', 'Trigger probability (0–100%). Sets how likely the entry fires when its keywords match. Leave blank to skip.');
 
     const probabilityInput = document.createElement('input'); {
         probabilityInput.classList.add('stwid-compactInput', 'text_pole');
@@ -1380,54 +1234,38 @@ export function buildBulkEditRow({
         probabilityContainer.append(probabilityInput);
     }
 
-    const applyProbability = document.createElement('div'); {
-        applyProbability.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyProbability, 'Apply this probability to all selected entries');
-        const runApplyProbability = async () => {
-            const rawValue = probabilityInput.value.trim();
-            if (rawValue === '') {
-                toastr.warning('Enter a probability value (0–100).');
-                return;
-            }
-            const parsed = parseInt(rawValue, 10);
-            if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
-                toastr.warning('Probability must be a whole number between 0 and 100.');
-                return;
-            }
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.selective_probability = parsed;
-                const rowInp = tr.querySelector('[name="selective_probability"]');
-                if (rowInp) rowInp.value = String(parsed);
-            }
-            await saveUpdatedBooks(books);
-            applyProbability.classList.remove('stwid--applyDirty');
-        };
-        applyProbability.addEventListener('click', runApplyProbability);
-        applyRegistry.push({ isDirty: () => applyProbability.classList.contains('stwid--applyDirty'), runApply: runApplyProbability });
-        probabilityContainer.append(applyProbability);
-    }
+    const runApplyProbability = async () => {
+        const rawValue = probabilityInput.value.trim();
+        if (rawValue === '') {
+            toastr.warning('Enter a probability value (0–100).');
+            return;
+        }
+        const parsed = parseInt(rawValue, 10);
+        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+            toastr.warning('Probability must be a whole number between 0 and 100.');
+            return;
+        }
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.selective_probability = parsed;
+            const rowInp = tr.querySelector('[name="selective_probability"]');
+            if (rowInp) rowInp.value = String(parsed);
+        }
+        await saveUpdatedBooks(books);
+        applyProbability.classList.remove('stwid--applyDirty');
+    };
+    const applyProbability = createApplyButton('Apply this probability to all selected entries', runApplyProbability, applyRegistry);
     probabilityInput.addEventListener('change', () => applyProbability.classList.add('stwid--applyDirty'));
+    probabilityContainer.append(applyProbability);
 
     row.append(probabilityContainer);
 
     // ── Sticky container ───────────────────────────────────────────────────
-    const stickyContainer = document.createElement('div');
-    stickyContainer.classList.add('stwid--thinContainer');
-    stickyContainer.dataset.field = 'sticky';
-
-    const stickyLabel = document.createElement('span');
-    stickyLabel.classList.add('stwid--bulkEditLabel');
-    stickyLabel.textContent = 'Sticky';
-    const stickyLabelHint = document.createElement('i');
-    stickyLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(stickyLabelHint, 'Sticky turns — keeps the entry active for N turns after it triggers. Leave blank to skip.');
-    stickyLabel.append(stickyLabelHint);
-    stickyContainer.append(stickyLabel);
+    const stickyContainer = createLabeledBulkContainer('sticky', 'Sticky', 'Sticky turns — keeps the entry active for N turns after it triggers. Leave blank to skip.');
 
     const stickyInput = document.createElement('input'); {
         stickyInput.classList.add('stwid-compactInput', 'text_pole');
@@ -1443,54 +1281,38 @@ export function buildBulkEditRow({
         stickyContainer.append(stickyInput);
     }
 
-    const applySticky = document.createElement('div'); {
-        applySticky.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applySticky, 'Apply this sticky value to all selected entries');
-        const runApplySticky = async () => {
-            const rawValue = stickyInput.value.trim();
-            if (rawValue === '') {
-                toastr.warning('Enter a sticky value (0 or more).');
-                return;
-            }
-            const parsed = parseInt(rawValue, 10);
-            if (!Number.isInteger(parsed) || parsed < 0) {
-                toastr.warning('Sticky must be a non-negative whole number.');
-                return;
-            }
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.sticky = parsed;
-                const rowInp = tr.querySelector('[name="sticky"]');
-                if (rowInp) rowInp.value = String(parsed);
-            }
-            await saveUpdatedBooks(books);
-            applySticky.classList.remove('stwid--applyDirty');
-        };
-        applySticky.addEventListener('click', runApplySticky);
-        applyRegistry.push({ isDirty: () => applySticky.classList.contains('stwid--applyDirty'), runApply: runApplySticky });
-        stickyContainer.append(applySticky);
-    }
+    const runApplySticky = async () => {
+        const rawValue = stickyInput.value.trim();
+        if (rawValue === '') {
+            toastr.warning('Enter a sticky value (0 or more).');
+            return;
+        }
+        const parsed = parseInt(rawValue, 10);
+        if (!Number.isInteger(parsed) || parsed < 0) {
+            toastr.warning('Sticky must be a non-negative whole number.');
+            return;
+        }
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.sticky = parsed;
+            const rowInp = tr.querySelector('[name="sticky"]');
+            if (rowInp) rowInp.value = String(parsed);
+        }
+        await saveUpdatedBooks(books);
+        applySticky.classList.remove('stwid--applyDirty');
+    };
+    const applySticky = createApplyButton('Apply this sticky value to all selected entries', runApplySticky, applyRegistry);
     stickyInput.addEventListener('change', () => applySticky.classList.add('stwid--applyDirty'));
+    stickyContainer.append(applySticky);
 
     row.append(stickyContainer);
 
     // ── Cooldown container ─────────────────────────────────────────────────
-    const cooldownContainer = document.createElement('div');
-    cooldownContainer.classList.add('stwid--thinContainer');
-    cooldownContainer.dataset.field = 'cooldown';
-
-    const cooldownLabel = document.createElement('span');
-    cooldownLabel.classList.add('stwid--bulkEditLabel');
-    cooldownLabel.textContent = 'Cooldown';
-    const cooldownLabelHint = document.createElement('i');
-    cooldownLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(cooldownLabelHint, 'Cooldown turns — prevents the entry from re-triggering for N turns after activation. Leave blank to skip.');
-    cooldownLabel.append(cooldownLabelHint);
-    cooldownContainer.append(cooldownLabel);
+    const cooldownContainer = createLabeledBulkContainer('cooldown', 'Cooldown', 'Cooldown turns — prevents the entry from re-triggering for N turns after activation. Leave blank to skip.');
 
     const cooldownInput = document.createElement('input'); {
         cooldownInput.classList.add('stwid-compactInput', 'text_pole');
@@ -1506,54 +1328,38 @@ export function buildBulkEditRow({
         cooldownContainer.append(cooldownInput);
     }
 
-    const applyCooldown = document.createElement('div'); {
-        applyCooldown.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyCooldown, 'Apply this cooldown value to all selected entries');
-        const runApplyCooldown = async () => {
-            const rawValue = cooldownInput.value.trim();
-            if (rawValue === '') {
-                toastr.warning('Enter a cooldown value (0 or more).');
-                return;
-            }
-            const parsed = parseInt(rawValue, 10);
-            if (!Number.isInteger(parsed) || parsed < 0) {
-                toastr.warning('Cooldown must be a non-negative whole number.');
-                return;
-            }
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.cooldown = parsed;
-                const rowInp = tr.querySelector('[name="cooldown"]');
-                if (rowInp) rowInp.value = String(parsed);
-            }
-            await saveUpdatedBooks(books);
-            applyCooldown.classList.remove('stwid--applyDirty');
-        };
-        applyCooldown.addEventListener('click', runApplyCooldown);
-        applyRegistry.push({ isDirty: () => applyCooldown.classList.contains('stwid--applyDirty'), runApply: runApplyCooldown });
-        cooldownContainer.append(applyCooldown);
-    }
+    const runApplyCooldown = async () => {
+        const rawValue = cooldownInput.value.trim();
+        if (rawValue === '') {
+            toastr.warning('Enter a cooldown value (0 or more).');
+            return;
+        }
+        const parsed = parseInt(rawValue, 10);
+        if (!Number.isInteger(parsed) || parsed < 0) {
+            toastr.warning('Cooldown must be a non-negative whole number.');
+            return;
+        }
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.cooldown = parsed;
+            const rowInp = tr.querySelector('[name="cooldown"]');
+            if (rowInp) rowInp.value = String(parsed);
+        }
+        await saveUpdatedBooks(books);
+        applyCooldown.classList.remove('stwid--applyDirty');
+    };
+    const applyCooldown = createApplyButton('Apply this cooldown value to all selected entries', runApplyCooldown, applyRegistry);
     cooldownInput.addEventListener('change', () => applyCooldown.classList.add('stwid--applyDirty'));
+    cooldownContainer.append(applyCooldown);
 
     row.append(cooldownContainer);
 
     // ── Delay container ────────────────────────────────────────────────────
-    const bulkDelayContainer = document.createElement('div');
-    bulkDelayContainer.classList.add('stwid--thinContainer');
-    bulkDelayContainer.dataset.field = 'bulkDelay';
-
-    const bulkDelayLabel = document.createElement('span');
-    bulkDelayLabel.classList.add('stwid--bulkEditLabel');
-    bulkDelayLabel.textContent = 'Delay';
-    const bulkDelayLabelHint = document.createElement('i');
-    bulkDelayLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(bulkDelayLabelHint, 'Delay turns — the entry will not activate until N messages have passed since the chat started. Leave blank to skip.');
-    bulkDelayLabel.append(bulkDelayLabelHint);
-    bulkDelayContainer.append(bulkDelayLabel);
+    const bulkDelayContainer = createLabeledBulkContainer('bulkDelay', 'Delay', 'Delay turns — the entry will not activate until N messages have passed since the chat started. Leave blank to skip.');
 
     const bulkDelayInput = document.createElement('input'); {
         bulkDelayInput.classList.add('stwid-compactInput', 'text_pole');
@@ -1569,54 +1375,38 @@ export function buildBulkEditRow({
         bulkDelayContainer.append(bulkDelayInput);
     }
 
-    const applyBulkDelay = document.createElement('div'); {
-        applyBulkDelay.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyBulkDelay, 'Apply this delay value to all selected entries');
-        const runApplyBulkDelay = async () => {
-            const rawValue = bulkDelayInput.value.trim();
-            if (rawValue === '') {
-                toastr.warning('Enter a delay value (0 or more).');
-                return;
-            }
-            const parsed = parseInt(rawValue, 10);
-            if (!Number.isInteger(parsed) || parsed < 0) {
-                toastr.warning('Delay must be a non-negative whole number.');
-                return;
-            }
-            const rows = getSafeTbodyRows();
-            if (!rows) return;
-            const targets = getBulkTargets(rows);
-            const books = new Set();
-            for (const { tr, bookName, entryData } of targets) {
-                books.add(bookName);
-                entryData.delay = parsed;
-                const rowInp = tr.querySelector('[name="delay"]');
-                if (rowInp) rowInp.value = String(parsed);
-            }
-            await saveUpdatedBooks(books);
-            applyBulkDelay.classList.remove('stwid--applyDirty');
-        };
-        applyBulkDelay.addEventListener('click', runApplyBulkDelay);
-        applyRegistry.push({ isDirty: () => applyBulkDelay.classList.contains('stwid--applyDirty'), runApply: runApplyBulkDelay });
-        bulkDelayContainer.append(applyBulkDelay);
-    }
+    const runApplyBulkDelay = async () => {
+        const rawValue = bulkDelayInput.value.trim();
+        if (rawValue === '') {
+            toastr.warning('Enter a delay value (0 or more).');
+            return;
+        }
+        const parsed = parseInt(rawValue, 10);
+        if (!Number.isInteger(parsed) || parsed < 0) {
+            toastr.warning('Delay must be a non-negative whole number.');
+            return;
+        }
+        const rows = getSafeTbodyRows();
+        if (!rows) return;
+        const targets = getBulkTargets(rows);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.delay = parsed;
+            const rowInp = tr.querySelector('[name="delay"]');
+            if (rowInp) rowInp.value = String(parsed);
+        }
+        await saveUpdatedBooks(books);
+        applyBulkDelay.classList.remove('stwid--applyDirty');
+    };
+    const applyBulkDelay = createApplyButton('Apply this delay value to all selected entries', runApplyBulkDelay, applyRegistry);
     bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add('stwid--applyDirty'));
+    bulkDelayContainer.append(applyBulkDelay);
 
     row.append(bulkDelayContainer);
 
     // ── Apply All Changes container ────────────────────────────────────────
-    const applyAllContainer = document.createElement('div');
-    applyAllContainer.classList.add('stwid--thinContainer');
-    applyAllContainer.dataset.field = 'applyAll';
-
-    const applyAllLabel = document.createElement('span');
-    applyAllLabel.classList.add('stwid--bulkEditLabel');
-    applyAllLabel.textContent = 'Apply All Changes';
-    const applyAllLabelHint = document.createElement('i');
-    applyAllLabelHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
-    setTooltip(applyAllLabelHint, 'Applies all containers that have unsaved changes. Skips containers that have not been modified.');
-    applyAllLabel.append(applyAllLabelHint);
-    applyAllContainer.append(applyAllLabel);
+    const applyAllContainer = createLabeledBulkContainer('applyAll', 'Apply All Changes', 'Applies all containers that have unsaved changes. Skips containers that have not been modified.');
 
     const applyAll = document.createElement('div'); {
         applyAll.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
@@ -1646,45 +1436,7 @@ export function buildBulkEditRow({
     }
     row.append(contentWrap);
 
-    // Wire collapse toggle
-    rowTitle.addEventListener('click', () => {
-        const isCollapsed = row.dataset.collapsed === 'true';
-        if (isCollapsed) {
-            // Expanding
-            row.dataset.collapsed = 'false';
-            row.classList.remove('stwid--collapsed');
-            contentWrap.style.overflow = 'hidden';
-            contentWrap.style.maxHeight = '1000px';
-            collapseChevron.classList.remove('fa-chevron-right');
-            collapseChevron.classList.add('fa-chevron-down');
-            contentWrap.addEventListener('transitionend', () => {
-                contentWrap.style.overflow = '';
-                contentWrap.style.maxHeight = '';
-            }, { once: true });
-        } else {
-            // Collapsing: close open dropdowns, then animate
-            closeOpenMultiselectDropdownMenus();
-            contentWrap.style.overflow = 'hidden';
-            contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
-            // Force reflow so the browser registers the pinned height before animating
-            void contentWrap.offsetHeight;
-            contentWrap.style.maxHeight = '0';
-            row.dataset.collapsed = 'true';
-            row.classList.add('stwid--collapsed');
-            collapseChevron.classList.remove('fa-chevron-down');
-            collapseChevron.classList.add('fa-chevron-right');
-        }
-    });
-
-    if (initialCollapsed) {
-        row.dataset.collapsed = 'true';
-        row.classList.add('stwid--collapsed');
-        contentWrap.style.overflow = 'hidden';
-        contentWrap.style.maxHeight = '0';
-        collapseChevron.classList.remove('fa-chevron-down');
-        collapseChevron.classList.add('fa-chevron-right');
-    }
+    wireCollapseRow(rowTitle, row, contentWrap, collapseChevron, { initialCollapsed });
 
     return { element: row, refreshSelectionCount, cleanup };
 }
-

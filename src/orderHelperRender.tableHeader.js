@@ -1,4 +1,4 @@
-﻿import {
+import {
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
@@ -10,9 +10,150 @@ import {
 } from './constants.js';
 
 /**
+ * Builds the filter button + multiselect dropdown menu for a single column.
+ *
+ * When `normalizeFilters` is null (recursion mode): reads state values directly from
+ * `orderHelperState[stateValuesKey]`, returns early from `updateFilterIndicator` if empty,
+ * and resets to all values if `filters[stateKey]` is empty — no normalize step.
+ *
+ * When `normalizeFilters` is a function (standard mode): calls it to normalize the
+ * current filter selection and uses `getValues()` as a live fallback for stateValuesKey.
+ *
+ * @param {{
+ *   stateKey: string,
+ *   stateValuesKey: string,
+ *   getOptions: function(): Array<{value: string, label: string}>,
+ *   getValues: function(): string[] | null,
+ *   normalizeFilters: function(string[]): string[] | null,
+ *   applyFilters: function(): void,
+ *   onFilterChange: function(): void,
+ *   orderHelperState: object,
+ * }} config
+ * @returns {{ menuWrap: HTMLElement, updateFilterIndicator: function }}
+ */
+function buildFilterMenu({ stateKey, stateValuesKey, getOptions, getValues, normalizeFilters, applyFilters, onFilterChange, orderHelperState }) {
+    const menuWrap = document.createElement('div');
+    menuWrap.classList.add('stwid--multiselectDropdownWrap');
+
+    const menuButton = document.createElement('div');
+    menuButton.classList.add(
+        'menu_button',
+        'fa-solid',
+        'fa-fw',
+        'fa-filter',
+        'stwid--orderFilterButton',
+        'stwid--multiselectDropdownButton',
+    );
+    menuWrap.append(menuButton);
+
+    const menu = document.createElement('div');
+    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
+
+    let updateFilterIndicator;
+    let updateFilters;
+
+    if (normalizeFilters === null) {
+        // Recursion mode: no normalize function; read state values directly.
+        updateFilterIndicator = ()=>{
+            const allValues = orderHelperState[stateValuesKey] ?? [];
+            if (!allValues.length) return;
+            if (!orderHelperState.filters[stateKey].length) {
+                orderHelperState.filters[stateKey] = [...allValues];
+            }
+            const isActive = orderHelperState.filters[stateKey].length !== allValues.length;
+            menuButton.classList.toggle('stwid--state-active', isActive);
+        };
+        updateFilters = ()=>{
+            const allValues = orderHelperState[stateValuesKey] ?? [];
+            if (!orderHelperState.filters[stateKey].length) {
+                orderHelperState.filters[stateKey] = [...allValues];
+            }
+            updateFilterIndicator();
+            applyFilters();
+            onFilterChange();
+        };
+    } else {
+        // Standard mode: normalize filters and use getValues() as live fallback.
+        updateFilterIndicator = ()=>{
+            const allValues = orderHelperState[stateValuesKey].length
+                ? orderHelperState[stateValuesKey]
+                : getValues();
+            const filters = normalizeFilters(orderHelperState.filters[stateKey]);
+            orderHelperState.filters[stateKey] = filters.length ? filters : [...allValues];
+            const isActive = orderHelperState.filters[stateKey].length !== allValues.length;
+            menuButton.classList.toggle('stwid--state-active', isActive);
+        };
+        updateFilters = ()=>{
+            orderHelperState.filters[stateKey] = normalizeFilters(orderHelperState.filters[stateKey]);
+            updateFilterIndicator();
+            applyFilters();
+            onFilterChange();
+        };
+    }
+
+    const options = getOptions();
+    if (!options.length) {
+        menu.classList.add('stwid--empty');
+        menu.textContent = 'No options available.';
+    }
+
+    for (const optionData of options) {
+        const option = document.createElement('label');
+        option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+        const inputControl = createMultiselectDropdownCheckbox(
+            orderHelperState.filters[stateKey].includes(optionData.value),
+        );
+        inputControl.input.addEventListener('change', ()=>{
+            if (inputControl.input.checked) {
+                if (!orderHelperState.filters[stateKey].includes(optionData.value)) {
+                    orderHelperState.filters[stateKey].push(optionData.value);
+                }
+            } else {
+                orderHelperState.filters[stateKey] = orderHelperState.filters[stateKey]
+                    .filter((item)=>item !== optionData.value);
+            }
+            updateFilters();
+        });
+        option.append(inputControl.input, inputControl.checkbox);
+        const optionLabel = document.createElement('span');
+        optionLabel.textContent = optionData.label;
+        option.append(optionLabel);
+        menu.append(option);
+    }
+
+    updateFilterIndicator();
+    wireMultiselectDropdown(menu, menuButton, menuWrap);
+    menuWrap.append(menu);
+
+    return { menuWrap, updateFilterIndicator };
+}
+
+/**
+ * Builds a `div.stwid--columnHeader` containing the column label and a filter dropdown.
+ *
+ * @param {string} label - Column header text.
+ * @param {object} menuConfig - Config forwarded to `buildFilterMenu` (plus onFilterChange).
+ * @param {object} orderHelperState
+ * @returns {{ header: HTMLElement, updateFilterIndicator: function }}
+ */
+function buildFilterColumnHeader(label, menuConfig, orderHelperState) {
+    const header = document.createElement('div');
+    header.classList.add('stwid--columnHeader');
+    const titleDiv = document.createElement('div');
+    titleDiv.textContent = label;
+    header.append(titleDiv);
+    const filterWrap = document.createElement('div');
+    filterWrap.classList.add('stwid--columnFilter');
+    const { menuWrap, updateFilterIndicator } = buildFilterMenu({ ...menuConfig, orderHelperState });
+    filterWrap.append(menuWrap);
+    header.append(filterWrap);
+    return { header, updateFilterIndicator };
+}
+
+/**
  * Builds the Order Helper table header (`<thead>`) with 6 multiselect column filter menus.
  *
- * Returns the thead element plus three refresh-indicator callbacks.
+ * Returns the thead element plus six refresh-indicator callbacks.
  * These callbacks are assigned here (they are the `updateFilterIndicator` functions
  * created inside the outlet, automationId, and group filter menus) and must be passed
  * to buildTableBody so that row-level edits can refresh the header filter button state.
@@ -77,502 +218,28 @@ export function buildTableHeader({
     getGroupValues,
     onFilterChange = ()=>{},
 }) {
-    // These are assigned inside the respective filter menu blocks and returned
-    // so the orchestrator can pass them to buildTableBody and the visibility row.
-    let refreshStrategyFilterIndicator = ()=>{};
-    let refreshPositionFilterIndicator = ()=>{};
-    let refreshRecursionFilterIndicator = ()=>{};
-    let refreshOutletFilterIndicator = ()=>{};
-    let refreshAutomationIdFilterIndicator = ()=>{};
-    let refreshGroupFilterIndicator = ()=>{};
+    const refreshFilterIndicators = {};
+
+    const filterMenuConfigs = {
+        strategy:    { stateKey: 'strategy',     stateValuesKey: 'strategyValues',     getOptions: getStrategyOptions,     getValues: getStrategyValues,     normalizeFilters: normalizeStrategyFilters,     applyFilters: applyOrderHelperStrategyFilters },
+        position:    { stateKey: 'position',     stateValuesKey: 'positionValues',     getOptions: getPositionOptions,     getValues: getPositionValues,     normalizeFilters: normalizePositionFilters,     applyFilters: applyOrderHelperPositionFilters },
+        recursion:   { stateKey: 'recursion',    stateValuesKey: 'recursionValues',    getOptions: ()=>ORDER_HELPER_RECURSION_OPTIONS, getValues: null, normalizeFilters: null, applyFilters: applyOrderHelperRecursionFilters },
+        outlet:      { stateKey: 'outlet',       stateValuesKey: 'outletValues',       getOptions: getOutletOptions,       getValues: getOutletValues,       normalizeFilters: normalizeOutletFilters,       applyFilters: applyOrderHelperOutletFilters },
+        automationId:{ stateKey: 'automationId', stateValuesKey: 'automationIdValues', getOptions: getAutomationIdOptions, getValues: getAutomationIdValues, normalizeFilters: normalizeAutomationIdFilters, applyFilters: applyOrderHelperAutomationIdFilters },
+        group:       { stateKey: 'group',        stateValuesKey: 'groupValues',        getOptions: getGroupOptions,        getValues: getGroupValues,        normalizeFilters: normalizeGroupFilters,        applyFilters: applyOrderHelperGroupFilters },
+    };
 
     const thead = document.createElement('thead');
     const tr = document.createElement('tr'); {
         for (const col of ORDER_HELPER_TABLE_COLUMNS) {
             const th = document.createElement('th'); {
-                if (col.key === 'strategy') {
-                    const header = document.createElement('div'); {
-                        header.classList.add('stwid--columnHeader');
-                        const title = document.createElement('div'); {
-                            title.textContent = col.label;
-                            header.append(title);
-                        }
-                        const filterWrap = document.createElement('div'); {
-                            filterWrap.classList.add('stwid--columnFilter');
-                            const menuWrap = document.createElement('div'); {
-                                menuWrap.classList.add('stwid--multiselectDropdownWrap');
-                                const menuButton = document.createElement('div'); {
-                                    menuButton.classList.add(
-                                        'menu_button',
-                                        'fa-solid',
-                                        'fa-fw',
-                                        'fa-filter',
-                                        'stwid--orderFilterButton',
-                                        'stwid--multiselectDropdownButton',
-                                    );
-                                    menuWrap.append(menuButton);
-                                }
-                                const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                                    const updateFilterIndicator = ()=>{
-                                        const allValues = orderHelperState.strategyValues.length
-                                            ? orderHelperState.strategyValues
-                                            : getStrategyValues();
-                                        const filters = normalizeStrategyFilters(orderHelperState.filters.strategy);
-                                        orderHelperState.filters.strategy = filters.length ? filters : [...allValues];
-                                        const isActive = orderHelperState.filters.strategy.length !== allValues.length;
-                                        menuButton.classList.toggle('stwid--state-active', isActive);
-                                    };
-                                    refreshStrategyFilterIndicator = updateFilterIndicator;
-                                    const updateStrategyFilters = ()=>{
-                                        // Phase 2: update state → update indicator → apply filter
-                                        orderHelperState.filters.strategy = normalizeStrategyFilters(orderHelperState.filters.strategy);
-                                        updateFilterIndicator();
-                                        applyOrderHelperStrategyFilters();
-                                        onFilterChange();
-                                    };
-                                    const strategyOptions = getStrategyOptions();
-                                    if (!strategyOptions.length) {
-                                        menu.classList.add('stwid--empty');
-                                        menu.textContent = 'No strategies available.';
-                                    }
-                                    for (const optionData of strategyOptions) {
-                                        const option = document.createElement('label'); {
-                                            option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                                            const inputControl = createMultiselectDropdownCheckbox(
-                                                orderHelperState.filters.strategy.includes(optionData.value),
-                                            );
-                                            inputControl.input.addEventListener('change', ()=>{
-                                                if (inputControl.input.checked) {
-                                                    if (!orderHelperState.filters.strategy.includes(optionData.value)) {
-                                                        orderHelperState.filters.strategy.push(optionData.value);
-                                                    }
-                                                } else {
-                                                    orderHelperState.filters.strategy = orderHelperState.filters.strategy
-                                                        .filter((item)=>item !== optionData.value);
-                                                }
-                                                updateStrategyFilters();
-                                            });
-                                            option.append(inputControl.input);
-                                            option.append(inputControl.checkbox);
-                                            const optionLabel = document.createElement('span');
-                                            optionLabel.textContent = optionData.label;
-                                            option.append(optionLabel);
-                                            menu.append(option);
-                                        }
-                                    }
-                                    updateFilterIndicator();
-                                    wireMultiselectDropdown(menu, menuButton, menuWrap);
-                                    menuWrap.append(menu);
-                                }
-                                filterWrap.append(menuWrap);
-                            }
-                            header.append(filterWrap);
-                        }
-                        th.append(header);
-                    }
-                } else if (col.key === 'position') {
-                    const header = document.createElement('div'); {
-                        header.classList.add('stwid--columnHeader');
-                        const title = document.createElement('div'); {
-                            title.textContent = col.label;
-                            header.append(title);
-                        }
-                        const filterWrap = document.createElement('div'); {
-                            filterWrap.classList.add('stwid--columnFilter');
-                            const menuWrap = document.createElement('div'); {
-                                menuWrap.classList.add('stwid--multiselectDropdownWrap');
-                                const menuButton = document.createElement('div'); {
-                                    menuButton.classList.add(
-                                        'menu_button',
-                                        'fa-solid',
-                                        'fa-fw',
-                                        'fa-filter',
-                                        'stwid--orderFilterButton',
-                                        'stwid--multiselectDropdownButton',
-                                    );
-                                    menuWrap.append(menuButton);
-                                }
-                                const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                                    const updateFilterIndicator = ()=>{
-                                        const allValues = orderHelperState.positionValues.length
-                                            ? orderHelperState.positionValues
-                                            : getPositionValues();
-                                        const filters = normalizePositionFilters(orderHelperState.filters.position);
-                                        orderHelperState.filters.position = filters.length ? filters : [...allValues];
-                                        const isActive = orderHelperState.filters.position.length !== allValues.length;
-                                        menuButton.classList.toggle('stwid--state-active', isActive);
-                                    };
-                                    refreshPositionFilterIndicator = updateFilterIndicator;
-                                    const updatePositionFilters = ()=>{
-                                        // Phase 2: update state → update indicator → apply filter
-                                        orderHelperState.filters.position = normalizePositionFilters(orderHelperState.filters.position);
-                                        updateFilterIndicator();
-                                        applyOrderHelperPositionFilters();
-                                        onFilterChange();
-                                    };
-                                    const positionOptions = getPositionOptions();
-                                    if (!positionOptions.length) {
-                                        menu.classList.add('stwid--empty');
-                                        menu.textContent = 'No positions available.';
-                                    }
-                                    for (const optionData of positionOptions) {
-                                        const option = document.createElement('label'); {
-                                            option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                                            const inputControl = createMultiselectDropdownCheckbox(
-                                                orderHelperState.filters.position.includes(optionData.value),
-                                            );
-                                            inputControl.input.addEventListener('change', ()=>{
-                                                if (inputControl.input.checked) {
-                                                    if (!orderHelperState.filters.position.includes(optionData.value)) {
-                                                        orderHelperState.filters.position.push(optionData.value);
-                                                    }
-                                                } else {
-                                                    orderHelperState.filters.position = orderHelperState.filters.position
-                                                        .filter((item)=>item !== optionData.value);
-                                                }
-                                                updatePositionFilters();
-                                            });
-                                            option.append(inputControl.input);
-                                            option.append(inputControl.checkbox);
-                                            const optionLabel = document.createElement('span');
-                                            optionLabel.textContent = optionData.label;
-                                            option.append(optionLabel);
-                                            menu.append(option);
-                                        }
-                                    }
-                                    updateFilterIndicator();
-                                    wireMultiselectDropdown(menu, menuButton, menuWrap);
-                                    menuWrap.append(menu);
-                                }
-                                filterWrap.append(menuWrap);
-                            }
-                            header.append(filterWrap);
-                        }
-                        th.append(header);
-                    }
-                } else if (col.key === 'recursion') {
-                    const header = document.createElement('div'); {
-                        header.classList.add('stwid--columnHeader');
-                        const title = document.createElement('div'); {
-                            title.textContent = col.label;
-                            header.append(title);
-                        }
-                        const filterWrap = document.createElement('div'); {
-                            filterWrap.classList.add('stwid--columnFilter');
-                            const menuWrap = document.createElement('div'); {
-                                menuWrap.classList.add('stwid--multiselectDropdownWrap');
-                                const menuButton = document.createElement('div'); {
-                                    menuButton.classList.add(
-                                        'menu_button',
-                                        'fa-solid',
-                                        'fa-fw',
-                                        'fa-filter',
-                                        'stwid--orderFilterButton',
-                                        'stwid--multiselectDropdownButton',
-                                    );
-                                    menuWrap.append(menuButton);
-                                }
-                                const menu = document.createElement('div'); {
-                                    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                                    const updateFilterIndicator = ()=>{
-                                        const allValues = orderHelperState.recursionValues ?? [];
-                                        if (!allValues.length) return;
-                                        if (!orderHelperState.filters.recursion.length) {
-                                            orderHelperState.filters.recursion = [...allValues];
-                                        }
-                                        const isActive = orderHelperState.filters.recursion.length !== allValues.length;
-                                        menuButton.classList.toggle('stwid--state-active', isActive);
-                                    };
-                                    refreshRecursionFilterIndicator = updateFilterIndicator;
-                                    const updateRecursionFilters = ()=>{
-                                        // Phase 2: update state → update indicator → apply filter
-                                        const allValues = orderHelperState.recursionValues ?? [];
-                                        if (!orderHelperState.filters.recursion.length) {
-                                            orderHelperState.filters.recursion = [...allValues];
-                                        }
-                                        updateFilterIndicator();
-                                        applyOrderHelperRecursionFilters();
-                                        onFilterChange();
-                                    };
-                                    // Phase 3: use ORDER_HELPER_RECURSION_OPTIONS (shared with row cell builder)
-                                    for (const optionData of ORDER_HELPER_RECURSION_OPTIONS) {
-                                        const option = document.createElement('label'); {
-                                            option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                                            const inputControl = createMultiselectDropdownCheckbox(
-                                                orderHelperState.filters.recursion.includes(optionData.value),
-                                            );
-                                            inputControl.input.addEventListener('change', ()=>{
-                                                if (inputControl.input.checked) {
-                                                    if (!orderHelperState.filters.recursion.includes(optionData.value)) {
-                                                        orderHelperState.filters.recursion.push(optionData.value);
-                                                    }
-                                                } else {
-                                                    orderHelperState.filters.recursion = orderHelperState.filters.recursion
-                                                        .filter((item)=>item !== optionData.value);
-                                                }
-                                                updateRecursionFilters();
-                                            });
-                                            option.append(inputControl.input);
-                                            option.append(inputControl.checkbox);
-                                            const optionLabel = document.createElement('span');
-                                            optionLabel.textContent = optionData.label;
-                                            option.append(optionLabel);
-                                            menu.append(option);
-                                        }
-                                    }
-                                    updateFilterIndicator();
-                                    wireMultiselectDropdown(menu, menuButton, menuWrap);
-                                    menuWrap.append(menu);
-                                }
-                                filterWrap.append(menuWrap);
-                            }
-                            header.append(filterWrap);
-                        }
-                        th.append(header);
-                    }
+                const menuConfig = filterMenuConfigs[col.key];
+                if (menuConfig) {
+                    const { header, updateFilterIndicator } = buildFilterColumnHeader(col.label, { ...menuConfig, onFilterChange }, orderHelperState);
+                    th.append(header);
+                    refreshFilterIndicators[col.key] = updateFilterIndicator;
                 } else {
-                    if (col.key === 'outlet') {
-                        const header = document.createElement('div'); {
-                            header.classList.add('stwid--columnHeader');
-                            const title = document.createElement('div'); {
-                                title.textContent = col.label;
-                                header.append(title);
-                            }
-                            const filterWrap = document.createElement('div'); {
-                                filterWrap.classList.add('stwid--columnFilter');
-                                const menuWrap = document.createElement('div'); {
-                                    menuWrap.classList.add('stwid--multiselectDropdownWrap');
-                                    const menuButton = document.createElement('div'); {
-                                        menuButton.classList.add(
-                                            'menu_button',
-                                            'fa-solid',
-                                            'fa-fw',
-                                            'fa-filter',
-                                            'stwid--orderFilterButton',
-                                            'stwid--multiselectDropdownButton',
-                                        );
-                                        menuWrap.append(menuButton);
-                                    }
-                                    const menu = document.createElement('div'); {
-                                        menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                                        const updateFilterIndicator = ()=>{
-                                            const allValues = orderHelperState.outletValues.length
-                                                ? orderHelperState.outletValues
-                                                : getOutletValues();
-                                            const filters = normalizeOutletFilters(orderHelperState.filters.outlet);
-                                            orderHelperState.filters.outlet = filters.length ? filters : [...allValues];
-                                            const isActive = orderHelperState.filters.outlet.length !== allValues.length;
-                                            menuButton.classList.toggle('stwid--state-active', isActive);
-                                        };
-                                        // Phase 2: assign the late-bound indicator callback so row-level
-                                        // outlet edits can refresh the header filter button state.
-                                        refreshOutletFilterIndicator = updateFilterIndicator;
-                                        const updateOutletFilters = ()=>{
-                                            // Phase 2: update state → update indicator → apply filter
-                                            orderHelperState.filters.outlet = normalizeOutletFilters(orderHelperState.filters.outlet);
-                                            updateFilterIndicator();
-                                            applyOrderHelperOutletFilters();
-                                            onFilterChange();
-                                        };
-                                        const outletOptions = getOutletOptions();
-                                        for (const optionData of outletOptions) {
-                                            const option = document.createElement('label'); {
-                                                option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                                                const inputControl = createMultiselectDropdownCheckbox(
-                                                    orderHelperState.filters.outlet.includes(optionData.value),
-                                                );
-                                                inputControl.input.addEventListener('change', ()=>{
-                                                    if (inputControl.input.checked) {
-                                                        if (!orderHelperState.filters.outlet.includes(optionData.value)) {
-                                                            orderHelperState.filters.outlet.push(optionData.value);
-                                                        }
-                                                    } else {
-                                                        orderHelperState.filters.outlet = orderHelperState.filters.outlet
-                                                            .filter((item)=>item !== optionData.value);
-                                                    }
-                                                    updateOutletFilters();
-                                                });
-                                                option.append(inputControl.input);
-                                                option.append(inputControl.checkbox);
-                                                const optionLabel = document.createElement('span');
-                                                optionLabel.textContent = optionData.label;
-                                                option.append(optionLabel);
-                                                menu.append(option);
-                                            }
-                                        }
-                                        updateFilterIndicator();
-                                        wireMultiselectDropdown(menu, menuButton, menuWrap);
-                                        menuWrap.append(menu);
-                                    }
-                                    filterWrap.append(menuWrap);
-                                }
-                                header.append(filterWrap);
-                            }
-                            th.append(header);
-                        }
-                    } else if (col.key === 'automationId') {
-                        const header = document.createElement('div'); {
-                            header.classList.add('stwid--columnHeader');
-                            const title = document.createElement('div'); {
-                                title.textContent = col.label;
-                                header.append(title);
-                            }
-                            const filterWrap = document.createElement('div'); {
-                                filterWrap.classList.add('stwid--columnFilter');
-                                const menuWrap = document.createElement('div'); {
-                                    menuWrap.classList.add('stwid--multiselectDropdownWrap');
-                                    const menuButton = document.createElement('div'); {
-                                        menuButton.classList.add(
-                                            'menu_button',
-                                            'fa-solid',
-                                            'fa-fw',
-                                            'fa-filter',
-                                            'stwid--orderFilterButton',
-                                            'stwid--multiselectDropdownButton',
-                                        );
-                                        menuWrap.append(menuButton);
-                                    }
-                                    const menu = document.createElement('div'); {
-                                        menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                                        const updateFilterIndicator = ()=>{
-                                            const allValues = orderHelperState.automationIdValues.length
-                                                ? orderHelperState.automationIdValues
-                                                : getAutomationIdValues();
-                                            const filters = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
-                                            orderHelperState.filters.automationId = filters.length ? filters : [...allValues];
-                                            const isActive = orderHelperState.filters.automationId.length !== allValues.length;
-                                            menuButton.classList.toggle('stwid--state-active', isActive);
-                                        };
-                                        // Phase 2: assign the late-bound indicator callback so row-level
-                                        // automationId edits can refresh the header filter button state.
-                                        refreshAutomationIdFilterIndicator = updateFilterIndicator;
-                                        const updateAutomationIdFilters = ()=>{
-                                            // Phase 2: update state → update indicator → apply filter
-                                            orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
-                                            updateFilterIndicator();
-                                            applyOrderHelperAutomationIdFilters();
-                                            onFilterChange();
-                                        };
-                                        const automationIdOptions = getAutomationIdOptions();
-                                        for (const optionData of automationIdOptions) {
-                                            const option = document.createElement('label'); {
-                                                option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                                                const inputControl = createMultiselectDropdownCheckbox(
-                                                    orderHelperState.filters.automationId.includes(optionData.value),
-                                                );
-                                                inputControl.input.addEventListener('change', ()=>{
-                                                    if (inputControl.input.checked) {
-                                                        if (!orderHelperState.filters.automationId.includes(optionData.value)) {
-                                                            orderHelperState.filters.automationId.push(optionData.value);
-                                                        }
-                                                    } else {
-                                                        orderHelperState.filters.automationId = orderHelperState.filters.automationId
-                                                            .filter((item)=>item !== optionData.value);
-                                                    }
-                                                    updateAutomationIdFilters();
-                                                });
-                                                option.append(inputControl.input);
-                                                option.append(inputControl.checkbox);
-                                                const optionLabel = document.createElement('span');
-                                                optionLabel.textContent = optionData.label;
-                                                option.append(optionLabel);
-                                                menu.append(option);
-                                            }
-                                        }
-                                        updateFilterIndicator();
-                                        wireMultiselectDropdown(menu, menuButton, menuWrap);
-                                        menuWrap.append(menu);
-                                    }
-                                    filterWrap.append(menuWrap);
-                                }
-                                header.append(filterWrap);
-                            }
-                            th.append(header);
-                        }
-                    } else if (col.key === 'group') {
-                        const header = document.createElement('div'); {
-                            header.classList.add('stwid--columnHeader');
-                            const title = document.createElement('div'); {
-                                title.textContent = col.label;
-                                header.append(title);
-                            }
-                            const filterWrap = document.createElement('div'); {
-                                filterWrap.classList.add('stwid--columnFilter');
-                                const menuWrap = document.createElement('div'); {
-                                    menuWrap.classList.add('stwid--multiselectDropdownWrap');
-                                    const menuButton = document.createElement('div'); {
-                                        menuButton.classList.add(
-                                            'menu_button',
-                                            'fa-solid',
-                                            'fa-fw',
-                                            'fa-filter',
-                                            'stwid--orderFilterButton',
-                                            'stwid--multiselectDropdownButton',
-                                        );
-                                        menuWrap.append(menuButton);
-                                    }
-                                    const menu = document.createElement('div'); {
-                                        menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                                        const updateFilterIndicator = ()=>{
-                                            const allValues = orderHelperState.groupValues.length
-                                                ? orderHelperState.groupValues
-                                                : getGroupValues();
-                                            const filters = normalizeGroupFilters(orderHelperState.filters.group);
-                                            orderHelperState.filters.group = filters.length ? filters : [...allValues];
-                                            const isActive = orderHelperState.filters.group.length !== allValues.length;
-                                            menuButton.classList.toggle('stwid--state-active', isActive);
-                                        };
-                                        // Phase 2: assign the late-bound indicator callback so row-level
-                                        // group edits can refresh the header filter button state.
-                                        refreshGroupFilterIndicator = updateFilterIndicator;
-                                        const updateGroupFilters = ()=>{
-                                            // Phase 2: update state → update indicator → apply filter
-                                            orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
-                                            updateFilterIndicator();
-                                            applyOrderHelperGroupFilters();
-                                            onFilterChange();
-                                        };
-                                        const groupOptions = getGroupOptions();
-                                        for (const optionData of groupOptions) {
-                                            const option = document.createElement('label'); {
-                                                option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                                                const inputControl = createMultiselectDropdownCheckbox(
-                                                    orderHelperState.filters.group.includes(optionData.value),
-                                                );
-                                                inputControl.input.addEventListener('change', ()=>{
-                                                    if (inputControl.input.checked) {
-                                                        if (!orderHelperState.filters.group.includes(optionData.value)) {
-                                                            orderHelperState.filters.group.push(optionData.value);
-                                                        }
-                                                    } else {
-                                                        orderHelperState.filters.group = orderHelperState.filters.group
-                                                            .filter((item)=>item !== optionData.value);
-                                                    }
-                                                    updateGroupFilters();
-                                                });
-                                                option.append(inputControl.input);
-                                                option.append(inputControl.checkbox);
-                                                const optionLabel = document.createElement('span');
-                                                optionLabel.textContent = optionData.label;
-                                                option.append(optionLabel);
-                                                menu.append(option);
-                                            }
-                                        }
-                                        updateFilterIndicator();
-                                        wireMultiselectDropdown(menu, menuButton, menuWrap);
-                                        menuWrap.append(menu);
-                                    }
-                                    filterWrap.append(menuWrap);
-                                }
-                                header.append(filterWrap);
-                            }
-                            th.append(header);
-                        }
-                    } else {
-                        th.textContent = col.label;
-                    }
+                    th.textContent = col.label;
                 }
                 if (col.key) {
                     th.setAttribute('data-col', col.key);
@@ -588,11 +255,11 @@ export function buildTableHeader({
 
     return {
         thead,
-        refreshStrategyFilterIndicator,
-        refreshPositionFilterIndicator,
-        refreshRecursionFilterIndicator,
-        refreshOutletFilterIndicator,
-        refreshAutomationIdFilterIndicator,
-        refreshGroupFilterIndicator,
+        refreshStrategyFilterIndicator:     refreshFilterIndicators.strategy     ?? (()=>{}),
+        refreshPositionFilterIndicator:     refreshFilterIndicators.position     ?? (()=>{}),
+        refreshRecursionFilterIndicator:    refreshFilterIndicators.recursion    ?? (()=>{}),
+        refreshOutletFilterIndicator:       refreshFilterIndicators.outlet       ?? (()=>{}),
+        refreshAutomationIdFilterIndicator: refreshFilterIndicators.automationId ?? (()=>{}),
+        refreshGroupFilterIndicator:        refreshFilterIndicators.group        ?? (()=>{}),
     };
 }

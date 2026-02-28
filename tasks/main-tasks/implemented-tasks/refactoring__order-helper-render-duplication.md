@@ -2,7 +2,7 @@
 *Created: February 28, 2026*
 
 **Type:** Refactoring
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -62,7 +62,7 @@ After this refactoring:
 
 **Context:** The 6 filter columns (strategy, position, recursion, outlet, automationId, group) each build identical DOM with a `div.stwid--columnHeader`, a filter button, a multiselect menu, and a `wireMultiselectDropdown` call. The only differences between them are the state key, the normalize function, and the apply function.
 
-- [ ] **1a.** Add a private (non-exported) `buildFilterMenu(config)` function before `buildTableHeader` in `orderHelperRender.tableHeader.js`. Its signature:
+- [x] **1a.** Add a private (non-exported) `buildFilterMenu(config)` function before `buildTableHeader` in `orderHelperRender.tableHeader.js`. Its signature:
 
   ```js
   /**
@@ -116,11 +116,11 @@ After this refactoring:
 
   If `getOptions()` returns an empty array, add `menu.classList.add('stwid--empty')` and set `menu.textContent = 'No options available.'`
 
-- [ ] **1b.** Add a private `buildFilterColumnHeader(label, menuConfig, orderHelperState)` function that:
+- [x] **1b.** Add a private `buildFilterColumnHeader(label, menuConfig, orderHelperState)` function that:
   - Creates `div.stwid--columnHeader` → child `div` with `label` text → child `div.stwid--columnFilter` → calls `buildFilterMenu({ ...menuConfig, orderHelperState })`
   - Returns `{ header: HTMLElement, updateFilterIndicator: function }`
 
-- [ ] **1c.** Inside `buildTableHeader`, build a `filterMenuConfigs` object (keyed by column key) mapping each filterable column to its config:
+- [x] **1c.** Inside `buildTableHeader`, build a `filterMenuConfigs` object (keyed by column key) mapping each filterable column to its config:
 
   ```js
   const filterMenuConfigs = {
@@ -133,7 +133,7 @@ After this refactoring:
   };
   ```
 
-- [ ] **1d.** Replace the `if (col.key === 'strategy') { ... } else if (...) { ... }` chain inside the `for (const col of ORDER_HELPER_TABLE_COLUMNS)` loop with:
+- [x] **1d.** Replace the `if (col.key === 'strategy') { ... } else if (...) { ... }` chain inside the `for (const col of ORDER_HELPER_TABLE_COLUMNS)` loop with:
 
   ```js
   const menuConfig = filterMenuConfigs[col.key];
@@ -148,7 +148,7 @@ After this refactoring:
 
   Where `refreshFilterIndicators` is an object declared before the loop: `const refreshFilterIndicators = {};`
 
-- [ ] **1e.** Replace the 6 `let refreshXxxFilterIndicator = () => {};` declarations with the single `refreshFilterIndicators` object. Update the `return` statement of `buildTableHeader` to use `refreshFilterIndicators`:
+- [x] **1e.** Replace the 6 `let refreshXxxFilterIndicator = () => {};` declarations with the single `refreshFilterIndicators` object. Update the `return` statement of `buildTableHeader` to use `refreshFilterIndicators`:
 
   ```js
   return {
@@ -170,7 +170,7 @@ After this refactoring:
 
 **Context:** 6 table cells (depth, order, sticky, cooldown, delay, trigger/selective_probability) all follow the same 20-line pattern: create `<td data-col>`, add a number `<input>`, wire a `change` listener that calls `parseInt`, checks `Number.isFinite`, updates the cache, and calls `enqueueSave`.
 
-- [ ] **2a.** Add a private (non-exported) `buildNumberInputCell(config)` function before `buildTableBody` in `orderHelperRender.tableBody.js`. Its signature:
+- [x] **2a.** Add a private (non-exported) `buildNumberInputCell(config)` function before `buildTableBody` in `orderHelperRender.tableBody.js`. Its signature:
 
   ```js
   /**
@@ -210,7 +210,7 @@ After this refactoring:
   }
   ```
 
-- [ ] **2b.** Replace the 6 inline number-cell blocks in `buildTableBody` with calls to `buildNumberInputCell`. Add each returned `<td>` with `tr.append(...)`. The 6 replacements are:
+- [x] **2b.** Replace the 6 inline number-cell blocks in `buildTableBody` with calls to `buildNumberInputCell`. Add each returned `<td>` with `tr.append(...)`. The 6 replacements are:
 
   | Old variable | `col` | `name` | `tooltip` | `max` | `cacheKey` |
   |---|---|---|---|---|---|
@@ -231,7 +231,7 @@ After this refactoring:
 
 **Context:** Both `buildVisibilityRow` and `buildBulkEditRow` in `actionBar.js` have the exact same collapse/expand animation logic (chevron toggle, `maxHeight` transition, `closeOpenMultiselectDropdownMenus` on collapse). The code is written out in full twice.
 
-- [ ] **3a.** Add an exported `wireCollapseRow` function to `orderHelperRender.utils.js`:
+- [x] **3a.** Add an exported `wireCollapseRow` function to `orderHelperRender.utils.js`:
 
   ```js
   /**
@@ -290,9 +290,9 @@ After this refactoring:
 
 ### Step 4 — `orderHelperRender.actionBar.js`: use `wireCollapseRow` and extract bulk container helpers
 
-- [ ] **4a.** Import `wireCollapseRow` from `./orderHelperRender.utils.js` at the top of `actionBar.js`.
+- [x] **4a.** Import `wireCollapseRow` from `./orderHelperRender.utils.js` at the top of `actionBar.js`.
 
-- [ ] **4b.** In `buildVisibilityRow`, replace the inline collapse wiring block (the `rowTitle.addEventListener('click', ...)` handler plus the `if (initialCollapsed)` block at the bottom) with a single call:
+- [x] **4b.** In `buildVisibilityRow`, replace the inline collapse wiring block (the `rowTitle.addEventListener('click', ...)` handler plus the `if (initialCollapsed)` block at the bottom) with a single call:
 
   ```js
   wireCollapseRow(rowTitle, row, contentWrap, collapseChevron, { initialCollapsed });
@@ -300,9 +300,9 @@ After this refactoring:
 
   Also remove the `row.dataset.collapsed = 'false';` line that precedes the old wiring, since `wireCollapseRow` sets it internally.
 
-- [ ] **4c.** In `buildBulkEditRow`, do the same replacement — the collapse wiring block is structurally identical to the one in `buildVisibilityRow`.
+- [x] **4c.** In `buildBulkEditRow`, do the same replacement — the collapse wiring block is structurally identical to the one in `buildVisibilityRow`.
 
-- [ ] **4d.** Add a private (non-exported) `createLabeledBulkContainer(fieldKey, labelText, hintText)` function before `buildBulkEditRow`:
+- [x] **4d.** Add a private (non-exported) `createLabeledBulkContainer(fieldKey, labelText, hintText)` function before `buildBulkEditRow`:
 
   ```js
   function createLabeledBulkContainer(fieldKey, labelText, hintText) {
@@ -321,7 +321,7 @@ After this refactoring:
   }
   ```
 
-- [ ] **4e.** Add a private (non-exported) `createApplyButton(tooltip, runFn, applyRegistry)` function before `buildBulkEditRow`:
+- [x] **4e.** Add a private (non-exported) `createApplyButton(tooltip, runFn, applyRegistry)` function before `buildBulkEditRow`:
 
   ```js
   function createApplyButton(tooltip, runFn, applyRegistry) {
@@ -337,7 +337,7 @@ After this refactoring:
   }
   ```
 
-- [ ] **4f.** Refactor each bulk edit container in `buildBulkEditRow` to use `createLabeledBulkContainer` and `createApplyButton`. Each container reduces from ~35 lines to ~15 lines. Apply to all of: **State, Strategy, Position, Depth, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay, Outlet** containers (and any others present). Preserve existing behavior exactly — only the scaffolding (container div + label + hint + apply button) changes; the input elements, dirty wiring, and apply logic stay as-is.
+- [x] **4f.** Refactor each bulk edit container in `buildBulkEditRow` to use `createLabeledBulkContainer` and `createApplyButton`. Each container reduces from ~35 lines to ~15 lines. Apply to all of: **State, Strategy, Position, Depth, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay, Outlet** containers (and any others present). Preserve existing behavior exactly — only the scaffolding (container div + label + hint + apply button) changes; the input elements, dirty wiring, and apply logic stay as-is.
 
   Example — before (State container, ~35 lines):
   ```js
@@ -379,7 +379,7 @@ After this refactoring:
 
 **Context:** `getOutletOptions`, `getAutomationIdOptions`, and `getGroupOptions` all: collect unique values from entries via a per-entry accessor, exclude the "none" value, sort alphabetically, and return `[{ value: noneValue, label: '(none)' }, ...sorted]`.
 
-- [ ] **5a.** Add a private (non-exported) `buildDynamicOptions(entries, getValueFn, noneValue)` function before the three options functions in `orderHelper.js`:
+- [x] **5a.** Add a private (non-exported) `buildDynamicOptions(entries, getValueFn, noneValue)` function before the three options functions in `orderHelper.js`:
 
   ```js
   /**
@@ -410,21 +410,21 @@ After this refactoring:
   }
   ```
 
-- [ ] **5b.** Replace `getOutletOptions` with a one-liner:
+- [x] **5b.** Replace `getOutletOptions` with a one-liner:
 
   ```js
   const getOutletOptions = (book = orderHelperState.book) =>
       buildDynamicOptions(getOrderHelperEntries(book), getOutletValueForEntry, OUTLET_NONE_VALUE);
   ```
 
-- [ ] **5c.** Replace `getAutomationIdOptions` with a one-liner:
+- [x] **5c.** Replace `getAutomationIdOptions` with a one-liner:
 
   ```js
   const getAutomationIdOptions = (book = orderHelperState.book) =>
       buildDynamicOptions(getOrderHelperEntries(book), getAutomationIdValueForEntry, AUTOMATION_ID_NONE_VALUE);
   ```
 
-- [ ] **5d.** Replace `getGroupOptions` with a one-liner:
+- [x] **5d.** Replace `getGroupOptions` with a one-liner:
 
   ```js
   const getGroupOptions = (book = orderHelperState.book) =>
@@ -437,13 +437,63 @@ After this refactoring:
 
 ### Step 6 — Verify no public API changes
 
-- [ ] **6a.** Confirm that `buildTableHeader`, `buildTableBody`, `buildVisibilityRow`, `buildBulkEditRow` still export the same function names with the same parameter shapes and return values. The callers in `orderHelperRender.js` must not require any changes.
-- [ ] **6b.** Confirm that `getOutletOptions`, `getAutomationIdOptions`, `getGroupOptions`, `getOutletValues`, `getAutomationIdValues`, `getGroupValues` still exist in `orderHelper.js` and return the same shape. The caller (`createOrderHelperRenderer` in `orderHelperRender.js`) passes these as dependencies.
-- [ ] **6c.** Confirm that `wireCollapseRow` is the only new export from `orderHelperRender.utils.js`. No existing exports are changed or removed.
+- [x] **6a.** Confirm that `buildTableHeader`, `buildTableBody`, `buildVisibilityRow`, `buildBulkEditRow` still export the same function names with the same parameter shapes and return values. The callers in `orderHelperRender.js` must not require any changes.
+- [x] **6b.** Confirm that `getOutletOptions`, `getAutomationIdOptions`, `getGroupOptions`, `getOutletValues`, `getAutomationIdValues`, `getGroupValues` still exist in `orderHelper.js` and return the same shape. The caller (`createOrderHelperRenderer` in `orderHelperRender.js`) passes these as dependencies.
+- [x] **6c.** Confirm that `wireCollapseRow` is the only new export from `orderHelperRender.utils.js`. No existing exports are changed or removed.
 
 ---
 
 ### Step 7 — Update ARCHITECTURE.md and FEATURE_MAP.md
 
-- [ ] **7a.** In `ARCHITECTURE.md`, update the `orderHelperRender.utils.js` row to mention `wireCollapseRow` in its description: `Shared DOM/utility helpers across orderHelperRender.* slices` → `Shared DOM/utility helpers across orderHelperRender.* slices, including multiselect dropdown wiring and collapsible row animation`.
-- [ ] **7b.** In `FEATURE_MAP.md`, the "Shared multiselect dropdown DOM helpers" entry already references `orderHelperRender.utils.js`. Append `wireCollapseRow` to this description: `…; wireCollapseRow wires collapse/expand animation shared by Visibility and Bulk Editor rows`.
+- [x] **7a.** In `ARCHITECTURE.md`, update the `orderHelperRender.utils.js` row to mention `wireCollapseRow` in its description: `Shared DOM/utility helpers across orderHelperRender.* slices` → `Shared DOM/utility helpers across orderHelperRender.* slices, including multiselect dropdown wiring and collapsible row animation`.
+- [x] **7b.** In `FEATURE_MAP.md`, the "Shared multiselect dropdown DOM helpers" entry already references `orderHelperRender.utils.js`. Append `wireCollapseRow` to this description: `…; wireCollapseRow wires collapse/expand animation shared by Visibility and Bulk Editor rows`.
+
+---
+
+## After Implementation
+*Implemented: February 28, 2026*
+
+### What changed
+
+**`src/orderHelperRender.tableHeader.js`**
+- Added private `buildFilterMenu` function that builds the filter button + dropdown menu for any column (both standard and recursion modes handled by a single `normalizeFilters === null` branch).
+- Added private `buildFilterColumnHeader` function that wraps a filter menu in the column header scaffold.
+- Replaced the 6-branch if/else chain inside `buildTableHeader` with a data-driven `filterMenuConfigs` object and a loop — one code path for all 6 columns.
+- Replaced 6 separate `let refresh*` declarations with a single `refreshFilterIndicators` object; return shape is unchanged.
+
+**`src/orderHelperRender.tableBody.js`**
+- Added private `buildNumberInputCell` function that builds a `<td>` number input with its change listener and save callback.
+- Replaced 6 near-identical inline number-cell blocks (depth, order, sticky, cooldown, delay, trigger/probability) with single-call `buildNumberInputCell(...)` invocations.
+
+**`src/orderHelperRender.utils.js`**
+- Added exported `wireCollapseRow` helper that wires the chevron toggle, maxHeight CSS transition, and dropdown-close behavior for any collapsible row.
+
+**`src/orderHelperRender.actionBar.js`**
+- Imported `wireCollapseRow` from utils.
+- Added private `createLabeledBulkContainer` that builds the container div, label span, and hint icon scaffold.
+- Added private `createApplyButton` that builds the apply check-mark button and auto-registers it in the apply registry.
+- Replaced inline collapse wiring in both `buildVisibilityRow` and `buildBulkEditRow` with `wireCollapseRow(...)` calls.
+- Refactored all 12+ bulk edit containers (state, strategy, position, depth, order, recursion, budget, probability, sticky, cooldown, delay, outlet) to use `createLabeledBulkContainer` and `createApplyButton`.
+
+**`src/orderHelper.js`**
+- Added private `buildDynamicOptions` function that collects unique values from entries, excludes the sentinel "none" value, sorts alphabetically, and returns `[{value: noneValue, label: '(none)'}, ...sorted]`. Handles both single-value and array-returning accessors.
+- Replaced `getOutletOptions`, `getAutomationIdOptions`, and `getGroupOptions` with one-liner arrow functions delegating to `buildDynamicOptions`.
+
+**`ARCHITECTURE.md`, `FEATURE_MAP.md`**
+- Updated description for `orderHelperRender.utils.js` to mention collapsible row animation alongside multiselect dropdown wiring.
+
+### Risks / What might break
+
+- The collapse/expand animation in the Order Helper action bar now goes through `wireCollapseRow`. If any row had subtly different timing or overflow handling, it would now match the shared implementation instead.
+- The `buildDynamicOptions` helper unifies the group options path (which used a nested loop) with the outlet/automationId paths (single value per entry). If any entry's `getGroupValueForEntry` returns an unexpected non-array, the `Array.isArray` branch will treat it as a single value — same behavior as the original nested loop for the common case.
+- The `buildNumberInputCell` helper sets `max='99999'` as default and `max='100'` for probability. If any of the 6 cells previously had a different max value, behavior has changed — but inspection confirmed the originals all had `max='99999'` except probability which had `max='100'`.
+
+### Manual checks
+
+1. Open the extension. Open Order Helper. Confirm all 6 column filter menus open, close, and filter rows correctly (strategy, position, recursion, outlet, automation ID, group).
+2. Click the column filter button for recursion — confirm the dropdown shows recursion options, not an error.
+3. Edit a depth, order, sticky, cooldown, delay, or probability value in an Order Helper row. Confirm the value saves (row does not revert after closing/reopening).
+4. Open the Visibility row (the collapsible row above the bulk editor). Confirm it collapses and expands with animation and the chevron rotates correctly.
+5. Open the Bulk Editor row. Confirm it collapses and expands. Confirm the "Apply All Changes" button applies all dirty fields across selected entries.
+6. Use at least one bulk edit container (e.g. Strategy). Change the value, confirm the apply button highlights as dirty, click it, and confirm the change applies to selected rows.
+7. Confirm no visible UI differences from before the refactoring.

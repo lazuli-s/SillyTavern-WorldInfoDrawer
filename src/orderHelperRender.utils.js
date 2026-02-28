@@ -109,6 +109,55 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     return closeMenu;
 };
 
+/**
+ * Wires collapse/expand toggle behavior onto a row.
+ * The row title element triggers the toggle. The contentWrap element is
+ * animated with maxHeight. The chevron icon switches between fa-chevron-down
+ * and fa-chevron-right.
+ *
+ * @param {HTMLElement} rowTitle - The clickable title element.
+ * @param {HTMLElement} row - The row container (receives `data-collapsed` and `stwid--collapsed`).
+ * @param {HTMLElement} contentWrap - The element whose height is animated.
+ * @param {HTMLElement} chevron - The icon element that rotates between down and right.
+ * @param {{ initialCollapsed?: boolean }} [options]
+ */
+export const wireCollapseRow = (rowTitle, row, contentWrap, chevron, { initialCollapsed = false } = {})=>{
+    const applyCollapsedState = (collapsed)=>{
+        row.dataset.collapsed = String(collapsed);
+        row.classList.toggle('stwid--collapsed', collapsed);
+        chevron.classList.toggle('fa-chevron-down', !collapsed);
+        chevron.classList.toggle('fa-chevron-right', collapsed);
+    };
+
+    rowTitle.addEventListener('click', ()=>{
+        const isCollapsed = row.dataset.collapsed === 'true';
+        if (isCollapsed) {
+            applyCollapsedState(false);
+            contentWrap.style.overflow = 'hidden';
+            contentWrap.style.maxHeight = '1000px';
+            contentWrap.addEventListener('transitionend', ()=>{
+                contentWrap.style.overflow = '';
+                contentWrap.style.maxHeight = '';
+            }, { once: true });
+        } else {
+            closeOpenMultiselectDropdownMenus();
+            contentWrap.style.overflow = 'hidden';
+            contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
+            void contentWrap.offsetHeight;
+            contentWrap.style.maxHeight = '0';
+            applyCollapsedState(true);
+        }
+    });
+
+    if (initialCollapsed) {
+        applyCollapsedState(true);
+        contentWrap.style.overflow = 'hidden';
+        contentWrap.style.maxHeight = '0';
+    } else {
+        applyCollapsedState(false);
+    }
+};
+
 export const formatCharacterFilter = (entry)=>{
     const filter = entry?.characterFilter;
     if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];

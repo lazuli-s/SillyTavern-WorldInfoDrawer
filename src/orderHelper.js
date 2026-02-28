@@ -132,19 +132,26 @@ export const initOrderHelper = ({
         return normalized || OUTLET_NONE_VALUE;
     };
 
-    const getOutletOptions = (book = orderHelperState.book)=>{
-        const entries = getOrderHelperEntries(book);
+    function buildDynamicOptions(entries, getValueFn, noneValue) {
         const values = new Set();
         for (const entry of entries) {
-            values.add(getOutletValueForEntry(entry.data));
+            const result = getValueFn(entry.data);
+            if (Array.isArray(result)) {
+                for (const v of result) values.add(v);
+            } else {
+                values.add(result);
+            }
         }
-        const labels = [...values].filter((value)=>value !== OUTLET_NONE_VALUE);
+        const labels = [...values].filter((v)=>v !== noneValue);
         labels.sort((a, b)=>a.localeCompare(b));
         return [
-            { value: OUTLET_NONE_VALUE, label: '(none)' },
+            { value: noneValue, label: '(none)' },
             ...labels.map((label)=>({ value: label, label })),
         ];
-    };
+    }
+
+    const getOutletOptions = (book = orderHelperState.book)=>
+        buildDynamicOptions(getOrderHelperEntries(book), getOutletValueForEntry, OUTLET_NONE_VALUE);
 
     const getOutletValues = (book = orderHelperState.book)=>getOutletOptions(book).map((option)=>option.value);
 
@@ -155,19 +162,8 @@ export const initOrderHelper = ({
         return normalized || AUTOMATION_ID_NONE_VALUE;
     };
 
-    const getAutomationIdOptions = (book = orderHelperState.book)=>{
-        const entries = getOrderHelperEntries(book);
-        const values = new Set();
-        for (const entry of entries) {
-            values.add(getAutomationIdValueForEntry(entry.data));
-        }
-        const labels = [...values].filter((value)=>value !== AUTOMATION_ID_NONE_VALUE);
-        labels.sort((a, b)=>a.localeCompare(b));
-        return [
-            { value: AUTOMATION_ID_NONE_VALUE, label: '(none)' },
-            ...labels.map((label)=>({ value: label, label })),
-        ];
-    };
+    const getAutomationIdOptions = (book = orderHelperState.book)=>
+        buildDynamicOptions(getOrderHelperEntries(book), getAutomationIdValueForEntry, AUTOMATION_ID_NONE_VALUE);
 
     const getAutomationIdValues = (book = orderHelperState.book)=>getAutomationIdOptions(book).map((option)=>option.value);
 
@@ -180,21 +176,8 @@ export const initOrderHelper = ({
         return groups.length ? groups : [GROUP_NONE_VALUE];
     };
 
-    const getGroupOptions = (book = orderHelperState.book)=>{
-        const entries = getOrderHelperEntries(book);
-        const values = new Set();
-        for (const entry of entries) {
-            for (const value of getGroupValueForEntry(entry.data)) {
-                values.add(value);
-            }
-        }
-        const labels = [...values].filter((value)=>value !== GROUP_NONE_VALUE);
-        labels.sort((a, b)=>a.localeCompare(b));
-        return [
-            { value: GROUP_NONE_VALUE, label: '(none)' },
-            ...labels.map((label)=>({ value: label, label })),
-        ];
-    };
+    const getGroupOptions = (book = orderHelperState.book)=>
+        buildDynamicOptions(getOrderHelperEntries(book), getGroupValueForEntry, GROUP_NONE_VALUE);
 
     const getGroupValues = (book = orderHelperState.book)=>getGroupOptions(book).map((option)=>option.value);
 

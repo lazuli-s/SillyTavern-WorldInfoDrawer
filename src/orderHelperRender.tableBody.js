@@ -57,6 +57,39 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
 }
 
 /**
+ * Builds a `<td>` containing a number input wired to save on change.
+ *
+ * @param {{
+ *   col: string,
+ *   name: string,
+ *   tooltip: string,
+ *   max?: string,
+ *   getValue: function(): number | undefined | null,
+ *   onSave: function(number | undefined): Promise<void>,
+ * }} config
+ * @returns {HTMLElement} The `<td>` element.
+ */
+function buildNumberInputCell({ col, name, tooltip, max = '99999', getValue, onSave }) {
+    const td = document.createElement('td');
+    td.setAttribute('data-col', col);
+    td.classList.add('stwid--orderTable--NumberColumns');
+    const inp = document.createElement('input');
+    inp.classList.add('stwid--input', 'text_pole');
+    inp.name = name;
+    setTooltip(inp, tooltip);
+    inp.min = '0';
+    inp.max = max;
+    inp.type = 'number';
+    inp.value = getValue() ?? '';
+    inp.addEventListener('change', async()=>{
+        const value = parseInt(inp.value);
+        await onSave(Number.isFinite(value) ? value : undefined);
+    });
+    td.append(inp);
+    return td;
+}
+
+/**
  * Builds the Order Helper table body (`<tbody>`) with one row per entry.
  * Also wires jQuery sortable drag reordering and runs all structured filters
  * at the end so the initial view is correctly filtered.
@@ -459,27 +492,11 @@ export function buildTableBody({
             }
 
             // Depth cell
-            const depth = document.createElement('td'); {
-                depth.setAttribute('data-col', 'depth');
-                depth.classList.add('stwid--orderTable--NumberColumns');
-                const inp = document.createElement('input'); {
-                    inp.classList.add('stwid--input');
-                    inp.classList.add('text_pole');
-                    inp.name = 'depth';
-                    setTooltip(inp, 'Entry depth');
-                    inp.min = '0';
-                    inp.max = '99999';
-                    inp.type = 'number';
-                    inp.value = e.data.depth ?? '';
-                    inp.addEventListener('change', async()=>{
-                        const depth = parseInt(inp.value);
-                        cache[e.book].entries[e.data.uid].depth = Number.isFinite(depth) ? depth : undefined;
-                        await enqueueSave(e.book);
-                    });
-                    depth.append(inp);
-                }
-                tr.append(depth);
-            }
+            tr.append(buildNumberInputCell({
+                col: 'depth', name: 'depth', tooltip: 'Entry depth',
+                getValue: ()=>e.data.depth,
+                onSave: async (value)=>{ cache[e.book].entries[e.data.uid].depth = value; await enqueueSave(e.book); },
+            }));
 
             // Outlet cell
             const outlet = document.createElement('td'); {
@@ -576,96 +593,32 @@ export function buildTableBody({
             }
 
             // Order cell
-            const order = document.createElement('td'); {
-                order.setAttribute('data-col', 'order');
-                order.classList.add('stwid--orderTable--NumberColumns');
-                const inp = document.createElement('input'); {
-                    inp.classList.add('stwid--input');
-                    inp.classList.add('text_pole');
-                    inp.name = 'order';
-                    setTooltip(inp, 'Order value');
-                    inp.min = '0';
-                    inp.max = '99999';
-                    inp.type = 'number';
-                    inp.value = e.data.order ?? '';
-                    inp.addEventListener('change', async()=>{
-                        const order = parseInt(inp.value);
-                        cache[e.book].entries[e.data.uid].order = Number.isFinite(order) ? order : undefined;
-                        await enqueueSave(e.book);
-                    });
-                    order.append(inp);
-                }
-                tr.append(order);
-            }
+            tr.append(buildNumberInputCell({
+                col: 'order', name: 'order', tooltip: 'Order value',
+                getValue: ()=>e.data.order,
+                onSave: async (value)=>{ cache[e.book].entries[e.data.uid].order = value; await enqueueSave(e.book); },
+            }));
 
             // Sticky cell
-            const sticky = document.createElement('td'); {
-                sticky.setAttribute('data-col', 'sticky');
-                sticky.classList.add('stwid--orderTable--NumberColumns');
-                const inp = document.createElement('input'); {
-                    inp.classList.add('stwid--input');
-                    inp.classList.add('text_pole');
-                    inp.name = 'sticky';
-                    setTooltip(inp, 'Sticky duration');
-                    inp.min = '0';
-                    inp.max = '99999';
-                    inp.type = 'number';
-                    inp.value = e.data.sticky ?? '';
-                    inp.addEventListener('change', async()=>{
-                        const value = parseInt(inp.value);
-                        cache[e.book].entries[e.data.uid].sticky = Number.isFinite(value) ? value : undefined;
-                        await enqueueSave(e.book);
-                    });
-                    sticky.append(inp);
-                }
-                tr.append(sticky);
-            }
+            tr.append(buildNumberInputCell({
+                col: 'sticky', name: 'sticky', tooltip: 'Sticky duration',
+                getValue: ()=>e.data.sticky,
+                onSave: async (value)=>{ cache[e.book].entries[e.data.uid].sticky = value; await enqueueSave(e.book); },
+            }));
 
             // Cooldown cell
-            const cooldown = document.createElement('td'); {
-                cooldown.setAttribute('data-col', 'cooldown');
-                cooldown.classList.add('stwid--orderTable--NumberColumns');
-                const inp = document.createElement('input'); {
-                    inp.classList.add('stwid--input');
-                    inp.classList.add('text_pole');
-                    inp.name = 'cooldown';
-                    setTooltip(inp, 'Cooldown duration');
-                    inp.min = '0';
-                    inp.max = '99999';
-                    inp.type = 'number';
-                    inp.value = e.data.cooldown ?? '';
-                    inp.addEventListener('change', async()=>{
-                        const value = parseInt(inp.value);
-                        cache[e.book].entries[e.data.uid].cooldown = Number.isFinite(value) ? value : undefined;
-                        await enqueueSave(e.book);
-                    });
-                    cooldown.append(inp);
-                }
-                tr.append(cooldown);
-            }
+            tr.append(buildNumberInputCell({
+                col: 'cooldown', name: 'cooldown', tooltip: 'Cooldown duration',
+                getValue: ()=>e.data.cooldown,
+                onSave: async (value)=>{ cache[e.book].entries[e.data.uid].cooldown = value; await enqueueSave(e.book); },
+            }));
 
             // Delay cell
-            const delay = document.createElement('td'); {
-                delay.setAttribute('data-col', 'delay');
-                delay.classList.add('stwid--orderTable--NumberColumns');
-                const inp = document.createElement('input'); {
-                    inp.classList.add('stwid--input');
-                    inp.classList.add('text_pole');
-                    inp.name = 'delay';
-                    setTooltip(inp, 'Delay before activation');
-                    inp.min = '0';
-                    inp.max = '99999';
-                    inp.type = 'number';
-                    inp.value = e.data.delay ?? '';
-                    inp.addEventListener('change', async()=>{
-                        const value = parseInt(inp.value);
-                        cache[e.book].entries[e.data.uid].delay = Number.isFinite(value) ? value : undefined;
-                        await enqueueSave(e.book);
-                    });
-                    delay.append(inp);
-                }
-                tr.append(delay);
-            }
+            tr.append(buildNumberInputCell({
+                col: 'delay', name: 'delay', tooltip: 'Delay before activation',
+                getValue: ()=>e.data.delay,
+                onSave: async (value)=>{ cache[e.book].entries[e.data.uid].delay = value; await enqueueSave(e.book); },
+            }));
 
             // Automation ID cell
             const automationId = document.createElement('td'); {
@@ -696,27 +649,11 @@ export function buildTableBody({
             }
 
             // Trigger % cell
-            const probability = document.createElement('td'); {
-                probability.setAttribute('data-col', 'trigger');
-                probability.classList.add('stwid--orderTable--NumberColumns');
-                const inp = document.createElement('input'); {
-                    inp.classList.add('stwid--input');
-                    inp.classList.add('text_pole');
-                    inp.name = 'selective_probability';
-                    setTooltip(inp, 'Trigger chance percentage');
-                    inp.min = '0';
-                    inp.max = '100';
-                    inp.type = 'number';
-                    inp.value = e.data.selective_probability ?? '';
-                    inp.addEventListener('change', async()=>{
-                        const probability = parseInt(inp.value);
-                        cache[e.book].entries[e.data.uid].selective_probability = Number.isFinite(probability) ? probability : undefined;
-                        await enqueueSave(e.book);
-                    });
-                    probability.append(inp);
-                }
-                tr.append(probability);
-            }
+            tr.append(buildNumberInputCell({
+                col: 'trigger', name: 'selective_probability', tooltip: 'Trigger chance percentage', max: '100',
+                getValue: ()=>e.data.selective_probability,
+                onSave: async (value)=>{ cache[e.book].entries[e.data.uid].selective_probability = value; await enqueueSave(e.book); },
+            }));
 
             // Recursion cell (uses ORDER_HELPER_RECURSION_OPTIONS shared with the header filter)
             const recursion = document.createElement('td'); {
