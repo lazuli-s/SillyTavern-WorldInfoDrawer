@@ -1,6 +1,6 @@
 ---
 name: code-review-first-review
-description: Runs a structured first-pass code review on the next file from the code-review queue. Reads tasks/code-review-queue.md "Files Pending Review", picks the first entry, loads authoritative docs via doc-guide, reviews the file across six axes (data integrity, race conditions, UI correctness, performance, redundancy, JS best practices), writes tasks/code-reviews/CodeReview_<filename>.md with structured findings, and updates the queue and REVIEW_TRACKER.md. Use when the user invokes /code-review-first-review, says "do a code review", "review the next file", "start a code review", "run a first review", or names a specific source file to review.
+description: Runs a structured first-pass code review on the next file from the code-review queue. Picks the first entry from the pending review list, loads authoritative docs via doc-guide, reviews the file across six axes (data integrity, race conditions, UI correctness, performance, redundancy, JS best practices), writes a structured findings report, and updates the queue and review tracker. Use when the user invokes /code-review-first-review, says "do a code review", "review the next file", "start a code review", "run a first review", or names a specific source file to review.
 ---
 
 # code-review-first-review
@@ -90,6 +90,15 @@ In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new 
     - Reason:
   - Implemented:
 (repeat for each finding)
+```
+
+**No-findings case:** If `TARGET_FILE` had no findings, add a simplified entry with no finding rows:
+
+```
+### `<TARGET_FILE>`
+→ [CodeReview_<BASENAME>.md](tasks/code-reviews/finished/CodeReview_<BASENAME>.md)
+
+*No findings.*
 ```
 
 ---
