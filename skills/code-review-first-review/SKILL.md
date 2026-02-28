@@ -77,12 +77,12 @@ Apply all updates. Keep separators, blank lines, and indentation consistent with
 **A. Remove from pending review**
 In `tasks/code-reviews/code-review-queue.md`: remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
 
-**B. Add to reviewed files in tracker**
+**B. Add to reviewed files in tracker (findings only)**
 In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new section following the format of existing entries:
 
 ```
 ### `<TARGET_FILE>`
-→ [CodeReview_<BASENAME>.md](tasks/code-reviews/pending-meta-review/CodeReview_<BASENAME>.md)
+[CodeReview_<BASENAME>.md](tasks/code-reviews/pending-meta-review/CodeReview_<BASENAME>.md)
 
 - **F01** — <Title>
   - Meta-reviewed: [ ]
@@ -92,14 +92,7 @@ In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new 
 (repeat for each finding)
 ```
 
-**No-findings case:** If `TARGET_FILE` had no findings, add a simplified entry with no finding rows:
-
-```
-### `<TARGET_FILE>`
-→ [CodeReview_<BASENAME>.md](tasks/code-reviews/finished/CodeReview_<BASENAME>.md)
-
-*No findings.*
-```
+**No-findings case:** If `TARGET_FILE` had no findings, do not add anything to `REVIEW_TRACKER.md`.
 
 ---
 

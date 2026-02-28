@@ -2,7 +2,6 @@
 
 ## Files Pending Review
 
-- `src/constants.js`
 - `src/drawer.js`
 - `src/editorPanel.js`
 - `src/listPanel.bookMenu.js`
