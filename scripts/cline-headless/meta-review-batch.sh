@@ -89,10 +89,9 @@ Pick the FIRST file (alphabetical order) from:
   tasks/code-reviews/pending-meta-review/
 
 Complete the full meta-review for that one file only.
-Insert the STEP 2 section into each finding, update REVIEW_TRACKER.md, and move the file to the next stage folder.
+Insert the STEP 2 section into each finding and move the file to the next stage folder.
 
 Hard constraints — never violate these:
-- Do NOT edit any source files. This is a READ-ONLY review of review documents.
 - Do NOT modify anything under vendor/SillyTavern/
 - Use write_to_file or replace_in_file for all file writes. Never use apply_patch." \
     2>&1 | tee -a "$LOG_FILE"
