@@ -8,14 +8,14 @@ description: Runs a structured first-pass code review on the next file from the 
 Reviews exactly one file per invocation, then stops.
 
 **Two modes:**
-- **Queue mode** (no file specified): read `tasks/code-review-queue.md`, pick the first entry under `## Files Pending Review`.
+- **Queue mode** (no file specified): read `tasks/code-reviews/code-review-queue.md`, pick the first entry under `## Files Pending Review`.
 - **Direct mode** (user names a file): use that path as `TARGET_FILE`. Skip queue lookup.
 
 ---
 
 ## 1. Select target
 
-**Queue mode:** Read `tasks/code-review-queue.md`. Under `## Files Pending Review`, pick the first bullet item and set it as `TARGET_FILE`. If the list is empty: report "No files pending review" and stop.
+**Queue mode:** Read `tasks/code-reviews/code-review-queue.md`. Under `## Files Pending Review`, pick the first bullet item and set it as `TARGET_FILE`. If the list is empty: report "No files pending review" and stop.
 
 **Direct mode:** Set `TARGET_FILE` to the path the user provided.
 
@@ -23,13 +23,7 @@ Reviews exactly one file per invocation, then stops.
 
 ## 2. Load authoritative documentation
 
-Invoke the `doc-guide` skill and load the docs it prescribes for code review tasks.
-
-**Always load:** `ARCHITECTURE.md`, `FEATURE_MAP.md`, `SILLYTAVERN_OWNERSHIP_BOUNDARY.md`
-
-**Load conditionally:**
-- `wi-api.md` — if `TARGET_FILE` imports from `world-info.js` or uses WI APIs
-- `st-context.js` — only if needed to confirm ST API names or shapes
+Invoke the `doc-guide` skill and load the applicable docs.
 
 ---
 
@@ -70,22 +64,25 @@ Review `TARGET_FILE` across six axes:
 3. Load `references/finding-template.md` for the exact output file structure and per-finding format.
 4. Write the output file using that template. Assign finding IDs F01, F02, … in order.
 5. If `TARGET_FILE` has no findings: write only the Scope section, then `---`, then `*No findings.*`
+6. Output path rules:
+   - If there are **one or more findings**: `tasks/code-reviews/pending-meta-review/CodeReview_<BASENAME>.md`
+   - If there are **no findings**: `tasks/code-reviews/finished/CodeReview_<BASENAME>.md`
 
 ---
 
 ## 6. Update queue files and tracker
 
-Apply all three updates. Keep separators, blank lines, and indentation consistent with existing entries.
+Apply all updates. Keep separators, blank lines, and indentation consistent with existing entries.
 
 **A. Remove from pending review**
-In `tasks/code-review-queue.md`: remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
+In `tasks/code-reviews/code-review-queue.md`: remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
 
 **B. Add to reviewed files in tracker**
 In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new section following the format of existing entries:
 
 ```
 ### `<TARGET_FILE>`
-→ `CodeReview_<BASENAME>.md`
+→ [CodeReview_<BASENAME>.md](tasks/code-reviews/pending-meta-review/CodeReview_<BASENAME>.md)
 
 - **F01** — <Title>
   - Meta-reviewed: [ ]
@@ -94,9 +91,6 @@ In `tasks/code-reviews/REVIEW_TRACKER.md`: under `## Reviewed Files`, add a new 
   - Implemented:
 (repeat for each finding)
 ```
-
-**C. Add to pending meta-review**
-In `tasks/code-review-queue.md`: add `tasks/code-reviews/CodeReview_<BASENAME>.md` as a new bullet under `## Files Pending Meta-Review`.
 
 ---
 

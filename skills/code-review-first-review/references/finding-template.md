@@ -4,7 +4,6 @@
 
 ```
 # CODE REVIEW FINDINGS: `<TARGET_FILE>`
-
 *Reviewed: <Month D, YYYY>*
 
 ## Scope
@@ -41,6 +40,8 @@ Repeat this block for each Fxx, separated by `---`:
 - **Plain-language summary:**
   Explain the issue as if the reader has no programming background.
 
+- **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice — pick the single best-fit category
+
 - **Location:**
   file + function (and anchor snippet)
 
@@ -55,8 +56,6 @@ Repeat this block for each Fxx, separated by `---`:
 
 - **Confidence:** Low 😔 / Medium 🤔 / High 😀
   High = complete failure path traceable entirely from code, no runtime assumptions needed. Medium = failure depends on a runtime condition not confirmable from code alone (e.g., concurrent update in-flight). Low = speculative; depends on unverifiable user behavior or unmeasured load.
-
-- **Category:** Data Integrity / Race Condition / UI Correctness / Performance / Redundancy / JS Best Practice — pick the single best-fit category
 
 #### ADDRESSING THE ISSUE
 
