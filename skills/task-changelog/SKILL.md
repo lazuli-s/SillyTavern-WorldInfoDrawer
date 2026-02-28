@@ -41,14 +41,39 @@ Detect the task type from the filename (basename only). Match the prefix — bot
 
 If no prefix matches, use "Task" as the label and `changelog__task.md` as the file.
 
-### 2b. Title
+### 2b. CHANGELOG category
+
+Determine which CHANGELOG.md section this task's outcome belongs to. Use the task type as the starting point, then override if the content clearly says otherwise.
+
+**Defaults by task type:**
+
+| Task type | Default category |
+|---|---|
+| Issue | `Fixed` |
+| NewFeature | `Added` |
+| Rework | `Changed` |
+| Refactoring | `Internal` |
+| Docs | `Internal` |
+| Skill | `Internal` |
+| CodeReview | `Internal` |
+| Task (no prefix) | Determine from content |
+
+**Override rules — apply when the content clearly contradicts the default:**
+- A Rework that only corrects broken behavior a user experienced → `Fixed`
+- A Rework that removes a feature or control → `Removed`
+- Any task whose primary outcome is a speed or responsiveness improvement → `Performance`
+- Any task where all changes are code-only with nothing a user can see or experience → `Internal`
+
+**Valid values:** `Added` / `Changed` / `Fixed` / `Removed` / `Performance` / `Internal`
+
+### 2c. Title
 
 Extract from the first `# ` heading. Strip the leading task-type label and colon, if present.
 - `# New Feature: List Panel Tabs` → title is `List Panel Tabs`
 - `# TASK: Remove redundant parent prefix` → title is `Remove redundant parent prefix`
 - `# Refactoring_stylecssNesting` → title is `style.css Nesting`
 
-### 2c. Date
+### 2d. Date
 
 Use the **first available** date, in this priority order:
 1. `*Implemented: ...*` under `## After Implementation`
@@ -57,16 +82,18 @@ Use the **first available** date, in this priority order:
 
 Normalize to `Month D, YYYY` (e.g. `February 23, 2026`).
 
-### 2d. Summary (1–2 sentences)
+### 2e. Summary (1–2 sentences)
 
-Write a plain-language 1–2 sentence summary of what the task did. Draw from:
+Write a summary of what the task did. Draw from:
 - `## Summary` section (if present)
 - `## Why` section (if present)
 - The title and `## Changes Made` / `### What changed` sections
 
-Keep it non-technical and jargon-free. Do not quote code.
+**If category is `Internal`:** Write in plain, non-technical language. Jargon-free. Do not quote code.
 
-### 2e. Scope
+**If category is user-facing (`Added`, `Changed`, `Fixed`, `Removed`, `Performance`):** Write following `CHANGELOG_rules.md` tone — plain and direct, active voice ("X now does Y"), ends with a period. This summary may be used as a CHANGELOG.md entry directly.
+
+### 2f. Scope
 
 List the files that were touched. Check in this order:
 1. `## Agreed Scope` — extract explicit file paths
@@ -76,27 +103,41 @@ List the files that were touched. Check in this order:
 
 Present as a flat list of file names, e.g. `style.css`, `src/orderHelper.js`.
 
-### 2f. What changed
+### 2g. What changed
 
 Extract the major change bullets. Draw from:
 - `## After Implementation` → `### What changed` bullets
 - `## Changes Made` bullets (old format)
 
-Keep to 3–5 bullets max. Rewrite in plain language if the source is too technical.
+Keep to 3–5 bullets max.
 
-**What counts as a major change (include):**
-- Something was added, removed, or renamed in a way that a user or reviewer would notice
+**If category is `Internal`:**
+
+Rewrite in plain language if the source is too technical.
+
+What counts as a major change (include):
+- Something was added, removed, or renamed in a way that a reviewer would notice
 - A behavior changed — something now works differently than before
-- A new visual element, section, or control appeared or was removed
 - A name or structure was changed across multiple files (e.g. a CSS class rename)
 
-**What to skip (not a major change):**
+What to skip:
 - Verification or grep steps run during implementation ("confirmed X still works")
 - Architecture doc updates (`ARCHITECTURE.md`, `FEATURE_MAP.md`) unless they are the primary purpose of the task
 - Checklist items that describe process steps, not outcomes
-- Low-level implementation details (specific line numbers, internal variable names) that don't surface to any user
+- Low-level implementation details (specific line numbers, internal variable names)
 
-### 2g. Review status
+**If category is user-facing (`Added`, `Changed`, `Fixed`, `Removed`, `Performance`):**
+
+Bullets must be specific and concrete — ready to use as CHANGELOG.md draft bullets. Do not rewrite to be vague.
+
+Include:
+- Specific feature names, UI element names, and control labels as they appear in the UI
+- Concrete behavior descriptions ("clicking X now does Y" not "behavior was updated")
+- Anything a user would directly notice or need to adjust to
+
+Skip the same process-only and architecture-only items as above.
+
+### 2h. Review status
 
 Determine from the `**Status:**` field in the task file:
 
@@ -108,14 +149,20 @@ Determine from the `**Status:**` field in the task file:
 | Field absent — check for PIR `### Findings` | `Issues found` |
 | No Status field and no PIR section | `Not reviewed` |
 
-### 2h. Fixes
+### 2i. Fixes
 
-Look for `## Post-Implementation Fixes`. Extract `[x]` items only (fixed ones):
-- Use the `**PIR-NN**: <Title>` as the issue name
-- Use the `**What changed**: ...` line as the fix description
-- Format: `<Title>: <what changed>`
-- Skip `[ ]` items (not fixed / skipped)
-- If no `## Post-Implementation Fixes` section, or all items were `[ ]`: omit the **Fixes** field entirely
+Look for `## Post-Implementation Fixes`. Extract `[x]` items only (fixed ones).
+
+For each fixed item, determine its own CHANGELOG category using the same logic as §2b — applied to the fix itself:
+- A fix correcting wrong behavior a user could see or experience → `Fixed`
+- A fix adding a guard for an edge case users would never encounter → `Internal`
+
+Format each fix as:
+```
+<PIR title>: <what changed> — category: <Fixed / Internal / …>
+```
+
+Skip `[ ]` items (not fixed / skipped). If no `## Post-Implementation Fixes` section, or all items were `[ ]`: omit the **Fixes** field entirely.
 
 ---
 
@@ -127,7 +174,7 @@ Set `CHANGELOG_FILE` to `tasks/changelogs/<changelog filename from table in §2a
 
 ## 4. Format the changelog entry
 
-Compose the entry block:
+Compose the entry block. Note: the file name link path is relative to the changelog file being written (`tasks/changelogs/`), not to this skill file.
 
 ```markdown
 ## <Month D, YYYY>
@@ -136,17 +183,18 @@ Compose the entry block:
 
 <1–2 sentence summary>
 
-- File name: [`<TARGET_TASK_FILE basename>`]
+- File name: [<TARGET_TASK_FILE basename>](../main-tasks/archived-tasks/<TARGET_TASK_FILE basename>)
 - Scope: [`file1.js`, `style.css`, …]
+- **CHANGELOG category:** <Added / Changed / Fixed / Removed / Performance / Internal>
 - **What changed:**
   - <bullet 1>
   - <bullet 2>
 - **Review:** <No issues found / Issues found / Not reviewed>
 - **Fixes:**
-  - <PIR title>: <what changed>
+  - <PIR title>: <what changed> — category: <Fixed / Internal / …>
 ```
 
-Omit the `**Fixes:**` block entirely if no fixes were applied (see §2h).
+Omit the `**Fixes:**` block entirely if no fixes were applied (see §2i).
 
 ---
 
