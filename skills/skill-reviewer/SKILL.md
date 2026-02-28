@@ -1,18 +1,8 @@
 ---
 name: skill-reviewer
-description: >-
-  Reviews an existing Claude skill against skill-creator quality rules and
-  produces a structured SkillReview findings report saved to
-  tasks/main-tasks/skills/. Use when the user invokes /skill-reviewer, asks to
-  "review a skill", "audit a skill", "check a skill's quality", or "is this
-  skill well written". Checks SKILL.md structure, description trigger phrasing,
-  progressive disclosure, extraneous files, duplicate or nested references, and
-  asset relevance. Severity-rated findings plus improvement recommendations.
-metadata:
-  sync:
-    version: 2
-    hash: sha256-2e532518789c5d60bff17bc7c198e0f8da3e3e908a555ddfc02f113d25419df8
+description: Reviews an existing Claude skill against skill-creator quality rules and produces a structured SkillReview findings report saved to tasks/main-tasks/documented/. Use when the user invokes /skill-reviewer, asks to "review a skill", "audit a skill", "check a skill's quality", or "is this skill well written". Checks SKILL.md structure, description trigger phrasing, progressive disclosure, extraneous files, duplicate or nested references, and asset relevance. Severity-rated findings plus improvement recommendations.
 ---
+
 # Skill Reviewer
 
 Reviews an existing skill against the skill-creator quality rules and auto-writes a SkillReview findings report.
@@ -22,9 +12,9 @@ Reviews an existing skill against the skill-creator quality rules and auto-write
 
 1. **Locate** — resolve the name or path to a directory.
 2. **Read the skill** — read `SKILL.md` plus every file in `references/`, `scripts/`, and `assets/`.
-3. **Read the rules** — read `.claude/skills/skill-creator/SKILL.md` for the authoritative rule definitions.
+3. **Read the rules** — read `skills/skill-creator/SKILL.md` for the authoritative rule definitions.
 4. **Analyze** — work through every item in the Review Checklist below.
-5. **Write the report** — auto-write to `tasks/main-tasks/skills/SkillReview_<name>.md`. Create `tasks/main-tasks/skills/` if it does not exist.
+5. **Write the report** — auto-write to `tasks/main-tasks/documented/SkillReview_<name>.md`. Create `tasks/main-tasks/documented/` if it does not exist.
 
 Do not ask for confirmation before writing. Write the report only.
 

@@ -15,31 +15,27 @@ If a relevant file already exists there, **update it** - do not create a duplica
 
 ## File Types and Naming
 
-All main task files — bugs, features, reworks, refactoring, docs, skill tasks —
-go into `tasks/main-tasks/documented/` when first created.
+All main task files go into `tasks/main-tasks/documented/` when first created, except for code review tasks, which go into `tasks/code-reviews/`. 
 
-| Task type | Folder (when new) | Filename format | Example |
-|---|---|---|---|
-| Bug or issue | `tasks/main-tasks/documented/` | `Issue_<NameNoUnderscores>.md` | `Issue_FilterBarCrashOnEmpty.md` |
-| New feature | `tasks/main-tasks/documented/` | `NewFeature_<NameNoUnderscores>.md` | `NewFeature_ListPanelTabs.md` |
-| Rework of existing feature | `tasks/main-tasks/documented/` | `Rework_<NameNoUnderscores>.md` | `Rework_VisibilityChipsLayout.md` |
-| Refactoring (code only, no behavior change) | `tasks/main-tasks/documented/` | `Refactoring_<NameOfFileOrArea>.md` | `Refactoring_stylecss.md` |
-| Documentation task | `tasks/main-tasks/documented/` | `Docs_<NameNoUnderscores>.md` | `Docs_ArchitectureUpdate.md` |
-| Skill review | `tasks/main-tasks/documented/` | `SkillReview_<SkillName>.md` | `SkillReview_analyze-request.md` |
-| Code review | `tasks/code-reviews/` | `CodeReview_<FileName>.md` | `CodeReview_listPanel.filterBar.js.md` |
+When naming a new task file, use the following format:
 
-### Naming rules
+| Task type | Filename format | Example |
+|---|---|---|
+| Bug or issue | `issue__<name-only-low-case>.md` | `issue__filter-bar-crash-on-empty.md` |
+| New feature | `new-feature__<name-only-low-case>.md` | `new-feature__list-panel-tabs.md` |
+| Rework of existing feature | `rework__<name-only-low-case>.md` | `rework__visibility-chips-layout.md` |
+| Refactoring (code only, no behavior change) | `refactoring__<name-only-low-case>.md` | `refactoring__style.css.md` |
+| Documentation task | `docs__<name-only-low-case>.md` | `docs__architecture-update.md` |
+| Skill | `skill__<name-only-low-case>.md` | `skill__create-analyze-request.md` |
+| Code review | `code-review___<file-name-only-low-case>.md` | `code-review___listPanel.filterBar.js.md` |
 
-- Use **PascalCase** (each word capitalized, no spaces) for the name part - `MyFeatureName` not `my-feature-name`
-- **No underscores in the name part** - underscores only appear as the separator after the prefix
-- **No spaces** in any filename
-- Always end with `.md`
+---
 
 ## Required Task Header
 
 At the top of each task file, include this header:
 
 ```md
-# TASK TYPE: task title
+# <TASK TYPE>: <Task title>
 *Created: <Month D, YYYY>*
 ```

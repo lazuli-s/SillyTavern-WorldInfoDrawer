@@ -14,7 +14,7 @@ Follow the non-programmer communication guidelines in CLAUDE.md §0 throughout t
 
 ## Step 1: Load authoritative documentation
 
-Invoke the `doc-guide` skill and load the docs it prescribes for this task. Use the task type that matches the user's request: bug → ISSUE, new behavior → NEW_FEATURE, change to existing → REWORK, code restructure → REFACTORING.
+Invoke the `doc-guide` skill and load the docs necessary for this task.
 
 ---
 
@@ -54,15 +54,15 @@ Explain these findings to the user in plain language before writing the task fil
 
 ### 4a: Choose the file name
 
-Use the `file-naming` skill. Pass the agreed task type (ISSUE / NEW_FEATURE / REWORK / REFACTORING) and any candidate title so it can confirm the correct file name and path.
+Use the `file-naming` skill. Pass the agreed task type and any candidate title so it can confirm the correct file name and path.
 
 ### 4b: Write the task file
 
 ```markdown
-# TASK: Task Title
+# TASK TYPE: Task Title
 *Created: <Month D, YYYY>*
 
-**Type:** ISSUE / NEW_FEATURE / REWORK / REFACTORING
+**Type:** 
 **Status:** DOCUMENTED
 
 ---
@@ -105,4 +105,4 @@ Rules for checklist items:
 - [ ] Detailed, incremental task to implement this change
 ```
 
-Then stop. Do NOT write any code.
+Then stop. Do NOT change any code.

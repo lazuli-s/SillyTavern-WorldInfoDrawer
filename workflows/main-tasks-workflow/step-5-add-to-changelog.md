@@ -5,11 +5,10 @@
 - For each file: read it, extract the task title, implemented date, summary, and what changed.
 - Prepend a human-readable entry to `tasks/main-tasks-changelog.md` for each file.
 - Move each processed file from `finished-tasks/` to `archived-tasks/` (creating the folder if it does not exist).
-- Update `tasks/main-tasks-queue.md`: move all processed entries to the `## Archived tasks` section.
 
 Process all files in `finished-tasks/` in one invocation, then stop.
 </steps_overview>
-
+ 
 <detailed_steps>
 
 ## 1. Scan the finished-tasks folder
@@ -64,37 +63,10 @@ If a field is missing (e.g. no `## After Implementation` section yet), substitut
 
 3. Prepend all new entries at the top of the changelog file (below any existing header, above any existing entries).
 
-4. Use `write_to_file` to save the updated `tasks/main-tasks-changelog.md`.
 
 ---
 
 ## 4. Move files to archived-tasks
-
-1. Run:
-
-    ```bash
-    mkdir -p "tasks/main-tasks/archived-tasks"
-    ```
-
-2. For each file in `FILES_TO_ARCHIVE`, run:
-
-    ```bash
-    mv "tasks/main-tasks/finished-tasks/<FILENAME>.md" "tasks/main-tasks/archived-tasks/<FILENAME>.md"
-    ```
-
-    Substitute the actual filename for `<FILENAME>`.
-
----
-
-## 5. Update main-tasks-queue.md
-
-1. Use `read_file` on `tasks/main-tasks-queue.md`.
-
-2. For each processed file, use `replace_in_file` to:
-    - Remove its entry from whichever section it currently appears in (`→ Tasks with no issues found` or `→ Tasks with all issues fixed`).
-    - Add its entry to the `## Archived tasks` section. If that section does not exist, append it at the end of the queue file.
-
-3. Keep existing formatting consistent (same `---` separators, blank lines, indentation).
 
 ---
 
@@ -104,7 +76,6 @@ Print a plain-language summary:
 
 - How many files were archived.
 - The title of each one.
-- Confirm `tasks/main-tasks-changelog.md` was updated.
 
 Then stop.
 

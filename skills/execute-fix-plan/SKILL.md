@@ -23,7 +23,7 @@ Implements PIR fix plans for exactly one task per invocation, then stops.
 
 ## 2. Load authoritative documentation
 
-Invoke the `doc-guide` skill and load the docs it prescribes for this task type (always: `ARCHITECTURE.md`, `FEATURE_MAP.md`; conditionals based on file types being reviewed).
+Invoke the `doc-guide` skill and load the docs it prescribes for this task type.
 
 ---
 
@@ -51,8 +51,8 @@ For each **fixable** PIR, working in order:
 3. After each successful change: mark the Fix Plan checklist item as `- [x]` inside the PIR finding immediately. Do not batch updates.
 4. After the full PIR is resolved: create a commit using Conventional Commits format.
    - Always run the `git-commit` skill before writing any commit message.
-   - Use type `fix` and scope `code-review`.
-   - Example: `fix(code-review): address null-check issue found in review`
+   - Use type `fix` and scope `TARGET_TASK_FILE`.
+   - Example: `fix(TARGET_TASK_FILE): address null-check issue found in review`
 
 ---
 
@@ -80,7 +80,7 @@ Rules:
 - Include every PIR from the review, fixed or not.
 - Fixed PIRs: mark `[x]`; include a `**What changed**` line in plain language.
 - Skipped PIRs: mark `[ ]`; include only the skip reason, no `**What changed**` line.
-- Skip reasons: `High fix risk` / `Requires human judgment` / `No fix plan provided - Requires human judgment`.
+- Skip reasons: `High fix risk` / `Requires human judgment` / `No fix plan provided`.
 
 ---
 
