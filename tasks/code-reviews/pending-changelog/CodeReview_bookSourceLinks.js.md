@@ -121,7 +121,7 @@ No questionable claims — all assertions are traceable from code.
 
 - Risks / Side effects
   - Older/partial host context payloads may produce fewer source-link attributions until those fields are available in context (probability: ❗)
-      - **🟥 MANUAL CHECK**: [ ] Open a chat, change chat/persona/character source books, and confirm source-link badges refresh without console errors.
+      - **🟥 MANUAL CHECK**: [x] Open a chat, change chat/persona/character source books, and confirm source-link badges refresh without console errors.
 
 ---
 

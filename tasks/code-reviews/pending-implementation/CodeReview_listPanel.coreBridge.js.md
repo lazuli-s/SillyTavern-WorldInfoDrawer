@@ -102,6 +102,73 @@
   - Provides reliable feedback when selection fails
   - Makes the function's success/failure indication accurate
 
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The claim that `select.dispatchEvent(new Event('change', { bubbles:true }))` is dispatched before value verification is traceable from the code (lines 48-50).
+  - The claim that ST may reject or modify the selection is plausible given the function's purpose of delegating to core WI UI, though no explicit rejection path was found in source.
+  - The risk of UI inconsistency is valid: if the selection fails silently, subsequent delegated actions (rename, duplicate, delete) would operate on the wrong book.
+
+- **Top risks:**
+  None. The finding correctly identifies a sequencing issue and proposes a safe fix.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Is the proposed direction technically sound? Does it stay within the correct module per ARCHITECTURE.md? Flag structural issues requiring human decision.
+  - Yes, the direction is sound. The fix stays within `listPanel.coreBridge.js` which owns "Core WI DOM delegation helpers" per ARCHITECTURE.md. The change is localized to a single function.
+
+- **Behavioral change:**
+  Does the fix change observable behavior? Is it labeled "Behavior Change Required" if yes? Flag unlabeled behavioral changes — including seemingly safe ones (changed debounce timing, altered event ordering, removed a guard check, changed when a save is triggered).
+  - The fix adds a 50ms delay after dispatch for verification. This is a timing change but only affects error-case detection. The labeled "Fix risk: Low" is appropriate. No unlabeled behavioral changes.
+
+- **Ambiguity:**
+  Is there only ONE recommendation? If more than one, the least-behavioral-change option must be the sole recommendation.
+  - Single clear recommendation with code example. No ambiguity.
+
+- **Checklist:**
+  Are checklist items complete and actionable by an LLM without human input? Flag: vague steps ("refactor X" without specifics), steps implying manual verification, skipped follow-up actions (updating callers after a rename, re-registering a listener after removal).
+  - All checklist items are specific and actionable:
+    1. "Reorder value verification to happen before dispatching change event" — clear
+    2. "Add short delay and re-verification after dispatch to catch ST rejections" — clear
+    3. "Ensure early return on `previousValue === option.value` happens before dispatch" — clear
+    4. "Update function documentation to clarify return value semantics" — clear
+
+- **Dependency integrity:**
+  If the fix depends on or conflicts with another finding, is it declared explicitly? Would applying this before/after the declared dependency work as described?
+  - N/A — this is the only finding in the file.
+
+- **Fix risk calibration:**
+  Is the stated Fix risk accurate? A fix touching shared state, core event handlers, debounce/async behavior, or multiple callers must NOT be rated Low.
+  - The stated "Low" risk is appropriate. The fix:
+    - Only touches one function (`setSelectedBookInCoreUi`)
+    - Does not modify external APIs
+    - Only affects error-case behavior (where selection fails)
+    - Adds minimal timing delay (50ms)
+
+- **"Why it's safe" validity:**
+  Is the safety claim specific and verifiable — naming concrete behaviors, paths, or callers not affected? Vague claims ("only affects this function", "shouldn't break anything") are not valid, especially when the function has multiple call sites or mutates shared state.
+  - The safety claim is specific and verifiable: "The change is localized to one function", "No external APIs are modified", "The behavior change only affects error cases".
+
+- **Verdict:** Ready to implement 🟢
+  - All claims are evidence-based and traceable to code.
+  - The proposed fix is technically sound, localized, and low-risk.
+  - Checklist items are actionable.
+  - No structural issues or unlabeled behavioral changes.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Reorder value verification to happen before dispatching change event
+- [ ] Add short delay and re-verification after dispatch to catch ST rejections
+- [ ] Ensure early return on `previousValue === option.value` happens before dispatch
+- [ ] Update function documentation to clarify return value semantics (true = selection confirmed, false = selection failed or was rejected)
+
 ---
 
 *No other findings.*

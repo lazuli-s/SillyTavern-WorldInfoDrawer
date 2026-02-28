@@ -42,6 +42,12 @@
 - **Proposed fix:**
   Return a boolean success indicator from `saveFolderCollapseStates()` and check it in callers to show a toast if persistence fails.
 
+- **Implementation Checklist:**
+  - [ ] Modify `saveFolderCollapseStates()` to return `true` on success, `false` on failure
+  - [ ] Modify `setFolderCollapsedAndPersist()` to check the return value
+  - [ ] Add a toast notification in the extension's UI layer when persistence fails
+  - [ ] Optionally add a retry mechanism or guidance for the user to clear browser storage
+
 - **Fix risk:** Low 🟢
   The change is additive (returning a value) and doesn't modify existing behavior unless callers explicitly check the return value.
 
@@ -129,6 +135,11 @@ No questionable claims — all assertions are traceable from code.
 
 - **Proposed fix:**
   Document the precondition that DOM must be settled before calling this function, or refactor to track collapse state in the state object rather than inferring it from DOM classes.
+
+- **Implementation Checklist:**
+  - [ ] Review all call sites of `captureBookCollapseStatesFromDom()` to verify they wait for DOM updates
+  - [ ] Add JSDoc comment documenting the precondition
+  - [ ] Consider adding a `requestAnimationFrame` or `setTimeout(0)` delay if needed
 
 - **Fix risk:** Low 🟢
   Documentation and verification changes are low risk.
@@ -240,6 +251,12 @@ No questionable claims — all assertions are traceable from code.
 
 - **Proposed fix:**
   Add a maximum entry count (e.g., 10000 entries across all books) and track last-access timestamps for eviction.
+
+- **Implementation Checklist:**
+  - [ ] Add a constant for max cache entries (e.g., `MAX_ENTRY_CACHE_SIZE = 10000`)
+  - [ ] Track last access time in cache entries
+  - [ ] Implement LRU eviction when threshold is exceeded
+  - [ ] Or simpler: Clear the entire cache when it exceeds a threshold
 
 - **Fix risk:** Low 🟢
   Cache eviction is safe - at worst, a search might take slightly longer if results need to be recomputed.

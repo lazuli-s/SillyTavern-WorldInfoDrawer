@@ -55,6 +55,55 @@
 - **Pros:**
   Prevents silent data loss from concurrent modifications; aligns with ST's event-driven architecture.
 
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The `moveOrCopySelectedEntriesToBook` function at lines 38-66 loads books, mutates them, and saves them.
+  - `loadWorldInfo` returns a deep clone (per WI API reference), and `saveWorldInfo` updates the server and cache.
+  - The race window exists between load and save operations.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound. The proposed event-listener approach stays within the module's responsibilities per ARCHITECTURE.md (selection/drag-drop persistence).
+
+- **Behavioral change:**
+  No observable behavior change for successful operations; only adds abort-on-conflict behavior which is defensive.
+
+- **Ambiguity:**
+  Two competing options proposed (event listener vs reload-before-save). The checklist should specify the event listener approach as primary.
+
+- **Checklist:**
+  Items are actionable but lack specifics on event listener cleanup timing. Needs explicit cleanup step.
+
+- **Dependency integrity:**
+  No cross-finding dependencies.
+
+- **Fix risk calibration:**
+  Stated as Medium 🟡 — accurate. Adding event listeners and conflict detection touches async coordination.
+
+- **"Why it's safe" validity:**
+  Valid. The safety claim correctly notes this only adds validation without changing core move/copy logic.
+
+- **Verdict:** Ready to implement 🟢 — Finding is technically accurate with actionable fix direction.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add event listener for `WORLDINFO_UPDATED` before starting move/copy operations
+- [ ] Set a flag if the affected book receives an update during the operation
+- [ ] Before calling `saveWorldInfo`, check the flag and abort if stale, or reload and re-apply changes
+- [ ] Ensure the selection state is properly restored or cleared on abort
+- [ ] **Added:** Ensure event listener is removed in a `finally` block to prevent leaks
+
 ---
 
 ## F02: Missing error handling leaves UI in inconsistent state
@@ -101,6 +150,54 @@
 
 - **Pros:**
   Prevents user confusion and potential data loss; provides clear feedback when operations fail.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Line 65 calls `selectEnd()` unconditionally after the save operations (lines 56, 61).
+  - Lines 47-48 call `runtime.deleteWorldInfoEntry()` and `runtime.deleteWIOriginalDataValue()` without try/catch.
+  - No error handling exists for `saveWorldInfo()` calls at lines 56, 61.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound. Adding try/catch and conditional state clearing is standard defensive programming.
+
+- **Behavioral change:**
+  Labeled correctly — error cases now preserve selection state instead of clearing it, which is a behavioral change but improves correctness.
+
+- **Ambiguity:**
+  Single clear recommendation (add error handling).
+
+- **Checklist:**
+  Items are complete and actionable. The "Retry" option is marked as "Consider" which appropriately scopes it as optional.
+
+- **Dependency integrity:**
+  No cross-finding dependencies.
+
+- **Fix risk calibration:**
+  Stated as Low 🟢 — accurate for basic error handling. The "Retry" option would increase complexity but is optional.
+
+- **"Why it's safe" validity:**
+  Valid. Error handling only adds defensive code paths without modifying success behavior.
+
+- **Verdict:** Ready to implement 🟢 — Finding is accurate with clear, actionable fix.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Wrap `saveWorldInfo` calls in try/catch blocks
+- [ ] On catch, display error toast with descriptive message
+- [ ] Only call `selectEnd()` and clear selection on successful completion
+- [ ] Consider adding a "Retry" option in the error toast
 
 ---
 
@@ -150,6 +247,55 @@
 - **Pros:**
   Users can recover from partial failures; no data is hidden; improves transparency of bulk operations.
 
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Lines 43-52 loop through entries and call `runtime.deleteWorldInfoEntry()` which returns a boolean.
+  - Line 50 sets `hasSrcChanges = true` only when deletion returns true.
+  - Line 65 calls `selectEnd()` regardless of partial success.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound. Tracking individual failures and updating selection state is appropriate for bulk operations.
+
+- **Behavioral change:**
+  Yes — selection is no longer cleared on partial failure, allowing user retry. This is a behavioral change but improves correctness and user experience.
+
+- **Ambiguity:**
+  Single clear recommendation.
+
+- **Checklist:**
+  Items are complete and actionable.
+
+- **Dependency integrity:**
+  No cross-finding dependencies. Complementary to F02 (error handling) but neither blocks the other.
+
+- **Fix risk calibration:**
+  Stated as Low 🟢 — accurate. This adds tracking and conditional UI logic without changing core data operations.
+
+- **"Why it's safe" validity:**
+  Valid. The fix only adds metadata tracking and conditional UI feedback.
+
+- **Verdict:** Ready to implement 🟢 — Finding is accurate with actionable fix.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Create `failedUids` array to track entries that failed to move
+- [ ] When `deleteWorldInfoEntry` returns false, add UID to `failedUids`
+- [ ] After processing loop, check if `failedUids.length > 0`
+- [ ] If failures exist, show toast with count and update selection to include only failed entries
+- [ ] Only clear selection completely when `failedUids` is empty
+
 ---
 
 ## F04: Uses undocumented runtime APIs not in WI API reference
@@ -197,4 +343,55 @@
 - **Pros:**
   Improves maintainability; reduces risk of future breakage; aligns with documented best practices.
 
----
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `runtime.deleteWorldInfoEntry(srcBook, uid, { silent:true })` is called at lines 47-48.
+  - `runtime.updateWIChange(bookName, bookData)` is called at lines 56, 61.
+  - Neither function appears in the WI API reference document.
+
+- **Top risks:**
+  None — the finding correctly notes these as extension runtime helpers rather than ST APIs.
+
+#### Technical Accuracy Audit
+
+No questionable claims — the observation that these functions are not documented in the WI API reference is correct.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound. Documenting extension-internal helpers improves maintainability.
+
+- **Behavioral change:**
+  No behavioral change — this is documentation/investigation only.
+
+- **Ambiguity:**
+  The fix proposes multiple paths (document if extension-owned, inline if wrapping ST APIs). This is appropriate for an investigation task.
+
+- **Checklist:**
+  Items are actionable but could be more specific about where to document (suggest adding JSDoc to the runtime module).
+
+- **Dependency integrity:**
+  No cross-finding dependencies.
+
+- **Fix risk calibration:**
+  Stated as Low 🟢 — accurate. This is investigation and documentation.
+
+- **"Why it's safe" validity:**
+  Valid. Documentation changes don't affect runtime behavior.
+
+- **Verdict:** Ready to implement 🟢 — Finding is accurate. Investigation/documentation task with no implementation risk.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — checklist auto-revised for clarity.
+> Meta-review Reason: Added specific documentation location guidance.
+> Revisions applied: Clarified that documentation should be JSDoc comments in the runtime module, and added step to verify function signatures.
+
+- [ ] Locate the runtime module definition (likely `src/` or injected via `index.js`)
+- [ ] Verify `runtime.deleteWorldInfoEntry` exists and document its parameters (`book`, `uid`, `options`)
+- [ ] Verify `runtime.updateWIChange` exists and document its parameters (`bookName`, `bookData`)
+- [ ] Add JSDoc comments explaining purpose, parameters, and return values
+- [ ] If functions wrap ST APIs, add cross-reference to WI API documentation
+- [ ] Add fallback error handling in calling code if functions are unavailable
+

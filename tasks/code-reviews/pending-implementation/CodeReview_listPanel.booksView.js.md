@@ -41,11 +41,6 @@
 - **Proposed fix:**
   Add an `isProcessing` flag at the book level or check `active.disabled` at the very start of the handler before reading `active.checked`. Store the intended state in a local variable before any async operation.
 
-- **Implementation Checklist:**
-  - [ ] Add guard check at the start of the click handler to return early if already processing
-  - [ ] Store the target checked state in a local variable before the async operation
-  - [ ] Ensure the checkbox state is reverted if the async operation fails
-
 - **Fix risk:** Low 🟢
   This is a localized change to the click handler with minimal side effects.
 
@@ -55,7 +50,64 @@
 - **Pros:**
   Prevents state inconsistency; improves user experience with clear visual feedback during async operations.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The code does set `active.disabled = true` before async work and `active.disabled = false` after (lines 76-85 in source).
+  - The `onWorldInfoChange` call is indeed async.
+
+- **Top risks:**
+  Wrong prioritization — the core technical claim about disabled elements firing click events is incorrect.
+
+#### Technical Accuracy Audit
+
+> *"the `disabled` property doesn't prevent the click event from firing on rapid successive clicks"*
+
+- **Why it may be wrong/speculative:**
+  This claim is factually incorrect. In standard browser behavior, disabled form elements (including checkboxes) do NOT fire `click` events. Once `disabled = true` is set, subsequent clicks are suppressed by the browser. The race condition as described cannot occur because the browser prevents click events on disabled inputs.
+
+- **Validation:**
+  Validated ✅ — browser specification and tested behavior confirm disabled inputs do not fire click events.
+
+- **What needs to be done/inspected to validate:**
+  N/A — claim is verifiably incorrect.
+
+> *"If a user clicks rapidly before the first async operation completes, multiple handler invocations can be in-flight simultaneously"*
+
+- **Why it may be wrong/speculative:**
+  This requires clicks to fire while the element is disabled, which browsers prevent. The scenario described is not possible under normal browser behavior.
+
+- **Validation:**
+  Validated ✅ — the scenario requires event firing on disabled elements, which does not occur.
+
+- **What needs to be done/inspected to validate:**
+  N/A — claim depends on incorrect premise.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed guard flag is unnecessary for the stated reason. However, a guard flag could still be useful as defense-in-depth against edge cases (browser extensions, programmatic triggers, or unusual event bubbling scenarios).
+
+- **Behavioral change:**
+  No behavioral change — the guard would only prevent theoretically impossible overlap.
+
+- **Ambiguity:**
+  Single clear recommendation (add guard flag).
+
+- **Checklist:**
+  Checklist items are actionable but address a non-existent problem.
+
+- **Dependency integrity:**
+  N/A
+
+- **Fix risk calibration:**
+  Correctly rated Low — even if implemented, risk is minimal.
+
+- **"Why it's safe" validity:**
+  Valid — the change is localized and doesn't affect data flow.
+
+- **Verdict:** Implementation plan discarded 🔴
+  The core claim (disabled elements fire click events) is incorrect. The race condition as described cannot occur. A guard flag would be defensive programming against an impossible scenario.
 
 ---
 
@@ -90,11 +142,6 @@
 - **Proposed fix:**
   Before executing the rollback in the catch block, check if the editor has unsaved changes using the extension's dirty tracking (if available). If dirty, show a toast notification explaining the save failed and allow the user to retry or discard. Only auto-rollback if the editor is clean.
 
-- **Implementation Checklist:**
-  - [ ] Expose editor dirty state check from `editorPanel.js` if not already available
-  - [ ] Modify rollback logic to check dirty state before removing entry
-  - [ ] Add user-facing error message with retry option when save fails with dirty editor
-
 - **Fix risk:** Medium 🟡
   Changes the error handling behavior and requires coordination with editor panel state management.
 
@@ -104,7 +151,65 @@
 - **Pros:**
   Prevents accidental data loss; provides clearer error feedback to users.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The code uses optimistic UI: creates entry, renders, opens editor, then saves (lines 93-116 in source).
+  - The catch block removes the entry from cache and DOM, and calls `runtime.resetEditor()` (lines 117-129).
+  - The timing window between editor open and save completion is indeed small but non-zero.
+
+- **Top risks:**
+  Speculative claims — the severity may be overstated given the extremely narrow timing window.
+
+#### Technical Accuracy Audit
+
+> *"if the user makes edits in the editor during the brief window between step 3 and step 4 completion, those edits are lost"*
+
+- **Why it may be wrong/speculative:**
+  The timing window is typically milliseconds (the save happens immediately after the editor opens). For user edits to be lost, the user would need to start typing within milliseconds of the entry creation, AND the save would need to fail. While technically possible with extreme network latency, this is an edge case of an edge case.
+
+- **Validation:**
+  Validated ✅ — the code path exists and could theoretically lose edits, but the probability is extremely low.
+
+- **What needs to be done/inspected to validate:**
+  N/A — the code path is confirmed, only probability is debatable.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound — checking dirty state before rollback is a valid pattern for optimistic UIs.
+
+- **Behavioral change:**
+  Yes — changes error handling from auto-rollback to user-prompted decision. This should be labeled "Behavior Change Required".
+
+- **Ambiguity:**
+  The fix assumes dirty tracking exists in `editorPanel.js`. If not available, this finding cannot be implemented as described.
+
+- **Checklist:**
+  Item 1 ("Expose editor dirty state check") is vague — doesn't specify how to expose it or what API to use. Item 2 assumes the dirty check is available.
+
+- **Dependency integrity:**
+  Depends on `editorPanel.js` exposing dirty state — not confirmed available.
+
+- **Fix risk calibration:**
+  Correctly rated Medium — changes error handling and requires coordination with editor state.
+
+- **"Why it's safe" validity:**
+  Valid — only affects error path.
+
+- **Verdict:** Implementation plan needs revision 🟡
+  The finding identifies a real (if low-probability) issue, but the checklist is vague about the dirty state dependency. Needs explicit confirmation of dirty state API availability or an alternative approach.
+
+#### Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Checklist assumes dirty state API exists without verification; needs explicit API check or fallback approach.
+> Revisions applied: Added API verification step and fallback option if dirty state unavailable.
+
+- [ ] Verify `editorPanel.js` exposes a dirty state check API; if not, implement one or use alternative approach (compare current editor content against saved entry)
+- [ ] Modify rollback logic to check dirty state before removing entry; if dirty, show confirmation dialog instead of auto-rollback
+- [ ] Add user-facing error message with retry option when save fails with dirty editor
+- [ ] Ensure editor content is preserved (not cleared) when showing the confirmation dialog
 
 ---
 
@@ -140,11 +245,6 @@
   Option A: Store handler references in the `world.dom` object and add a `destroyBook` function that removes all listeners before clearing the DOM.
   Option B: Use event delegation — attach listeners to the parent container (`runtime.dom.books`) and use `event.target` to determine which book was interacted with.
 
-- **Implementation Checklist:**
-  - [ ] Evaluate current memory usage patterns to confirm leak significance
-  - [ ] Implement event delegation for book interactions OR add explicit cleanup function
-  - [ ] Call cleanup function before clearing books in `loadList` and folder reset
-
 - **Fix risk:** Low 🟢
   Event delegation is a well-established pattern with minimal risk. Explicit cleanup is also straightforward.
 
@@ -154,7 +254,54 @@
 - **Pros:**
   Reduces memory usage; improves long-session stability; simplifies event management.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Multiple event listeners are attached in `renderBook` (confirmed: lines 44-48, 56-70, 74-84, 88-130 in source).
+  - `loadList` clears books with `innerHTML = ''` (confirmed: line 137).
+  - Modern browsers garbage collect DOM elements and listeners (confirmed — standard browser behavior).
+
+- **Top risks:**
+  Speculative claims — closure retention concern is theoretical without profiling evidence.
+
+#### Technical Accuracy Audit
+
+> *"the closure references to `name`, `book`, `runtime`, etc., may retain memory longer than necessary"*
+
+- **Why it may be wrong/speculative:**
+  This is speculation without evidence. Modern browsers (Chrome, Firefox, Safari, Edge) all garbage collect DOM elements and their attached listeners when the elements are removed from the DOM and no other references exist. The closures are attached to the DOM elements; when the elements are GC'd, the closures become eligible for GC too. No evidence is provided that `runtime.cache` or other long-lived objects retain references to these closures.
+
+- **Validation:**
+  Validated ✅ — browser garbage collection behavior is well-documented. The claim of closure retention is unproven.
+
+- **What needs to be done/inspected to validate:**
+  Memory profiling would be needed to confirm actual leak. Without profiling, this is theoretical.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Both options (explicit cleanup and event delegation) are valid patterns. Event delegation is cleaner but requires more refactoring.
+
+- **Behavioral change:**
+  No behavioral change.
+
+- **Ambiguity:**
+  Two options provided without clear recommendation. Event delegation is cleaner but more work; explicit cleanup is localized but adds complexity.
+
+- **Checklist:**
+  Item 1 ("Evaluate current memory usage") is not actionable by an LLM — requires manual profiling.
+
+- **Dependency integrity:**
+  N/A
+
+- **Fix risk calibration:**
+  Correctly rated Low — either approach is safe.
+
+- **"Why it's safe" validity:**
+  Valid.
+
+- **Verdict:** Implementation plan discarded 🔴
+  The finding is speculative without profiling evidence. Modern browsers reliably clean up event listeners when DOM elements are removed. The concern about closure retention is unproven. Without evidence of actual memory pressure, this is premature optimization.
 
 ---
 
@@ -189,11 +336,6 @@
 - **Proposed fix:**
   Change the yield threshold from every 5 books to every 3 books during initial loading, or add a time-based check that yields if rendering takes longer than a threshold (e.g., 16ms for 60fps).
 
-- **Implementation Checklist:**
-  - [ ] Profile rendering time for typical book counts to establish baseline
-  - [ ] Adjust yield thresholds based on profiling results
-  - [ ] Consider implementing progressive rendering (render visible books first, then load others)
-
 - **Fix risk:** Low 🟢
   Changing yield frequency is a tuning parameter with no functional impact.
 
@@ -203,4 +345,51 @@
 - **Pros:**
   Smoother UI experience for users with large collections; prevents "unresponsive script" warnings.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Yield occurs every 5 books during initial loading (confirmed: line 157).
+  - Yield occurs every 2 books during folder rendering (confirmed: lines 168-170).
+  - Each book involves DOM creation and event attachment (confirmed).
+
+- **Top risks:**
+  Speculative claims — no evidence of actual performance problems with current thresholds.
+
+#### Technical Accuracy Audit
+
+> *"For users with 100+ books, this means the UI could be blocked for 20+ book rendering operations between yields"*
+
+- **Why it may be wrong/speculative:**
+  This is theoretical. No profiling data is provided to show that 5 books take longer than 16ms (one frame) to render. The actual render time depends on book complexity, entry count, and device performance. Without measurements, this is guesswork.
+
+- **Validation:**
+  Validated ✅ — the math is correct (100 books / 5 = 20 yields), but the claim of UI blocking is unproven.
+
+- **What needs to be done/inspected to validate:**
+  Performance profiling on representative datasets would be needed.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Tuning yield frequency is reasonable, but without profiling data, it's shooting in the dark.
+
+- **Behavioral change:**
+  No behavioral change — only timing.
+
+- **Ambiguity:**
+  Two approaches suggested (reduce threshold vs. time-based). Time-based is better but more complex.
+
+- **Checklist:**
+  Item 1 ("Profile rendering time") requires manual testing — not fully actionable by LLM.
+
+- **Dependency integrity:**
+  N/A
+
+- **Fix risk calibration:**
+  Correctly rated Low.
+
+- **"Why it's safe" validity:**
+  Valid.
+
+- **Verdict:** Implementation plan discarded 🔴
+  This is premature optimization without profiling data. The current implementation has explicit comments acknowledging the trade-off. Without evidence of actual user impact or performance measurements, changing arbitrary constants is not justified.

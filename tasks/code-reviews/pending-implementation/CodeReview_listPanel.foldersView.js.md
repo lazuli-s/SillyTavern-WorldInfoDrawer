@@ -92,4 +92,50 @@
   - Clearer separation of concerns (visibility vs. active state)
   - Better performance with large folder lists
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - Claim that `updateFolderActiveToggles` iterates over all folder DOMs before calling `updateFolderVisibility` — validated from source code at lines 96-104.
+  - Claim that folders with no visible books still have toggle updated — validated; the loop processes all folders via `getFolderDomValues()`.
+  - Claim about duplicate `getFolderDomValues()` calls — validated; function is called once in the loop and once (indirectly) in `updateFolderVisibility`.
+
+- **Top risks:**
+  - Ambiguity: Finding proposes two competing implementation options without selecting one as the primary recommendation.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:** ✅ Sound — stays within `listPanel.foldersView.js` per ARCHITECTURE.md, doesn't cross module boundaries.
+
+- **Behavioral change:** ✅ No observable behavior change — purely a refactoring that removes unnecessary work. Correctly labeled as Low severity.
+
+- **Ambiguity:** ⚠️ Finding proposes TWO options (Option 1: skip hidden folders; Option 2: cache array). Per meta-review rules, only ONE recommendation should be retained. Option 1 is cleaner and more direct.
+
+- **Checklist:** ⚠️ Vague at decision point — "Choose between Option 1 or Option 2" requires the implementer to make a choice. Checklist should specify the single recommended approach.
+
+- **Dependency integrity:** N/A — no cross-finding dependencies declared.
+
+- **Fix risk calibration:** ✅ Accurate — Low risk is appropriate. This is pure refactoring with no state mutations, no async boundaries, and no caller changes required.
+
+- **"Why it's safe" validity:** ✅ Valid and specific — names concrete behaviors that remain identical and explicitly states no signature changes.
+
+- **Mitigation:** N/A — no high risk of introducing new bugs.
+
+- **Verdict:** Implementation plan needs revision 🟡
+  The finding is technically sound and well-evidenced, but violates the "single recommendation" rule by proposing two competing options. The checklist must be revised to specify Option 1 (skip folders with no visible books) as the sole recommended approach. The severity (Low) is appropriate — this is a micro-optimization, not a correctness issue.
+
+#### Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Finding proposed two competing options; revised to select Option 1 as the sole recommendation for clarity and simplicity.
+> Revisions applied: Removed Option 2 (cache array) and replaced vague decision step with specific Option 1 implementation steps.
+
+- [ ] Modify `updateFolderActiveToggles` to iterate over `Object.entries(visibleBooksByFolder)` instead of `listPanelState.getFolderDomValues()`
+- [ ] For each `[folderName, visibleBookNames]` entry, look up the folder DOM via `listPanelState.getFolderDom(folderName)` and call `updateActiveToggle`
+- [ ] Remove the redundant iteration over folders with no visible books
+- [ ] Verify `updateFolderVisibility` still receives correct parameters
+- [ ] Test folder visibility updates after applying search filters
+- [ ] Test folder active toggle updates when books are filtered in/out
