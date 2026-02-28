@@ -887,6 +887,11 @@ export const initDrawer = ({
             const style = drawerContent.getAttribute('style') ?? '';
             if (style.includes('display: none;')) return;
 
+            // Drawer just became visible. Re-run the splitter restore now that
+            // the element has real dimensions. (On initial load the drawer is
+            // hidden, so the first restore call produces zero-width results.)
+            restoreSplitterForCurrentLayout();
+
             const currentEditor = getCurrentEditor();
             if (!currentEditor) return;
 

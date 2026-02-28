@@ -76,3 +76,13 @@ Implemented: February 27, 2026
 
 - [x] **PIR-01**: Layout switch overwrites saved splitter size
   - **What changed**: When the browser window crossed the mobile/desktop size boundary, the code was resetting the splitter to its default size and saving that default over the user's custom size. Changed the resize handler to call the existing restore function instead, which reads the saved size first and only falls back to the default when nothing is stored. User-selected sizes are now preserved across layout switches.
+
+---
+
+## Follow-up Fix — Splitter Reset on First Open
+
+**Reported:** 2026-02-27 (user: splitter width keeps getting reset)
+
+**Root cause:** On page load, `#WorldInfo` is hidden by SillyTavern's inline `display: none`. The extension's `addDrawer()` function calls `restoreSplitterForCurrentLayout()` immediately after building the DOM (line 865). Because the element is hidden, all `getBoundingClientRect()` calls return zero. `getDesktopMaxWidth()` evaluates to the 150 px minimum, so any saved value — e.g. 500 px — gets silently clamped to 150 px and applied to the list DOM. When the user later opens the drawer they see 150 px instead of their saved size.
+
+**Fix:** Added `restoreSplitterForCurrentLayout()` at the top of the `moDrawer` `MutationObserver` callback (after the `display: none` early-return guard). The observer fires whenever SillyTavern changes the inline style of `#WorldInfo`, which includes removing the `display: none` when the user opens the drawer. At that moment the element has real dimensions, so the restore clamps correctly and the saved width is applied.
