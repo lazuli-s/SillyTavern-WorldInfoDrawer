@@ -55,9 +55,9 @@
 - **Why it matters:**
   Users might accidentally delete entries they didn't intend to delete if filter states change during the delete flow. This is a data integrity issue.
 
-- **Severity:** Medium â—
+- **Severity:** Medium ❗
 
-- **Confidence:** Medium ðŸ¤”
+- **Confidence:** Medium 🤔
 
 #### ADDRESSING THE ISSUE
 
@@ -67,7 +67,7 @@
 - **Proposed fix:**
   Move the `isSelectionVisible()` call to after `loadWorldInfo()` returns and immediately before the deletion loop. If visibility changed, show a new confirmation dialog explaining that the entries are now hidden.
 
-- **Fix risk:** Low ðŸŸ¢
+- **Fix risk:** Low 🟢
   - Changes order of operations but not the overall flow
   - Adds one more check, doesn't remove existing safety
 
@@ -95,7 +95,7 @@
   Deletion uses `selectedUids` captured at keypress (`const selectedUids = [...(selectionState.selectList ?? [])];`). Filter changes do not alter that captured UID list.
 
 - **Validation:**
-  Validated âœ… â€” "wrong entries" is not supported by the current deletion path.
+  Validated ✅ — "wrong entries" is not supported by the current deletion path.
 
 - **What needs to be done/inspected to validate:**
   If this is a UX expectation issue (not a correctness issue), document intended behavior for "selection captured at keypress vs re-evaluate before commit."
@@ -106,7 +106,7 @@
   The data write path is deterministic to snapshotted IDs; no alternative write target is introduced by filter changes in this function.
 
 - **Validation:**
-  Requires user input ðŸš© â€” confirm product expectation for whether visibility changes during async delete should force a second confirmation.
+  Requires user input 🚩 — confirm product expectation for whether visibility changes during async delete should force a second confirmation.
 
 - **What needs to be done/inspected to validate:**
   Decide intended UX contract for delete semantics under mid-flow filter changes.
@@ -137,7 +137,7 @@
 - **Mitigation:**
   Do not implement until the delete UX contract is confirmed; if approved, document it explicitly as a behavior-change item.
 
-- **Verdict:** Implementation plan discarded ðŸ”´
+- **Verdict:** Implementation plan discarded 🔴
   The current evidence does not support a correctness defect, and implementation requires explicit UX/product intent.
 
 ---
@@ -168,9 +168,9 @@
 - **Why it matters:**
   If the selection state becomes stale, the Delete key could operate on entries that are no longer selected, or fail to operate on newly selected entries. This could lead to accidental deletions or confusing UX where Delete appears broken.
 
-- **Severity:** Medium â—
+- **Severity:** Medium ❗
 
-- **Confidence:** Low ðŸ˜”
+- **Confidence:** Low 😔
 
 #### ADDRESSING THE ISSUE
 
@@ -180,7 +180,7 @@
 - **Proposed fix:**
   Replace direct `selectionState` access in `onDrawerKeydown` with a fresh call to `listPanelApi.getSelectionState()`. Since `listPanelApi` is available in scope, this ensures we always have the current state.
 
-- **Fix risk:** Low ðŸŸ¢
+- **Fix risk:** Low 🟢
   - Simple reference change, no logic modification
   - `listPanelApi` is already available in the closure
 
@@ -208,7 +208,7 @@
   The stored object is an accessor wrapper over `listPanelState`; it reads live values on each access. No replacement of `listPanelState` object was shown.
 
 - **Validation:**
-  Validated âœ… â€” stale-reference claim is not demonstrated by current implementation.
+  Validated ✅ — stale-reference claim is not demonstrated by current implementation.
 
 - **What needs to be done/inspected to validate:**
   Provide a concrete reproduction path where `listPanelApi` or `listPanelState` is replaced while drawer keydown handler remains active.
@@ -219,7 +219,7 @@
   Re-calling returns another wrapper over the same backing state; it does not fix a demonstrated defect.
 
 - **Validation:**
-  Requires user input ðŸš© â€” implementation should only proceed if a reproducible stale-state scenario is provided.
+  Requires user input 🚩 — implementation should only proceed if a reproducible stale-state scenario is provided.
 
 - **What needs to be done/inspected to validate:**
   Capture exact reproduction steps (UI flow + expected/actual delete behavior) before coding.
@@ -247,7 +247,7 @@
 - **"Why it's safe" validity:**
   Safety claim is not sufficient justification when defect evidence is missing.
 
-- **Verdict:** Implementation plan discarded ðŸ”´
+- **Verdict:** Implementation plan discarded 🔴
   The core claim is unsubstantiated in code, and no reproducible failure path has been provided.
 
 ---

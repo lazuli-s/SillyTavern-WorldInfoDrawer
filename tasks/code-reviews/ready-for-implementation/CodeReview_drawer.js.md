@@ -37,9 +37,9 @@
 - **Why it matters:**
   If SillyTavern moves or renames these internal modules, the extension will fail to load or throw runtime errors. This creates maintenance burden and potential breakages for users when they update SillyTavern.
 
-- **Severity:** Medium â—
+- **Severity:** Medium ❗
 
-- **Confidence:** High ðŸ˜€
+- **Confidence:** High 😀
 
 #### ADDRESSING THE ISSUE
 
@@ -51,7 +51,7 @@
   2. For `Popup`, `SlashCommandParser`, and utilities, evaluate if they can be obtained via context or if direct import must remain (add code comments explaining why).
   3. Update `world_names` and `selected_world_info` to use context equivalents if available, or add defensive checks.
 
-- **Fix risk:** Medium ðŸŸ¡
+- **Fix risk:** Medium 🟡
   - Risk: Context API might expose slightly different signatures than direct imports
   - Risk: Some APIs may not be available on context, requiring fallback logic
 
@@ -79,7 +79,7 @@
   `st-context.js` does not expose `world_names` or `selected_world_info` via `getContext()`. `skills/st-world-info-api/references/wi-api.md` also documents them as module exports, not context properties.
 
 - **Validation:**
-  Validated âœ… â€” the "context equivalent" path for these two values is not currently available.
+  Validated ✅ — the "context equivalent" path for these two values is not currently available.
 
 - **What needs to be done/inspected to validate:**
   Maintain a per-symbol import map: context-backed APIs vs required direct imports; do not plan blanket migration.
@@ -90,7 +90,7 @@
   Replacing imports with context usage changes acquisition timing/scope and can require call-site updates, especially for symbols unavailable in context.
 
 - **Validation:**
-  Validated âœ… â€” this safety claim is too broad.
+  Validated ✅ — this safety claim is too broad.
 
 - **What needs to be done/inspected to validate:**
   Inspect each replaced symbol's call sites in `src/drawer.js` to ensure unchanged behavior and null-safety.
@@ -118,12 +118,12 @@
 - **"Why it's safe" validity:**
   Not fully valid as written; it needs explicit constraints and verification steps.
 
-- **Verdict:** Implementation plan needs revision ðŸŸ¡
+- **Verdict:** Implementation plan needs revision 🟡
   The finding is directionally correct, but the implementation plan must be narrowed to a verified symbol mapping and behavior-preserving migration.
 
 #### Implementation Checklist
 
-> Verdict: Needs revision ðŸŸ¡ â€” checklist auto-revised.
+> Verdict: Needs revision 🟡 — checklist auto-revised.
 > Meta-review Reason: Original checklist was too generic and assumed wider context coverage than exists.
 > Revisions applied: Replaced broad migration steps with a concrete per-symbol mapping and verification flow.
 
@@ -159,9 +159,9 @@
 - **Why it matters:**
   MutationObservers hold references to DOM elements and prevent garbage collection. Over time, multiple extension reloads could accumulate orphaned observers, increasing memory usage and potentially causing performance issues.
 
-- **Severity:** Low â­˜
+- **Severity:** Low ⭘
 
-- **Confidence:** High ðŸ˜€
+- **Confidence:** High 😀
 
 #### ADDRESSING THE ISSUE
 
@@ -172,7 +172,7 @@
   1. Move `moSel` declaration outside the `if` block or make it accessible to cleanup
   2. Add `moSel?.disconnect()` to the `beforeunload` cleanup handler alongside other cleanup calls
 
-- **Fix risk:** Low ðŸŸ¢
+- **Fix risk:** Low 🟢
   - Simple cleanup addition, no behavioral changes
   - Follows existing cleanup pattern in the file
 
@@ -194,7 +194,7 @@
 
 #### Technical Accuracy Audit
 
-No questionable claims â€” all assertions are traceable from code.
+No questionable claims — all assertions are traceable from code.
 
 #### Fix Quality Audit
 
@@ -219,12 +219,12 @@ No questionable claims â€” all assertions are traceable from code.
 - **"Why it's safe" validity:**
   Valid and specific enough for this low-risk change.
 
-- **Verdict:** Ready to implement ðŸŸ¢
+- **Verdict:** Ready to implement 🟢
   Evidence is concrete and implementation is straightforward.
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
 - [ ] Declare `moSel` variable at function scope (around line 140, near other cleanup-tracked variables)
 - [ ] Assign the MutationObserver to this variable when created
@@ -259,9 +259,9 @@ No questionable claims â€” all assertions are traceable from code.
 - **Why it matters:**
   The observer holds a reference to the drawer DOM element and its callback closure, preventing garbage collection. This compounds with F02 to increase memory pressure.
 
-- **Severity:** Low â­˜
+- **Severity:** Low ⭘
 
-- **Confidence:** High ðŸ˜€
+- **Confidence:** High 😀
 
 #### ADDRESSING THE ISSUE
 
@@ -272,7 +272,7 @@ No questionable claims â€” all assertions are traceable from code.
   1. Declare `moDrawer` at function scope near other tracked references
   2. Add `moDrawer?.disconnect();` to the `beforeunload` cleanup handler
 
-- **Fix risk:** Low ðŸŸ¢
+- **Fix risk:** Low 🟢
   - Simple cleanup addition matching existing patterns
   - No behavioral changes
 
@@ -294,7 +294,7 @@ No questionable claims â€” all assertions are traceable from code.
 
 #### Technical Accuracy Audit
 
-No questionable claims â€” all assertions are traceable from code.
+No questionable claims — all assertions are traceable from code.
 
 #### Fix Quality Audit
 
@@ -319,12 +319,12 @@ No questionable claims â€” all assertions are traceable from code.
 - **"Why it's safe" validity:**
   Valid; change is teardown-only.
 
-- **Verdict:** Ready to implement ðŸŸ¢
+- **Verdict:** Ready to implement 🟢
   This is a clear cleanup gap with low implementation risk.
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
 - [ ] Declare `moDrawer` variable at function scope (around line 140)
 - [ ] Remove `const` keyword when assigning the MutationObserver (line ~791)
