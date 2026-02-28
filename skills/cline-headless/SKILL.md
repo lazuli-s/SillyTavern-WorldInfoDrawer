@@ -45,6 +45,17 @@ Then ask: *"Want me to save this as `scripts/cline-headless/<name>.sh` in your p
 
 Do not enforce guardrails in code. Document them clearly and let the user decide.
 
+## Constraints
+
+These are hard limits that apply to every generated script — never violate them:
+
+- **Shell target is Git Bash only.** Do not generate PowerShell, CMD, or Python scripts. The user runs Windows and Git Bash is the only supported shell for this skill.
+- **Headless mode only.** Scripts must invoke Cline non-interactively. Do not generate scripts that open an interactive Cline session.
+- **No destructive git operations without explicit instruction.** Scripts must not force-push, reset the working tree (`git reset --hard`), or delete branches unless the user has explicitly asked for that behavior.
+- **Never touch `vendor/SillyTavern`.** If the task prompt would cause Cline to modify files under that path, add an explicit exclusion instruction to the Cline task prompt.
+- **One clear goal per script.** Reject or decompose vague, open-ended task descriptions. A prompt like "fix everything" is not actionable — ask the user to narrow it down before generating the script.
+- **Avoid `apply_patch` in Cline task prompts.** Instruct Cline to use `write_to_file` or `replace_in_file` instead. `apply_patch` produces unreliable results on Windows and can silently corrupt files that contain special characters or emoji.
+
 ## Use cases
 
 **1. Code review** — Pipe a git diff into Cline for analysis. Cline reads only; output goes to terminal. Risk: Low.
@@ -65,6 +76,17 @@ See `references/examples.md` for complete, ready-to-run scripts for each use cas
 - Branch check with `git branch --show-current` for Medium/High risk scripts
 - `read -r` pause before continuing if risk is High
 - Add `--timeout <seconds>` for any task that edits files (Medium/High)
+
+## Best practices
+
+Guidance for writing scripts that are safe, reviewable, and easy to debug:
+
+- **Run on a feature branch, not on `main` or `dev`.** For any Medium or High risk script, switching to a throwaway branch before running means a bad result is one `git checkout` away from being undone.
+- **Tee output to a log file.** Pipe the script's output with `| tee cline-run.log` so the full Cline session is reviewable after the terminal closes. Log files should be gitignored.
+- **Size `--timeout` to the task scope.** Suggested baselines: ~120 s for a single-file review or small fix; ~300 s for a multi-file batch; ~600 s for a full lint-fix pass. Tighter timeouts catch runaway sessions early.
+- **Test batch scripts on one file first.** Before looping over a directory, run the script against a single representative file and inspect the result. Only widen the loop once the single-file output looks correct.
+- **Keep the Cline task prompt under ~200 words.** Long, multi-objective prompts increase the chance of unintended edits. One goal, stated clearly, produces more predictable output than a list of goals.
+- **Stash or commit local changes before a Medium/High run.** A clean working tree means `git diff` after the run shows only what Cline changed, with no noise from pre-existing edits.
 
 ## Running scripts on Windows (Git Bash)
 
