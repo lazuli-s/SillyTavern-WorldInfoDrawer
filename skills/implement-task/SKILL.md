@@ -1,6 +1,6 @@
 ---
 name: implement-task
-description: Implements a documented task from the main tasks queue (or a user-specified task file) by loading authoritative docs, reviewing and correcting the implementation plan, applying each step, updating architecture docs if needed, and marking the task IMPLEMENTED. Use when the user invokes /implement-task, says "implement the next task", "implement this task", or provides a task file path to implement. Do NOT use when the user wants to plan or analyze a request — use analyze-request for that.
+description: Implements a documented task from the tasks/main-tasks/pending-implementation (or a user-specified task file) by loading authoritative docs, reviewing and correcting the implementation plan, applying each step, updating architecture docs if needed, and marking the task IMPLEMENTED. Use when the user invokes /implement-task, says "implement the next task", "implement this task", or provides a task file path to implement. Do NOT use when the user wants to plan or analyze a request — use analyze-request for that.
 ---
 
 # implement-task
@@ -8,14 +8,14 @@ description: Implements a documented task from the main tasks queue (or a user-s
 Implements exactly one task per invocation, then stops.
 
 **Two modes:**
-- **Queue mode** (no task specified): read `tasks/main-tasks-queue.md`, pick the first entry under `## Documented tasks`.
-- **Direct mode** (user names a task): use that task file as `TARGET_TASK_FILE`. Skip queue lookup.
+- **Direct mode** (user names a task): use that task file as `TARGET_TASK_FILE`. Skip folder scan.
+- **Pending-implementation folder mode** (no task specified): scan `tasks/main-tasks/pending-implementation` and pick the first task file in alphabetical order.
 
 ---
 
 ## 1. Select target
 
-**Queue mode:** Read `tasks/main-tasks-queue.md`. Under `## Documented tasks`, select the first item and set it as `TARGET_TASK_FILE`. If none exist: report "No documented tasks to implement" and stop.
+**Pending-implementation folder mode:** Read `tasks/main-tasks/pending-implementation`, collect task files (`*.md`), sort alphabetically, and set the first file as `TARGET_TASK_FILE`. If none exist: report "No pending-implementation tasks to implement" and stop.
 
 **Direct mode:** Set `TARGET_TASK_FILE` to the path the user provided.
 
@@ -38,24 +38,9 @@ Invoke the `doc-guide` skill and load the docs it prescribes for this task type.
 
 ## 4. Review and correct the implementation plan
 
-Before writing any code, check each checklist item in `Implementation Plan` for violations.
+Before writing any code, load the `skills/st-js-best-practices/SKILL.md` skill and use it to review each checklist item in `Implementation Plan`.
 
-**JS best practice violations:**
-
-| Code | Rule |
-| --- | --- |
-| SEC-01 | Unsanitized HTML inserted into DOM |
-| SEC-02 | `eval()` or `new Function()` |
-| SEC-03 | Secrets in source |
-| PERF-01 | Large data stored in localStorage |
-| PERF-02 | Event listeners without cleanup |
-| PERF-03 | Blocking synchronous operations |
-| COMPAT-01 | Direct ST internals access |
-| COMPAT-02 | Non-unique MODULE_NAME |
-| COMPAT-03 | Settings not initialized with defaults |
-| COMPAT-04 | Direct emission of ST-internal events |
-
-**WI API violations:** Check anti-patterns from `wi-api.md` Section 11 and verify the plan uses correct API methods for book/entry CRUD.
+When the task touches World Info APIs, also verify plan steps against `skills/st-world-info-api/SKILL.md` (correct CRUD APIs and anti-pattern avoidance).
 
 If violations found: rewrite the affected checklist item(s) in-place and append a short note explaining what changed and why.
 *Example: "Step 3 rewritten: original used direct DOM injection without sanitization — corrected to use DOMPurify per SEC-01."*
@@ -118,5 +103,11 @@ In `TARGET_TASK_FILE`, update to:
 ```markdown
 **Status:** IMPLEMENTED
 ```
+
+---
+
+## 9. Move task file
+
+Move `TARGET_TASK_FILE` to `tasks/main-tasks/implemented-tasks`.
 
 Then stop.
