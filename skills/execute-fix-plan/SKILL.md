@@ -1,6 +1,6 @@
 ---
 name: execute-fix-plan
-description: Implements the fix plans from a post-implementation review (PIR). Reads a reviewed task file, classifies each PIR finding as fixable or skippable, applies all fixable fixes, appends a Post-Implementation Fixes section, and updates the task status to FINISHED or PENDING_FIX. Use when the user invokes /execute-fix-plan, says "execute the fix plan", "fix the next reviewed task", "apply the PIR fixes", or provides a reviewed task file path. Processes exactly one task per invocation. In queue mode (no task specified), picks the first entry under "### Tasks with issues found" in tasks/main-tasks-queue.md.
+description: Implements the fix plans from a post-implementation review (PIR). Reads one reviewed task file, classifies each PIR finding as fixable or skippable, applies all fixable fixes, appends a Post-Implementation Fixes section, and moves the task file to the correct folder based on remaining skipped items. Use when the user invokes /execute-fix-plan, says "execute the fix plan", "fix the next reviewed task", "apply the PIR fixes", or provides a reviewed task file path. Processes exactly one task per invocation. In pending-fix folder mode (no task specified), scans tasks/main-tasks/pending-fix and picks the first task file.
 ---
 
 # execute-fix-plan
@@ -8,14 +8,14 @@ description: Implements the fix plans from a post-implementation review (PIR). R
 Implements PIR fix plans for exactly one task per invocation, then stops.
 
 **Two modes:**
-- **Queue mode** (no task specified): read `tasks/main-tasks-queue.md`, pick the first entry under `### Tasks with issues found`.
-- **Direct mode** (user names a task): use that task file as `TARGET_TASK_FILE`. Skip queue lookup.
+- **Pending-fix folder mode** (no task specified): scan `tasks/main-tasks/pending-fix` and pick the first task file.
+- **Direct mode** (user names a task): use that task file as `TARGET_TASK_FILE`. Skip folder scan.
 
 ---
 
 ## 1. Select target
 
-**Queue mode:** Read `tasks/main-tasks-queue.md`. Under `### Tasks with issues found`, select the first item and set it as `TARGET_TASK_FILE`. If none exist: report "No tasks with issues found" and stop.
+**Pending-fix folder mode:** Read `tasks/main-tasks/pending-fix`, gather `*.md` files, sort alphabetically, and select the first file as `TARGET_TASK_FILE`. If none exist: report "No pending-fix tasks to process" and stop.
 
 **Direct mode:** Set `TARGET_TASK_FILE` to the path the user provided.
 
@@ -35,38 +35,14 @@ Invoke the `doc-guide` skill and load the docs it prescribes for this task type 
    - If `Agreed Scope` is vague or does not list explicit paths: infer likely owning modules from `FEATURE_MAP.md` using the features described in the task.
 3. Collect all PIR findings from the `## Post-Implementation Review` section.
 4. For each PIR finding, classify:
-   - **Fixable**: Fix risk is Low 🟢 or Medium 🟡, `Requires human judgment` is No, and a Fix Plan with at least one step is present.
-   - **Skippable**: Fix risk is High 🔴, `Requires human judgment` is Yes, Fix Plan is absent, or Fix Plan is marked N/A. Treat a missing Fix Plan as `⚠️ Requires human judgment`.
+   - **Fixable**: Fix risk is Low or Medium, `Requires human judgment` is No, and a Fix Plan with at least one step is present.
+   - **Skippable**: Fix risk is High, `Requires human judgment` is Yes, Fix Plan is absent, or Fix Plan is marked N/A. Treat a missing Fix Plan as `Requires human judgment`.
 
 ---
 
-## 4. Review each fix plan
+## 4. Implement each fix
 
-Before writing any code, check each **fixable** PIR's Fix Plan checklist for violations.
-
-**JS best practice violations:**
-
-| Code | Rule |
-| --- | --- |
-| SEC-01 | Unsanitized HTML inserted into DOM |
-| SEC-02 | `eval()` or `new Function()` |
-| SEC-03 | Secrets in source |
-| PERF-01 | Large data stored in localStorage |
-| PERF-02 | Event listeners without cleanup |
-| PERF-03 | Blocking synchronous operations |
-| COMPAT-01 | Direct ST internals access |
-| COMPAT-02 | Non-unique MODULE_NAME |
-| COMPAT-03 | Settings not initialized with defaults |
-| COMPAT-04 | Direct emission of ST-internal events |
-
-**WI API violations:** Check anti-patterns from `wi-api.md` Section 11 and verify the plan uses correct API methods for book/entry CRUD.
-
-If violations found: rewrite the affected checklist item(s) in-place and append a short note directly below the checklist explaining what changed and why.
-*Example: "Step 2 rewritten: original used direct DOM injection without sanitization — corrected to use DOMPurify per SEC-01."*
-
----
-
-## 5. Implement each fix
+Do not review or rewrite fix plans. Start implementation immediately using the classification above.
 
 For each **fixable** PIR, working in order:
 
@@ -80,7 +56,7 @@ For each **fixable** PIR, working in order:
 
 ---
 
-## 6. Append Post-Implementation Fixes section
+## 5. Append Post-Implementation Fixes section
 
 Append to the end of `TARGET_TASK_FILE`:
 
@@ -94,42 +70,48 @@ Append to the end of `TARGET_TASK_FILE`:
   - **What changed**: [Plain-language description. No jargon. No code snippets.]
 
 - [ ] **PIR-02**: <Title>
-  - High fix risk 🔴
+  - High fix risk
 
 - [ ] **PIR-03**: <Title>
-  - ⚠️ Requires human judgment
+  - Requires human judgment
 ```
 
 Rules:
 - Include every PIR from the review, fixed or not.
 - Fixed PIRs: mark `[x]`; include a `**What changed**` line in plain language.
-- Skipped PIRs: mark `[ ]`; include only the skip reason — no `**What changed**` line.
-- Skip reasons: `High fix risk 🔴` / `⚠️ Requires human judgment` / `No fix plan provided — ⚠️ Requires human judgment`.
+- Skipped PIRs: mark `[ ]`; include only the skip reason, no `**What changed**` line.
+- Skip reasons: `High fix risk` / `Requires human judgment` / `No fix plan provided - Requires human judgment`.
 
 ---
 
-## 7. Update status
+## 6. Update status and move task file
 
 In `TARGET_TASK_FILE`, update `**Status**` to one of:
 
 - `FINISHED`: every PIR was fixed.
-- `PENDING_FIX`: at least one PIR was skipped (high risk, human judgment, or no fix plan).
+- `PENDING_HUMAN_REVIEW`: at least one PIR was skipped (high risk, human judgment, or no fix plan).
+
+Then move the task file:
+
+- If a destination folder does not exist yet, create it first.
+- If status is `FINISHED`: move `TARGET_TASK_FILE` to `tasks/main-tasks/finished-tasks`.
+- If status is `PENDING_HUMAN_REVIEW`: move `TARGET_TASK_FILE` to `tasks/main-tasks/pending-human-review`.
 
 ---
 
-## 8. Print summary
+## 7. Print summary
 
 Print a short plain-language summary:
 
-- For each fixed PIR: one sentence — what was wrong and what was done to fix it.
-- For each skipped PIR: one sentence — what it is and why it was not fixed.
+- For each fixed PIR: one sentence, what was wrong and what was done to fix it.
+- For each skipped PIR: one sentence, what it is and why it was not fixed.
 - End with the final status.
 
 Example:
-> **PIR-01 (fixed):** The null check was missing before reading the entry's key field — added a guard so the code no longer crashes when the key is empty.
+> **PIR-01 (fixed):** The null check was missing before reading the entry's key field - added a guard so the code no longer crashes when the key is empty.
 >
-> **PIR-02 (skipped — high fix risk):** The event listener is registered without cleanup. Fixing this would require restructuring how the module initializes — left for human review.
+> **PIR-02 (skipped - high fix risk):** The event listener is registered without cleanup. Fixing this would require restructuring how the module initializes - left for human review.
 >
-> **Status:** PENDING_FIX — 1 issue was not resolved and requires human judgment.
+> **Status:** PENDING_HUMAN_REVIEW - 1 issue was not resolved and requires human judgment.
 
 Then stop.
