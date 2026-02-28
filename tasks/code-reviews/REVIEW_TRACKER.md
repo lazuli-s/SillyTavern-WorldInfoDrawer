@@ -4,6 +4,39 @@ Track all code-review findings across the extension's JS files.
 
 ## Reviewed Files
 
+### `src/listPanel.coreBridge.js`
+[CodeReview_listPanel.coreBridge.js.md](tasks/code-reviews/pending-meta-review/CodeReview_listPanel.coreBridge.js.md)
+
+- **F01** — Race Condition in Value Verification Timing
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+
+### `src/listPanel.booksView.js`
+[CodeReview_listPanel.booksView.js.md](tasks/code-reviews/pending-meta-review/CodeReview_listPanel.booksView.js.md)
+
+- **F01** — Race Condition in Active Toggle Handler
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+- **F02** — Optimistic UI Rollback May Discard User Edits
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+- **F03** — Event Listeners on Dynamic DOM Elements Not Cleaned Up
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+- **F04** — Yield Frequency May Be Insufficient for Large Datasets
+  - Meta-reviewed: [ ]
+    - Verdict:
+    - Reason:
+  - Implemented:
+
 ### `src/bookSourceLinks.js`
 [CodeReview_bookSourceLinks.js.md](tasks/code-reviews/pending-meta-review/CodeReview_bookSourceLinks.js.md)
 

@@ -2,9 +2,6 @@
 
 ## Files Pending Review
 
-- `src/listPanel.booksView.js`
-- `src/listPanel.coreBridge.js`
-- `src/listPanel.filterBar.js`
 - `src/listPanel.foldersView.js`
 - `src/listPanel.js`
 - `src/listPanel.selectionDnD.js`
