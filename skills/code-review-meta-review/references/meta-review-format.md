@@ -20,6 +20,7 @@ This file defines the exact format for the `### STEP 2: META CODE REVIEW` block 
 Insert this block immediately after the `- **Pros:**` content in each finding:
 
 ```markdown
+
 ### STEP 2: META CODE REVIEW
 
 - **Evidence-based claims:**
