@@ -110,20 +110,26 @@ Track all code-review findings across the extension's JS files.
   - Implemented:
 
 ### `src/bookSourceLinks.js`
-[CodeReview_bookSourceLinks.js.md](tasks/code-reviews/pending-implementation/CodeReview_bookSourceLinks.js.md)
+[CodeReview_bookSourceLinks.js.md](tasks/code-reviews/pending-changelog/CodeReview_bookSourceLinks.js.md)
 
 - **F01** - Context fallback still hard-depends on fragile direct ST imports
   - Meta-reviewed: [X]
     - Verdict: 🟢
     - Reason: N/A
   - Neglect Risk: Medium ❗ — direct-import fragility can break source-link behavior after host export changes.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Removed fragile direct ST imports and switched runtime context reads to `SillyTavern.getContext()` with safe defaults.
+    - **🟥 MANUAL CHECK**:
+      - [ ] Open a chat, change chat/persona/character source books, and confirm source-link badges refresh without console errors.
 - **F02** - Group member fallback by character name can mis-attribute source links
   - Meta-reviewed: [X]
     - Verdict: 🟡
     - Reason: behavior-change label and checklist precision need revision before implementation.
   - Neglect Risk: Medium ❗ — mis-attribution is an edge-case UI correctness issue, but still user-visible when triggered.
-  - Implemented:
+  - Implemented: ✅
+    - Implementation Notes: Added avatar-first member resolution with unique-name fallback only and skip+debug behavior for ambiguous duplicate names.
+    - **🟥 MANUAL CHECK**:
+      - [ ] In a group with two characters sharing the same name, verify source icons do not attach that ambiguous member to the wrong book and a debug log appears.
 
 ### `src/drawer.js`
 [CodeReview_drawer.js.md](tasks/code-reviews/pending-implementation/CodeReview_drawer.js.md)

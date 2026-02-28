@@ -1,13 +1,3 @@
-import {
-    chat_metadata as legacyChatMetadata,
-    characters as legacyCharacters,
-    event_types as legacyEventTypes,
-    eventSource as legacyEventSource,
-    name1 as legacyName1,
-    this_chid as legacyCharacterId,
-} from '../../../../../script.js';
-import { groups as legacyGroups, selected_group as legacyGroupId } from '../../../../group-chats.js';
-import { power_user as legacyPowerUserSettings } from '../../../../power-user.js';
 import { getCharaFilename } from '../../../../utils.js';
 // Keep direct world-info imports for values not available via context.
 import { METADATA_KEY, world_info, world_names } from '../../../../world-info.js';
@@ -23,16 +13,21 @@ const EMPTY_BOOK_SOURCE_LINKS = Object.freeze({
 
 const getBookSourceRuntimeContext = ()=>{
     const context = globalThis.SillyTavern?.getContext?.() ?? null;
+    const eventTypes = context?.eventTypes && typeof context.eventTypes === 'object'
+        ? context.eventTypes
+        : (context?.event_types && typeof context.event_types === 'object' ? context.event_types : {});
     return {
-        chatMetadata: context?.chatMetadata ?? legacyChatMetadata,
-        characters: Array.isArray(context?.characters) ? context.characters : legacyCharacters,
-        groups: Array.isArray(context?.groups) ? context.groups : legacyGroups,
-        name1: context?.name1 ?? legacyName1,
-        characterId: context?.characterId ?? legacyCharacterId,
-        groupId: context?.groupId ?? legacyGroupId,
-        powerUserSettings: context?.powerUserSettings ?? legacyPowerUserSettings,
-        eventSource: context?.eventSource ?? legacyEventSource,
-        eventTypes: context?.eventTypes ?? context?.event_types ?? legacyEventTypes,
+        chatMetadata: context?.chatMetadata && typeof context.chatMetadata === 'object' ? context.chatMetadata : {},
+        characters: Array.isArray(context?.characters) ? context.characters : [],
+        groups: Array.isArray(context?.groups) ? context.groups : [],
+        name1: typeof context?.name1 === 'string' ? context.name1 : '',
+        characterId: context?.characterId ?? null,
+        groupId: context?.groupId ?? null,
+        powerUserSettings: context?.powerUserSettings && typeof context.powerUserSettings === 'object'
+            ? context.powerUserSettings
+            : {},
+        eventSource: context?.eventSource ?? null,
+        eventTypes,
     };
 };
 
@@ -159,8 +154,33 @@ export const initBookSourceLinks = ({ getListPanelApi })=>{
         if (runtime.groupId) {
             const activeGroup = runtime.groups.find((group)=>group?.id == runtime.groupId);
             const members = Array.isArray(activeGroup?.members) ? activeGroup.members : [];
+            const characterByAvatar = new Map();
+            const charactersByName = new Map();
+            for (const character of runtime.characters) {
+                if (!character || typeof character !== 'object') continue;
+                const avatar = typeof character.avatar === 'string' ? character.avatar : '';
+                const name = typeof character.name === 'string' ? character.name : '';
+                if (avatar && !characterByAvatar.has(avatar)) {
+                    characterByAvatar.set(avatar, character);
+                }
+                if (name) {
+                    if (!charactersByName.has(name)) {
+                        charactersByName.set(name, []);
+                    }
+                    charactersByName.get(name).push(character);
+                }
+            }
             for (const member of members) {
-                const character = runtime.characters.find((it)=>it?.avatar === member || it?.name === member);
+                if (typeof member !== 'string' || !member) continue;
+                let character = characterByAvatar.get(member) ?? null;
+                if (!character) {
+                    const matchingNameCharacters = charactersByName.get(member) ?? [];
+                    if (matchingNameCharacters.length === 1) {
+                        character = matchingNameCharacters[0];
+                    } else if (matchingNameCharacters.length > 1) {
+                        console.debug(SOURCE_ICON_LOG_PREFIX, 'skip_ambiguous_group_member', member);
+                    }
+                }
                 addCharacterLinkedBooks(characterBooks, character);
             }
         } else if (runtime.characterId !== undefined && runtime.characterId !== null && runtime.characters[runtime.characterId]) {

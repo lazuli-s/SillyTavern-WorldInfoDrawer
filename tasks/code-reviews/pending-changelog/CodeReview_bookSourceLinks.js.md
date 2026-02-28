@@ -103,10 +103,25 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Remove top-level direct imports from `script.js`, `group-chats.js`, and `power-user.js`.
-- [ ] Refactor `getBookSourceRuntimeContext()` to context-only reads plus safe defaults.
-- [ ] Verify event subscription setup still no-ops safely when `eventSource` or `eventTypes` are missing.
-- [ ] Keep WI-specific direct imports (`METADATA_KEY`, `world_info`, `world_names`) unchanged.
+- [x] Remove top-level direct imports from `script.js`, `group-chats.js`, and `power-user.js`.
+- [x] Refactor `getBookSourceRuntimeContext()` to context-only reads plus safe defaults.
+- [x] Verify event subscription setup still no-ops safely when `eventSource` or `eventTypes` are missing.
+- [x] Keep WI-specific direct imports (`METADATA_KEY`, `world_info`, `world_names`) unchanged.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Removed direct imports from `script.js`, `group-chats.js`, and `power-user.js`.
+  - Refactored `getBookSourceRuntimeContext()` to context-only reads with safe defaults for missing values.
+  - Kept WI-specific direct imports (`METADATA_KEY`, `world_info`, `world_names`) unchanged.
+  - Event subscriptions remain safe no-ops when context `eventSource` or `eventTypes` are missing.
+
+- Risks / Side effects
+  - Older/partial host context payloads may produce fewer source-link attributions until those fields are available in context (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Open a chat, change chat/persona/character source books, and confirm source-link badges refresh without console errors.
 
 ---
 
@@ -207,8 +222,24 @@ No questionable claims — all assertions are traceable from code.
 > Meta-review Reason: Behavioral change was not explicitly labeled and checklist did not pin the ambiguity contract.
 > Revisions applied: Added an explicit behavior-change step and tightened fallback behavior guarantees for unique versus ambiguous name matches.
 
-- [ ] Mark this finding as `Behavior Change Required`: ambiguous duplicate-name fallback now skips linking instead of choosing the first match.
-- [ ] Precompute avatar and name lookup maps once per `buildLorebookSourceLinks(...)` refresh run.
-- [ ] Replace `.find(avatar || name)` with two-step resolution: avatar exact match first, then unique-name fallback only.
-- [ ] If name fallback returns multiple characters, skip linking for that member and emit a debug log for ambiguity.
-- [ ] Preserve existing behavior when avatar matches exist and when name fallback is uniquely resolvable.
+- [x] Mark this finding as `Behavior Change Required`: ambiguous duplicate-name fallback now skips linking instead of choosing the first match.
+- [x] Precompute avatar and name lookup maps once per `buildLorebookSourceLinks(...)` refresh run.
+- [x] Replace `.find(avatar || name)` with two-step resolution: avatar exact match first, then unique-name fallback only.
+- [x] If name fallback returns multiple characters, skip linking for that member and emit a debug log for ambiguity.
+- [x] Preserve existing behavior when avatar matches exist and when name fallback is uniquely resolvable.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/bookSourceLinks.js`
+  - Applied the behavior change: ambiguous duplicate-name fallback now skips linking instead of selecting the first match.
+  - Added one-pass avatar and name lookup maps per `buildLorebookSourceLinks(...)` run.
+  - Replaced `.find(avatar || name)` with avatar-first resolution and unique-name fallback only.
+  - Added debug logging for ambiguous duplicate-name fallback cases.
+  - Preserved avatar-match and unique-name-match behavior.
+
+- Risks / Side effects
+  - Ambiguous duplicate-name members now show no character-source attribution instead of potentially incorrect attribution (probability: ⚪)
+      - **🟥 MANUAL CHECK**: [ ] In a group with two characters sharing the same name, verify source icons do not attach that ambiguous member to the wrong book and a debug log appears.
