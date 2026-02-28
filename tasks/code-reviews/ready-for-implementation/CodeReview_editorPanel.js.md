@@ -46,11 +46,6 @@
 - **Proposed fix:**
   Create a private helper function `renderActivationSettings()` that encapsulates the common logic: closing order helper, clearing highlights, creating the h4, and appending the activation block. Both `showActivationSettings()` and `toggleActivationSettings()` should call this helper.
 
-- **Implementation Checklist:**
-  - [ ] Create a new private function `renderActivationSettings()` that contains the duplicated logic
-  - [ ] Refactor `showActivationSettings()` to call `renderActivationSettings()` after setting the active class
-  - [ ] Refactor `toggleActivationSettings()` to call `renderActivationSettings()` when `isActive` is true
-
 - **Fix risk:** Low 🟢
 
 - **Why it's safe to implement:**
@@ -61,3 +56,49 @@
   - Easier future maintenance and modifications
   - Reduced risk of inconsistent behavior between the two entry points
   - Smaller bundle size (minor, but measurable)
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The duplication claim is directly traceable in `src/editorPanel.js` where `showActivationSettings()` and the `isActive` branch of `toggleActivationSettings()` run the same ordered steps: close order helper if open, clear highlights, create/append the same `<h4>` title, then append `activationBlock`.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims - all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound. The recommendation stays inside `src/editorPanel.js`, which matches module ownership in `ARCHITECTURE.md` and does not move responsibilities across modules.
+
+- **Behavioral change:**
+  No observable behavior change required. This is a local deduplication refactor if the extracted helper preserves current statement order.
+
+- **Ambiguity:**
+  One clear recommendation is provided (extract shared render logic to one helper).
+
+- **Checklist:**
+  Complete and actionable. Steps are specific and directly mappable to existing functions.
+
+- **Dependency integrity:**
+  None. This finding can be implemented independently.
+
+- **Fix risk calibration:**
+  Accurate. `Low` is appropriate because the change is localized and does not alter async flow, shared persistence, or cross-module contracts.
+
+- **"Why it's safe" validity:**
+  Valid. The safety claim is specific to identical code paths in the same module and is verifiable by comparing current branches.
+
+- **Verdict:** Ready to implement 🟢
+  The finding is well-evidenced, confidence is high, and the implementation plan is sufficiently concrete.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 - no checklist revisions needed.
+
+- [ ] Create a new private function `renderActivationSettings()` that contains the duplicated logic
+- [ ] Refactor `showActivationSettings()` to call `renderActivationSettings()` after setting the active class
+- [ ] Refactor `toggleActivationSettings()` to call `renderActivationSettings()` when `isActive` is true

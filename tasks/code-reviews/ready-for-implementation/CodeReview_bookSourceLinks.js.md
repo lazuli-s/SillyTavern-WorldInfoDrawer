@@ -52,12 +52,6 @@
   - `eventSource`: `null` default
   Keep direct imports only for WI fields not exposed through context (`METADATA_KEY`, `world_info`, `world_names`) and keep the explicit comment for that exception.
 
-- **Implementation Checklist:**
-  - [ ] Remove top-level direct imports from `script.js`, `group-chats.js`, and `power-user.js`.
-  - [ ] Refactor `getBookSourceRuntimeContext()` to context-only reads plus safe defaults.
-  - [ ] Verify event subscription setup still no-ops safely when `eventSource` or `eventTypes` are missing.
-  - [ ] Keep WI-specific direct imports (`METADATA_KEY`, `world_info`, `world_names`) unchanged.
-
 - **Fix risk:** Medium
   If older host versions rely on those legacy exports and provide incomplete context fields, behavior may degrade to missing source-link metadata until compatibility rules are clarified.
 
@@ -67,7 +61,52 @@
 - **Pros:**
   Better resilience to ST internal refactors and fewer extension breakages after host updates.
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  The finding is grounded in concrete code paths: module-level direct imports from `script.js`, `group-chats.js`, and `power-user.js`; fallback wiring in `getBookSourceRuntimeContext(...)`; and matching context fields in `st-context.js` (`chatMetadata`, `characters`, `groups`, `name1`, `characterId`, `groupId`, `powerUserSettings`, `eventSource`, `eventTypes`).
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound and stays in the correct module (`src/bookSourceLinks.js`) without crossing architecture boundaries.
+
+- **Behavioral change:**
+  No intended behavior change on supported ST versions. On legacy/partial-context hosts, source-link data can degrade to defaults; this trade-off is already acknowledged in Step 1 risk text.
+
+- **Ambiguity:**
+  One clear recommendation only (context-first/context-only reads).
+
+- **Checklist:**
+  Steps are actionable and implementation-ready.
+
+- **Dependency integrity:**
+  No cross-finding dependency.
+
+- **Fix risk calibration:**
+  Medium is appropriate because this touches initialization-time runtime context and event subscription inputs.
+
+- **"Why it's safe" validity:**
+  Valid. The safety claim is specific: source-link computation stays intact while only the data access path changes.
+
+- **Verdict:** Ready to implement 🟢
+  Confidence is High, no user-input blocker exists, and no claim requires deep unresolved analysis.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Remove top-level direct imports from `script.js`, `group-chats.js`, and `power-user.js`.
+- [ ] Refactor `getBookSourceRuntimeContext()` to context-only reads plus safe defaults.
+- [ ] Verify event subscription setup still no-ops safely when `eventSource` or `eventTypes` are missing.
+- [ ] Keep WI-specific direct imports (`METADATA_KEY`, `world_info`, `world_names`) unchanged.
 
 ---
 
@@ -109,12 +148,6 @@
   - If avatar miss and name lookup returns exactly one character, use it.
   - If name lookup returns multiple characters, skip linking for that member and optionally `console.debug` an ambiguity warning.
 
-- **Implementation Checklist:**
-  - [ ] Precompute avatar and name lookup maps once per refresh call.
-  - [ ] Replace the current `.find(avatar || name)` resolution with two-step lookup logic.
-  - [ ] Add an ambiguity guard for duplicate names so no arbitrary character is selected.
-  - [ ] Keep existing behavior unchanged when avatars are present and unique.
-
 - **Fix risk:** Low
   The change is local to group member matching and only alters ambiguous edge cases.
 
@@ -123,5 +156,59 @@
 
 - **Pros:**
   More reliable source attribution and fewer incorrect icons/tooltips in multi-character groups.
+  
+### STEP 2: META CODE REVIEW
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+- **Evidence-based claims:**
+  The code anchor is exact: `runtime.characters.find((it)=>it?.avatar === member || it?.name === member)`. This directly allows name fallback and `.find(...)` first-match behavior. The chosen character is then used by `addCharacterLinkedBooks(...)`, which drives `linksByBook` attribution shown in source icons/tooltips.
+
+- **Top risks:**
+  Missing evidence on trigger frequency. The finding is correct, but Step 1 does not quantify how often name-based members occur versus avatar-based members.
+
+#### Technical Accuracy Audit
+
+  > *"If two characters share the same name, the first one found is used, which can show wrong source icons and wrong tooltip names."*
+
+- **Why it may be wrong/speculative:**
+  The duplicate-name failure needs a specific trigger path: group member token must resolve through name fallback (not avatar match).
+
+- **Validation:**
+  Validated ✅ — ST group handling still includes avatar-or-name member lookups for compatibility (`group-chats.js` uses the same `avatar || name` pattern), so this edge case remains plausible.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Sound and localized. Building maps once per refresh is cleaner and avoids repeated linear scans.
+
+- **Behavioral change:**
+  Yes. Ambiguous duplicate-name members would change from "pick first match" to "skip linking". That is observable and should be explicitly labeled as Behavior Change Required in the implementation task.
+
+- **Ambiguity:**
+  One recommendation path is provided.
+
+- **Checklist:**
+  Mostly actionable, but it should explicitly capture the behavior-change label and preserve unique-name fallback behavior while blocking ambiguous matches.
+
+- **Dependency integrity:**
+  No cross-finding dependency.
+
+- **Fix risk calibration:**
+  Low is acceptable because the change is scoped to source-attribution mapping and not persistence.
+
+- **"Why it's safe" validity:**
+  Partially valid. It needs an explicit note that only ambiguous fallback cases change behavior.
+
+- **Verdict:** Implementation plan needs revision 🟡
+  The fix direction is correct, but behavior-change labeling and checklist precision need tightening before implementation.
+
+#### Implementation Checklist
+
+> Verdict: Needs revision 🟡 — checklist auto-revised.
+> Meta-review Reason: Behavioral change was not explicitly labeled and checklist did not pin the ambiguity contract.
+> Revisions applied: Added an explicit behavior-change step and tightened fallback behavior guarantees for unique versus ambiguous name matches.
+
+- [ ] Mark this finding as `Behavior Change Required`: ambiguous duplicate-name fallback now skips linking instead of choosing the first match.
+- [ ] Precompute avatar and name lookup maps once per `buildLorebookSourceLinks(...)` refresh run.
+- [ ] Replace `.find(avatar || name)` with two-step resolution: avatar exact match first, then unique-name fallback only.
+- [ ] If name fallback returns multiple characters, skip linking for that member and emit a debug log for ambiguity.
+- [ ] Preserve existing behavior when avatar matches exist and when name fallback is uniquely resolvable.

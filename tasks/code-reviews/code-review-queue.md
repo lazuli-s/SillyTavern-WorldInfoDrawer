@@ -2,12 +2,6 @@
 
 ## Files Pending Review
 
-- `src/listPanel.js`
-- `src/listPanel.selectionDnD.js`
-- `src/listPanel.state.js`
-- `src/lorebookFolders.js`
-- `src/orderHelper.js`
-- `src/orderHelperFilters.js`
 - `src/orderHelperRender.actionBar.js`
 - `src/orderHelperRender.filterPanel.js`
 - `src/orderHelperRender.js`

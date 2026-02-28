@@ -31,15 +31,15 @@
   - `import { renderTemplateAsync } from '../../../../templates.js';`
   - `import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../../utils.js';`
   - `import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../../world-info.js';`
-  
+
   Per `st-js-best-practices` COMPAT-01, direct imports from ST source files may break when SillyTavern is updated. The context API is the stable, documented surface. Some of these imports (like `renderTemplateAsync`, `loadWorldInfo`, `saveWorldInfo`) are available via `SillyTavern.getContext()`.
 
 - **Why it matters:**
   If SillyTavern moves or renames these internal modules, the extension will fail to load or throw runtime errors. This creates maintenance burden and potential breakages for users when they update SillyTavern.
 
-- **Severity:** Medium ❗
+- **Severity:** Medium â—
 
-- **Confidence:** High 😀
+- **Confidence:** High ðŸ˜€
 
 #### ADDRESSING THE ISSUE
 
@@ -51,13 +51,7 @@
   2. For `Popup`, `SlashCommandParser`, and utilities, evaluate if they can be obtained via context or if direct import must remain (add code comments explaining why).
   3. Update `world_names` and `selected_world_info` to use context equivalents if available, or add defensive checks.
 
-- **Implementation Checklist:**
-  - [ ] Identify which imported APIs are available via `SillyTavern.getContext()`
-  - [ ] Replace context-available imports with `const { apiName } = SillyTavern.getContext();`
-  - [ ] Add code comments for any remaining direct imports explaining why they must stay
-  - [ ] Test that drawer functionality still works after changes
-
-- **Fix risk:** Medium 🟡
+- **Fix risk:** Medium ðŸŸ¡
   - Risk: Context API might expose slightly different signatures than direct imports
   - Risk: Some APIs may not be available on context, requiring fallback logic
 
@@ -68,6 +62,75 @@
   - Future-proofs the extension against ST internal restructuring
   - Follows SillyTavern extension best practices
   - Easier maintenance when upgrading ST versions
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  `src/drawer.js` lines 1-7 directly import from `script.js`, `extensions.js`, `popup.js`, `SlashCommandParser.js`, `templates.js`, `utils.js`, and `world-info.js`; COMPAT-01 prefers `SillyTavern.getContext()` when equivalent APIs exist. `vendor/SillyTavern/public/scripts/st-context.js` confirms several equivalents are exposed (`getRequestHeaders`, `Popup`, `SlashCommandParser`, `loadWorldInfo`, `saveWorldInfo`, `uuidv4`).
+
+- **Top risks:**
+  Missing evidence for full replacement scope and under-specified mapping for APIs that are not context-exposed.
+
+#### Technical Accuracy Audit
+
+  > "Update `world_names` and `selected_world_info` to use context equivalents if available, or add defensive checks."
+
+- **Why it may be wrong/speculative:**
+  `st-context.js` does not expose `world_names` or `selected_world_info` via `getContext()`. `skills/st-world-info-api/references/wi-api.md` also documents them as module exports, not context properties.
+
+- **Validation:**
+  Validated âœ… â€” the "context equivalent" path for these two values is not currently available.
+
+- **What needs to be done/inspected to validate:**
+  Maintain a per-symbol import map: context-backed APIs vs required direct imports; do not plan blanket migration.
+
+  > "Changes are localized to import statements and won't affect business logic."
+
+- **Why it may be wrong/speculative:**
+  Replacing imports with context usage changes acquisition timing/scope and can require call-site updates, especially for symbols unavailable in context.
+
+- **Validation:**
+  Validated âœ… â€” this safety claim is too broad.
+
+- **What needs to be done/inspected to validate:**
+  Inspect each replaced symbol's call sites in `src/drawer.js` to ensure unchanged behavior and null-safety.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Direction is sound only as a selective migration: move context-available symbols to `getContext()` and retain justified direct imports for non-context symbols.
+
+- **Behavioral change:**
+  Behavior should remain unchanged if mapping is correct, but this is not guaranteed by import edits alone. Current finding does not explicitly label this as no-intent behavior-preserving migration.
+
+- **Ambiguity:**
+  More than one recommendation is present; use one recommendation: "perform a symbol-by-symbol context migration only where context exports exist."
+
+- **Checklist:**
+  Original checklist was too generic and did not force a concrete per-symbol mapping.
+
+- **Dependency integrity:**
+  N/A.
+
+- **Fix risk calibration:**
+  Medium is appropriate because this touches shared integrations and may require multiple call-site changes.
+
+- **"Why it's safe" validity:**
+  Not fully valid as written; it needs explicit constraints and verification steps.
+
+- **Verdict:** Implementation plan needs revision ðŸŸ¡
+  The finding is directionally correct, but the implementation plan must be narrowed to a verified symbol mapping and behavior-preserving migration.
+
+#### Implementation Checklist
+
+> Verdict: Needs revision ðŸŸ¡ â€” checklist auto-revised.
+> Meta-review Reason: Original checklist was too generic and assumed wider context coverage than exists.
+> Revisions applied: Replaced broad migration steps with a concrete per-symbol mapping and verification flow.
+
+- [ ] Build a table of every ST import in `src/drawer.js` and mark each as `Context available` or `Direct import required` using `vendor/SillyTavern/public/scripts/st-context.js`
+- [ ] Replace only `Context available` symbols with one `const context = SillyTavern.getContext();` access pattern and update call sites
+- [ ] Keep required direct imports (`world_names`, `selected_world_info`, and any non-context APIs) and add a brief comment for each explaining why it stays direct
+- [ ] Manually verify create/delete/save flows and drawer startup still work after migration
 
 ---
 
@@ -96,9 +159,9 @@
 - **Why it matters:**
   MutationObservers hold references to DOM elements and prevent garbage collection. Over time, multiple extension reloads could accumulate orphaned observers, increasing memory usage and potentially causing performance issues.
 
-- **Severity:** Low ⭕
+- **Severity:** Low â­˜
 
-- **Confidence:** High 😀
+- **Confidence:** High ðŸ˜€
 
 #### ADDRESSING THE ISSUE
 
@@ -109,12 +172,7 @@
   1. Move `moSel` declaration outside the `if` block or make it accessible to cleanup
   2. Add `moSel?.disconnect()` to the `beforeunload` cleanup handler alongside other cleanup calls
 
-- **Implementation Checklist:**
-  - [ ] Declare `moSel` variable at function scope (around line 140, near other cleanup-tracked variables)
-  - [ ] Assign the MutationObserver to this variable when created
-  - [ ] Add `moSel?.disconnect();` to the `beforeunload` cleanup handler (around line 145)
-
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
   - Simple cleanup addition, no behavioral changes
   - Follows existing cleanup pattern in the file
 
@@ -125,6 +183,52 @@
   - Prevents memory leaks during extension reloads
   - Follows best practice of cleaning up observers
   - Consistent with other cleanup in the file
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  `moSel` is created at `src/drawer.js` lines 880-883 and no `disconnect()` call exists in teardown handlers at lines 177-182 or 850-852.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims â€” all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Technically sound and contained within `src/drawer.js`, matching module ownership for lifecycle cleanup.
+
+- **Behavioral change:**
+  None expected; disconnect executes only during teardown.
+
+- **Ambiguity:**
+  Single clear recommendation.
+
+- **Checklist:**
+  Actionable and specific.
+
+- **Dependency integrity:**
+  Independent, but it can be implemented alongside F03 cleanup in one teardown block.
+
+- **Fix risk calibration:**
+  Low is accurate.
+
+- **"Why it's safe" validity:**
+  Valid and specific enough for this low-risk change.
+
+- **Verdict:** Ready to implement ðŸŸ¢
+  Evidence is concrete and implementation is straightforward.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
+
+- [ ] Declare `moSel` variable at function scope (around line 140, near other cleanup-tracked variables)
+- [ ] Assign the MutationObserver to this variable when created
+- [ ] Add `moSel?.disconnect();` to the `beforeunload` cleanup handler (around line 145)
 
 ---
 
@@ -155,9 +259,9 @@
 - **Why it matters:**
   The observer holds a reference to the drawer DOM element and its callback closure, preventing garbage collection. This compounds with F02 to increase memory pressure.
 
-- **Severity:** Low ⭕
+- **Severity:** Low â­˜
 
-- **Confidence:** High 😀
+- **Confidence:** High ðŸ˜€
 
 #### ADDRESSING THE ISSUE
 
@@ -168,12 +272,7 @@
   1. Declare `moDrawer` at function scope near other tracked references
   2. Add `moDrawer?.disconnect();` to the `beforeunload` cleanup handler
 
-- **Implementation Checklist:**
-  - [ ] Declare `moDrawer` variable at function scope (around line 140)
-  - [ ] Remove `const` keyword when assigning the MutationObserver (line ~791)
-  - [ ] Add `moDrawer?.disconnect();` to the `beforeunload` cleanup handler
-
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
   - Simple cleanup addition matching existing patterns
   - No behavioral changes
 
@@ -185,139 +284,61 @@
   - Consistent with cleanup pattern for other observers
   - Good hygiene for extension lifecycle management
 
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  `moDrawer` is created at `src/drawer.js` lines 886-908 and there is no teardown `disconnect()` call for it in existing unload handlers.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims â€” all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  Sound and scoped correctly to drawer lifecycle management.
+
+- **Behavioral change:**
+  None expected during normal operation.
+
+- **Ambiguity:**
+  Single recommendation.
+
+- **Checklist:**
+  Actionable and implementation-ready.
+
+- **Dependency integrity:**
+  Should be coordinated with F02 so both observers are disconnected from the same teardown path.
+
+- **Fix risk calibration:**
+  Low is accurate.
+
+- **"Why it's safe" validity:**
+  Valid; change is teardown-only.
+
+- **Verdict:** Ready to implement ðŸŸ¢
+  This is a clear cleanup gap with low implementation risk.
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
+
+- [ ] Declare `moDrawer` variable at function scope (around line 140)
+- [ ] Remove `const` keyword when assigning the MutationObserver (line ~791)
+- [ ] Add `moDrawer?.disconnect();` to the `beforeunload` cleanup handler
+
 ---
 
 ## F04: Selection Visibility Check Race Condition in Delete Handler
-
-### STEP 1. FIRST CODE REVIEW
-
-- **Plain-language summary:**
-  When the user presses Delete to remove selected entries, the code first checks if the entries are visible on screen. However, this check happens at one moment, and the actual deletion happens later. If the user quickly changes filters between the check and the deletion, the wrong entries might get deleted.
-
-- **Category:** Race Condition
-
-- **Location:**
-  `src/drawer.js`, `onDrawerKeydown` function, Delete case, lines ~105-135:
-  ```javascript
-  const isSelectionVisible = ()=>{
-      const bookRoot = cache[selectFrom]?.dom?.root;
-      if (!bookRoot) return false;
-      if (bookRoot.classList.contains('stwid--filter-visibility') ||
-          bookRoot.classList.contains('stwid--filter-query')) return false;
-      return selectedUids.every((uid)=>{
-          const entryRoot = cache[selectFrom]?.dom?.entry?.[uid]?.root;
-          return entryRoot && !entryRoot.classList.contains('stwid--filter-query');
-      });
-  };
-  if (!isSelectionVisible()) {
-      const count = selectedUids.length;
-      const noun = count === 1 ? 'entry is' : 'entries are';
-      const confirmed = await Popup.show.confirm(...);
-      if (!confirmed) return;
-  }
-  const srcBook = await loadWorldInfo(selectFrom);
-  // ... deletion loop
-  ```
-
-- **Detailed Finding:**
-  The `isSelectionVisible()` function checks DOM classes synchronously, but between this check and the actual deletion (after `await loadWorldInfo()` and potential user confirmation), the filter state could change. A user could:
-  1. Have entries selected
-  2. Press Delete (visibility check shows entries visible)
-  3. User or another async process changes filters, hiding entries
-  4. User confirms deletion (if confirmation was shown)
-  5. Entries are deleted despite now being hidden
-  
-  The snapshot of `selectFrom` and `selectedUids` is good, but the visibility check result becomes stale after any `await`.
-
-- **Why it matters:**
-  Users might accidentally delete entries they didn't intend to delete if filter states change during the delete flow. This is a data integrity issue.
-
-- **Severity:** Medium ❗
-
-- **Confidence:** Medium 🤔
-
-#### ADDRESSING THE ISSUE
-
-- **Suggested direction:**
-  Re-check visibility immediately before performing the deletion, or move the visibility check after loading the book data.
-
-- **Proposed fix:**
-  Move the `isSelectionVisible()` call to after `loadWorldInfo()` returns and immediately before the deletion loop. If visibility changed, show a new confirmation dialog explaining that the entries are now hidden.
-
-- **Implementation Checklist:**
-  - [ ] Move `isSelectionVisible()` call to after `const srcBook = await loadWorldInfo(selectFrom);`
-  - [ ] Add early return if `!srcBook` (already exists)
-  - [ ] Re-check visibility; if changed to hidden, show confirmation with updated message
-  - [ ] Only proceed with deletion after this second check
-
-- **Fix risk:** Low 🟢
-  - Changes order of operations but not the overall flow
-  - Adds one more check, doesn't remove existing safety
-
-- **Why it's safe to implement:**
-  The fix adds a safety check without changing the deletion logic itself. The confirmation dialog behavior remains the same.
-
-- **Pros:**
-  - Prevents accidental deletion of entries that became hidden during the async flow
-  - Better user experience with accurate visibility information
-  - More robust against race conditions
+*Finding removed - implementation plan discarded. See [user-review__drawer.js.md](tasks/code-reviews/pending-user-review/user-review__drawer.js.md)*
 
 ---
 
 ## F05: Potential Stale Reference to `selectionState`
-
-### STEP 1. FIRST CODE REVIEW
-
-- **Plain-language summary:**
-  The code gets a reference to the selection state object at startup and keeps using it forever. If the list panel is recreated or reset, this reference might point to old data that no longer matches what's on screen.
-
-- **Category:** Data Integrity
-
-- **Location:**
-  `src/drawer.js`, lines ~260-261 and ~270-273:
-  ```javascript
-  selectionState = listPanelApi.getSelectionState();
-  // ... later used in onDrawerKeydown:
-  const selectFrom = selectionState.selectFrom;
-  const selectedUids = [...(selectionState.selectList ?? [])];
-  ```
-
-- **Detailed Finding:**
-  `selectionState` is obtained once during drawer initialization via `listPanelApi.getSelectionState()`. The keyboard handler `onDrawerKeydown` uses this reference to get the current selection. However, if `listPanelApi` is recreated or its internal state is reset (e.g., during a full list refresh), the `selectionState` reference could become stale or point to a detached state object.
-
-  The code does set up `setWorldEntryContext` with getters/setters for selection properties, suggesting there was awareness of reference management, but `onDrawerKeydown` directly accesses the `selectionState` object instead of going through the context or re-querying from `listPanelApi`.
-
-- **Why it matters:**
-  If the selection state becomes stale, the Delete key could operate on entries that are no longer selected, or fail to operate on newly selected entries. This could lead to accidental deletions or confusing UX where Delete appears broken.
-
-- **Severity:** Medium ❗
-
-- **Confidence:** Low 😔
-
-#### ADDRESSING THE ISSUE
-
-- **Suggested direction:**
-  Access selection state through `listPanelApi.getSelectionState()` in the keyboard handler instead of caching the reference, or verify the reference is still valid before use.
-
-- **Proposed fix:**
-  Replace direct `selectionState` access in `onDrawerKeydown` with a fresh call to `listPanelApi.getSelectionState()`. Since `listPanelApi` is available in scope, this ensures we always have the current state.
-
-- **Implementation Checklist:**
-  - [ ] In `onDrawerKeydown`, replace `selectionState.selectFrom` with `listPanelApi.getSelectionState().selectFrom`
-  - [ ] Similarly update `selectionState.selectList` access
-  - [ ] Consider removing the `selectionState` variable entirely if no longer needed, or keep it only for initial setup
-
-- **Fix risk:** Low 🟢
-  - Simple reference change, no logic modification
-  - `listPanelApi` is already available in the closure
-
-- **Why it's safe to implement:**
-  The fix only changes how the state is accessed, not what is done with it. All existing validation logic remains unchanged.
-
-- **Pros:**
-  - Eliminates risk of stale state references
-  - More robust against list panel lifecycle changes
-  - Consistent with defensive programming practices
+*Finding removed - implementation plan discarded. See [user-review__drawer.js.md](tasks/code-reviews/pending-user-review/user-review__drawer.js.md)*
 
 ---
 
