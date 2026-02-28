@@ -1,6 +1,6 @@
 ---
 name: post-implementation-review
-description: Runs a structured post-implementation review (PIR) on a completed task. Reads the changed source files, identifies bugs, architectural violations, and JS best-practice issues introduced by the implementation, then appends a "## Post-Implementation Review" section to the task file and updates its status. Use when the user invokes /post-implementation-review, says "review the next task", "do a PIR", or provides a task file path to review. Processes exactly one task per invocation. In queue mode (no task specified), picks the first entry under "## Implemented tasks" in tasks/main-tasks-queue.md.
+description: Runs a structured post-implementation review (PIR) on a completed task. Reads the changed source files, identifies bugs, architectural violations, JS best-practice issues, and st-world-info-api rule violations introduced by the implementation, then appends a "## Post-Implementation Review" section to the task file and updates its status. Use when the user invokes /post-implementation-review, says "review the next task", "do a PIR", or provides a task file path to review. Processes exactly one task per invocation. In implemented-tasks folder mode (no task specified), scans tasks/main-tasks/implemented-tasks and picks the first task file.
 ---
 
 # post-implementation-review
@@ -8,14 +8,14 @@ description: Runs a structured post-implementation review (PIR) on a completed t
 Runs a post-implementation review on exactly one task per invocation, then stops.
 
 **Two modes:**
-- **Queue mode** (no task specified): read `tasks/main-tasks-queue.md`, pick the first entry under `## Implemented tasks`.
-- **Direct mode** (user names a task): use that task file as `TARGET_TASK_FILE`. Skip queue lookup.
+- **Implemented-tasks folder mode** (no task specified): scan `tasks/main-tasks/implemented-tasks`, sort task files by name, and pick the first file.
+- **Direct mode** (user names a task): use that task file as `TARGET_TASK_FILE`. Skip folder scan.
 
 ---
 
 ## 1. Select target
 
-**Queue mode:** Read `tasks/main-tasks-queue.md`. Under `## Implemented tasks`, select the first item and set it as `TARGET_TASK_FILE`. If none exist: report "No implemented tasks pending review" and stop.
+**Implemented-tasks folder mode:** Read `tasks/main-tasks/implemented-tasks`. Build a list of task files, sort by filename ascending, and set the first item as `TARGET_TASK_FILE`. If none exist: report "No implemented tasks pending review" and stop.
 
 **Direct mode:** Set `TARGET_TASK_FILE` to the path the user provided.
 
@@ -42,7 +42,7 @@ For each file in `FILES_TO_INSPECT`:
 
 1. Read the current source file. If it does not exist: record "File not found — skipped" and continue.
 2. Look up stated responsibilities in `FEATURE_MAP.md`. Flag anything outside declared scope as an Architectural Violation.
-3. Identify findings across the three categories below. Assign sequential IDs: PIR-01, PIR-02, etc., counting across all files.
+3. Identify findings across the four categories below. Assign sequential IDs: PIR-01, PIR-02, etc., counting across all files.
 
 ### A. Bugs introduced by the implementation
 
@@ -61,20 +61,11 @@ For each file in `FILES_TO_INSPECT`:
 
 ### C. JS best practice violations
 
-| Code | Rule |
-| --- | --- |
-| SEC-01 | Unsanitized HTML inserted into DOM |
-| SEC-02 | `eval()` or `new Function()` |
-| SEC-03 | Secrets in source |
-| PERF-01 | Large data stored in localStorage |
-| PERF-02 | Event listeners without cleanup |
-| PERF-03 | Blocking synchronous operations |
-| COMPAT-01 | Direct ST internals access |
-| COMPAT-02 | Non-unique MODULE_NAME |
-| COMPAT-03 | Settings not initialized with defaults |
-| COMPAT-04 | Direct emission of ST-internal events |
+Load and apply the `st-js-best-practices` skill. Use that skill as the source of truth for JS rule checks instead of hardcoding a local rule table here.
 
-For WI-related files: also check `wi-api.md` Section 11 anti-patterns.
+### D. st-world-info-api rule violations
+
+For WI-related files, load and apply the `st-world-info-api` skill and check for violations (including anti-patterns in `references/wi-api.md`, especially Section 11).
 
 ---
 
@@ -130,5 +121,14 @@ In `TARGET_TASK_FILE`, update `**Status**` to one of:
 
 - `ISSUES_FOUND` — if there is at least one finding
 - `NO_ISSUES` — if there are no findings
+
+---
+
+## 7. Move task file by outcome
+
+After updating `**Status**`:
+
+- If `NO_ISSUES`: move `TARGET_TASK_FILE` to `tasks\main-tasks\finished-tasks`.
+- If `ISSUES_FOUND`: move `TARGET_TASK_FILE` to `tasks\main-tasks\pending-fix`.
 
 Then stop.
