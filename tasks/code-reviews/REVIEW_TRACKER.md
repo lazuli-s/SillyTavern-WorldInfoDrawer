@@ -34,46 +34,46 @@ Track all code-review findings across the extension's JS files.
   - Implemented:
 
 ### `src/listPanel.state.js`
-[CodeReview_listPanel.state.js.md](tasks/code-reviews/pending-meta-review/CodeReview_listPanel.state.js.md)
+[CodeReview_listPanel.state.js.md](tasks/code-reviews/pending-implementation/CodeReview_listPanel.state.js.md)
 
-- **F01** â€” Potential data loss in folder collapse state persistence
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F01** — Potential data loss in folder collapse state persistence
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: All claims evidence-based; fix is low-risk and additive; checklist is actionable.
   - Implemented:
-- **F02** â€” Book collapse state capture may miss updates due to DOM timing
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F02** — Book collapse state capture may miss updates due to DOM timing
+  - Meta-reviewed: [X]
+    - Verdict: 🟡
+    - Reason: DOM timing claim is speculative/unverified; boolean check claim is incorrect; refactoring recommendation violates architecture. Revised to documentation-only.
   - Implemented:
-- **F03** â€” Entry search cache lacks eviction limits
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F03** — Entry search cache lacks eviction limits
+  - Meta-reviewed: [X]
+    - Verdict: 🟡
+    - Reason: Finding is sound but checklist presented competing implementations without guidance. Revised to prioritize simpler clear-cache approach.
   - Implemented:
 
 ### `src/listPanel.js`
-[CodeReview_listPanel.js.md](tasks/code-reviews/pending-meta-review/CodeReview_listPanel.js.md)
+[CodeReview_listPanel.js.md](tasks/code-reviews/pending-implementation/CodeReview_listPanel.js.md)
 
-- **F01** â€” Unhandled Promise Rejections in Async Book Operations
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F01** — Unhandled Promise Rejections in Async Book Operations
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: N/A
   - Implemented:
-- **F02** â€” Race Condition Between Save and Refresh in setBookSortPreference
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F02** — Race Condition Between Save and Refresh in setBookSortPreference
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: N/A
   - Implemented:
-- **F03** â€” Missing DOM Attachment Check in applyCollapseState
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F03** — Missing DOM Attachment Check in applyCollapseState
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: N/A
   - Implemented:
-- **F04** â€” refreshWorkerPromise Null Race in refreshList
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F04** — refreshWorkerPromise Null Race in refreshList
+  - Meta-reviewed: [X]
+    - Verdict: 🟡
+    - Reason: Fix proposal is vague with competing options; risk understated for core coordination changes. Checklist auto-revised to single concrete approach.
   - Implemented:
 
 ### `src/listPanel.coreBridge.js`
@@ -231,27 +231,27 @@ Track all code-review findings across the extension's JS files.
   - Implemented:
 
 ### `src/listPanel.selectionDnD.js`
-[CodeReview_listPanel.selectionDnD.js.md](tasks/code-reviews/pending-meta-review/CodeReview_listPanel.selectionDnD.js.md)
+[CodeReview_listPanel.selectionDnD.js.md](tasks/code-reviews/pending-implementation/CodeReview_listPanel.selectionDnD.js.md)
 
-- **F01** â€” Race condition between book load and save operations
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F01** — Race condition between book load and save operations
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: Finding is technically accurate with actionable fix direction. Added explicit cleanup step to checklist.
   - Implemented:
-- **F02** â€” Missing error handling leaves UI in inconsistent state
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F02** — Missing error handling leaves UI in inconsistent state
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: Finding is accurate with clear, actionable fix. No checklist revisions needed.
   - Implemented:
-- **F03** â€” Partial failure in bulk move creates data inconsistency
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F03** — Partial failure in bulk move creates data inconsistency
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: Finding is accurate with actionable fix. No checklist revisions needed.
   - Implemented:
-- **F04** â€” Uses undocumented runtime APIs not in WI API reference
-  - Meta-reviewed: [ ]
-    - Verdict:
-    - Reason:
+- **F04** — Uses undocumented runtime APIs not in WI API reference
+  - Meta-reviewed: [X]
+    - Verdict: 🟢
+    - Reason: Finding is accurate. Investigation/documentation task. Checklist auto-revised to add JSDoc guidance.
   - Implemented:
 
 ### `src/orderHelper.js`

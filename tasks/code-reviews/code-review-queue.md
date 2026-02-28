@@ -2,7 +2,6 @@
 
 ## Files Pending Review
 
-- `src/orderHelperRender.actionBar.js`
 - `src/orderHelperRender.filterPanel.js`
 - `src/orderHelperRender.js`
 - `src/orderHelperRender.tableBody.js`
