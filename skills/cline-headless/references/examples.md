@@ -57,6 +57,7 @@ git diff --cached | cline "Review these staged changes before I commit them."
 **Task:** Run Cline autonomously to find and fix all ESLint errors in `src/`.
 **Risk:** Medium — Cline edits source files.
 **Guardrails (suggested):**
+
 - Run on a feature branch: `git checkout -b fix/lint-errors`
 - Review changes after: `git diff`
 
@@ -202,6 +203,7 @@ git log --oneline -10 | cline "Write friendly release notes from these recent co
 **Task:** Apply a repeated instruction to multiple JS files, one at a time.
 **Risk:** High — Cline edits every file in the list.
 **Guardrails (strongly suggested):**
+
 - Run on a feature branch: `git checkout -b refactor/batch-task`
 - Restrict what Cline can do: `CLINE_COMMAND_PERMISSIONS` (see below)
 - Set a timeout per file with `--timeout`
@@ -282,6 +284,155 @@ echo "Review all changes with: git diff"
 | `-m claude-sonnet-4-6` | Use a specific model for this task |
 | `--config ~/.cline-cheap` | Use an alternate Cline config (e.g., cheaper model profile) |
 | `-c ~/path` | Run Cline in a different working directory |
+
+---
+
+## 6. Code Review Batch Runner
+
+**Task:** Run the `code-review-first-review` skill in a loop until the review queue is empty, then commit all new report files.
+**Risk:** Medium — Cline writes new review files and updates the queue and tracker. No source files are modified.
+
+**Guardrails (suggested):**
+
+- Optional throwaway branch for easy rollback: `git checkout -b reviews/batch`
+- Timeout is set to 900 s (15 min) per file — the skill loads docs, reads the source file, analyses across six axes, then writes the report and updates the queue. Less than 15 min risks a timeout before the file writes complete.
+
+```bash
+#!/bin/bash
+# ──────────────────────────────────────────────────────────────────────────────
+# code-review-batch.sh
+#
+# Task:    Run the code-review-first-review skill in a loop until the review
+#          queue is empty, then commit all new review report files.
+# Risk:    MEDIUM — Cline writes new review files and updates the queue/tracker.
+# Guardrail (optional):
+#   Run on a throwaway branch for easy rollback:
+#     git checkout -b reviews/batch
+# ──────────────────────────────────────────────────────────────────────────────
+
+set -e
+
+QUEUE="tasks/code-reviews/code-review-queue.md"
+LOG_DIR="scripts/cline-headless/logs"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="${LOG_DIR}/code-review-batch-${TIMESTAMP}.log"
+
+mkdir -p "$LOG_DIR"
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+log() { echo "$1" | tee -a "$LOG_FILE"; }
+
+# Count lines matching '- `...`' in the queue file.
+# grep -c exits 1 when count is 0; '|| true' keeps set -e happy.
+count_pending() {
+  local n
+  n=$(grep -c '^- `' "$QUEUE" 2>/dev/null || true)
+  echo "${n:-0}"
+}
+
+# Extract the first pending filename from the queue (without backticks).
+next_file() {
+  grep '^- `' "$QUEUE" | head -1 | sed 's/^- `//; s/`$//'
+}
+
+# ── Pre-flight ────────────────────────────────────────────────────────────────
+
+if [ ! -f "$QUEUE" ]; then
+  echo "ERROR: Queue file not found: $QUEUE"
+  exit 1
+fi
+
+PENDING=$(count_pending)
+
+if [ "${PENDING:-0}" -eq 0 ]; then
+  echo "Queue is already empty. Nothing to do."
+  exit 0
+fi
+
+log "═══════════════════════════════════════════════════════════════════════════"
+log "Code-review batch started: $(date)"
+log "Files in queue: $PENDING"
+log "Log file: $LOG_FILE"
+log "═══════════════════════════════════════════════════════════════════════════"
+
+# ── Review loop ───────────────────────────────────────────────────────────────
+
+RUN=0
+REVIEWED=()
+
+while true; do
+  PENDING=$(count_pending)
+  if [ "${PENDING:-0}" -eq 0 ]; then
+    log ""
+    log "Queue is empty — all reviews complete."
+    break
+  fi
+
+  NEXT=$(next_file)
+  RUN=$((RUN + 1))
+
+  log ""
+  log "── Run ${RUN} ── ${NEXT} ──────────────────────────────────────────────"
+  log "Started: $(date)"
+
+  # Each 'cline -y' invocation is a completely isolated task with a fresh
+  # context. No conversation history is shared between runs.
+  cline -y --timeout 900 \
+    "Run the /code-review-first-review skill now.
+
+Follow the skill instructions exactly as written in:
+  skills/code-review-first-review/SKILL.md
+
+Pick the FIRST file listed under '## Files Pending Review' in:
+  tasks/code-reviews/code-review-queue.md
+
+Complete the full first-pass review for that one file only.
+Write the findings report, remove the file from the queue, and update the tracker.
+
+Hard constraints — never violate these:
+- Do NOT edit any source files. This is a READ-ONLY review.
+- Do NOT modify anything under vendor/SillyTavern/
+- Use write_to_file or replace_in_file for all file writes. Never use apply_patch." \
+    2>&1 | tee -a "$LOG_FILE"
+
+  REVIEWED+=("$NEXT")
+  log "Completed: $(date)"
+done
+
+log ""
+log "Total reviews completed: ${RUN}"
+
+# ── Commit ────────────────────────────────────────────────────────────────────
+
+# Stage only the review output files — not source code.
+git add tasks/code-reviews/
+
+if git diff --cached --quiet; then
+  log "No review files were staged. Nothing to commit."
+  exit 0
+fi
+
+# Build the file list for the commit body.
+BODY=""
+for F in "${REVIEWED[@]}"; do
+  BODY="${BODY}- ${F}"$'\n'
+done
+
+git commit -m "$(printf 'code-review(first-review): add review reports from batch run\n\nFiles reviewed:\n%s' "$BODY")"
+
+log ""
+log "Committed. Log saved to: ${LOG_FILE}"
+```
+
+**Notes:**
+
+- The queue file is `tasks/code-reviews/code-review-queue.md`. The script stops when there are no more `- \`...\`` lines under `## Files Pending Review`.
+- Each `cline -y` call is a completely isolated task — no context carries over between runs.
+- Log files land in `scripts/cline-headless/logs/` and are gitignored.
+- If a run times out before writing the report, the queue entry is not removed and the next run retries the same file. Increase `--timeout` if this happens repeatedly.
+
+---
 
 ## CLINE_COMMAND_PERMISSIONS examples
 
