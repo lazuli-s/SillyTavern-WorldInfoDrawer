@@ -67,6 +67,13 @@ Load all conditionals that apply to the file being reviewed, plus always load:
 - `vendor/SillyTavern/public/scripts/st-context.js` — only if needed to confirm
   ST API names or shapes
 
+### When making any UI or CSS change
+
+Load:
+
+- `.claude/skills/css-guide/SKILL.md`
+  (overview of all CSS skills and when each one applies — then load the specific skills it recommends for the task)
+
 ---
 
 ## Reference note
