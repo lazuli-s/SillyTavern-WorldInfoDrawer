@@ -54,12 +54,59 @@
 - **Why it's safe to implement:**
   It does not alter metadata read/write, settings defaults, or any non-Prompt sort mode.
 
+
 - **Pros:**
   - Makes Prompt sort behavior align with core WI ordering rules
   - Reduces UI/runtime mismatch confusion
   - Keeps sorting behavior more predictable for users tuning activation priority
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The `SORT.PROMPT` comparator uses ascending `order` comparison (`>` returns 1, `<` returns -1), which is directly visible in `sortHelpers.js` lines 62-63.
+  - WI API documentation confirms `order` field semantics: "Priority order (higher = inserted earlier)".
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed direction is technically sound. The fix stays within `sortHelpers.js`, which per ARCHITECTURE.md owns "Sorting implementations and per-book sort preference read/write."
+
+- **Behavioral change:**
+  This is correctly labeled as "Behavior Change Required." Users currently see ascending `order` (lower first) in Prompt sort; after the fix, they will see descending order (higher first), matching core WI behavior.
+
+- **Ambiguity:**
+  Only one recommendation is presented: invert the `order` comparison in the `SORT.PROMPT` comparator.
+
+- **Checklist:**
+  Checklist items are complete and actionable by an LLM without human input:
+  - Items clearly reference specific comparison branches.
+  - Items specify preserving existing behavior for `position`, `depth`, and fallback logic.
+
+- **Dependency integrity:**
+  No cross-finding dependencies declared. The fix is self-contained within `sortEntries()`.
+
+- **Fix risk calibration:**
+  The stated "Low" risk is accurate. The change only affects one sort mode (`SORT.PROMPT`) and does not touch shared state, event handlers, or async behavior. Multiple sort modes remain unaffected.
+
+- **"Why it's safe" validity:**
+  The safety claim ("does not alter metadata read/write, settings defaults, or any non-Prompt sort mode") is specific and verifiable. The comparator is an isolated pure function; other sort modes have independent `case` branches.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Update the two `order` comparison branches in `SORT.PROMPT` so higher `order` values come first before fallback compare
+- [ ] Keep `position` and `depth` comparison behavior unchanged
+- [ ] Preserve the existing `sortDirection` reverse flow and fallback `defaultCompare`
 
 ---
 
@@ -112,7 +159,57 @@
   - Improves responsiveness for large lorebooks
   - Keeps behavior intact while lowering CPU cost
 
-<!-- META-REVIEW: STEP 2 will be inserted here -->
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The `SORT.LENGTH` getter `entry.content.split(/\s+/).filter(Boolean).length` is executed inside `numericSort`, which is called with `safeToSorted(entries, comparator)`.
+  - Sorting algorithms perform `O(n log n)` comparisons; each comparison calls the getter, causing repeated split/filter operations on the same content.
+  - `st-js-best-practices` PERF-03 explicitly warns against heavy synchronous work in UI-critical paths.
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code and algorithmic complexity analysis.
+
+#### Fix Quality Audit
+
+- **Direction:**
+  The proposed direction is technically sound. Precomputing values before sorting is a standard optimization pattern. The fix stays within `sortHelpers.js`, which per ARCHITECTURE.md owns sorting implementations.
+
+- **Behavioral change:**
+  No observable behavioral change — this is a pure optimization. Ordering semantics are preserved; only performance characteristics change.
+
+- **Ambiguity:**
+  Only one recommendation is presented: precompute length values in a lookup before sorting.
+
+- **Checklist:**
+  Checklist items are complete and actionable:
+  - "Add a per-call cache" — clear objective.
+  - "Compute each entry length once" — specific action.
+  - "Change the getter to read from cache" — specific implementation step.
+  - "Keep existing handling for non-string content" — boundary condition preserved.
+
+- **Dependency integrity:**
+  No cross-finding dependencies declared. The fix is self-contained within the `SORT.LENGTH` case.
+
+- **Fix risk calibration:**
+  The stated "Low" risk is accurate. This is a local optimization that does not affect shared state, event handlers, or async behavior. The change is isolated to how `SORT.LENGTH` produces numeric values for comparison.
+
+- **"Why it's safe" validity:**
+  The safety claim ("only changes how length values are produced, not how comparisons, fallbacks, or direction handling work") is specific and verifiable. The `numericSort` function's comparison logic, fallback behavior, and direction handling remain entirely unchanged.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add a per-call cache for length counts in `SORT.LENGTH`
+- [ ] Compute each entry length once using existing content rules
+- [ ] Change the `numericSort` getter for `SORT.LENGTH` to read from the cache
+- [ ] Keep existing handling for non-string `content` values
 
 ---
 

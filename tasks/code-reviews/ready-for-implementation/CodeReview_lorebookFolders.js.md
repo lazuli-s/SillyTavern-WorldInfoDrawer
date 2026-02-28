@@ -52,12 +52,6 @@
 - **Proposed fix:**
   Change the blocking condition to allow partial attribution. If `attributedNames.length > 0`, proceed to move those books. If `attributedNames.length < newNames.length`, show an additional informational toast listing the unmatched books.
 
-- **Implementation Checklist:**
-  - [ ] Replace the strict length check with a check that allows partial matches (e.g., `if (attributedNames.length === 0)` instead of `if (attributedNames.length !== newNames.length)`)
-  - [ ] Add logic to compute `unmatchedNames = newNames.filter(name => !attributedNames.includes(name))`
-  - [ ] Update the warning toast to indicate partial completion: "Moved N books to folder. Could not identify: [list]"
-  - [ ] Ensure the flow still guards against the case where `attributedNames` is empty (no confident matches)
-
 - **Fix risk:** Low 🟢
   This changes only the success condition for partial matches. The conservative attribution logic (matching by exact name or import prefix) remains unchanged, so the risk of mis-assigning books is not increased.
 
@@ -66,6 +60,41 @@
 
 - **Pros:**
   Better user experience for partial imports; users won't need to manually move books that were correctly identified.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The strict length check at line 381 blocks partial imports: `if (expectedBookNames.length && attributedNames.length !== newNames.length)`
+  - The attribution logic uses `expectedBookNames.includes(name) || importPrefixes.some(...)` which correctly identifies matching books
+  - The code path is traceable: import completes → newNames detected → attribution filtering → strict length check → potential cancellation
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:** Sound. Relaxing the length check allows partial matches without changing the attribution logic.
+- **Behavioral change:** Yes — partial imports will now succeed instead of failing completely. This is a positive behavioral change.
+- **Ambiguity:** Single clear recommendation — replace the strict length check with a check for zero attributed names.
+- **Checklist:** Complete and actionable. Steps are specific and verifiable.
+- **Dependency integrity:** No dependencies on other findings.
+- **Fix risk calibration:** Accurately rated Low. Only affects the success condition, not the attribution logic.
+- **"Why it's safe" validity:** Valid. The attribution matching logic is unchanged; only the decision threshold is relaxed.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Replace the strict length check with a check that allows partial matches (e.g., `if (attributedNames.length === 0)` instead of `if (attributedNames.length !== newNames.length)`)
+- [ ] Add logic to compute `unmatchedNames = newNames.filter(name => !attributedNames.includes(name))`
+- [ ] Update the warning toast to indicate partial completion: "Moved N books to folder. Could not identify: [list]"
+- [ ] Ensure the flow still guards against the case where `attributedNames` is empty (no confident matches)
 
 ---
 
@@ -131,11 +160,6 @@
 
   Alternatively, check if `root.classList.contains('stwid--state-target')` is already set before calling the callback.
 
-- **Implementation Checklist:**
-  - [ ] Track drag-over state locally in the event handler
-  - [ ] Only call `onDragStateChange(true, evt)` on the first `dragover` after `dragleave` or initial entry
-  - [ ] Ensure `onDragStateChange(false, evt)` is still called appropriately on `dragleave`
-
 - **Fix risk:** Low 🟢
   This is a performance optimization that doesn't change the callback contract — it just reduces the call frequency. The behavior remains the same; only the performance improves.
 
@@ -144,6 +168,40 @@
 
 - **Pros:**
   Reduced CPU usage during drag operations; smoother UI performance.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - The `dragover` handler at lines 412-420 calls `onDragStateChange?.(true, evt)` unconditionally on every event
+  - The `dragover` event fires continuously during drag operations (60+ times/second)
+  - The callback contract is for state change notifications, not continuous updates
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:** Sound. Adding a guard to prevent redundant callback invocations is the correct approach.
+- **Behavioral change:** No — the callback is still invoked at the correct lifecycle points (drag start/end), just not repeatedly during the drag.
+- **Ambiguity:** Two alternatives presented (guard variable vs classList check). The guard variable approach is cleaner and should be the primary recommendation.
+- **Checklist:** Complete and actionable. Steps are specific and verifiable.
+- **Dependency integrity:** No dependencies on other findings.
+- **Fix risk calibration:** Accurately rated Low. This is a defensive optimization with no functional changes.
+- **"Why it's safe" validity:** Valid. The callback contract is preserved; only the invocation frequency changes.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Track drag-over state locally in the event handler
+- [ ] Only call `onDragStateChange(true, evt)` on the first `dragover` after `dragleave` or initial entry
+- [ ] Ensure `onDragStateChange(false, evt)` is still called appropriately on `dragleave`
 
 ---
 
@@ -221,11 +279,6 @@
   }
   ```
 
-- **Implementation Checklist:**
-  - [ ] Move `registerFolderName(normalized)` to after the move loop
-  - [ ] Wrap it in a condition: only register if `movedCount > 0`
-  - [ ] Update the cleanup logic to match the new flow (remove the `removeFolderName(normalized)` call since we won't register unless books moved)
-
 - **Fix risk:** Low 🟢
   This ensures the registry always reflects actual folder usage. The only behavioral change is that empty folders won't temporarily appear in the registry during failed rename operations.
 
@@ -234,6 +287,40 @@
 
 - **Pros:**
   Registry consistency; no empty folders appearing temporarily in the UI.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `registerFolderName(normalized)` is called at line 271 before the book moving loop
+  - The registry tracks folder names for UI purposes via `FOLDER_REGISTRY_STORAGE_KEY`
+  - `normalizeRegistry` cleans up empty folders on next load, but temporary inconsistency exists
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:** Sound. Deferring registration until after successful moves ensures registry consistency.
+- **Behavioral change:** No — the end result is the same (folder registered if books exist), just without the temporary inconsistency window.
+- **Ambiguity:** Single clear recommendation with before/after code showing the exact change.
+- **Checklist:** Complete and actionable. Steps are specific and verifiable.
+- **Dependency integrity:** No dependencies on other findings.
+- **Fix risk calibration:** Accurately rated Low. This is a behavioral refinement with no breaking changes.
+- **"Why it's safe" validity:** Valid. The registry is a UI convenience; changes don't affect data integrity.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Move `registerFolderName(normalized)` to after the move loop
+- [ ] Wrap it in a condition: only register if `movedCount > 0`
+- [ ] Update the cleanup logic to match the new flow (remove the `removeFolderName(normalized)` call since we won't register unless books moved)
 
 ---
 
@@ -294,12 +381,6 @@
 
   Then ensure callers (in `listPanel.foldersView.js` or wherever folder DOMs are managed) call `folder.cleanup()` when removing the folder from the DOM.
 
-- **Implementation Checklist:**
-  - [ ] Add a `cleanup` function to the return object that calls `observer.disconnect()`
-  - [ ] Identify all places where folder DOM objects are discarded (likely in listPanel.foldersView.js)
-  - [ ] Ensure `cleanup()` is called before discarding the folder DOM reference
-  - [ ] Consider using a `WeakRef` or `FinalizationRegistry` as a fallback, though explicit cleanup is preferred
-
 - **Fix risk:** Low 🟢
   This adds a cleanup mechanism without changing existing behavior. If callers don't use the new `cleanup()` method immediately, the behavior is identical to today (memory leak continues). Once they do use it, the leak is fixed.
 
@@ -308,6 +389,41 @@
 
 - **Pros:**
   Proper resource cleanup; prevents memory leaks during long sessions.
+
+### STEP 2: META CODE REVIEW
+
+- **Evidence-based claims:**
+  - `MutationObserver` is created at line 529-532 and returned in the folder DOM object
+  - `observer.disconnect()` is never called in the current implementation
+  - The observer holds references to `books` and `count` elements, preventing GC
+
+- **Top risks:**
+  None.
+
+#### Technical Accuracy Audit
+
+No questionable claims — all assertions are traceable from code.
+
+#### Fix Quality Audit
+
+- **Direction:** Sound. Adding a cleanup method follows standard resource management patterns.
+- **Behavioral change:** No — the cleanup method is additive and doesn't change existing behavior until callers use it.
+- **Ambiguity:** Single clear recommendation with code showing the exact change.
+- **Checklist:** Complete and actionable. Steps are specific and verifiable.
+- **Dependency integrity:** No dependencies on other findings.
+- **Fix risk calibration:** Accurately rated Low. This is an additive change with no breaking changes.
+- **"Why it's safe" validity:** Valid. The change is purely additive.
+
+- **Verdict:** Ready to implement 🟢
+
+#### Implementation Checklist
+
+> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+
+- [ ] Add a `cleanup` function to the return object that calls `observer.disconnect()`
+- [ ] Identify all places where folder DOM objects are discarded (likely in listPanel.foldersView.js)
+- [ ] Ensure `cleanup()` is called before discarding the folder DOM reference
+- [ ] Consider using a `WeakRef` or `FinalizationRegistry` as a fallback, though explicit cleanup is preferred
 
 ---
 
