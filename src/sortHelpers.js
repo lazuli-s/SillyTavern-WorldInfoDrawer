@@ -74,8 +74,8 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
                 if (x(a).position < x(b).position) return -1;
                 if ((x(a).depth ?? Number.MAX_SAFE_INTEGER) < (x(b).depth ?? Number.MAX_SAFE_INTEGER)) return 1;
                 if ((x(a).depth ?? Number.MAX_SAFE_INTEGER) > (x(b).depth ?? Number.MAX_SAFE_INTEGER)) return -1;
-                if ((x(a).order ?? Number.MAX_SAFE_INTEGER) > (x(b).order ?? Number.MAX_SAFE_INTEGER)) return 1;
-                if ((x(a).order ?? Number.MAX_SAFE_INTEGER) < (x(b).order ?? Number.MAX_SAFE_INTEGER)) return -1;
+                if ((x(a).order ?? Number.MAX_SAFE_INTEGER) > (x(b).order ?? Number.MAX_SAFE_INTEGER)) return -1;
+                if ((x(a).order ?? Number.MAX_SAFE_INTEGER) < (x(b).order ?? Number.MAX_SAFE_INTEGER)) return 1;
                 return defaultCompare(a, b);
             });
             break;
@@ -97,9 +97,13 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
             break;
         }
         case SORT.LENGTH: {
+            const lengthCache = new Map(entries.map((item)=>{
+                const entry = x(item);
+                if (typeof entry?.content !== 'string') return [entry, null];
+                return [entry, entry.content.split(/\s+/).filter(Boolean).length];
+            }));
             result = numericSort((entry)=>{
-                if (typeof entry.content !== 'string') return null;
-                return entry.content.split(/\s+/).filter(Boolean).length;
+                return lengthCache.get(entry) ?? null;
             });
             break;
         }

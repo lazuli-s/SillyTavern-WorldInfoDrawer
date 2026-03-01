@@ -91,10 +91,25 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Replace the strict length check with a check that allows partial matches (e.g., `if (attributedNames.length === 0)` instead of `if (attributedNames.length !== newNames.length)`)
-- [ ] Add logic to compute `unmatchedNames = newNames.filter(name => !attributedNames.includes(name))`
-- [ ] Update the warning toast to indicate partial completion: "Moved N books to folder. Could not identify: [list]"
-- [ ] Ensure the flow still guards against the case where `attributedNames` is empty (no confident matches)
+- [x] Replace the strict length check with a check that allows partial matches (e.g., `if (attributedNames.length === 0)` instead of `if (attributedNames.length !== newNames.length)`)
+- [x] Add logic to compute `unmatchedNames = newNames.filter(name => !attributedNames.includes(name))`
+- [x] Update the warning toast to indicate partial completion: "Moved N books to folder. Could not identify: [list]"
+- [x] Ensure the flow still guards against the case where `attributedNames` is empty (no confident matches)
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/lorebookFolders.js`
+  - Replaced the all-or-nothing attribution check with a zero-match guard (`if (!attributedNames.length)`).
+  - Added `unmatchedNames` computation and an informational toast when only part of the imported books can be confidently identified.
+  - Kept the conservative attribution logic intact (exact expected names or imported-name prefixes), and still blocks auto-move when there are no confident matches.
+
+- [x] Replace the strict length check with a check that allows partial matches (e.g., `if (attributedNames.length === 0)` instead of `if (attributedNames.length !== newNames.length)`)
+- [x] Add logic to compute `unmatchedNames = newNames.filter(name => !attributedNames.includes(name))`
+- [x] Update the warning toast to indicate partial completion: "Moved N books to folder. Could not identify: [list]"
+- [x] Ensure the flow still guards against the case where `attributedNames` is empty (no confident matches)
 
 ---
 
@@ -199,9 +214,22 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Track drag-over state locally in the event handler
-- [ ] Only call `onDragStateChange(true, evt)` on the first `dragover` after `dragleave` or initial entry
-- [ ] Ensure `onDragStateChange(false, evt)` is still called appropriately on `dragleave`
+- [x] Track drag-over state locally in the event handler
+- [x] Only call `onDragStateChange(true, evt)` on the first `dragover` after `dragleave` or initial entry
+- [x] Ensure `onDragStateChange(false, evt)` is still called appropriately on `dragleave`
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/lorebookFolders.js`
+  - Added local drag target state (`isDropTargetActive`) so `onDragStateChange(true, evt)` runs only once per active drag-over session.
+  - Added shared cleanup (`clearDropTargetState`) used by both `dragleave` and `drop` to clear UI state and emit `onDragStateChange(false, evt)` once.
+
+- [x] Track drag-over state locally in the event handler
+- [x] Only call `onDragStateChange(true, evt)` on the first `dragover` after `dragleave` or initial entry
+- [x] Ensure `onDragStateChange(false, evt)` is still called appropriately on `dragleave`
 
 ---
 
@@ -318,9 +346,23 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Move `registerFolderName(normalized)` to after the move loop
-- [ ] Wrap it in a condition: only register if `movedCount > 0`
-- [ ] Update the cleanup logic to match the new flow (remove the `removeFolderName(normalized)` call since we won't register unless books moved)
+- [x] Move `registerFolderName(normalized)` to after the move loop
+- [x] Wrap it in a condition: only register if `movedCount > 0`
+- [x] Update the cleanup logic to match the new flow (remove the `removeFolderName(normalized)` call since we won't register unless books moved)
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/lorebookFolders.js`
+  - Moved folder registration to after the rename move loop.
+  - Added `movedCount` gate so the new folder name is registered only when at least one book actually moved.
+  - Removed obsolete cleanup path that tried to remove `normalized` on total failure, since it is no longer pre-registered.
+
+- [x] Move `registerFolderName(normalized)` to after the move loop
+- [x] Wrap it in a condition: only register if `movedCount > 0`
+- [x] Update the cleanup logic to match the new flow (remove the `removeFolderName(normalized)` call since we won't register unless books moved)
 
 ---
 
@@ -420,10 +462,25 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a `cleanup` function to the return object that calls `observer.disconnect()`
-- [ ] Identify all places where folder DOM objects are discarded (likely in listPanel.foldersView.js)
-- [ ] Ensure `cleanup()` is called before discarding the folder DOM reference
-- [ ] Consider using a `WeakRef` or `FinalizationRegistry` as a fallback, though explicit cleanup is preferred
+- [x] Add a `cleanup` function to the return object that calls `observer.disconnect()`
+- [x] Identify all places where folder DOM objects are discarded (likely in listPanel.foldersView.js)
+- [x] Ensure `cleanup()` is called before discarding the folder DOM reference
+- [x] Consider using a `WeakRef` or `FinalizationRegistry` as a fallback, though explicit cleanup is preferred
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/lorebookFolders.js`, `src/listPanel.foldersView.js`
+  - Added `cleanup()` to folder DOM objects returned by `createFolderDom`, implemented as `observer.disconnect()`.
+  - Updated folder DOM teardown (`resetFolderDoms`) to call `folderDom.cleanup?.()` before clearing references.
+  - Chose explicit cleanup; did not add `WeakRef`/`FinalizationRegistry` fallback.
+
+- [x] Add a `cleanup` function to the return object that calls `observer.disconnect()`
+- [x] Identify all places where folder DOM objects are discarded (likely in listPanel.foldersView.js)
+- [x] Ensure `cleanup()` is called before discarding the folder DOM reference
+- [x] Consider using a `WeakRef` or `FinalizationRegistry` as a fallback, though explicit cleanup is preferred
 
 ---
 

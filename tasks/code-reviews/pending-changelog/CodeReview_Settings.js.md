@@ -103,10 +103,24 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Remove direct imports of `saveSettingsDebounced` and `extension_settings` from `src/Settings.js`
-- [ ] Retrieve `saveSettingsDebounced` and `extensionSettings` from `SillyTavern.getContext()`
-- [ ] Update constructor hydration/assignment logic to use `extensionSettings.worldInfoDrawer`
-- [ ] Keep existing validation and `toJSON()` behavior unchanged
+- [x] Remove direct imports of `saveSettingsDebounced` and `extension_settings` from `src/Settings.js`
+- [x] Retrieve `saveSettingsDebounced` and `extensionSettings` from `SillyTavern.getContext()`
+- [x] Update constructor hydration/assignment logic to use `extensionSettings.worldInfoDrawer`
+- [x] Keep existing validation and `toJSON()` behavior unchanged
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/Settings.js`
+  - Removed direct imports from `script.js` and `extensions.js` and replaced them with `SillyTavern.getContext()` access.
+  - Added a small context helper and updated hydration, assignment, and save paths to use `extensionSettings` and `saveSettingsDebounced` from context.
+  - Preserved existing persisted keys, validation guards, boolean normalization, and `toJSON()` output shape.
+
+- Risks / Side effects
+  - If `SillyTavern.getContext()` is unavailable at module runtime, settings save/hydration could fail. (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Reload SillyTavern, change each sorting setting in the drawer, reload again, and confirm the same values persist without console errors.
 
 ---
 

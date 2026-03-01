@@ -1,5 +1,3 @@
-import { saveSettingsDebounced } from '../../../../../script.js';
-import { extension_settings } from '../../../../extensions.js';
 import { SORT, SORT_DIRECTION } from './constants.js';
 import { parseBooleanSetting } from './utils.js';
 
@@ -12,6 +10,11 @@ export { SORT, SORT_DIRECTION } from './constants.js';
  * @type {ReadonlyArray<'sortLogic'|'sortDirection'|'useBookSorts'>}
  */
 const KNOWN_SETTINGS_KEYS = /** @type {const} */ (['sortLogic', 'sortDirection', 'useBookSorts']);
+
+function getSettingsContext() {
+    const { saveSettingsDebounced, extensionSettings } = SillyTavern.getContext();
+    return { saveSettingsDebounced, extensionSettings };
+}
 
 export class Settings {
     /**@type {Settings} */
@@ -30,9 +33,10 @@ export class Settings {
     useBookSorts = true;
 
     constructor() {
+        const { extensionSettings } = getSettingsContext();
         // Hydrate only known settings keys to prevent arbitrary key pollution from
         // stale or foreign data under extension_settings.worldInfoDrawer.
-        const saved = extension_settings.worldInfoDrawer;
+        const saved = extensionSettings.worldInfoDrawer;
         if (saved && typeof saved === 'object') {
             for (const key of KNOWN_SETTINGS_KEYS) {
                 if (Object.hasOwn(saved, key)) {
@@ -44,7 +48,7 @@ export class Settings {
         // Store the class instance directly. SillyTavern serializes extension_settings
         // via JSON.stringify, which invokes toJSON() on this instance, ensuring only
         // the three declared fields (sortLogic, sortDirection, useBookSorts) are persisted.
-        extension_settings.worldInfoDrawer = this;
+        extensionSettings.worldInfoDrawer = this;
 
         if (!Object.values(SORT).includes(this.sortLogic)) {
             this.sortLogic = SORT.TITLE;
@@ -68,6 +72,7 @@ export class Settings {
     }
 
     save() {
+        const { saveSettingsDebounced } = getSettingsContext();
         saveSettingsDebounced();
     }
 }

@@ -102,7 +102,7 @@ const createFoldersViewSlice = ({
     const resetFolderDoms = ()=>{
         bulkFolderCollapsedIntent = null;
         for (const folderDom of listPanelState.getFolderDomValues()) {
-            folderDom.observer?.disconnect();
+            folderDom.cleanup?.();
         }
         listPanelState.clearFolderDoms();
     };

@@ -22,11 +22,11 @@ const createBookMenuSlice = ({
         // We sniff the selected file before ST consumes it.
         const filePromise = new Promise((resolve)=>{
             let isDone = false;
+            const abortController = new AbortController();
             const finish = (value)=>{
                 if (isDone) return;
                 isDone = true;
-                input.removeEventListener('change', onChange);
-                window.removeEventListener('focus', onWindowFocus);
+                abortController.abort();
                 clearTimeout(timeoutId);
                 resolve(value);
             };
@@ -54,8 +54,8 @@ const createBookMenuSlice = ({
             };
             const timeoutId = setTimeout(()=>finish(null), 15000);
             input.value = '';
-            input.addEventListener('change', onChange, { once:true });
-            window.addEventListener('focus', onWindowFocus, { once:true });
+            input.addEventListener('change', onChange, { once:true, signal:abortController.signal });
+            window.addEventListener('focus', onWindowFocus, { once:true, signal:abortController.signal });
             try {
                 input.click();
             } catch {
@@ -105,13 +105,13 @@ const createBookMenuSlice = ({
             try {
                 const created = await state.createNewWorldInfo(name, { interactive: false });
                 if (!created) continue;
-                bookCreated = true;
                 const nextPayload = {
                     entries: structuredClone(entries),
                     metadata: structuredClone(metadata),
                 };
                 folderDeps.sanitizeFolderMetadata(nextPayload.metadata);
                 await state.saveWorldInfo(name, nextPayload, true);
+                bookCreated = true;
                 currentNames.add(name);
                 createdNames.push(name);
             } catch (error) {
@@ -122,6 +122,7 @@ const createBookMenuSlice = ({
                         await state.deleteWorldInfo?.(name);
                     } catch (rollbackError) {
                         console.warn('[STWID] Rollback failed for book:', name, rollbackError);
+                        toastr.warning(`Import cleanup failed for "${name}". Delete this book manually if it appears in the lorebook list.`);
                     }
                 }
             }
@@ -228,6 +229,9 @@ const createBookMenuSlice = ({
     };
 
     const buildMoveBookMenuItem = (name, closeMenu)=>{
+        if (typeof name !== 'string') return null;
+        const { DOMPurify } = SillyTavern.libs;
+        const cleanName = DOMPurify.sanitize(name);
         const item = document.createElement('div'); {
             item.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
             item.classList.add('stwid--moveToFolder');
@@ -261,7 +265,7 @@ const createBookMenuSlice = ({
                 popupContent.classList.add('stwid--moveBookContent');
 
                 const title = document.createElement('h3');
-                title.textContent = `Move "${name}" to folder`;
+                title.textContent = `Move "${cleanName}" to folder`;
                 popupContent.append(title);
 
                 const row = document.createElement('div');
@@ -413,6 +417,15 @@ const createBookMenuSlice = ({
     };
 
     const buildBookMenuTrigger = (name)=>{
+        const addMenuItemKeyboardSupport = (item)=>{
+            item.tabIndex = 0;
+            item.addEventListener('keydown', (evt)=>{
+                if (evt.key === 'Enter' || evt.key === ' ') {
+                    evt.preventDefault();
+                    item.click();
+                }
+            });
+        };
         const menuTrigger = document.createElement('div'); {
             menuTrigger.classList.add('stwid--action');
             menuTrigger.classList.add('stwid--listDropdownTrigger');
@@ -478,11 +491,13 @@ const createBookMenuSlice = ({
                             }
                             menu.append(rename);
                         }
-                        menu.append(buildMoveBookMenuItem(name, closeMenu));
+                        const moveBook = buildMoveBookMenuItem(name, closeMenu);
+                        if (moveBook) menu.append(moveBook);
                         if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
                             const bulk = document.createElement('div'); {
                                 bulk.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                 bulk.classList.add('stwid--bulkEdit');
+                                addMenuItemKeyboardSupport(bulk);
                                 bulk.addEventListener('click', async()=>{
                                     const selected = await setSelectedBookInCoreUi(name);
                                     if (!selected) return;
@@ -508,6 +523,7 @@ const createBookMenuSlice = ({
                             const editor = document.createElement('div'); {
                                 editor.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                                 editor.classList.add('stwid--externalEditor');
+                                addMenuItemKeyboardSupport(editor);
                                 editor.addEventListener('click', async()=>{
                                     try {
                                         const response = await fetch('/api/plugins/wiee/editor', {
@@ -544,7 +560,12 @@ const createBookMenuSlice = ({
                         const fillTitles = document.createElement('div'); {
                             fillTitles.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             fillTitles.classList.add('stwid--fillTitles');
+                            addMenuItemKeyboardSupport(fillTitles);
                             fillTitles.addEventListener('click', async()=>{
+                                if (state.isDirtyCheck?.()) {
+                                    toastr.warning('Unsaved edits detected. Save or discard changes before filling titles.');
+                                    return;
+                                }
                                 await state.fillEmptyTitlesWithKeywords(name);
                                 closeMenu?.();
                             });
@@ -659,6 +680,7 @@ const createBookMenuSlice = ({
                         const exp = document.createElement('div'); {
                             exp.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             exp.classList.add('stwid--export');
+                            addMenuItemKeyboardSupport(exp);
                             exp.addEventListener('click', async()=>{
                                 state.download(JSON.stringify({
                                     entries: structuredClone(state.cache[name].entries),
@@ -681,6 +703,7 @@ const createBookMenuSlice = ({
                         const dup = document.createElement('div'); {
                             dup.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             dup.classList.add('stwid--duplicate');
+                            addMenuItemKeyboardSupport(dup);
                             dup.addEventListener('click', async()=>{
                                 await duplicateBook(name);
                                 closeMenu?.();
@@ -700,6 +723,7 @@ const createBookMenuSlice = ({
                         const del = document.createElement('div'); {
                             del.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             del.classList.add('stwid--delete');
+                            addMenuItemKeyboardSupport(del);
                             del.addEventListener('click', async()=>{
                                 await deleteBook(name);
                                 closeMenu?.();

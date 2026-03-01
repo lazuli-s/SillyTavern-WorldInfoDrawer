@@ -28,6 +28,7 @@ export const initWIUpdateHandler = ({
     // Monotonic token to correlate a wait call with the specific update cycle it should observe.
     // This prevents a wait from resolving due to an earlier/later unrelated update.
     let updateWIChangeToken = 0;
+    let isWIUpdateInProgress = false;
     const editorDuplicateRefreshQueue = [];
     let isEditorDuplicateRefreshWorkerRunning = false;
 
@@ -64,6 +65,7 @@ export const initWIUpdateHandler = ({
         const cycleFinished = createDeferred();
         updateWIChangeFinished = cycleFinished;
         updateWIChangeToken += 1;
+        isWIUpdateInProgress = true;
         updateWIChangeStarted.resolve();
 
         try {
@@ -223,6 +225,7 @@ export const initWIUpdateHandler = ({
             }
             getRefreshBookSourceLinks()?.('worldinfo_updated');
         } finally {
+            isWIUpdateInProgress = false;
             updateWIChangeStarted = createDeferred();
             cycleFinished.resolve();
         }
@@ -242,8 +245,13 @@ export const initWIUpdateHandler = ({
 
         // Wait until a new cycle starts.
         while (updateWIChangeToken === tokenAtCall) {
-            const startPromise = updateWIChangeStarted.promise;
-            await startPromise;
+            if (isWIUpdateInProgress) {
+                // If we're inside a currently running cycle, wait for it to finish
+                // so we can observe a later cycle start.
+                await updateWIChangeFinished?.promise;
+                continue;
+            }
+            await updateWIChangeStarted.promise;
             // Loop to re-check token in case the promise resolved from an older resolve
             // (e.g., if an update started and finished before this awaited line ran).
         }
@@ -297,6 +305,9 @@ export const initWIUpdateHandler = ({
 
     const fillEmptyTitlesWithKeywords = async(name)=>{
         const data = await loadWorldInfo(name);
+        if (!data || typeof data !== 'object' || !data.entries || typeof data.entries !== 'object') {
+            return;
+        }
         let hasUpdates = false;
         for (const entry of Object.values(data.entries)) {
             const hasTitle = Boolean(entry.comment?.trim());

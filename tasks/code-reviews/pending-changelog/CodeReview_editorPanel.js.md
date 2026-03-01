@@ -99,6 +99,15 @@ No questionable claims - all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 - no checklist revisions needed.
 
-- [ ] Create a new private function `renderActivationSettings()` that contains the duplicated logic
-- [ ] Refactor `showActivationSettings()` to call `renderActivationSettings()` after setting the active class
-- [ ] Refactor `toggleActivationSettings()` to call `renderActivationSettings()` when `isActive` is true
+- [x] Create a new private function `renderActivationSettings()` that contains the duplicated logic
+- [x] Refactor `showActivationSettings()` to call `renderActivationSettings()` after setting the active class
+- [x] Refactor `toggleActivationSettings()` to call `renderActivationSettings()` when `isActive` is true
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/editorPanel.js`
+  - Added `renderActivationSettings()` to centralize activation settings rendering logic
+  - Updated `showActivationSettings()` and active branch of `toggleActivationSettings()` to call the shared helper

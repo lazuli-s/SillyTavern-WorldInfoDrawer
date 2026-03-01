@@ -105,10 +105,24 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add an in-progress flag (or equivalent state) updated at the start and end of `updateWIChange`
-- [ ] Update `waitForWorldInfoUpdate()` to avoid awaiting an already-resolved start signal in a tight loop
-- [ ] Preserve current semantics: only resolve for an update cycle that starts after the call
-- [ ] Keep `waitForWorldInfoUpdateWithTimeout()` behavior unchanged for callers
+- [x] Add an in-progress flag (or equivalent state) updated at the start and end of `updateWIChange`
+- [x] Update `waitForWorldInfoUpdate()` to avoid awaiting an already-resolved start signal in a tight loop
+- [x] Preserve current semantics: only resolve for an update cycle that starts after the call
+- [x] Keep `waitForWorldInfoUpdateWithTimeout()` behavior unchanged for callers
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`
+  - Added `isWIUpdateInProgress` state and update-cycle start/end toggles inside `updateWIChange`.
+  - Updated `waitForWorldInfoUpdate()` to await `updateWIChangeFinished.promise` when a cycle is already running, preventing a hot loop on an already-resolved start promise.
+  - Preserved strict token semantics so waits only resolve for cycles that start after the call, and left timeout wrapper behavior unchanged.
+
+- Risks / Side effects
+  - Waiters can now remain pending longer if updates never fire, which may expose pre-existing caller assumptions about immediate resolution timing. (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Trigger duplicate/create flows rapidly; confirm the UI stays responsive and each operation completes without long hangs.
 
 ---
 
@@ -205,9 +219,22 @@ No questionable claims — all assertions are traceable from code and `st-world-
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Validate `data` exists and has an object-like `entries` field before `Object.values(...)`
-- [ ] Return early when the book cannot be loaded
-- [ ] Keep existing "save only when updates exist" behavior unchanged
+- [x] Validate `data` exists and has an object-like `entries` field before `Object.values(...)`
+- [x] Return early when the book cannot be loaded
+- [x] Keep existing "save only when updates exist" behavior unchanged
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/wiUpdateHandler.js`
+  - Added a defensive guard in `fillEmptyTitlesWithKeywords()` to return early when `loadWorldInfo(name)` returns null/invalid data or missing `entries`.
+  - Kept existing behavior that saves only when title updates were actually made.
+
+- Risks / Side effects
+  - If upstream data is unexpectedly malformed, the action now exits silently instead of throwing, which may hide the root cause from end users. (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Run "fill empty titles" on a valid book and confirm empty-title entries are still filled and saved exactly as before.
 
 ---
 

@@ -104,9 +104,22 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Update the two `order` comparison branches in `SORT.PROMPT` so higher `order` values come first before fallback compare
-- [ ] Keep `position` and `depth` comparison behavior unchanged
-- [ ] Preserve the existing `sortDirection` reverse flow and fallback `defaultCompare`
+- [x] Update the two `order` comparison branches in `SORT.PROMPT` so higher `order` values come first before fallback compare
+- [x] Keep `position` and `depth` comparison behavior unchanged
+- [x] Preserve the existing `sortDirection` reverse flow and fallback `defaultCompare`
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/sortHelpers.js`
+  - Inverted the Prompt-mode `order` tie-breaker comparator so higher `order` values are sorted first for equal `position` and `depth`
+  - Left `position`, `depth`, fallback `defaultCompare`, and existing reverse handling unchanged
+
+- Risks / Side effects
+  - Users may notice Prompt sort order changes where entries share the same `position` and `depth` because display now matches WI precedence (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Open a lorebook with at least two same-position/same-depth entries with different `order` values, set sort to Prompt, and confirm higher `order` appears first in ascending mode.
 
 ---
 
@@ -206,10 +219,19 @@ No questionable claims — all assertions are traceable from code and algorithmi
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a per-call cache for length counts in `SORT.LENGTH`
-- [ ] Compute each entry length once using existing content rules
-- [ ] Change the `numericSort` getter for `SORT.LENGTH` to read from the cache
-- [ ] Keep existing handling for non-string `content` values
+- [x] Add a per-call cache for length counts in `SORT.LENGTH`
+- [x] Compute each entry length once using existing content rules
+- [x] Change the `numericSort` getter for `SORT.LENGTH` to read from the cache
+- [x] Keep existing handling for non-string `content` values
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/sortHelpers.js`
+  - Added a per-call `Map` cache in `SORT.LENGTH` to compute each entry word count once before sorting
+  - Replaced the length getter split/filter logic with a cache lookup, preserving `null` for non-string `content`
 
 ---
 

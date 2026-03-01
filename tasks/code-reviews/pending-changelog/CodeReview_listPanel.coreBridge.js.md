@@ -164,10 +164,25 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Reorder value verification to happen before dispatching change event
-- [ ] Add short delay and re-verification after dispatch to catch ST rejections
-- [ ] Ensure early return on `previousValue === option.value` happens before dispatch
-- [ ] Update function documentation to clarify return value semantics (true = selection confirmed, false = selection failed or was rejected)
+- [x] Reorder value verification to happen before dispatching change event
+- [x] Add short delay and re-verification after dispatch to catch ST rejections
+- [x] Ensure early return on `previousValue === option.value` happens before dispatch
+- [x] Update function documentation to clarify return value semantics (true = selection confirmed, false = selection failed or was rejected)
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.coreBridge.js`
+  - Moved `select.value` verification to run before dispatching the `change` event.
+  - Kept the unchanged-selection fast path (`previousValue === option.value`) before dispatch.
+  - Added a short `await delay(50)` post-dispatch verification to catch host rollback/rejection.
+  - Clarified JSDoc return semantics: `true` only when selection is confirmed.
+
+- Risks / Side effects
+  - Selection delegation now waits an extra 50ms only when dispatching a real selection change (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Switch between two different books using the drawer menu actions (rename/duplicate/delete); confirm actions apply to the currently highlighted book and no mismatch occurs.
 
 ---
 
