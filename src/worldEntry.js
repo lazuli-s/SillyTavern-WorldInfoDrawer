@@ -16,16 +16,17 @@ export const entryState = function(entry) {
 
 export const renderEntry = async(e, name, before = null)=>{
     const world = context.cache[name];
+    const rowUid = String(e.uid);
     world.dom.entry[e.uid] = {};
     const entry = document.createElement('div'); {
         world.dom.entry[e.uid].root = entry;
         entry.classList.add('stwid--entry');
-        entry.dataset.uid = e.uid;
+        entry.dataset.uid = rowUid;
         entry.addEventListener('selectstart', (evt)=>evt.preventDefault());
         entry.addEventListener('dragstart', (evt)=>{
             // Selection uses stable uid strings (not entry object identity).
             // After cache refreshes, entry objects are re-cloned, so identity checks break.
-            if (context.selectFrom === null || !context.selectList?.includes(e.uid)) {
+            if (context.selectFrom === null || !context.selectList?.includes(rowUid)) {
                 evt.preventDefault();
                 return;
             }
@@ -48,7 +49,7 @@ export const renderEntry = async(e, name, before = null)=>{
                     const to = Math.max(start, end);
                     for (let i = from; i <= to; i++) {
                         const el = world.dom.entryList.children[i];
-                        const uid = el.dataset.uid;
+                        const uid = String(el.dataset.uid);
                         if (!context.selectList.includes(uid)) {
                             context.selectAdd(el);
                             context.selectList.push(uid);
@@ -83,16 +84,16 @@ export const renderEntry = async(e, name, before = null)=>{
                         });
                     }
                     // regular single select
-                    if (context.selectList.includes(e.uid)) {
+                    if (context.selectList.includes(rowUid)) {
                         context.selectRemove(entry);
-                        context.selectList.splice(context.selectList.indexOf(e.uid), 1);
+                        context.selectList.splice(context.selectList.indexOf(rowUid), 1);
                         if (context.selectLast == entry) context.selectLast = null;
                         if (context.selectList.length == 0) {
                             context.selectEnd();
                         }
                     } else {
                         context.selectAdd(entry);
-                        context.selectList.push(e.uid);
+                        context.selectList.push(rowUid);
                         context.selectLast = entry;
                     }
                 }
@@ -126,8 +127,11 @@ export const renderEntry = async(e, name, before = null)=>{
             status.addEventListener('click', (evt)=>{
                 evt.stopPropagation();
             });
-            // F02: per-row in-flight save guard — prevents concurrent saves from racing
+            // Per-row in-flight save guard: prevents duplicate clicks while queued save runs.
             let isSavingState = false;
+            const saveEntryState = ()=>typeof context.enqueueEntryStateSave === 'function'
+                ? context.enqueueEntryStateSave(name)
+                : context.saveWorldInfo(name, context.buildSavePayload(name), true);
             const isEnabledTemplate = document.querySelector('#entry_edit_template [name="entryKillSwitch"]');
             const isEnabled = /**@type {HTMLSelectElement}*/(isEnabledTemplate?.cloneNode(true));
             // F04: guard instead of early return — row construction continues if template is missing
@@ -154,7 +158,7 @@ export const renderEntry = async(e, name, before = null)=>{
                     isSavingState = true;
                     isEnabled.disabled = true;
                     try {
-                        await context.saveWorldInfo(name, context.buildSavePayload(name), true);
+                        await saveEntryState();
                     } catch (err) {
                         // F03: rollback cache and UI on save failure
                         context.cache[name].entries[e.uid].disable = prevDisabled;
@@ -203,7 +207,7 @@ export const renderEntry = async(e, name, before = null)=>{
                     isSavingState = true;
                     strat.disabled = true;
                     try {
-                        await context.saveWorldInfo(name, context.buildSavePayload(name), true);
+                        await saveEntryState();
                     } catch (err) {
                         // F03: rollback cache and UI on save failure
                         context.cache[name].entries[e.uid].constant = prevConstant;
@@ -243,7 +247,7 @@ export const renderEntry = async(e, name, before = null)=>{
         entry.addEventListener('pointerdown', (evt)=>{
             if (evt.button !== 0) return; // left-click only
             if (context.selectFrom !== name) return;
-            if (!context.selectList?.includes?.(e.uid)) return;
+            if (!context.selectList?.includes?.(rowUid)) return;
             // Ensure the dragstart event can fire for any selected row.
             // (Without this, the UI can look selected but never start dragging.)
             entry.setAttribute('draggable', 'true');

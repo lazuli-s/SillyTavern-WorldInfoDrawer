@@ -102,10 +102,19 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a normalized row UID variable in `renderEntry()` and stop using raw `e.uid` for selection list comparisons.
-- [ ] Replace all selection-list membership/removal operations in `worldEntry.js` to use the normalized UID type consistently.
-- [ ] Normalize SHIFT-range UIDs from `dataset.uid` before comparing/pushing.
-- [ ] Update drag gating checks in `dragstart` and `pointerdown` to use the same normalized UID type.
+- [x] Add a normalized row UID variable in `renderEntry()` and stop using raw `e.uid` for selection list comparisons.
+- [x] Replace all selection-list membership/removal operations in `worldEntry.js` to use the normalized UID type consistently.
+- [x] Normalize SHIFT-range UIDs from `dataset.uid` before comparing/pushing.
+- [x] Update drag gating checks in `dragstart` and `pointerdown` to use the same normalized UID type.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/worldEntry.js`
+  - Added a normalized `rowUid` string in `renderEntry()` and used it for selection membership/removal checks.
+  - Normalized SHIFT-range dataset UIDs before pushing/comparing and updated `dragstart`/`pointerdown` gating to use normalized UIDs.
 
 ---
 
@@ -202,7 +211,20 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add a per-book save serialization helper in the shared runtime/handler layer used by `worldEntry.js`.
-- [ ] Expose that helper to `worldEntry` via the injected context object.
-- [ ] Replace direct immediate-save calls in both entry status handlers with the shared queued save helper.
-- [ ] Ensure queued saves rebuild payload at execution time (not at click time) to avoid stale snapshots.
+- [x] Add a per-book save serialization helper in the shared runtime/handler layer used by `worldEntry.js`.
+- [x] Expose that helper to `worldEntry` via the injected context object.
+- [x] Replace direct immediate-save calls in both entry status handlers with the shared queued save helper.
+- [x] Ensure queued saves rebuild payload at execution time (not at click time) to avoid stale snapshots.
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`, `src/worldEntry.js`
+  - Added `enqueueEntryStateSave(bookName)` in `drawer.js` using a per-book promise queue and payload rebuild at execution time.
+  - Injected the queue helper through `setWorldEntryContext(...)` and switched entry status handlers to call the shared queued helper.
+
+- Risks / Side effects
+  - Rapid cross-row toggles now serialize per book and may feel slightly slower than parallel immediate saves (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] In one book, quickly toggle enable/state on multiple different rows; confirm all final row states persist after refresh with no reversion.

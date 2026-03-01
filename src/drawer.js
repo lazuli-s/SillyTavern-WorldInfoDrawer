@@ -109,6 +109,20 @@ export const initDrawer = ({
      * @returns {Promise<void>}
      */
     const updateWIChangeRuntime = (bookName, bookData)=>wiHandlerApi.updateWIChange(bookName, bookData);
+    const entryStateSaveQueueByBook = new Map();
+    const enqueueEntryStateSave = (bookName)=>{
+        const previousSave = entryStateSaveQueueByBook.get(bookName) ?? Promise.resolve();
+        const queuedSave = previousSave
+            .catch(()=>{})
+            .then(()=>saveWorldInfo(bookName, wiHandlerApi.buildSavePayload(bookName), true))
+        ;
+        entryStateSaveQueueByBook.set(bookName, queuedSave);
+        return queuedSave.finally(()=>{
+            if (entryStateSaveQueueByBook.get(bookName) === queuedSave) {
+                entryStateSaveQueueByBook.delete(bookName);
+            }
+        });
+    };
 
     const addDrawer = ()=>{
         const { openOrderHelper, refreshOrderHelperScope } = initOrderHelper({
@@ -630,6 +644,7 @@ export const initDrawer = ({
                         buildSavePayload: wiHandlerApi.buildSavePayload,
                         cache,
                         dom,
+                        enqueueEntryStateSave,
                         getWorldEntry,
                         renderTemplateAsync,
                         saveWorldInfo,
