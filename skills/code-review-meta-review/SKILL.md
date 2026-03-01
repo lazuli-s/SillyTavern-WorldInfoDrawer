@@ -1,6 +1,6 @@
 ---
 name: code-review-meta-review
-description: Runs a structured meta-review (Step 2) on the next pending code review file. Scans `tasks/code-reviews/pending-meta-review/` for the first CodeReview file, loads authoritative docs, audits each finding for technical accuracy and implementation quality, inserts a `### STEP 2: META CODE REVIEW` section into each finding, and moves the file to `pending-implementation/`. Use when the user invokes /code-review-meta-review, says "do a meta-review", "run a meta-review", or "meta-review the next file". Processes exactly one file per run, then stops.
+description: 'Runs a structured meta-review (Step 2) on the next pending code review file. Scans `tasks/code-reviews/pending-meta-review/` for the first CodeReview file, loads authoritative docs, audits each finding for technical accuracy and implementation quality, inserts a `### STEP 2: META CODE REVIEW` section into each finding, and moves the file to `pending-implementation/`. Use when the user invokes /code-review-meta-review, says "do a meta-review", "run a meta-review", or "meta-review the next file". Processes exactly one file per run, then stops.'
 ---
 
 # code-review-meta-review
