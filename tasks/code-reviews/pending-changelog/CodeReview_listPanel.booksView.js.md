@@ -109,10 +109,29 @@
 > Meta-review Reason: Checklist assumes dirty state API exists without verification; needs explicit API check or fallback approach.
 > Revisions applied: Added API verification step and fallback option if dirty state unavailable.
 
-- [ ] Verify `editorPanel.js` exposes a dirty state check API; if not, implement one or use alternative approach (compare current editor content against saved entry)
-- [ ] Modify rollback logic to check dirty state before removing entry; if dirty, show confirmation dialog instead of auto-rollback
-- [ ] Add user-facing error message with retry option when save fails with dirty editor
-- [ ] Ensure editor content is preserved (not cleared) when showing the confirmation dialog
+- [x] Verify `editorPanel.js` exposes a dirty state check API; if not, implement one or use alternative approach (compare current editor content against saved entry)
+- [x] Modify rollback logic to check dirty state before removing entry; if dirty, show confirmation dialog instead of auto-rollback
+- [x] Add user-facing error message with retry option when save fails with dirty editor
+- [x] Ensure editor content is preserved (not cleared) when showing the confirmation dialog
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.booksView.js`
+  - Confirmed existing dirty-state API is already exposed through `runtime.isDirtyCheck`.
+  - Replaced unconditional rollback with a guarded flow: when the editor is dirty, prompt to retry save first, then ask whether to discard.
+  - Added fallback behavior for environments without confirm dialog support: keep editor content open and avoid auto-rollback.
+  - Kept existing rollback behavior for clean editor state to preserve prior fast-path behavior.
+
+- Risks / Side effects
+  - A failed create can now leave an unsaved temporary entry visible until the user saves or discards it (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Create a new entry, force a save failure, type text, and choose to keep edits. Confirm the editor stays open with typed text intact.
+  - Retry flow uses a fresh payload build and may still fail under unstable connectivity (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] After the same failure, choose retry. Confirm success toast appears when network is restored, or editor stays open if retry fails.
+  - Discard branch still removes optimistic cache/DOM entry and resets editor (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] After failure, choose discard. Confirm the temporary entry disappears from list and editor clears.
 
 ---
 
