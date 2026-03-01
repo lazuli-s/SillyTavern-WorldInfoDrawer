@@ -15,6 +15,16 @@ Subject line must be **under 72 characters**.
 
 ---
 
+## Default Staging Scope
+
+Unless the user explicitly says otherwise, stage and commit **only files changed during the current session**.
+
+- Do not include unrelated pre-existing modified/untracked files.
+- If unrelated files exist, leave them unstaged by default.
+- Include unrelated files only when the user explicitly requests it.
+
+---
+
 ## Types
 
 | Type | When to use |
