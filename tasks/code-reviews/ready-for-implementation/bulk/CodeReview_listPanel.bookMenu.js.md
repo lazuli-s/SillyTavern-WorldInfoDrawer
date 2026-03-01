@@ -1,4 +1,4 @@
-# CODE REVIEW FINDINGS: `src/listPanel.bookMenu.js`
+﻿# CODE REVIEW FINDINGS: `src/listPanel.bookMenu.js`
 *Reviewed: February 28, 2026*
 
 ## Scope
@@ -28,14 +28,14 @@
   2. Window focus returns without a file (cancel detection)
   3. The 15-second timeout fires
 
-  However, if the promise is resolved externally or the caller abandons it, the listeners remain attached. More critically, the `once: true` option only guarantees automatic removal if the event fires — if it never fires, the listener persists until the element is garbage collected.
+  However, if the promise is resolved externally or the caller abandons it, the listeners remain attached. More critically, the `once: true` option only guarantees automatic removal if the event fires â€” if it never fires, the listener persists until the element is garbage collected.
 
 - **Why it matters:**
   Repeated use of the import feature (especially if users cancel frequently) will accumulate orphaned event listeners and closures, gradually increasing memory usage in long-running SillyTavern sessions.
 
-- **Severity:** Low ⭕
+- **Severity:** Low â­•
 
-- **Confidence:** High 😀
+- **Confidence:** High ðŸ˜€
 
 #### ADDRESSING THE ISSUE
 
@@ -45,10 +45,10 @@
 - **Proposed fix:**
   Use an AbortController to manage all listener registrations, and call `abort()` in the `finish()` function to guarantee cleanup regardless of which path is taken.
 
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
 
 - **Why it's safe to implement:**
-  This is a pure refactoring with no behavior changes — it only ensures cleanup happens consistently. No UI flows or data paths are affected.
+  This is a pure refactoring with no behavior changes â€” it only ensures cleanup happens consistently. No UI flows or data paths are affected.
 
 - **Pros:**
   Prevents memory leaks, more robust cleanup pattern, follows modern best practices.
@@ -65,23 +65,23 @@
 
 #### Technical Accuracy Audit
 
-No questionable claims — all assertions are traceable from code.
+No questionable claims â€” all assertions are traceable from code.
 
 #### Fix Quality Audit
 
 - **Direction:** Using AbortController for listener cleanup is technically sound and modern.
 - **Behavioral change:** None. Pure refactoring.
 - **Ambiguity:** Single clear recommendation.
-- **Checklist:** Actionable steps — create controller, pass signal, call abort.
+- **Checklist:** Actionable steps â€” create controller, pass signal, call abort.
 - **Dependency integrity:** N/A
-- **Fix risk calibration:** Accurately rated Low — no shared state touched.
-- **"Why it's safe" validity:** Valid — no behavior changes, only cleanup guarantee.
+- **Fix risk calibration:** Accurately rated Low â€” no shared state touched.
+- **"Why it's safe" validity:** Valid â€” no behavior changes, only cleanup guarantee.
 
-- **Verdict:** Ready to implement 🟢
+- **Verdict:** Ready to implement ðŸŸ¢
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
 
 - [ ] Create an `AbortController` at the start of `openImportDialog`
 - [ ] Pass `abortController.signal` as the third argument to `addEventListener` calls
@@ -113,9 +113,9 @@ No questionable claims — all assertions are traceable from code.
 - **Why it matters:**
   Book names can come from imported files or external sources and may contain unexpected characters. While the current code uses `textContent` (safe), defense-in-depth requires sanitizing inputs before DOM insertion, and future modifications might inadvertently switch to `innerHTML`.
 
-- **Severity:** Low ⭕
+- **Severity:** Low â­•
 
-- **Confidence:** Medium 🤔
+- **Confidence:** Medium ðŸ¤”
 
 #### ADDRESSING THE ISSUE
 
@@ -125,7 +125,7 @@ No questionable claims — all assertions are traceable from code.
 - **Proposed fix:**
   Add a type check and DOMPurify sanitization for the `name` variable at the start of `buildMoveBookMenuItem`, following the SEC-02 pattern.
 
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
 
 - **Why it's safe to implement:**
   Sanitization with DOMPurify is non-destructive for normal strings and only removes potentially dangerous content. The `textContent` assignment already prevents HTML execution, so this adds defense-in-depth without changing behavior.
@@ -141,27 +141,27 @@ No questionable claims — all assertions are traceable from code.
   - Book names come from user-editable sources (imported files, manual entry)
 
 - **Top risks:**
-  Wrong prioritization — `textContent` is already XSS-safe; this is defense-in-depth not a vulnerability fix.
+  Wrong prioritization â€” `textContent` is already XSS-safe; this is defense-in-depth not a vulnerability fix.
 
 #### Technical Accuracy Audit
 
-No questionable claims — the finding correctly notes `textContent` is safe.
+No questionable claims â€” the finding correctly notes `textContent` is safe.
 
 #### Fix Quality Audit
 
 - **Direction:** Adding DOMPurify sanitization is acceptable defense-in-depth per SEC-02.
 - **Behavioral change:** None. Sanitization is non-destructive for normal strings.
 - **Ambiguity:** Single clear recommendation.
-- **Checklist:** Actionable — type check, import DOMPurify, sanitize, use result.
+- **Checklist:** Actionable â€” type check, import DOMPurify, sanitize, use result.
 - **Dependency integrity:** N/A
 - **Fix risk calibration:** Accurately rated Low.
-- **"Why it's safe" validity:** Valid — DOMPurify is non-destructive.
+- **"Why it's safe" validity:** Valid â€” DOMPurify is non-destructive.
 
-- **Verdict:** Ready to implement 🟢
+- **Verdict:** Ready to implement ðŸŸ¢
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
 
 - [ ] Add type check: `if (typeof name !== 'string') return null;`
 - [ ] Import or access DOMPurify from `SillyTavern.libs`
@@ -180,7 +180,7 @@ No questionable claims — the finding correctly notes `textContent` is safe.
 - **Category:** UI Correctness
 
 - **Location:**
-  `src/listPanel.bookMenu.js`, function `buildBookMenuTrigger` — menu items: Bulk Edit, External Editor, Fill Empty Titles, Export Book, Duplicate Book, Delete Book
+  `src/listPanel.bookMenu.js`, function `buildBookMenuTrigger` â€” menu items: Bulk Edit, External Editor, Fill Empty Titles, Export Book, Duplicate Book, Delete Book
 
 - **Detailed Finding:**
   The menu trigger itself has proper keyboard support:
@@ -198,9 +198,9 @@ No questionable claims — the finding correctly notes `textContent` is safe.
 - **Why it matters:**
   Users who navigate by keyboard (accessibility tools, power users, or those with motor impairments) cannot access these book actions. This violates WCAG accessibility guidelines and creates a frustrating experience.
 
-- **Severity:** Medium ❗
+- **Severity:** Medium â—
 
-- **Confidence:** High 😀
+- **Confidence:** High ðŸ˜€
 
 #### ADDRESSING THE ISSUE
 
@@ -212,10 +212,10 @@ No questionable claims — the finding correctly notes `textContent` is safe.
   1. Add `item.tabIndex = 0;`
   2. Add a `keydown` listener that triggers the click handler on Enter/Space
 
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
 
 - **Why it's safe to implement:**
-  Adding keyboard handlers doesn't change existing mouse/touch behavior — it only adds an additional input method. The click handlers remain unchanged.
+  Adding keyboard handlers doesn't change existing mouse/touch behavior â€” it only adds an additional input method. The click handlers remain unchanged.
 
 - **Pros:**
   Improves accessibility, follows ARIA best practices, consistent with other menu items in the same file.
@@ -232,23 +232,23 @@ No questionable claims — the finding correctly notes `textContent` is safe.
 
 #### Technical Accuracy Audit
 
-No questionable claims — keyboard gaps confirmed by code inspection.
+No questionable claims â€” keyboard gaps confirmed by code inspection.
 
 #### Fix Quality Audit
 
 - **Direction:** Adding `tabIndex` and keydown handlers is correct and follows established patterns in the same file.
 - **Behavioral change:** None. Adds input method without changing existing behavior.
 - **Ambiguity:** Single clear recommendation.
-- **Checklist:** Actionable — specific elements listed with exact pattern to follow.
+- **Checklist:** Actionable â€” specific elements listed with exact pattern to follow.
 - **Dependency integrity:** N/A
 - **Fix risk calibration:** Accurately rated Low.
-- **"Why it's safe" validity:** Valid — click handlers remain unchanged.
+- **"Why it's safe" validity:** Valid â€” click handlers remain unchanged.
 
-- **Verdict:** Ready to implement 🟢
+- **Verdict:** Ready to implement ðŸŸ¢
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
 
 - [ ] Add `bulk.tabIndex = 0;` and keydown handler for Bulk Edit
 - [ ] Add `editor.tabIndex = 0;` and keydown handler for External Editor
@@ -269,7 +269,7 @@ No questionable claims — keyboard gaps confirmed by code inspection.
 - **Category:** Data Integrity
 
 - **Location:**
-  `src/listPanel.bookMenu.js`, function `buildBookMenuTrigger` — Fill Empty Titles menu item (lines 365-379)
+  `src/listPanel.bookMenu.js`, function `buildBookMenuTrigger` â€” Fill Empty Titles menu item (lines 365-379)
 
 - **Detailed Finding:**
   Other destructive actions in this file check for unsaved changes before proceeding:
@@ -286,9 +286,9 @@ No questionable claims — keyboard gaps confirmed by code inspection.
 - **Why it matters:**
   Users could lose their in-progress edits if they accidentally click "Fill Empty Titles" while editing an entry. This is a data loss scenario that other actions in the same file explicitly protect against.
 
-- **Severity:** Medium ❗
+- **Severity:** Medium â—
 
-- **Confidence:** Medium 🤔
+- **Confidence:** Medium ðŸ¤”
   (Confidence is medium because we cannot confirm from code alone whether `fillEmptyTitlesWithKeywords` triggers an editor refresh, but the pattern of other guards suggests it should be checked.)
 
 #### ADDRESSING THE ISSUE
@@ -299,7 +299,7 @@ No questionable claims — keyboard gaps confirmed by code inspection.
 - **Proposed fix:**
   Before calling `state.fillEmptyTitlesWithKeywords(name)`, check `state.isDirtyCheck?.()` and show a warning toast if there are unsaved changes.
 
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
 
 - **Why it's safe to implement:**
   This adds a protective guard that prevents data loss. It follows the exact pattern already established in the same file for other actions. The change is additive and doesn't modify any existing logic paths.
@@ -319,23 +319,23 @@ No questionable claims — keyboard gaps confirmed by code inspection.
 
 #### Technical Accuracy Audit
 
-No questionable claims — pattern inconsistency confirmed.
+No questionable claims â€” pattern inconsistency confirmed.
 
 #### Fix Quality Audit
 
 - **Direction:** Adding the dirty check guard is correct and follows established pattern.
 - **Behavioral change:** None. Prevents data loss, doesn't change success path.
 - **Ambiguity:** Single clear recommendation.
-- **Checklist:** Actionable — check, warn, proceed conditionally.
+- **Checklist:** Actionable â€” check, warn, proceed conditionally.
 - **Dependency integrity:** N/A
-- **Fix risk calibration:** Accurately rated Low — guard pattern is proven safe.
-- **"Why it's safe" validity:** Valid — follows exact pattern from same file.
+- **Fix risk calibration:** Accurately rated Low â€” guard pattern is proven safe.
+- **"Why it's safe" validity:** Valid â€” follows exact pattern from same file.
 
-- **Verdict:** Ready to implement 🟢
+- **Verdict:** Ready to implement ðŸŸ¢
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
 
 - [ ] Add dirty check before `fillEmptyTitlesWithKeywords` call
 - [ ] Show warning toast if dirty: `'Unsaved edits detected. Save or discard changes before filling titles.'`
@@ -343,8 +343,8 @@ No questionable claims — pattern inconsistency confirmed.
 
 ---
 
-## F05: Duplicate book polling may miss fast updates
-*Finding removed — implementation plan discarded. See [user-review__listPanel.bookMenu.js.md](tasks/code-reviews/pending-user-review/user-review__listPanel.bookMenu.js.md)*
+## F05: Duplicate book polling may miss fast updates
+*Finding removed - implementation plan discarded. See [UserReview_listPanel.bookMenu.js.md](tasks/code-reviews/pending-user-review/UserReview_listPanel.bookMenu.js.md)*
 
 ---
 ## F06: Potential race condition in importFolderFile rollback
@@ -376,9 +376,9 @@ No questionable claims — pattern inconsistency confirmed.
 - **Why it matters:**
   Failed folder imports could leave orphaned book entries that are visible in the UI but corrupted or incomplete, requiring manual cleanup by the user.
 
-- **Severity:** Medium ❗
+- **Severity:** Medium â—
 
-- **Confidence:** Medium 🤔
+- **Confidence:** Medium ðŸ¤”
   (Depends on ST's internal persistence timing.)
 
 #### ADDRESSING THE ISSUE
@@ -389,7 +389,7 @@ No questionable claims — pattern inconsistency confirmed.
 - **Proposed fix:**
   Set `bookCreated = true` only after `saveWorldInfo` completes successfully, not after `createNewWorldInfo`. This ensures rollback only attempts to delete books that were fully saved.
 
-- **Fix risk:** Low 🟢
+- **Fix risk:** Low ðŸŸ¢
 
 - **Why it's safe to implement:**
   This changes the timing of when the rollback flag is set, ensuring we only rollback fully-created books. No existing successful paths are affected.
@@ -409,23 +409,23 @@ No questionable claims — pattern inconsistency confirmed.
 
 #### Technical Accuracy Audit
 
-No questionable claims — the timing issue is confirmed by code inspection.
+No questionable claims â€” the timing issue is confirmed by code inspection.
 
 #### Fix Quality Audit
 
 - **Direction:** Moving `bookCreated = true` to after `saveWorldInfo` is technically correct.
 - **Behavioral change:** None. Changes when rollback applies, not when success occurs.
 - **Ambiguity:** Single clear recommendation.
-- **Checklist:** Actionable — move line, test, add message.
+- **Checklist:** Actionable â€” move line, test, add message.
 - **Dependency integrity:** N/A
-- **Fix risk calibration:** Accurately rated Low — only affects error handling path.
-- **"Why it's safe" validity:** Valid — no successful paths modified.
+- **Fix risk calibration:** Accurately rated Low â€” only affects error handling path.
+- **"Why it's safe" validity:** Valid â€” no successful paths modified.
 
-- **Verdict:** Ready to implement 🟢
+- **Verdict:** Ready to implement ðŸŸ¢
 
 #### Implementation Checklist
 
-> Verdict: Ready to implement 🟢 — no checklist revisions needed.
+> Verdict: Ready to implement ðŸŸ¢ â€” no checklist revisions needed.
 
 - [ ] Move `bookCreated = true;` to after the `saveWorldInfo` call
 - [ ] Test that failed saves properly skip the rollback (since no book was fully created)
