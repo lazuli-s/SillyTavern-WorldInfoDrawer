@@ -1,6 +1,6 @@
 ---
 name: workflow-creator
-description: Creates a structured workflow documentation file (Workflow_<Name>.md) in tasks/workflows/ for any multi-step repeatable process. Interviews the user to capture all phases, tools, inputs, outputs, state-tracking folders, scripts, and edge cases, then generates the file using the project's four-section visual format: quick-reference table, pipeline flow diagram, folder conveyor belt, and per-phase cards. Also creates a linked scripts-reference.md when the workflow involves automated scripts. Use when the user says "create a workflow", "document my process", "help me create a workflow file", "document this process", or invokes /workflow-creator.
+description: 'Creates a structured workflow documentation file (Workflow_<Name>.md) in tasks/workflows/ for any multi-step repeatable process. Interviews the user to capture all phases, tools, inputs, outputs, state-tracking folders, scripts, and edge cases, then generates the file using the project''s four-section visual format: quick-reference table, pipeline flow diagram, folder conveyor belt, and per-phase cards. Also creates a linked scripts-reference.md when the workflow involves automated scripts. Use when the user says "create a workflow", "document my process", "help me create a workflow file", "document this process", or invokes /workflow-creator.'
 ---
 
 # Workflow Creator

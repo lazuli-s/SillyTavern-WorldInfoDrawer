@@ -1,6 +1,6 @@
 ---
 name: css-rules
-description: Authoring companion enforcing CSS naming, formatting, property value, and danger rules for this SillyTavern extension. Covers four rule families: Naming (NAME), Formatting (FMT), Properties (PROP), and Danger (DGR). Use when creating new CSS classes, writing new CSS blocks, cleaning up existing CSS, or explicitly reviewing CSS for naming, formatting, and property violations. Triggered independently by name — does not activate automatically for every CSS edit.
+description: 'Authoring companion enforcing CSS naming, formatting, property value, and danger rules for this SillyTavern extension. Covers four rule families: Naming (NAME), Formatting (FMT), Properties (PROP), and Danger (DGR). Use when creating new CSS classes, writing new CSS blocks, cleaning up existing CSS, or explicitly reviewing CSS for naming, formatting, and property violations. Triggered independently by name — does not activate automatically for every CSS edit.'
 ---
 
 # CSS Rules

@@ -1,6 +1,6 @@
 ---
 name: cline-headless
-description: Generate Cline CLI headless-mode bash scripts for local automation on Windows with Git Bash. Use when the user wants to automate a coding task with Cline CLI non-interactively — including code review (git diff, PR diffs), fixing lint or test failures, generating commit messages or release notes, and batch processing multiple files. Triggers on: "/cline-headless", "cline script", "automate with cline", "run cline headless", "cline yolo", "write a cline automation", "cline batch", or when the user describes a task they want Cline to handle autonomously without interaction.
+description: 'Generate Cline CLI headless-mode bash scripts for local automation on Windows with Git Bash. Use when the user wants to automate a coding task with Cline CLI non-interactively — including code review (git diff, PR diffs), fixing lint or test failures, generating commit messages or release notes, and batch processing multiple files. Triggers on: "/cline-headless", "cline script", "automate with cline", "run cline headless", "cline yolo", "write a cline automation", "cline batch", or when the user describes a task they want Cline to handle autonomously without interaction.'
 ---
 
 # Cline Headless Script Generator
