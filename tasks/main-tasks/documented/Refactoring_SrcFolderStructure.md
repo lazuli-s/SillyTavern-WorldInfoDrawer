@@ -89,7 +89,7 @@ src/
     editor-panel.js                                  ← editorPanel.js
 
   entry-manager/
-    entry-manager.js                                 ← orderHelper.js
+    entry-manager.js                                 ← orderHelper.js (also owns tab switching — see NewFeature_EntryManagerTabs.md)
 
     logic/
       logic.state.js                                 ← orderHelperState.js
@@ -103,8 +103,9 @@ src/
       bulk-editor.table-header.js                    ← orderHelperRender.tableHeader.js
       bulk-editor.utils.js                           ← orderHelperRender.utils.js
 
-    manager-tabs/                                    ← FUTURE (see Out of Scope)
-    visibility/                                      ← FUTURE (see Out of Scope)
+    display-tab/                                     ← FUTURE: Tab 1 — Display tab (see NewFeature_EntryManagerTabs.md)
+    presets-tab/                                     ← FUTURE: Tab 3 — Presets tab (see NewFeature_EntryManagerTabs.md)
+    (no manager-tabs/ folder — tab switching lives in entry-manager.js)
 ```
 
 > **filterBar.js split note:** `listPanel.filterBar.js` handles three distinct tabs:
@@ -124,7 +125,7 @@ src/
 |---|---|---|
 | Phase 2 | File renaming cleanup (any remaining prefix issues) | Needs a file-by-file audit after Phase 1 is done |
 | Phase 3 | Split large files into smaller focused files | Each file needs individual analysis before splitting |
-| Separate feature task | Entry Manager tabs: add `manager-tabs/` with `manager-tabs.bulk-editor.js` (thin shell for current bulk-editor) and `manager-tabs.visibility.js` (new visibility tab); add `visibility/` subfolder for visibility tab render/logic | These are new feature files, not reorganization |
+| `NewFeature_EntryManagerTabs.md` | Entry Manager tabs: Tab 1 (`display-tab/`) for columns/sorting/container-visibility presets; Tab 2 is the existing `bulk-editor/`; Tab 3 (`presets-tab/`) for managing bulk-apply presets. Tab switching lives in `entry-manager.js`. The Visibility row code in `bulk-editor.action-bar.js` splits out to `display-tab/` when the feature is built. | New feature files, not reorganization |
 
 ---
 
