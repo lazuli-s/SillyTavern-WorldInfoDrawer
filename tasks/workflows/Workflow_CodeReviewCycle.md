@@ -1,6 +1,6 @@
 # Workflow: JS Code Review Cycle
 
-**Last updated:** 2026-02-28
+**Last updated:** 2026-02-28 (rev: triage now routes to bulk/ and single/ subfolders)
 **Purpose:** Reference for running a complete JS code review batch — from scanning files to archiving results.
 **Audience:** Human reference + agent orientation.
 
@@ -15,9 +15,9 @@ For script commands, see [scripts-reference.md](scripts-reference.md).
 | 1 | Build queue | Manual LLM prompt | `code-review-queue.md` | No |
 | 2 | First review | `code-review-first-review` skill | `pending-meta-review/` | No |
 | 3 | Meta review | `code-review-meta-review` skill | `pending-implementation/` | No |
-| 4 | Triage | `triage-reviews` skill | `ready-for-implementation/` | No |
+| 4 | Triage | `triage-reviews` skill | `ready-for-implementation/bulk/` or `single/` | No |
 | 5 | Commit | `git commit` | — | No |
-| 6 | Review user-review files | Manual | `ready-for-implementation/` | No |
+| 6 | Review user-review files | Manual | `ready-for-implementation/single/` | No |
 | 7 | Implement | `code-review-implement` skill | `pending-changelog/` | 🟡 = yes |
 | 8 | *(if broke)* Failed implementation | `failed-implementation` skill | `pending-implementation/` | — |
 | 9 | Changelog + Archive | `code-review-changelog` skill | `archived/<month-year>/` | No |
@@ -50,7 +50,8 @@ For script commands, see [scripts-reference.md](scripts-reference.md).
           ┌──────────────┼──────────────────┐
           ▼              ▼                  ▼
   pending-user-review/  finished/   ready-for-implementation/
-  (manual decision)  (no findings)
+  (manual decision)  (no findings)      ├── bulk/   (🟢-only)
+                                         └── single/ (any 🟡)
 
                                             │
   PHASE 5 ── Git Commit ───────────────────┘
@@ -58,16 +59,16 @@ For script commands, see [scripts-reference.md](scripts-reference.md).
   PHASE 6 ── Review pending-user-review/  (manual)
   ┌──────────────────────▼─────────────────────────┐
   │  Read each file; decide: implement/skip/defer  │
-  │  Move approved files → ready-for-impl/         │
+  │  Move approved files → ready-for-impl/single/  │
   └──────────────────────┬─────────────────────────┘
                          │
-  PHASE 7 ── Implement  (one file at a time)
+  PHASE 7 ── Implement
   ┌──────────────────────▼─────────────────────────┐
-  │  run: code-review-implement skill              │
-  │  commit each file; test ST                     │
+  │  single/ files: run skill manually, one at a   │
+  │  time; reload ST and check before the next     │
   │                                                │
-  │  🟢-only file  →  continue; test once at end   │
-  │  any 🟡 found  →  reload ST before next file   │
+  │  bulk/ files: run via script; all 🟢-only so   │
+  │  safe to process together; commit at the end   │
   └──────┬───────────────────────────┬─────────────┘
          │ ST ok                     │ ST broke
          │                           ▼
@@ -109,9 +110,10 @@ tasks/code-reviews/
   ┌────────┴──────────────────────────────┐
   │                                       │
   pending-user-review/        ready-for-implementation/   ← Phase 4 complete
-  (Phase 6: manual review)              │
-           │                            │
-           └──── approved ─────────────┘
+  (Phase 6: manual review)         ├── bulk/   (🟢-only → scripted)
+           │                       └── single/ (any 🟡 → manual)
+           │                                   │
+           └──── approved → single/ ───────────┘
                                         │
                               Phase 5: git commit
                                         │
@@ -131,7 +133,7 @@ tasks/code-reviews/
            │
            │  after re-plan
            ▼
-  ready-for-implementation/   ← loops back to Phase 7 (implement)
+  ready-for-implementation/single/   ← loops back to Phase 7 (implement manually)
 ```
 
 ---
@@ -207,19 +209,23 @@ quality. Adds a STEP 2 section to each review file before passing it forward.
 ├──────────────────────────────────────────────────────────┤
 │  Skill    │  triage-reviews                             │
 │  Input    │  pending-implementation/                    │
-│  Output   │  ready-for-implementation/                  │
+│  Output   │  ready-for-implementation/bulk/  (🟢-only) │
+│           │  ready-for-implementation/single/ (any 🟡) │
 │           │  pending-user-review/  (needs your call)   │
-│           │  finished/             (no findings)       │
 │  Script   │  see scripts-reference.md → Step 4         │
 │  Session  │  fresh agent session per run                │
 └──────────────────────────────────────────────────────────┘
 ```
 
-Scans each review file for findings marked "Implementation plan discarded".
+Scans each review file twice in one pass:
 
-- No discarded findings → moves to `ready-for-implementation/`
-- Some discarded → splits them into a user-review file, stubs in the original, moves both
-- All discarded → moves entire file to `pending-user-review/`
+1. Checks for findings marked "Implementation plan discarded":
+   - Some discarded → splits them into a user-review file, stubs in the original
+   - All discarded → moves entire file to `pending-user-review/`
+
+2. For retained findings, checks for the 🟡 emoji (higher-risk changes):
+   - All 🟢 → moves file to `ready-for-implementation/bulk/` (safe to script)
+   - Any 🟡 → moves file to `ready-for-implementation/single/` (run one at a time)
 
 ---
 
@@ -269,22 +275,22 @@ For each file:
 │  PHASE 7  │  Implement                                  │
 ├──────────────────────────────────────────────────────────┤
 │  Skill    │  code-review-implement                      │
-│  Input    │  ready-for-implementation/ (one file)       │
 │  Output   │  pending-changelog/                         │
 │  Session  │  one fresh agent session per file           │
 │  Commit   │  after each file                            │
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Risk rule — when to reload ST:**
+**Two sub-paths depending on the source subfolder:**
 
-| Finding type in the file | Action |
+| Source subfolder | What to do |
 | --- | --- |
-| 🟢 only | Commit and move on. Test once after all 🟢-only files are done. |
-| Any 🟡 present | Reload ST and verify it works before implementing the next file. |
+| `single/` | Run the skill manually, one file at a time. After each file: commit, reload ST, verify no errors. Only continue to the next file once ST is confirmed working. |
+| `bulk/` | All files are 🟢-only. Run via script across all files. Commit at the end. Test ST once after all are done. |
 
 **If ST breaks after a commit** → invoke the `failed-implementation` skill (Phase 8).
 Do not manually revert or move files — the skill handles all of that.
+Re-queued files always go to `single/` (treated as higher-risk after a failure).
 
 ---
 
@@ -306,6 +312,8 @@ Do not manually revert or move files — the skill handles all of that.
 │           │  4. Document the failure in the file        │
 │           │  5. Create new implementation plan          │
 │           │  6. Move file → ready-for-implementation/  │
+│           │     single/ (always — re-queued files are │
+│           │     treated as higher-risk)                │
 │  After    │  File re-enters Phase 7 directly with      │
 │           │  its new plan                               │
 └──────────────────────────────────────────────────────────┘
@@ -341,12 +349,13 @@ Do not manually revert or move files — the skill handles all of that.
 Check the folder contents:
 
 ```text
-pending-meta-review/        → run code-review-meta-review next (Phase 3)
-pending-implementation/     → run triage-reviews next (Phase 4)
-pending-user-review/        → review files manually (Phase 6)
-ready-for-implementation/   → you are at Phase 7 (implement)
-implementation-failed/      → invoke failed-implementation skill (Phase 8)
-pending-changelog/          → run code-review-changelog next (Phase 9)
+pending-meta-review/                    → run code-review-meta-review next (Phase 3)
+pending-implementation/                 → run triage-reviews next (Phase 4)
+pending-user-review/                    → review files manually (Phase 6)
+ready-for-implementation/single/        → run skill manually, one file at a time (Phase 7)
+ready-for-implementation/bulk/          → run via script across all files (Phase 7)
+implementation-failed/                  → invoke failed-implementation skill (Phase 8)
+pending-changelog/                      → run code-review-changelog next (Phase 9)
 ```
 
 If multiple folders have files (e.g., you stopped mid-Phase 7), finish the

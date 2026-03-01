@@ -1,6 +1,6 @@
 ---
 name: code-review-implement
-description: Implements code review findings from the ready-for-implementation queue. Reads the first file from `tasks/code-reviews/ready-for-implementation/`, loads authoritative docs, verifies each finding against current source (skips Already Fixed ones), implements all verified findings in order (🟢 then 🟡), writes a STEP 3 section for each finding, and moves the file to `tasks/code-reviews/pending-changelog/`. Processes exactly one file per invocation. Use when the user invokes /code-review-implement, says "implement code review", "implement the next code review", "implement review findings", or provides a specific review file path to implement.
+description: Implements code review findings from the ready-for-implementation queue. In auto mode, scans `tasks/code-reviews/ready-for-implementation/single/` first (files with 🟡 findings — run one at a time), then `bulk/` (🟢-only files — safe to script). Loads authoritative docs, verifies each finding against current source (skips Already Fixed ones), implements all verified findings in order (🟢 then 🟡), writes a STEP 3 section for each finding, and moves the file to `tasks/code-reviews/pending-changelog/`. Processes exactly one file per invocation. Use when the user invokes /code-review-implement, says "implement code review", "implement the next code review", "implement review findings", or provides a specific review file path to implement.
 ---
 
 # code-review-implement
@@ -8,14 +8,17 @@ description: Implements code review findings from the ready-for-implementation q
 Implements exactly one review file per invocation, then stops.
 
 **Two modes:**
-- **Auto mode** (no file specified): scan `tasks/code-reviews/ready-for-implementation/`, pick the first `.md` file alphabetically.
+- **Auto mode** (no file specified): scan `tasks/code-reviews/ready-for-implementation/single/` first, then `tasks/code-reviews/ready-for-implementation/bulk/` if `single/` is empty. Pick the first `.md` file alphabetically from whichever folder has files. Note which subfolder the file came from.
 - **Direct mode** (user names a file): use that path as `TARGET_REVIEW_FILE`.
 
 ---
 
 ## 1. Select target
 
-**Auto mode:** List files in `tasks/code-reviews/ready-for-implementation/`. Pick the first `.md` file alphabetically and set it as `TARGET_REVIEW_FILE`. If the folder is empty: report "No files pending implementation" and stop.
+**Auto mode:**
+1. List `.md` files in `tasks/code-reviews/ready-for-implementation/single/`. If any exist, pick the first alphabetically → set as `TARGET_REVIEW_FILE`. Note: source subfolder is `single/`.
+2. If `single/` is empty, list `.md` files in `tasks/code-reviews/ready-for-implementation/bulk/`. If any exist, pick the first alphabetically → set as `TARGET_REVIEW_FILE`. Note: source subfolder is `bulk/`.
+3. If both are empty: report "No files pending implementation" and stop.
 
 **Direct mode:** Set `TARGET_REVIEW_FILE` to the path the user provided.
 
@@ -144,7 +147,7 @@ Already fixed — <evidence, e.g. "guard added at line 42 of src/drawer.js">
 
 ## 7. Move the file
 
-Move `TARGET_REVIEW_FILE` from `tasks/code-reviews/ready-for-implementation/` to `tasks/code-reviews/pending-changelog/`. Create the destination folder if it does not exist.
+Move `TARGET_REVIEW_FILE` from its source subfolder (`ready-for-implementation/single/` or `ready-for-implementation/bulk/`) to `tasks/code-reviews/pending-changelog/`. Create the destination folder if it does not exist.
 
 ---
 

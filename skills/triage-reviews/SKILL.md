@@ -1,6 +1,6 @@
 ---
 name: triage-reviews
-description: Triages the next code review file from pending-implementation by scanning each finding for "Implementation plan discarded". If no discarded findings exist, moves the file to ready-for-implementation. If some are discarded, splits them into a user-review file, stubs them in the original, and moves the original to ready-for-implementation. If all are discarded, renames and moves the whole file to pending-user-review. Use when the user invokes /triage-reviews or says "triage the next review".
+description: Triages the next code review file from pending-implementation by scanning each finding for "Implementation plan discarded". If no discarded findings exist, moves the file to ready-for-implementation/bulk/ (all 🟢) or ready-for-implementation/single/ (any 🟡). If some are discarded, splits them into a user-review file, stubs them in the original, and moves the original to the appropriate subfolder. If all are discarded, renames and moves the whole file to pending-user-review. Use when the user invokes /triage-reviews or says "triage the next review".
 ---
 
 # triage-reviews
@@ -30,7 +30,11 @@ Processes exactly one file per invocation, then stops.
 
 ## 2. Classify findings
 
-For each finding, check whether the block contains the exact phrase:
+For each finding, apply two labels:
+
+### Label 1 — Discarded or Retained
+
+Check whether the block contains the exact phrase:
 
 ```
 Implementation plan discarded
@@ -38,19 +42,31 @@ Implementation plan discarded
 
 Label each finding as either **discarded** or **retained**.
 
+### Label 2 — Risk level (retained findings only)
+
+For each **retained** finding, check whether the block contains the 🟡 emoji character.
+
+- Contains 🟡 → label as **yellow**
+- No 🟡 found → label as **green**
+
+A file is considered **yellow** if any retained finding is labelled yellow.
+A file is considered **green** if all retained findings are labelled green.
+
 ---
 
 ## 3. Route based on classification
 
 ### Case A — No discarded findings
 
-- Move the file to `tasks/code-reviews/ready-for-implementation/`.
+- If file is **green**: move the file to `tasks/code-reviews/ready-for-implementation/bulk/`.
+- If file is **yellow**: move the file to `tasks/code-reviews/ready-for-implementation/single/`.
+- Create the destination subfolder if it does not exist.
 - No user-review file is created.
 - Report and stop.
 
 ### Case B — All findings discarded
 
-- Rename the file from `CodeReview_<SOURCE_BASENAME>.md` to `user-review__<SOURCE_BASENAME>.md`.
+- Rename the file from `CodeReview_<SOURCE_BASENAME>.md` to `UserReview_<SOURCE_BASENAME>.md`.
 - Move the renamed file (unchanged) to `tasks/code-reviews/pending-user-review/`.
 - Report and stop.
 
@@ -64,7 +80,7 @@ Proceed to step 4.
 
 ### 4a. Create the user-review file
 
-Create `tasks/code-reviews/pending-user-review/user-review__<SOURCE_BASENAME>.md`.
+Create `tasks/code-reviews/pending-user-review/UserReview_<SOURCE_BASENAME>.md`.
 
 Structure:
 
@@ -86,14 +102,18 @@ For each discarded finding block, replace the entire block (from `## F0X:` throu
 
 ```
 ## F0X: <original title>
-*Finding removed — implementation plan discarded. See [user-review__<SOURCE_BASENAME>.md](tasks/code-reviews/pending-user-review/user-review__<SOURCE_BASENAME>.md)*
+*Finding removed — implementation plan discarded. See [UserReview_<SOURCE_BASENAME>.md](tasks/code-reviews/pending-user-review/UserReview_<SOURCE_BASENAME>.md)*
 
 ---
 ```
 
 ### 4c. Move the trimmed original
 
-Move the modified original file to `tasks/code-reviews/ready-for-implementation/`.
+Apply the same green/yellow rule to the **retained** findings only:
+
+- If all retained findings are **green**: move the modified file to `tasks/code-reviews/ready-for-implementation/bulk/`.
+- If any retained finding is **yellow**: move the modified file to `tasks/code-reviews/ready-for-implementation/single/`.
+- Create the destination subfolder if it does not exist.
 
 ---
 
@@ -102,4 +122,5 @@ Move the modified original file to `tasks/code-reviews/ready-for-implementation/
 State:
 - File triaged
 - How many findings were retained vs discarded
-- Which folders files were moved to
+- Risk level of retained findings (all green / any yellow)
+- Which folders files were moved to (including which subfolder: `bulk/` or `single/`)
