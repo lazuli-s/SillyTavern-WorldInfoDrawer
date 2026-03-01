@@ -19,7 +19,8 @@
       "Bash(powershell -Command:*)",
       "Bash(python3:*)",
       "Bash(git config core.symlinks true)",
-      "Bash(git config core.symlinks)"
+      "Bash(git config core.symlinks)",
+      "WebFetch(domain:github.com)"
     ]
   },
   "hooks": {
