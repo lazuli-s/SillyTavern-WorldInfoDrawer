@@ -98,11 +98,25 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add event listener for `WORLDINFO_UPDATED` before starting move/copy operations
-- [ ] Set a flag if the affected book receives an update during the operation
-- [ ] Before calling `saveWorldInfo`, check the flag and abort if stale, or reload and re-apply changes
-- [ ] Ensure the selection state is properly restored or cleared on abort
-- [ ] **Added:** Ensure event listener is removed in a `finally` block to prevent leaks
+- [x] Add event listener for `WORLDINFO_UPDATED` before starting move/copy operations
+- [x] Set a flag if the affected book receives an update during the operation
+- [x] Before calling `saveWorldInfo`, check the flag and abort if stale, or reload and re-apply changes
+- [x] Ensure the selection state is properly restored or cleared on abort
+- [x] **Added:** Ensure event listener is removed in a `finally` block to prevent leaks
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.selectionDnD.js`
+  - Added a temporary `WORLDINFO_UPDATED` listener during move/copy operations to detect concurrent source/destination updates.
+  - Added conflict abort checks before save calls and keep selection active on abort so users can retry safely.
+  - Added listener teardown in a `finally` block to prevent leaked event handlers.
+
+- Risks / Side effects
+  - Move/copy can now abort more often during heavy concurrent edits, requiring retry (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Start a drag move, then trigger a second edit/save in the same source or destination book before drop completes; confirm operation aborts with a toast and selection remains active.
 
 ---
 
@@ -194,10 +208,24 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Wrap `saveWorldInfo` calls in try/catch blocks
-- [ ] On catch, display error toast with descriptive message
-- [ ] Only call `selectEnd()` and clear selection on successful completion
-- [ ] Consider adding a "Retry" option in the error toast
+- [x] Wrap `saveWorldInfo` calls in try/catch blocks
+- [x] On catch, display error toast with descriptive message
+- [x] Only call `selectEnd()` and clear selection on successful completion
+- [x] Consider adding a "Retry" option in the error toast
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.selectionDnD.js`
+  - Wrapped move/copy operations in `try/catch` and now show error toasts when load/save operations fail.
+  - Selection cleanup (`selectEnd`) now runs only on successful completion, preserving selection state on failure.
+  - Retry UX was considered; current implementation keeps failed selection active so users can retry immediately.
+
+- Risks / Side effects
+  - Error toasts are now shown for failed operations and may be noisy during repeated transient failures (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Simulate a failing save (e.g., force an exception in `saveWorldInfo`) and confirm selection is still selected and no success-style cleanup runs.
 
 ---
 
@@ -290,11 +318,25 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Create `failedUids` array to track entries that failed to move
-- [ ] When `deleteWorldInfoEntry` returns false, add UID to `failedUids`
-- [ ] After processing loop, check if `failedUids.length > 0`
-- [ ] If failures exist, show toast with count and update selection to include only failed entries
-- [ ] Only clear selection completely when `failedUids` is empty
+- [x] Create `failedUids` array to track entries that failed to move
+- [x] When `deleteWorldInfoEntry` returns false, add UID to `failedUids`
+- [x] After processing loop, check if `failedUids.length > 0`
+- [x] If failures exist, show toast with count and update selection to include only failed entries
+- [x] Only clear selection completely when `failedUids` is empty
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.selectionDnD.js`
+  - Added `failedUids` tracking for move operations when entry deletion fails or throws.
+  - Added partial-failure flow: show summary toast and keep only failed entries selected for retry.
+  - Successful entries are now unselected when partial failures occur; full selection clear happens only when all items succeed.
+
+- Risks / Side effects
+  - On partial move failure, destination may contain copied entries while source keeps failed ones (intentional for recoverability) (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Force one deletion failure in a multi-entry move and confirm only failed entries stay selected while successful ones are cleared.
 
 ---
 
@@ -388,10 +430,23 @@ No questionable claims — the observation that these functions are not document
 > Meta-review Reason: Added specific documentation location guidance.
 > Revisions applied: Clarified that documentation should be JSDoc comments in the runtime module, and added step to verify function signatures.
 
-- [ ] Locate the runtime module definition (likely `src/` or injected via `index.js`)
-- [ ] Verify `runtime.deleteWorldInfoEntry` exists and document its parameters (`book`, `uid`, `options`)
-- [ ] Verify `runtime.updateWIChange` exists and document its parameters (`bookName`, `bookData`)
-- [ ] Add JSDoc comments explaining purpose, parameters, and return values
-- [ ] If functions wrap ST APIs, add cross-reference to WI API documentation
-- [ ] Add fallback error handling in calling code if functions are unavailable
+- [x] Locate the runtime module definition (likely `src/` or injected via `index.js`)
+- [x] Verify `runtime.deleteWorldInfoEntry` exists and document its parameters (`book`, `uid`, `options`)
+- [x] Verify `runtime.updateWIChange` exists and document its parameters (`bookName`, `bookData`)
+- [x] Add JSDoc comments explaining purpose, parameters, and return values
+- [x] If functions wrap ST APIs, add cross-reference to WI API documentation
+- [x] Add fallback error handling in calling code if functions are unavailable
 
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`, `src/listPanel.selectionDnD.js`
+  - Documented runtime helper signatures in `src/drawer.js` with JSDoc and explicit wrapper functions passed to `initListPanel`.
+  - Added WI API cross-reference note in wrapper documentation for the entry delete helper.
+  - Added fallback handling in call sites: guard missing `deleteWorldInfoEntry` as an error and missing `updateWIChange` as a warning.
+
+- Risks / Side effects
+  - If a host update removes `updateWIChange`, UI refresh sync may be delayed though saves still complete (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Temporarily stub `runtime.updateWIChange` to `undefined` and confirm move/copy still saves while warning appears in console.

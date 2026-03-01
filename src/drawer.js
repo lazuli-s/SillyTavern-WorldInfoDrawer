@@ -91,6 +91,25 @@ export const initDrawer = ({
         uuidv4,
     } = context;
 
+    /**
+     * Delete one entry from a loaded lorebook object.
+     * Wraps the ST World Info entry-delete helper (see WI API delete pattern: mutate + save).
+     * @param {object} book
+     * @param {number|string} uid
+     * @param {{silent?: boolean}} [options]
+     * @returns {Promise<boolean>}
+     */
+    const deleteWorldInfoEntryRuntime = (book, uid, options)=>deleteWorldInfoEntry(book, uid, options);
+
+    /**
+     * Notify the WI update handler after saving a lorebook.
+     * This syncs extension UI state after ST-owned book persistence completes.
+     * @param {string} bookName
+     * @param {object} bookData
+     * @returns {Promise<void>}
+     */
+    const updateWIChangeRuntime = (bookName, bookData)=>wiHandlerApi.updateWIChange(bookName, bookData);
+
     const addDrawer = ()=>{
         const { openOrderHelper, refreshOrderHelperScope } = initOrderHelper({
             dom,
@@ -568,7 +587,7 @@ export const initDrawer = ({
                         debounceAsync,
                         deleteWIOriginalDataValue,
                         deleteWorldInfo,
-                        deleteWorldInfoEntry,
+                        deleteWorldInfoEntry: deleteWorldInfoEntryRuntime,
                         delay,
                         dom,
                         download,
@@ -594,7 +613,7 @@ export const initDrawer = ({
                         getSelectedWorldInfo: ()=>selected_world_info,
                         getWorldNames: ()=>world_names,
                         sortEntries,
-                        updateWIChange: wiHandlerApi.updateWIChange,
+                        updateWIChange: updateWIChangeRuntime,
                         waitForWorldInfoUpdate: wiHandlerApi.waitForWorldInfoUpdate,
                         world_names,
                         createNewWorldInfo,
