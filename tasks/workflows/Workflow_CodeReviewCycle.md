@@ -1,6 +1,6 @@
 # Workflow: JS Code Review Cycle
 
-**Last updated:** 2026-02-28 (rev: triage now routes to bulk/ and single/ subfolders)
+**Last updated:** 2026-03-01 (rev: added implement-bulk-batch.ps1 for Phase 7 bulk automation)
 **Purpose:** Reference for running a complete JS code review batch — from scanning files to archiving results.
 **Audience:** Human reference + agent orientation.
 
@@ -286,7 +286,7 @@ For each file:
 | Source subfolder | What to do |
 | --- | --- |
 | `single/` | Run the skill manually, one file at a time. After each file: commit, reload ST, verify no errors. Only continue to the next file once ST is confirmed working. |
-| `bulk/` | All files are 🟢-only. Run via script across all files. Commit at the end. Test ST once after all are done. |
+| `bulk/` | All files are 🟢-only. Run `scripts/codex/implement-bulk-batch.ps1` — processes every file in the folder, commits once at the end. See scripts-reference.md → Step 7. Test ST once after all are done. |
 
 **If ST breaks after a commit** → invoke the `failed-implementation` skill (Phase 8).
 Do not manually revert or move files — the skill handles all of that.

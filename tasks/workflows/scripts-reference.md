@@ -1,10 +1,10 @@
 # Scripts Reference — Code Review Cycle
 
-**Last updated:** 2026-02-28
+**Last updated:** 2026-03-01
 **Used by:** [Workflow_CodeReviewCycle.md](Workflow_CodeReviewCycle.md)
 
-This file documents the scripts and commands used to run Phases 2–4 of the
-code review cycle in batch mode. Each phase runs in a **fresh agent session**.
+This file documents the scripts and commands used to run Phases 2–4 and Phase 7
+of the code review cycle in batch mode. Each phase runs in a **fresh agent session**.
 
 ---
 
@@ -75,10 +75,42 @@ scripts/codex/triage-batch.ps1     ← PowerShell (Windows)
 
 ---
 
+## Step 7 — Bulk Implement
+
+**Skill:** `code-review-implement`
+**Runs:** Once per file in `ready-for-implementation/bulk/` — loops until the folder is empty.
+**Commits:** Once at the end, after all files are processed.
+**Note:** Only use this script for `bulk/`. Files in `single/` must be run manually, one at a time.
+
+### Batch script (loops until folder is empty, then commits)
+
+```text
+scripts/codex/implement-bulk-batch.ps1     <- PowerShell (Windows)
+```
+
+**Optional parameter** — override the source folder:
+
+```text
+.\scripts\codex\implement-bulk-batch.ps1 -BulkDir "tasks/code-reviews/ready-for-implementation/bulk"
+```
+
+**What the script does:**
+
+1. Counts `.md` files in `bulk/`, shows a header with the file count and folder path.
+2. For each file (alphabetical order): calls `codex exec --yolo` with the `code-review-implement` skill in direct mode, targeting that specific file.
+3. The skill implements findings and moves the file to `tasks/code-reviews/pending-changelog/`.
+4. Shows per-file Started / Completed / Elapsed timing.
+5. After the folder empties: runs `git add -A` and commits with the message:
+   `code-review(bulk-implement): implement bulk review findings from codex batch run`
+6. If codex or git fails at any step, the script throws an error and stops immediately.
+
+---
+
 ## Notes
 
-- All three steps process **one file per invocation**. If you have 14 files,
+- Steps 2, 3, and 4 process **one file per invocation**. If you have 14 files,
   you need to run each script 14 times (or loop it).
+- Step 7 (bulk) processes **all files in one run** and commits at the end — do not run it for `single/` files.
 - Always use a **fresh context/session** for each invocation — do not chain
   them in the same session.
 - Steps 2, 3, and 4 can each be run as a loop script that keeps calling the
