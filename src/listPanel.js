@@ -89,7 +89,11 @@ const setAllFoldersCollapsed = (isCollapsed)=>foldersViewSlice?.setAllFoldersCol
 const applyCollapseState = (name)=>{
     const isCollapsed = listPanelState.getCollapseState(name);
     const world = state.cache[name];
-    if (isCollapsed === undefined || !world?.dom?.entryList || !world?.dom?.collapseToggle) return;
+    if (isCollapsed === undefined
+        || !world?.dom?.entryList
+        || !world?.dom?.collapseToggle
+        || !world.dom.entryList.isConnected
+        || !world.dom.collapseToggle.isConnected) return;
     world.dom.entryList.classList.toggle('stwid--state-collapsed', isCollapsed);
     if (isCollapsed) {
         world.dom.collapseToggle.classList.remove('fa-chevron-up');
@@ -247,7 +251,13 @@ const buildLatestBookSavePayload = (latest)=>({
 
 const hasSortableBookDom = (name)=>{
     const world = state.cache[name];
-    if (!world || !world.entries || !world.dom?.entryList || !world.dom?.entry) {
+    if (!world
+        || !world.entries
+        || !world.dom?.root
+        || !world.dom?.entryList
+        || !world.dom?.entry
+        || !world.dom.root.isConnected
+        || !world.dom.entryList.isConnected) {
         return false;
     }
     for (const entry of Object.values(world.entries)) {
@@ -260,9 +270,16 @@ const hasSortableBookDom = (name)=>{
 
 const setBookSortPreference = async(name, sort = null, direction = null)=>{
     const hasSort = Boolean(sort && direction);
-    const latest = await state.loadWorldInfo(name);
+    let latest;
+    try {
+        latest = await state.loadWorldInfo(name);
+    } catch (error) {
+        console.warn(`[STWID] Failed to load book "${name}" before saving sort preference.`, error);
+        toastr.error(`Could not load "${name}" before saving sort preference.`);
+        return { ok: false, error: 'load_failed' };
+    }
     if (!latest || typeof latest !== 'object') {
-        return false;
+        return { ok: false, error: 'book_missing' };
     }
     const nextPayload = buildLatestBookSavePayload(latest);
     nextPayload.metadata[state.METADATA_NAMESPACE] ??= {};
@@ -279,46 +296,79 @@ const setBookSortPreference = async(name, sort = null, direction = null)=>{
     }
     // Any refresh request while save is in-flight invalidates post-save DOM sorting.
     const refreshTokenBeforeSave = refreshRequestToken;
-    await state.saveWorldInfo(name, nextPayload, true);
+    try {
+        await state.saveWorldInfo(name, nextPayload, true);
+    } catch (error) {
+        console.warn(`[STWID] Failed to save sort preference for "${name}".`, error);
+        toastr.error(`Could not save sort preference for "${name}".`);
+        return { ok: false, error: 'save_failed' };
+    }
     if (state.cache[name]) {
         setCacheMetadata(name, nextPayload.metadata);
     }
     if (refreshTokenBeforeSave !== refreshRequestToken) {
         console.warn('[STWID] Skipping stale post-save sort after refresh.', { name });
-        return true;
+        return { ok: true };
     }
     if (!hasSortableBookDom(name)) {
         console.warn('[STWID] Skipping post-save sort: book cache/DOM not ready.', { name });
-        return true;
+        return { ok: true };
     }
     sortEntriesIfNeeded(name);
-    return true;
+    return { ok: true };
 };
 
 const clearBookSortPreferences = async()=>{
+    const failedBooks = [];
     for (const [name, data] of Object.entries(state.cache)) {
         const hasSortPreference = Boolean(data.metadata?.[state.METADATA_NAMESPACE]?.[state.METADATA_SORT_KEY]);
         if (!hasSortPreference) continue;
-        await setBookSortPreference(name, null, null);
+        try {
+            const result = await setBookSortPreference(name, null, null);
+            if (!result.ok) {
+                failedBooks.push(name);
+            }
+        } catch (error) {
+            console.warn(`[STWID] Failed to clear sort preference for "${name}".`, error);
+            failedBooks.push(name);
+        }
     }
+    if (failedBooks.length) {
+        toastr.error(`Could not clear sort preferences for ${failedBooks.length} book${failedBooks.length === 1 ? '' : 's'}.`);
+        return { ok: false, error: 'partial_failure', failedBooks };
+    }
+    return { ok: true, failedBooks };
 };
 
 // Folder assignment helper (persists through WI APIs).
 const setBookFolder = async(name, folderName)=>{
-    const latest = await state.loadWorldInfo(name);
-    if (!latest || typeof latest !== 'object') return false;
+    let latest;
+    try {
+        latest = await state.loadWorldInfo(name);
+    } catch (error) {
+        console.warn(`[STWID] Failed to load book "${name}" before folder change.`, error);
+        toastr.error(`Could not load "${name}" before moving it.`);
+        return { ok: false, error: 'load_failed' };
+    }
+    if (!latest || typeof latest !== 'object') return { ok: false, error: 'book_missing' };
 
     const nextPayload = buildLatestBookSavePayload(latest);
     const result = setFolderInMetadata(nextPayload.metadata, folderName);
-    if (!result.ok) return false;
+    if (!result.ok) return { ok: false, error: 'invalid_folder' };
     if (result.folder) {
         registerFolderName(result.folder);
     }
-    await state.saveWorldInfo(name, nextPayload, true);
+    try {
+        await state.saveWorldInfo(name, nextPayload, true);
+    } catch (error) {
+        console.warn(`[STWID] Failed to save folder change for "${name}".`, error);
+        toastr.error(`Could not move "${name}" to the selected folder.`);
+        return { ok: false, error: 'save_failed' };
+    }
     if (state.cache[name]) {
         setCacheMetadata(name, nextPayload.metadata);
     }
-    return true;
+    return { ok: true };
 };
 
 // Shared book action helpers (used by menu flows and drag/drop flows).
@@ -329,14 +379,21 @@ const refreshAndCenterBook = async(name)=>{
 };
 
 const applyBookFolderChange = async(name, folderName, { centerAfterRefresh = false } = {})=>{
-    const updated = await setBookFolder(name, folderName);
-    if (!updated) return false;
+    let updated;
+    try {
+        updated = await setBookFolder(name, folderName);
+    } catch (error) {
+        console.warn(`[STWID] Failed to apply folder change for "${name}".`, error);
+        toastr.error(`Could not move "${name}" to the selected folder.`);
+        return { ok: false, error: 'folder_change_failed' };
+    }
+    if (!updated.ok) return updated;
     if (centerAfterRefresh) {
         await refreshAndCenterBook(name);
     } else {
         await refreshList();
     }
-    return true;
+    return { ok: true };
 };
 
 const handleDraggedBookMoveOrCopy = async(draggedName, targetFolder, isCopy, { skipIfSameFolder = true } = {})=>{
@@ -347,13 +404,12 @@ const handleDraggedBookMoveOrCopy = async(draggedName, targetFolder, isCopy, { s
     if (!isCopy) {
         if (skipIfSameFolder) {
             const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
-            if (currentFolder === targetFolder) return false;
+            if (currentFolder === targetFolder) return { ok: false, error: 'same_folder' };
         }
-        await applyBookFolderChange(draggedName, targetFolder);
-        return true;
+        return applyBookFolderChange(draggedName, targetFolder);
     }
     const duplicated = await bookMenuSlice?.duplicateBookIntoFolder(draggedName, targetFolder);
-    return Boolean(duplicated);
+    return duplicated ? { ok: true } : { ok: false, error: 'duplicate_failed' };
 };
 
 // Core WI UI delegation helpers (select + trigger vanilla actions).
@@ -389,13 +445,9 @@ const runRefreshWorker = async()=>{
 // Contract: `refreshList()` resolves only after the newest pending refresh finished.
 const refreshList = async()=>{
     refreshRequestToken += 1;
-    if (!refreshWorkerPromise) {
-        refreshWorkerPromise = runRefreshWorker();
-    }
+    refreshWorkerPromise ??= runRefreshWorker();
     while (refreshCompletedToken < refreshRequestToken) {
-        if (!refreshWorkerPromise) {
-            refreshWorkerPromise = runRefreshWorker();
-        }
+        refreshWorkerPromise ??= runRefreshWorker();
         await refreshWorkerPromise;
     }
 };

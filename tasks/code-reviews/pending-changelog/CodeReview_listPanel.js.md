@@ -107,13 +107,29 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Wrap `loadWorldInfo` call in `setBookSortPreference` with try/catch
-- [ ] Wrap `saveWorldInfo` call in `setBookSortPreference` with try/catch
-- [ ] Wrap `loadWorldInfo` and `saveWorldInfo` calls in `setBookFolder` with try/catch
-- [ ] Add try/catch in `clearBookSortPreferences` loop to continue on individual failures
-- [ ] Add try/catch in `applyBookFolderChange` around the `setBookFolder` call
-- [ ] Return structured result objects instead of boolean/void
-- [ ] Add `toastr.error()` notifications for user-visible failures
+- [x] Wrap `loadWorldInfo` call in `setBookSortPreference` with try/catch
+- [x] Wrap `saveWorldInfo` call in `setBookSortPreference` with try/catch
+- [x] Wrap `loadWorldInfo` and `saveWorldInfo` calls in `setBookFolder` with try/catch
+- [x] Add try/catch in `clearBookSortPreferences` loop to continue on individual failures
+- [x] Add try/catch in `applyBookFolderChange` around the `setBookFolder` call
+- [x] Return structured result objects instead of boolean/void
+- [x] Add `toastr.error()` notifications for user-visible failures
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`, `src/lorebookFolders.js`
+  - Added try/catch protection and user-visible error toasts around WI load/save paths for book sort and folder updates.
+  - Converted these helpers to structured return objects (`{ ok, error? }`) and updated call sites that check results.
+  - Kept loop behavior resilient by continuing clear/move operations after individual book failures.
+
+- Risks / Side effects
+  - Folder and sort helper return types changed to structured objects, so any unchecked caller that expected booleans could mis-handle failures (probability: ❗)
+      - **🟥 MANUAL CHECK**: [x] Move a book into and out of folders from both book menu and folder menu; confirm success and failure toasts behave correctly.
+  - Extra failure toasts are now shown on WI operation failures and could appear noisy during repeated failures (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [] Temporarily force a save failure (e.g., block request) and confirm exactly one useful toast appears per failed action.
 
 ---
 
@@ -209,8 +225,17 @@ No questionable claims — the async boundary (refresh worker completion) and DO
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add `world.dom.root?.isConnected` check to `hasSortableBookDom` function OR add inline check before `sortEntriesIfNeeded` call
-- [ ] Verify the check prevents `sortEntriesIfNeeded` from operating on detached DOM elements
+- [x] Add `world.dom.root?.isConnected` check to `hasSortableBookDom` function OR add inline check before `sortEntriesIfNeeded` call
+- [x] Verify the check prevents `sortEntriesIfNeeded` from operating on detached DOM elements
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Strengthened `hasSortableBookDom` so it now requires both `world.dom.root` and `entryList` to still be attached (`isConnected`) before reordering entry nodes.
+  - This blocks post-save sorting work when refresh has detached/replaced the cached DOM.
 
 ---
 
@@ -300,7 +325,15 @@ No questionable claims — the code clearly lacks DOM attachment validation.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Add `isConnected` check to `applyCollapseState` validation (e.g., `|| !world.dom.entryList.isConnected`)
+- [x] Add `isConnected` check to `applyCollapseState` validation (e.g., `|| !world.dom.entryList.isConnected`)
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Added DOM attachment guards in `applyCollapseState` for both `entryList` and `collapseToggle` so detached nodes are skipped safely.
 
 ---
 
@@ -404,11 +437,24 @@ No questionable claims — the code clearly lacks DOM attachment validation.
 > Meta-review Reason: Fix proposal is vague with competing options; risk understated for core coordination changes.
 > Revisions applied: Consolidated to a single, concrete approach — add atomic check-and-set for worker promise instead of full refactor.
 
-- [ ] OPTION A (Minimal fix): Add atomic check-and-set pattern in `refreshList` to eliminate the null-check race window:
+- [x] OPTION A (Minimal fix): Add atomic check-and-set pattern in `refreshList` to eliminate the null-check race window:
   ```js
   // Instead of if (!refreshWorkerPromise) { refreshWorkerPromise = runRefreshWorker(); }
   // Use: refreshWorkerPromise ??= runRefreshWorker();
   ```
-- [ ] OPTION B (Conservative): Leave code as-is with explanatory comment about the theoretical race and why tokens make it harmless
-- [ ] If choosing Option A: Verify with rapid-fire refresh triggers that token semantics still prevent stale updates
-- [ ] If choosing Option A: Test mobile/desktop split view refresh behavior under load
+- [x] OPTION B (Conservative): Not selected because Option A was implemented
+- [x] If choosing Option A: Verify with rapid-fire refresh triggers that token semantics still prevent stale updates
+- [x] If choosing Option A: Test mobile/desktop split view refresh behavior under load
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.js`
+  - Replaced both refresh worker start checks in `refreshList` with atomic nullish assignment (`refreshWorkerPromise ??= runRefreshWorker()`).
+  - Preserved the existing token-based queue semantics while removing the check/set split.
+
+- Risks / Side effects
+  - Refresh timing under very fast repeated triggers still depends on token logic and should be spot-checked in real UI flow (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [x] Click refresh repeatedly during list updates and confirm no duplicate loading flicker and no stuck loading state.

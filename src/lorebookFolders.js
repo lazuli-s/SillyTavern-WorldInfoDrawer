@@ -370,7 +370,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             for (const bookName of bookNames) {
                                                 try {
                                                     const updated = await menuActions.setBookFolder(bookName, normalized);
-                                                    if (!updated) {
+                                                    if (!updated?.ok) {
                                                         failedBookNames.push(bookName);
                                                     }
                                                 } catch (error) {
@@ -476,7 +476,10 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             }
 
                                             for (const name of attributedNames) {
-                                                await menuActions.setBookFolder(name, folderName);
+                                                const moved = await menuActions.setBookFolder(name, folderName);
+                                                if (!moved?.ok) {
+                                                    console.warn(`[STWID] Failed to move imported book "${name}" into folder "${folderName}".`);
+                                                }
                                             }
                                             if (attributedNames.length) {
                                                 await menuActions.refreshList?.();
@@ -578,7 +581,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             for (const bookName of bookNames) {
                                                 try {
                                                     const updated = await menuActions.setBookFolder(bookName, null);
-                                                    if (!updated) {
+                                                    if (!updated?.ok) {
                                                         failedBookNames.push(bookName);
                                                     }
                                                 } catch (error) {
