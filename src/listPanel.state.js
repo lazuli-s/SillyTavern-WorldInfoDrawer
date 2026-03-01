@@ -1,6 +1,7 @@
 ﻿import { setFolderCollapsed } from './lorebookFolders.js';
 
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
+const MAX_ENTRY_CACHE_SIZE = 10000;
 const createSafeStateMap = ()=>Object.create(null);
 const normalizeStateKey = (value)=>{
     if (typeof value !== 'string') return null;
@@ -156,6 +157,9 @@ export const listPanelState = {
         if (!bookKey || !entryKey) return;
         state.entrySearchCache[bookKey] ??= createSafeStateMap();
         state.entrySearchCache[bookKey][entryKey] = value;
+        if (getEntrySearchCacheEntryCount() > MAX_ENTRY_CACHE_SIZE) {
+            clearEntrySearchCache();
+        }
     },
     pruneEntrySearchCacheStaleBooks(activeBookNames) {
         const activeSet = new Set(activeBookNames);
@@ -215,6 +219,14 @@ const clearObjectKeys = (target)=>{
     }
 };
 
+const getEntrySearchCacheEntryCount = ()=>{
+    let total = 0;
+    for (const bookCache of Object.values(state.entrySearchCache)) {
+        total += Object.keys(bookCache ?? {}).length;
+    }
+    return total;
+};
+
 const loadFolderCollapseStates = ()=>{
     if (typeof localStorage === 'undefined') return createSafeStateMap();
     try {
@@ -238,11 +250,13 @@ const loadFolderCollapseStates = ()=>{
 };
 
 const saveFolderCollapseStates = ()=>{
-    if (typeof localStorage === 'undefined') return;
+    if (typeof localStorage === 'undefined') return false;
     try {
         localStorage.setItem(FOLDER_COLLAPSE_STORAGE_KEY, JSON.stringify(listPanelState.folderCollapseStates));
+        return true;
     } catch (error) {
         console.warn('[STWID] Failed to save folder collapse states', error);
+        return false;
     }
 };
 
@@ -262,14 +276,20 @@ export const setFolderCollapsedAndPersist = (
 
     // "transientExpand" means: show expanded right now, but keep the stored default unchanged.
     if (!transientExpand && persist) {
-        saveFolderCollapseStates();
+        const saved = saveFolderCollapseStates();
+        if (!saved) {
+            toastr.warning('Folder collapse state could not be saved. Browser storage may be full.');
+        }
     }
 
     setFolderCollapsed(folderDom, Boolean(isCollapsed));
 };
 
 export const persistFolderCollapseStates = ()=>{
-    saveFolderCollapseStates();
+    const saved = saveFolderCollapseStates();
+    if (!saved) {
+        toastr.warning('Folder collapse state could not be saved. Browser storage may be full.');
+    }
 };
 
 export const resetBookVisibilityState = (bookVisibilityModes)=>{
@@ -298,6 +318,11 @@ export const resetSelectionMemory = (clearToast)=>{
     }
 };
 
+/**
+ * Reads current collapse state from DOM classes.
+ * Call this only after collapse toggle handlers finish updating classList.
+ * In this module, collapse class updates are synchronous.
+ */
 export const captureBookCollapseStatesFromDom = (cache, setCollapseState)=>{
     for (const [bookName, bookData] of Object.entries(cache ?? {})) {
         const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--state-collapsed');

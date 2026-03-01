@@ -91,10 +91,24 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Modify `saveFolderCollapseStates()` to return `true` on success, `false` on failure
-- [ ] Modify `setFolderCollapsedAndPersist()` to check the return value
-- [ ] Add a toast notification in the extension's UI layer when persistence fails
-- [ ] Optionally add a retry mechanism or guidance for the user to clear browser storage
+- [x] Modify `saveFolderCollapseStates()` to return `true` on success, `false` on failure
+- [x] Modify `setFolderCollapsedAndPersist()` to check the return value
+- [x] Add a toast notification in the extension's UI layer when persistence fails
+- [x] Optionally add a retry mechanism or guidance for the user to clear browser storage
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.state.js`
+  - Updated `saveFolderCollapseStates()` to return a boolean success status.
+  - Updated persistence callers to check that status and show a warning toast when save fails.
+  - Added user guidance in toast text ("Browser storage may be full") so users know what to check.
+
+- Risks / Side effects
+  - Users may see additional warning toasts during repeated persistence attempts while storage is unavailable (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Fill browser storage (or simulate localStorage write failure), collapse/expand a folder, and confirm a warning toast appears with storage guidance.
 
 ---
 
@@ -199,8 +213,17 @@ No questionable claims — all assertions are traceable from code.
 > Meta-review Reason: Checklist had vague verification step and incorrect refactoring recommendation that violates architecture.
 > Revisions applied: Removed refactoring recommendation; clarified documentation focus; removed unverified timing assumptions.
 
-- [ ] Add JSDoc comment to `captureBookCollapseStatesFromDom()` documenting that DOM must be settled (no pending classList changes) before calling
-- [ ] Verify the JSDoc accurately reflects the synchronous nature of collapse state changes
+- [x] Add JSDoc comment to `captureBookCollapseStatesFromDom()` documenting that DOM must be settled (no pending classList changes) before calling
+- [x] Verify the JSDoc accurately reflects the synchronous nature of collapse state changes
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.state.js`
+  - Added JSDoc above `captureBookCollapseStatesFromDom()` clarifying that callers should invoke it only after class updates have completed.
+  - Documented that this module's collapse class mutations are synchronous.
 
 ---
 
@@ -292,10 +315,24 @@ No questionable claims — all assertions are traceable from code.
 > Meta-review Reason: Checklist presented two competing implementations without clear guidance on which to choose.
 > Revisions applied: Prioritized the simpler clear-cache approach as primary recommendation; kept LRU as optional advanced alternative with clear condition for when to use it.
 
-- [ ] Add a constant for max cache entries (e.g., `MAX_ENTRY_CACHE_SIZE = 10000`)
-- [ ] On each `setEntrySearchCacheValue()` call, check if total entries across all books exceeds threshold
-- [ ] If threshold exceeded: Clear entire cache with `clearEntrySearchCache()` (simplest approach)
-- [ ] Optional advanced: Implement LRU eviction if performance testing shows clear-all causes noticeable search delays
+- [x] Add a constant for max cache entries (e.g., `MAX_ENTRY_CACHE_SIZE = 10000`)
+- [x] On each `setEntrySearchCacheValue()` call, check if total entries across all books exceeds threshold
+- [x] If threshold exceeded: Clear entire cache with `clearEntrySearchCache()` (simplest approach)
+- [x] Optional advanced: Implement LRU eviction if performance testing shows clear-all causes noticeable search delays (deferred by design; no performance evidence requiring LRU yet)
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.state.js`
+  - Added `MAX_ENTRY_CACHE_SIZE` and a helper that counts total cached entries across books.
+  - Added threshold enforcement in `setEntrySearchCacheValue()` to clear cache when the cap is exceeded.
+  - Kept the simple clear-all strategy and deferred LRU as an optional future optimization.
+
+- Risks / Side effects
+  - Search results may briefly feel slower right after cache clear because entries are recomputed (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Run many entry searches across multiple books until cache exceeds threshold, then verify search still works and repopulates cache without errors.
 
 ---
 
