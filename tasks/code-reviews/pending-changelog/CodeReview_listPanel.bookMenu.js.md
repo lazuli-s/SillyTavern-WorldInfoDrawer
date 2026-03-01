@@ -91,4 +91,23 @@
 - **Verdict:** Implementation plan discarded 🔴
   Justification: The "Requires user input" flag and uncertain investigation steps mean this cannot be implemented without first resolving the open question about `waitForWorldInfoUpdate` behavior. The implementer needs to first investigate and confirm the viable approach before proceeding.
 
+### STEP 3: USER DECISION & IMPLEMENTATION
+
+**User decision:** Proceed with simplification (Option A).
+
+**Investigation findings:**
+
+- `waitForWorldInfoUpdate()` is a generic signal — resolves to `true` when any update cycle completes. Does not carry the book name.
+- The code already used `waitForWorldInfoUpdate()` inside the loop, so it was already partially event-driven (not pure polling). The reviewer slightly overestimated the problem.
+- The main issue: the promise was created fresh on every loop iteration, meaning unnecessary deferreds were created and there was no stable reference to the specific update triggered by the click.
+
+**What was changed** (`src/listPanel.bookMenu.js`, `duplicateBook`, lines 174-200):
+
+- Removed the stale comment block describing a "polling loop"
+- Captured `waitForWorldInfoUpdate()` **once** right after the click, targeting the specific update cycle the duplicate triggers
+- Replaced the loop with a single `Promise.race` between the update promise and the full 8-second timeout
+- Retained a polling fallback for environments where `waitForWorldInfoUpdate` is not available
+
+**Result:** Cleaner, more correct. The promise is now tied precisely to the update cycle the duplicate click triggers rather than any later cycle.
+
 ---

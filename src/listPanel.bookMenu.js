@@ -171,10 +171,6 @@ const createBookMenuSlice = ({
         const clicked = await clickCoreUiAction(coreUiActionSelectors.duplicateBook);
         if (!clicked) return null;
 
-        // Wait for either:
-        // 1) a WORLDINFO update cycle (preferred), then detect new name
-        // 2) or the names list to change in a short polling loop
-        // Avoid hard-coded "sleep then hope".
         const findNewName = ()=>{
             const currentNames = getNames() ?? [];
             const addedNames = currentNames.filter((entry)=>!initialNameSet.has(entry));
@@ -187,13 +183,21 @@ const createBookMenuSlice = ({
         if (immediate) return immediate;
 
         const timeoutMs = 8000;
+
+        if (state.waitForWorldInfoUpdate) {
+            // Capture the wait promise once, right after the click, so it targets
+            // the specific update cycle the duplicate triggers — not a later unrelated one.
+            const updated = await Promise.race([
+                state.waitForWorldInfoUpdate().then(() => true),
+                state.delay(timeoutMs).then(() => false),
+            ]);
+            return updated ? findNewName() : null;
+        }
+
+        // Fallback: polling when event-based detection is unavailable.
         const start = Date.now();
         while (Date.now() - start < timeoutMs) {
-            if (state.waitForWorldInfoUpdate) {
-                await Promise.race([state.waitForWorldInfoUpdate(), state.delay(250)]);
-            } else {
-                await state.delay(250);
-            }
+            await state.delay(250);
             const next = findNewName();
             if (next) return next;
         }
