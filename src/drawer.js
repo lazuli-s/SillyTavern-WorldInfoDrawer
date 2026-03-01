@@ -1,10 +1,10 @@
-﻿import { getRequestHeaders } from '../../../../../script.js';
+// extensionNames is not exposed by SillyTavern.getContext(); keep direct import.
 import { extensionNames } from '../../../../extensions.js';
-import { Popup } from '../../../../popup.js';
-import { SlashCommandParser } from '../../../../slash-commands/SlashCommandParser.js';
+// renderTemplateAsync is not exposed by SillyTavern.getContext(); keep direct import.
 import { renderTemplateAsync } from '../../../../templates.js';
-import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../../utils.js';
-import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../../world-info.js';
+import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean } from '../../../../utils.js';
+// These world-info exports are not fully exposed via getContext(); keep direct imports for ST-owned globals and helper APIs.
+import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, onWorldInfoChange, selected_world_info, world_names } from '../../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './Settings.js';
 import { initEditorPanel } from './editorPanel.js';
 import { initListPanel } from './listPanel.js';
@@ -78,6 +78,18 @@ export const initDrawer = ({
     let listPanelApi;
     let selectionState;
     let editorPanelApi;
+    let moSel;
+    let moDrawer;
+
+    const context = SillyTavern.getContext();
+    const {
+        getRequestHeaders,
+        Popup,
+        SlashCommandParser,
+        loadWorldInfo,
+        saveWorldInfo,
+        uuidv4,
+    } = context;
 
     const addDrawer = ()=>{
         const { openOrderHelper, refreshOrderHelperScope } = initOrderHelper({
@@ -176,6 +188,8 @@ export const initDrawer = ({
         // Best-effort cleanup: if ST tears down/reloads extensions, remove global listeners.
         globalThis.addEventListener?.('beforeunload', ()=>{
             document.removeEventListener('keydown', onDrawerKeydown);
+            moSel?.disconnect();
+            moDrawer?.disconnect();
             editorPanelApi?.cleanup?.();
             wiHandlerApi.cleanup?.();
             bookSourceLinksApi.cleanup();
@@ -879,11 +893,11 @@ export const initDrawer = ({
 
         const moSelTarget = document.querySelector('#world_editor_select');
         if (moSelTarget) {
-            const moSel = new MutationObserver(()=>wiHandlerApi.updateWIChangeDebounced());
+            moSel = new MutationObserver(()=>wiHandlerApi.updateWIChangeDebounced());
             moSel.observe(moSelTarget, { childList:true });
         }
 
-        const moDrawer = new MutationObserver(()=>{
+        moDrawer = new MutationObserver(()=>{
             const style = drawerContent.getAttribute('style') ?? '';
             if (style.includes('display: none;')) return;
 
@@ -919,3 +933,7 @@ export const initDrawer = ({
         selectionState,
     };
 };
+
+
+
+

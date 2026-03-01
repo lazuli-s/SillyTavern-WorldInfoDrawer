@@ -127,10 +127,23 @@
 > Meta-review Reason: Original checklist was too generic and assumed wider context coverage than exists.
 > Revisions applied: Replaced broad migration steps with a concrete per-symbol mapping and verification flow.
 
-- [ ] Build a table of every ST import in `src/drawer.js` and mark each as `Context available` or `Direct import required` using `vendor/SillyTavern/public/scripts/st-context.js`
-- [ ] Replace only `Context available` symbols with one `const context = SillyTavern.getContext();` access pattern and update call sites
-- [ ] Keep required direct imports (`world_names`, `selected_world_info`, and any non-context APIs) and add a brief comment for each explaining why it stays direct
+- [x] Build a table of every ST import in `src/drawer.js` and mark each as `Context available` or `Direct import required` using `vendor/SillyTavern/public/scripts/st-context.js`
+- [x] Replace only `Context available` symbols with one `const context = SillyTavern.getContext();` access pattern and update call sites
+- [x] Keep required direct imports (`world_names`, `selected_world_info`, and any non-context APIs) and add a brief comment for each explaining why it stays direct
 - [ ] Manually verify create/delete/save flows and drawer startup still work after migration
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Moved `getRequestHeaders`, `Popup`, `SlashCommandParser`, `loadWorldInfo`, `saveWorldInfo`, and `uuidv4` to a single `SillyTavern.getContext()` lookup inside `initDrawer`
+  - Kept direct imports for symbols not exposed by `getContext()` and added short inline comments documenting why
+
+- Risks / Side effects
+  - Context surface changes upstream could affect startup wiring for drawer actions and list hooks (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Reload SillyTavern, open World Info drawer, then create a book, create a folder, and delete selected entries; confirm all actions complete with no console errors.
 
 ---
 
@@ -226,9 +239,23 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Declare `moSel` variable at function scope (around line 140, near other cleanup-tracked variables)
-- [ ] Assign the MutationObserver to this variable when created
-- [ ] Add `moSel?.disconnect();` to the `beforeunload` cleanup handler (around line 145)
+- [x] Declare `moSel` variable at function scope (around line 140, near other cleanup-tracked variables)
+- [x] Assign the MutationObserver to this variable when created
+- [x] Add `moSel?.disconnect();` to the `beforeunload` cleanup handler (around line 145)
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Promoted `moSel` to function scope so teardown can access it
+  - Added `moSel?.disconnect()` in the existing `beforeunload` cleanup path
+
+### Risks / Side effects
+
+- Teardown timing changed slightly because the observer now disconnects during unload (probability: ⭕)
+    - **🟥 MANUAL CHECK**: [ ] Reload the extension, open and close the drawer, then refresh the page; confirm no repeated observer-related console warnings appear.
 
 ---
 
@@ -326,9 +353,23 @@ No questionable claims — all assertions are traceable from code.
 
 > Verdict: Ready to implement 🟢 — no checklist revisions needed.
 
-- [ ] Declare `moDrawer` variable at function scope (around line 140)
-- [ ] Remove `const` keyword when assigning the MutationObserver (line ~791)
-- [ ] Add `moDrawer?.disconnect();` to the `beforeunload` cleanup handler
+- [x] Declare `moDrawer` variable at function scope (around line 140)
+- [x] Remove `const` keyword when assigning the MutationObserver (line ~791)
+- [x] Add `moDrawer?.disconnect();` to the `beforeunload` cleanup handler
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/drawer.js`
+  - Promoted `moDrawer` to function scope and updated assignment to reuse that reference
+  - Added `moDrawer?.disconnect()` in the same unload cleanup path used by other global listeners
+
+### Risks / Side effects
+
+- If unload cleanup runs very early, the drawer visibility observer now stops immediately (probability: ⭕)
+    - **🟥 MANUAL CHECK**: [ ] Open the drawer, switch away, then reopen it; confirm splitter restoration and editor reselect still happen as before.
 
 ---
 
@@ -343,3 +384,4 @@ No questionable claims — all assertions are traceable from code.
 ---
 
 *No additional findings. File has good patterns for data integrity (dirty checks before mode switches), performance (RAF for splitter, debounced resize), and follows most API contracts.*
+
