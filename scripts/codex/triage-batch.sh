@@ -1,32 +1,23 @@
-#!/bin/bash
-# ------------------------------------------------------------------------------
-# triage-batch.sh
-#
-# Task:    Run the triage-reviews skill in a loop until pending-implementation/
-#          is empty, then commit all moved review files.
-# Risk:    LOW - Codex moves files between folders only. No source code edits.
-# Guardrail (optional):
-#   Run on a throwaway branch for easy rollback:
-#     git checkout -b reviews/codex-triage
-# ------------------------------------------------------------------------------
-
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 PENDING_DIR="tasks/code-reviews/pending-implementation"
 
-# -- Helpers -------------------------------------------------------------------
-
-# Count .md files in the pending-implementation folder.
 count_pending() {
-  find "$PENDING_DIR" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' '
+  shopt -s nullglob
+  local files=("$PENDING_DIR"/*.md)
+  echo "${#files[@]}"
 }
 
-# Get the basename of the first pending file (alphabetical order).
 next_file() {
-  find "$PENDING_DIR" -maxdepth 1 -name "*.md" 2>/dev/null | sort | head -1 | xargs -I{} basename {}
+  shopt -s nullglob
+  local files=("$PENDING_DIR"/*.md)
+  if [ "${#files[@]}" -eq 0 ]; then
+    echo ""
+    return
+  fi
+  printf '%s\n' "${files[@]}" | sort | head -n 1
 }
-
-# -- Pre-flight ----------------------------------------------------------------
 
 if ! command -v codex >/dev/null 2>&1; then
   echo "ERROR: codex command not found in PATH."
@@ -38,63 +29,52 @@ if [ ! -d "$PENDING_DIR" ]; then
   exit 1
 fi
 
-PENDING=$(count_pending)
-
+PENDING="$(count_pending)"
 if [ "${PENDING:-0}" -eq 0 ]; then
-  echo "pending-implementation/ is already empty. Nothing to do."
+  echo "pending-implementation is already empty. Nothing to do."
   exit 0
 fi
 
-echo "=============================================================================="
 echo "Codex triage batch started: $(date)"
 echo "Files to triage: $PENDING"
-echo "=============================================================================="
-
-# -- Triage loop ---------------------------------------------------------------
 
 RUN=0
 TRIAGED=()
 
 while true; do
-  PENDING=$(count_pending)
+  PENDING="$(count_pending)"
   if [ "${PENDING:-0}" -eq 0 ]; then
-    echo ""
-    echo "pending-implementation/ is empty - all files triaged."
+    echo "pending-implementation is empty. All files triaged."
     break
   fi
 
-  NEXT=$(next_file)
+  NEXT_PATH="$(next_file)"
+  NEXT_BASE="$(basename "$NEXT_PATH")"
   RUN=$((RUN + 1))
 
-  echo ""
-  echo "-- Run ${RUN} -- ${NEXT} ----------------------------------------------"
+  echo "-- Run ${RUN}: ${NEXT_BASE}"
   echo "Started: $(date)"
 
-  # Each codex exec invocation is an isolated task with a fresh context.
-  # SHELL=bash forces Codex to use bash instead of PowerShell on Windows.
-  SHELL=bash codex exec --sandbox danger-full-access --full-auto \
-    "Run the /triage-reviews skill now.
+  codex exec --full-auto --sandbox workspace-write "Run triage-reviews for exactly one file.
 
-Follow the skill instructions exactly as written in:
-  skills/triage-reviews/SKILL.md
+Target file:
+$NEXT_PATH
 
-Pick the FIRST file in tasks/code-reviews/pending-implementation/ and triage it.
-Process that one file only.
+Requirements:
+- Follow skills/triage-reviews/SKILL.md behavior.
+- Process ONLY this target file.
+- Do not scan directories with shell commands.
+- Do not run PowerShell Get-ChildItem/Get-Content.
+- Do not edit source code files.
+- Do not modify vendor/SillyTavern.
+- Keep output and edits ASCII-only (no emoji)."
 
-Hard constraints - never violate these:
-- Do NOT edit any source files. This is a triage operation only.
-- Do NOT modify anything under vendor/SillyTavern/"
-
-  TRIAGED+=("$NEXT")
+  TRIAGED+=("$NEXT_BASE")
   echo "Completed: $(date)"
 done
 
-echo ""
 echo "Total files triaged: ${RUN}"
 
-# -- Commit --------------------------------------------------------------------
-
-# Stage only the review folders - not source code.
 git add tasks/code-reviews/
 
 if git diff --cached --quiet; then
@@ -102,7 +82,6 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-# Build the file list for the commit body.
 BODY=""
 for F in "${TRIAGED[@]}"; do
   BODY="${BODY}- ${F}"$'\n'
@@ -110,5 +89,4 @@ done
 
 git commit -m "$(printf 'chore(code-reviews): promote reviews after triage\n\nFiles triaged:\n%s' "$BODY")"
 
-echo ""
 echo "Committed."

@@ -63,7 +63,14 @@ Run the /triage-reviews skill.
 ### Codex command
 
 ```text
-[fill in your Codex command here]
+codex exec --sandbox workspace-write --full-auto "Run the /triage-reviews skill now. Pick the FIRST file in tasks/code-reviews/pending-implementation/ and triage it. Process that one file only."
+```
+
+### Batch script (loops until folder is empty)
+
+```text
+scripts/codex/triage-batch.sh      ← bash (Linux / macOS / WSL / Git Bash)
+scripts/codex/triage-batch.ps1     ← PowerShell (Windows)
 ```
 
 ---

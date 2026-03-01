@@ -1,142 +1,102 @@
-[CmdletBinding()]
-param(
-    [string]$PendingDir = "tasks/code-reviews/pending-implementation",
-    [string]$LogDir = "scripts/codex/logs"
-)
+#!/usr/bin/env pwsh
+#requires -Version 7.0
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
-$ErrorActionPreference = "Stop"
+$PENDING_DIR = "tasks/code-reviews/pending-implementation"
 
-function Write-LogLine {
-    param(
-        [string]$Message,
-        [string]$LogPath
-    )
-    Write-Host $Message
-    Add-Content -Path $LogPath -Value $Message
+function Count-Pending {
+  if (-not (Test-Path -LiteralPath $PENDING_DIR -PathType Container)) { return 0 }
+  $files = Get-ChildItem -LiteralPath $PENDING_DIR -Filter *.md -File -ErrorAction SilentlyContinue
+  return @($files).Count
 }
 
-function Get-PendingFiles {
-    param([string]$Path)
-    if (-not (Test-Path -Path $Path -PathType Container)) {
-        return @()
-    }
-    return @(Get-ChildItem -Path $Path -Filter "*.md" -File | Sort-Object Name)
+function Next-File {
+  if (-not (Test-Path -LiteralPath $PENDING_DIR -PathType Container)) { return "" }
+  $files = Get-ChildItem -LiteralPath $PENDING_DIR -Filter *.md -File -ErrorAction SilentlyContinue |
+           Sort-Object -Property Name
+  if (@($files).Count -eq 0) { return "" }
+  return $files[0].FullName
 }
 
-function Get-TrimmedCommandOutput {
-    param([scriptblock]$Command)
-    $raw = & $Command
-    if ($null -eq $raw) {
-        return ""
-    }
-    $text = ($raw | Out-String)
-    if ($null -eq $text) {
-        return ""
-    }
-    return $text.Trim()
+# Ensure codex exists
+$codex = Get-Command codex -ErrorAction SilentlyContinue
+if (-not $codex) {
+  Write-Error "ERROR: codex command not found in PATH."
+  exit 1
 }
 
-$repoRoot = Get-TrimmedCommandOutput { git rev-parse --show-toplevel }
-if (-not $repoRoot) {
-    throw "Could not determine git repository root."
-}
-Set-Location $repoRoot
-
-$codexCmd = Get-Command codex.cmd -ErrorAction SilentlyContinue
-if (-not $codexCmd) {
-    $codexCmd = Get-Command codex -ErrorAction SilentlyContinue
-}
-if (-not $codexCmd) {
-    throw "codex was not found in PATH."
+# Ensure pending directory exists
+if (-not (Test-Path -LiteralPath $PENDING_DIR -PathType Container)) {
+  Write-Error "ERROR: Pending folder not found: $PENDING_DIR"
+  exit 1
 }
 
-if (-not (Test-Path -Path $PendingDir -PathType Container)) {
-    throw "Pending folder not found: $PendingDir"
+$PENDING = Count-Pending
+if (($PENDING -as [int]) -eq 0) {
+  Write-Host "pending-implementation is already empty. Nothing to do."
+  exit 0
 }
 
-if (-not (Test-Path -Path $LogDir -PathType Container)) {
-    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
-}
+Write-Host ("Codex triage batch started: {0}" -f (Get-Date))
+Write-Host ("Files to triage: {0}" -f $PENDING)
 
-$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$logFile = Join-Path $LogDir "triage-batch-$timestamp.log"
-New-Item -ItemType File -Path $logFile -Force | Out-Null
-
-$pendingFiles = Get-PendingFiles -Path $PendingDir
-if ($pendingFiles.Count -eq 0) {
-    Write-Host "pending-implementation/ is already empty. Nothing to do."
-    exit 0
-}
-
-Write-LogLine -Message "==============================================================================" -LogPath $logFile
-Write-LogLine -Message "Codex triage batch started: $(Get-Date)" -LogPath $logFile
-Write-LogLine -Message "Files to triage: $($pendingFiles.Count)" -LogPath $logFile
-Write-LogLine -Message "Log file: $logFile" -LogPath $logFile
-Write-LogLine -Message "==============================================================================" -LogPath $logFile
-
-$run = 0
-$triaged = New-Object System.Collections.Generic.List[string]
+$RUN = 0
+$TRIAGED = New-Object System.Collections.Generic.List[string]
 
 while ($true) {
-    $pendingFiles = Get-PendingFiles -Path $PendingDir
-    if ($pendingFiles.Count -eq 0) {
-        Write-LogLine -Message "" -LogPath $logFile
-        Write-LogLine -Message "pending-implementation/ is empty - all files triaged." -LogPath $logFile
-        break
-    }
+  $PENDING = Count-Pending
+  if (($PENDING -as [int]) -eq 0) {
+    Write-Host "pending-implementation is empty. All files triaged."
+    break
+  }
 
-    $next = $pendingFiles[0].Name
-    $run += 1
+  $NEXT_PATH = Next-File
+  if ([string]::IsNullOrEmpty($NEXT_PATH)) {
+    Write-Host "pending-implementation is empty. All files triaged."
+    break
+  }
 
-    Write-LogLine -Message "" -LogPath $logFile
-    Write-LogLine -Message "-- Run $run -- $next ----------------------------------------------" -LogPath $logFile
-    Write-LogLine -Message "Started: $(Get-Date)" -LogPath $logFile
+  $NEXT_BASE = [System.IO.Path]::GetFileName($NEXT_PATH)
+  $RUN += 1
 
-    $prompt = @"
-Run the /triage-reviews skill now.
+  Write-Host ("-- Run {0}: {1}" -f $RUN, $NEXT_BASE)
+  Write-Host ("Started: {0}" -f (Get-Date))
 
-Follow the skill instructions exactly as written in:
-  skills/triage-reviews/SKILL.md
+  $instruction = @"
+Run triage-reviews for exactly one file.
 
-Pick the FIRST file in tasks/code-reviews/pending-implementation/ and triage it.
-Process that one file only.
+Target file:
+$NEXT_PATH
 
-Hard constraints - never violate these:
-- Do NOT edit any source files. This is a triage operation only.
-- Do NOT modify anything under vendor/SillyTavern/
+Requirements:
+- Follow skills/triage-reviews/SKILL.md behavior.
+- Process ONLY this target file.
+- Do not edit source code files.
+- Do not modify vendor/SillyTavern.
+- Keep output and edits ASCII-only (no emoji).
 "@
 
-    $codexArgs = @("exec", "--sandbox", "workspace-write", "--full-auto", "-")
-    $prompt | & $codexCmd.Source @codexArgs 2>&1 | Tee-Object -FilePath $logFile -Append | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        throw "codex exec failed on run $run for $next (exit $LASTEXITCODE). See log: $logFile"
-    }
+  & codex exec --yolo $instruction
 
-    $triaged.Add($next) | Out-Null
-    Write-LogLine -Message "Completed: $(Get-Date)" -LogPath $logFile
+  $TRIAGED.Add($NEXT_BASE) | Out-Null
+  Write-Host ("Completed: {0}" -f (Get-Date))
 }
 
-Write-LogLine -Message "" -LogPath $logFile
-Write-LogLine -Message "Total files triaged: $run" -LogPath $logFile
+Write-Host ("Total files triaged: {0}" -f $RUN)
 
 & git add tasks/code-reviews/
-if ($LASTEXITCODE -ne 0) {
-    throw "git add failed."
-}
 
+# If no staged changes, exit
 & git diff --cached --quiet
 if ($LASTEXITCODE -eq 0) {
-    Write-LogLine -Message "No files were staged. Nothing to commit." -LogPath $logFile
-    exit 0
+  Write-Host "No files were staged. Nothing to commit."
+  exit 0
 }
 
-$body = ($triaged | ForEach-Object { "- $_" }) -join "`n"
-$commitMessage = "chore(code-reviews): promote reviews after triage`n`nFiles triaged:`n$body"
+$bodyLines = ($TRIAGED | ForEach-Object { "- $_" }) -join "`n"
+$commitMsg = "chore(code-reviews): promote reviews after triage`n`nFiles triaged:`n$bodyLines`n"
 
-& git commit -m $commitMessage | Out-Host
-if ($LASTEXITCODE -ne 0) {
-    throw "git commit failed."
-}
+& git commit -m $commitMsg
 
-Write-LogLine -Message "" -LogPath $logFile
-Write-LogLine -Message "Committed. Log saved to: $logFile" -LogPath $logFile
+Write-Host "Committed."
