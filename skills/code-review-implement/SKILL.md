@@ -156,3 +156,4 @@ Move `TARGET_REVIEW_FILE` from its source subfolder (`ready-for-implementation/s
 Report:
 - File implemented
 - Findings processed: X total (Y implemented, Z already fixed, W skipped, V stubs silently skipped)
+- What needs to be manually checked
