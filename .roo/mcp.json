@@ -1,0 +1,25 @@
+{
+	"mcpServers": {
+		"context7": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@upstash/context7-mcp"
+			],
+			"env": {
+				"DEFAULT_MINIMUM_TOKENS": ""
+			},
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"puppeteer": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-puppeteer"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		}
+	}
+}
