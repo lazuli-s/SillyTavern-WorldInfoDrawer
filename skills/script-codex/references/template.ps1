@@ -3,26 +3,26 @@
 
 [CmdletBinding()]
 param(
-    [string]$BulkDir = "tasks/code-reviews/ready-for-implementation/bulk"
+    [string]$InputDir = "tasks/..."   # <<< CUSTOMIZE: default folder path (e.g. "tasks/code-reviews/pending-implementation")
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Force UTF-8 for all console I/O — prevents emoji/Unicode corruption on Windows
+# Force UTF-8 for all console I/O -- prevents emoji/Unicode corruption on Windows
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding  = [System.Text.Encoding]::UTF8
 $OutputEncoding           = [System.Text.Encoding]::UTF8
 
 function Count-Pending {
-    if (-not (Test-Path -LiteralPath $BulkDir -PathType Container)) { return 0 }
-    $files = Get-ChildItem -LiteralPath $BulkDir -Filter *.md -File -ErrorAction SilentlyContinue
+    if (-not (Test-Path -LiteralPath $InputDir -PathType Container)) { return 0 }
+    $files = Get-ChildItem -LiteralPath $InputDir -Filter *.md -File -ErrorAction SilentlyContinue
     return @($files).Count
 }
 
 function Next-File {
-    if (-not (Test-Path -LiteralPath $BulkDir -PathType Container)) { return "" }
-    $files = Get-ChildItem -LiteralPath $BulkDir -Filter *.md -File -ErrorAction SilentlyContinue |
+    if (-not (Test-Path -LiteralPath $InputDir -PathType Container)) { return "" }
+    $files = Get-ChildItem -LiteralPath $InputDir -Filter *.md -File -ErrorAction SilentlyContinue |
              Sort-Object -Property Name
     if (@($files).Count -eq 0) { return "" }
     return $files[0].FullName
@@ -42,38 +42,38 @@ if (-not $codex) {
     throw "codex command not found in PATH."
 }
 
-# Ensure bulk directory exists
-if (-not (Test-Path -LiteralPath $BulkDir -PathType Container)) {
-    throw "Bulk folder not found: $BulkDir"
+# Ensure input directory exists
+if (-not (Test-Path -LiteralPath $InputDir -PathType Container)) {
+    throw "Input folder not found: $InputDir"
 }
 
 $pending = Count-Pending
 if (($pending -as [int]) -eq 0) {
-    Write-Host "Bulk folder is already empty. Nothing to do."
+    Write-Host "Input folder is already empty. Nothing to do."  # <<< CUSTOMIZE: message if desired
     exit 0
 }
 
 Write-Host "=============================================================================="
-Write-Host ("Files to implement : {0}" -f $pending)
-Write-Host ("Bulk folder        : {0}" -f $BulkDir)
+Write-Host ("Files to process : {0}" -f $pending)   # <<< CUSTOMIZE: label (e.g. "Files to triage")
+Write-Host ("Input folder     : {0}" -f $InputDir)  # <<< CUSTOMIZE: label (e.g. "Pending folder")
 Write-Host "=============================================================================="
 
 $run = 0
-$implemented = New-Object System.Collections.Generic.List[string]
+$processed = New-Object System.Collections.Generic.List[string]  # <<< CUSTOMIZE: variable name (e.g. $triaged, $implemented)
 $batchStart = Get-Date
 
 while ($true) {
     $pending = Count-Pending
     if (($pending -as [int]) -eq 0) {
         Write-Host ""
-        Write-Host "Bulk folder is empty - all reviews implemented."
+        Write-Host "Input folder is empty - all files processed."  # <<< CUSTOMIZE: message
         break
     }
 
     $nextPath = Next-File
     if ([string]::IsNullOrEmpty($nextPath)) {
         Write-Host ""
-        Write-Host "Bulk folder is empty - all reviews implemented."
+        Write-Host "Input folder is empty - all files processed."  # <<< CUSTOMIZE: message
         break
     }
 
@@ -86,30 +86,29 @@ while ($true) {
     Write-Host ("Started   : {0}" -f $fileStart)
 
     $instruction = @"
-Run the /code-review-implement skill for exactly one file.
+Run the /<SKILL_NAME> skill for exactly one file.    # <<< CUSTOMIZE: skill name
 
 Target file:
 $nextPath
 
 Follow the skill instructions exactly as written in:
-  skills/code-review-implement/SKILL.md
+  skills/<SKILL_NAME>/SKILL.md                       # <<< CUSTOMIZE: SKILL.md path
 
-Use direct mode: process ONLY the target file listed above.
-Do not auto-select a different file.
+# <<< CUSTOMIZE: add a "Use direct mode" line if the skill supports it and you want to prevent auto-selection
+# Example: "Use direct mode: process ONLY the target file listed above. Do not auto-select a different file."
 
 Requirements:
-- You MUST edit the target review file above to write STEP 3 sections for each finding.
-- You MUST also edit any source files that the review findings require changes to (e.g. src/*.js, style.css).
-- Do NOT modify anything under vendor/SillyTavern.
-- Do not write file content using Bash echo, printf, or heredoc — use the Write or Edit tools only.
+- Do not modify vendor/SillyTavern.
+- Do not write file content using Bash echo, printf, or heredoc -- use the Write or Edit tools only.
+# <<< CUSTOMIZE: add any skill-specific constraints here (e.g. "Do not edit source code files.")
 "@
 
-    & codex exec --yolo $instruction
+    & codex exec --yolo $instruction   # <<< CUSTOMIZE: flags if needed (see SKILL.md section 4)
     if ($LASTEXITCODE -ne 0) {
         throw ("codex exec failed on run {0} for {1} (exit code {2})." -f $run, $nextBase, $LASTEXITCODE)
     }
 
-    $implemented.Add($nextBase) | Out-Null
+    $processed.Add($nextBase) | Out-Null  # <<< CUSTOMIZE: variable name to match above
     $fileEnd = Get-Date
     $fileElapsed = $fileEnd - $fileStart
     Write-Host ("Completed : {0}" -f $fileEnd)
@@ -121,11 +120,11 @@ $batchElapsed = $batchEnd - $batchStart
 
 Write-Host ""
 Write-Host "=============================================================================="
-Write-Host ("Total files implemented : {0}" -f $run)
-Write-Host ("Total time              : {0}" -f (Format-Elapsed $batchElapsed))
+Write-Host ("Total files processed : {0}" -f $run)   # <<< CUSTOMIZE: label
+Write-Host ("Total time            : {0}" -f (Format-Elapsed $batchElapsed))
 Write-Host "=============================================================================="
 
-& git add -A
+& git add tasks/code-reviews/   # <<< CUSTOMIZE: scope (use -A if source files are also edited)
 if ($LASTEXITCODE -ne 0) {
     throw "git add failed."
 }
@@ -137,8 +136,8 @@ if ($LASTEXITCODE -eq 0) {
     exit 0
 }
 
-$bodyLines = ($implemented | ForEach-Object { "- $_" }) -join "`n"
-$commitMsg = "code-review(bulk-implement): implement bulk review findings from codex batch run`n`nFiles implemented:`n$bodyLines`n"
+$bodyLines = ($processed | ForEach-Object { "- $_" }) -join "`n"   # <<< CUSTOMIZE: variable name
+$commitMsg = "<TYPE>(<SCOPE>): <description>`n`nFiles processed:`n$bodyLines`n"  # <<< CUSTOMIZE: commit message
 
 & git commit -m $commitMsg
 if ($LASTEXITCODE -ne 0) {

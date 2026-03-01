@@ -9,6 +9,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Force UTF-8 for all console I/O — prevents emoji/Unicode corruption on Windows
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
+$OutputEncoding           = [System.Text.Encoding]::UTF8
+
 function Count-Pending {
     if (-not (Test-Path -LiteralPath $PendingDir -PathType Container)) { return 0 }
     $files = Get-ChildItem -LiteralPath $PendingDir -Filter *.md -File -ErrorAction SilentlyContinue
@@ -94,6 +99,7 @@ Requirements:
 - Do not edit source code files.
 - Do not modify vendor/SillyTavern.
 - Keep output and edits ASCII-only (no emoji).
+- Do not write file content using Bash echo, printf, or heredoc — use the Write or Edit tools only.
 "@
 
     & codex exec --yolo $instruction
