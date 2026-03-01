@@ -133,9 +133,25 @@ No questionable claims — all assertions are traceable from code.
 > Meta-review Reason: Finding proposed two competing options; revised to select Option 1 as the sole recommendation for clarity and simplicity.
 > Revisions applied: Removed Option 2 (cache array) and replaced vague decision step with specific Option 1 implementation steps.
 
-- [ ] Modify `updateFolderActiveToggles` to iterate over `Object.entries(visibleBooksByFolder)` instead of `listPanelState.getFolderDomValues()`
-- [ ] For each `[folderName, visibleBookNames]` entry, look up the folder DOM via `listPanelState.getFolderDom(folderName)` and call `updateActiveToggle`
-- [ ] Remove the redundant iteration over folders with no visible books
-- [ ] Verify `updateFolderVisibility` still receives correct parameters
+- [x] Modify `updateFolderActiveToggles` to iterate over `Object.entries(visibleBooksByFolder)` instead of `listPanelState.getFolderDomValues()`
+- [x] For each `[folderName, visibleBookNames]` entry, look up the folder DOM via `listPanelState.getFolderDom(folderName)` and call `updateActiveToggle`
+- [x] Remove the redundant iteration over folders with no visible books
+- [x] Verify `updateFolderVisibility` still receives correct parameters
 - [ ] Test folder visibility updates after applying search filters
 - [ ] Test folder active toggle updates when books are filtered in/out
+
+### STEP 3: IMPLEMENTATION
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/listPanel.foldersView.js`
+  - Updated `updateFolderActiveToggles` to loop through `visibleBooksByFolder` entries only.
+  - Looked up each folder DOM by folder name and updated only visible-folder toggles.
+  - Kept `updateFolderVisibility({ isBookDomFilteredOut })` call unchanged.
+
+- Risks / Side effects
+  - Folder name mismatches between metadata and folder DOM keys could skip a toggle update for that folder (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Apply a search filter, then clear it; confirm folder active checkboxes still match visible books.
+  - This touches folder refresh flow, so rapid visibility changes might expose stale toggle state in edge cases (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Toggle visibility filters quickly; confirm hidden folders stay hidden and visible folders keep correct active state.
