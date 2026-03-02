@@ -25,29 +25,14 @@ The user of this repository **is not a programmer**. This shapes every interacti
 
 ## 2. Task File Naming Conventions
 
-Whenever working on a bug, issue, new feature, rework, or refactoring, create a task planning file according to the type of work:
-
-| Type | File path |
-| --- | --- |
-| Bug / Issue | `tasks/Issue_<NameHereWithNoUnderscores>.md` |
-| New Feature | `tasks/NewFeature_<NameHereWithNoUnderscores>.md` |
-| Rework of existing feature | `tasks/Rework_<NameHereWithNoUnderscores>.md` |
-| Refactoring | `tasks/Refactoring_<NameOfFileToBeRefactored>.md` |
-
-Check the `tasks/` folder first — if a relevant task file already exists, update it rather than creating a duplicate.
+See the `file-naming` skill for the authoritative rules on task file names, folder locations, and the check-first rule.
 
 ## 3. Authoritative Documentation
 
-Before starting any task, read `skills/doc-guide/SKILL.md` and load the docs
-it prescribes for this task type. It is the single source of truth for which
-docs to load and when — always-load docs plus conditional loading based on
-task type (writing JS, reading/writing WI, ownership questions, code review).
-
-SillyTavern source is available as a **reference-only submodule** under: `vendor/SillyTavern`
-
-Note: if you don't see that folder, the git submodule is probably not initialized.
-
-**DO NOT modify anything under `vendor/SillyTavern`.**
+Before starting any task, invoke the `doc-guide` skill. It is the single source
+of truth for which docs to load and when — always-load docs plus conditional
+loading based on task type (writing JS, reading/writing WI, ownership questions,
+code review).
 
 ## 4. Dependencies and Imports
 
@@ -76,12 +61,6 @@ Main shared libs include:
 ## 5. Style Guide Compliance
 
 Before making any UI or CSS change, always run the `css-ST` and `css-responsive` skills.
-
-Style guide requirements are mandatory:
-
-- Reuse existing SillyTavern styles first
-- Only add new extension CSS when no suitable existing style is available
-- Keep styling changes small, targeted, and consistent with the guide
 
 ## 6. Ownership and Integration Contract
 
@@ -129,59 +108,10 @@ When implementing or modifying behavior, follow the ownership boundary document:
 - Do NOT introduce frameworks (React, Vue, etc.)
 - Do NOT change public APIs unintentionally
 - Do NOT use Bash `echo`, `printf`, or heredoc to write file content — always use the Write or Edit tools. Shell output on Windows can corrupt multi-byte characters (emojis, special Unicode) inside files.
+- Prefer `apply_patch` for targeted edits to existing text files, especially workflow/docs files with symbols; direct file edits are safer than shell text output on Windows.
 
 ## 10. Git Commits
 
 Only commit when **explicitly asked** by the user.
 
-Use **Conventional Commits** format, matching the project's established style:
-
-```text
-type(scope): lowercase description, imperative mood, no period at end
-```
-
-**Types:**
-
-| Type | When to use |
-| --- | --- |
-| `new-feat` | New feature or new behavior added from scratch |
-| `rework` | Intentional change to how an existing feature works or looks — behavior or design intent changed, not just a tweak |
-| `fix` | Bug fix |
-| `style` | CSS or visual tweak with no intent change (colors, spacing, alignment) |
-| `docs` | Changes in documentation or architecture files |
-| `refactor` | Code restructured without changing behavior |
-| `chore` | Config, tooling, or maintenance (no production code) |
-| `code-review` | The review activity itself for a specific file — planning, findings, tracking, or implementation notes |
-
-**Scopes** — use the module or area being changed (e.g. `ui`, `editor`, `order-helper`, `css`, `code-review`). Omit the scope only when the change is truly cross-cutting and no single area owns it. `code-review` can also be used as a scope when a `fix` or `refactor` was directly triggered by a review.
-
-**Message rules:**
-
-- Lowercase after the colon
-- Imperative mood: "add", "fix", "remove", "prevent", "update" — not "added" or "fixing"
-- No period at the end
-- Keep the message under 72 characters
-
-**Examples from this project:**
-
-- `fix(editor): prevent blank flash on entry clear`
-- `new-feat(ui): add collapsible visibility row`
-- `rework(ui): redesign visibility row to use icon chips`
-- `style: remove unused row divider CSS`
-- `docs(tasks): update task file for order-helper refactor`
-- `code-review(sortHelpers.js): add findings for sortHelpers`
-- `fix(code-review): address null-check issue found in review`
-
-## 11. Definition of Done
-
-A task is complete when **all of the following are true**:
-
-1. **Code is written** — all changes are saved and in their final state.
-2. **Task file is updated** — the relevant `tasks/` file reflects what was done, what changed, and why.
-3. **Architecture docs are updated** — if the task added, removed, or moved a feature, `ARCHITECTURE.md` and/or `FEATURE_MAP.md` are updated to reflect the new state.
-
-Do NOT consider a task done if:
-
-- The implementation is partial or a placeholder remains
-- The task file was not updated
-- A feature was added or moved but the architecture docs were not updated
+**Always run the `git-commit` skill before writing any commit message.** It defines the required format, allowed types, canonical scope list, body/footer rules, and breaking-change notation for this project.
