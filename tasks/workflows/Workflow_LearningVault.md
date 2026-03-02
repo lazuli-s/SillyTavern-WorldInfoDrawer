@@ -10,9 +10,9 @@
 
 | # | Phase | How | Output location | Test? |
 | --- | --- | --- | --- | --- |
-| 1 | Capture concepts | `/document-concepts` skill | `learning-vault/drafts/` | No |
-| 2 | Review for accuracy | Codex batch script (one file at a time) | `learning-vault/reviewed/` | Yes — user checks flagged items |
-| 3 | Generate notebooks | `/generate-learning` skill | `learning-vault/notebooks/` | No |
+| 1 | Capture concepts | `/document-concepts` skill | `docs/user/learning-vault/drafts/` | No |
+| 2 | Review for accuracy | Codex batch script (one file at a time) | `docs/user/learning-vault/reviewed/` | Yes — user checks flagged items |
+| 3 | Generate notebooks | `/generate-learning` skill | `docs/user/learning-vault/notebooks/` | No |
 | 4 | *(if AnkiConnect set up)* Push Anki cards | `/generate-learning` skill | Anki deck directly | Yes — open Anki and verify |
 
 ---
@@ -24,7 +24,7 @@
   ┌──────────────────────────────────────────────────────────────┐
   │  User types /document-concepts during or after a session.   │
   │  Claude scans the conversation, identifies concepts worth    │
-  │  saving, and writes a draft file to learning-vault/drafts/  │
+  │  saving, and writes a draft file to docs/user/learning-vault/drafts/  │
   └──────────────────────────────┬───────────────────────────────┘
                                  │
                                  ▼
@@ -54,7 +54,7 @@
   │  Runs as part of /generate-learning.                        │
   │  Claude generates cards and pushes them via AnkiConnect.    │
   │  If AnkiConnect is unavailable, generates an import file    │
-  │  instead and saves it to learning-vault/anki-imports/       │
+  │  instead and saves it to docs/user/learning-vault/anki-imports/       │
   └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -63,7 +63,7 @@
 ## Folder Conveyor Belt
 
 ```text
-  learning-vault/
+  docs/user/learning-vault/
 
   drafts/           reviewed/         notebooks/         archived/
   ─────────         ─────────         ──────────         ─────────
@@ -89,25 +89,30 @@
 │  Trigger  │  User types /document-concepts                      │
 │  When     │  During or at the end of any coding conversation    │
 │  Input    │  Current conversation history                       │
-│  Output   │  New .md draft file in learning-vault/drafts/       │
-│  Skill    │  /document-concepts  (not yet created)              │
+│  Output   │  New .md draft file in docs/user/learning-vault/drafts/       │
+│  Skill    │  /document-concepts                                 │
 │  Test?    │  No                                                 │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-Claude automatically scans the conversation and decides what is worth saving. You do not need to know what is important — that is Claude's job. Each draft file captures:
+Claude scans the conversation, then presents a multiselect box so you can choose which concepts to save. You do not need to know what is important — Claude identifies the candidates, you pick the ones you want. Each draft file captures:
 
 - **Concept name** — the term or idea being captured
 - **Type** — one of: `terminology`, `mental model`, `code snippet`
-- **Plain-language explanation** — what it means, written for someone learning to read code
-- **Example** — a short code snippet or concrete illustration where relevant
 - **Topic tag** — one of: `JS`, `HTML`, `DOM`, `Async`, `CSS`, `Git`, `Patterns`, `Browser`, `Architecture`, `General`
+- **Date captured** — recorded inside the file
 - **Source context** — a brief note about which conversation it came from
+- **Plain-language definition** — what it means, in one sentence, no jargon
+- **Why it matters** — what problem it solves; why programmers use it
+- **Where it fits** — a table or diagram showing how this concept relates to others
+- **Example** — a code snippet from this project when possible, with a plain-language explanation
 
-Draft filename format: `YYYY-MM-DD_topic-slug.md`
-Example: `2026-03-01_kebab-case-naming.md`
+Draft filename format: `[TAG]_[concept-slug].md`
+Examples: `JS_callback-function.md`, `ARCH_separation-of-concerns.md`
 
-> **Status:** The `/document-concepts` skill does not exist yet. This phase is a placeholder.
+If a concept has already been documented, the skill silently updates the existing file rather than creating a duplicate.
+
+> **Status:** Skill implemented at `.claude/skills/document-concepts/SKILL.md`.
 
 ---
 
@@ -118,9 +123,9 @@ Example: `2026-03-01_kebab-case-naming.md`
 │  Trigger  │  User runs scripts/codex/review-concepts.ps1        │
 │  When     │  After accumulating a few drafts (not after every   │
 │           │  capture — batch them)                              │
-│  Input    │  Each file in learning-vault/drafts/ — one at a     │
+│  Input    │  Each file in docs/user/learning-vault/drafts/ — one at a     │
 │           │  time, processed sequentially by the batch script   │
-│  Output   │  Verified files moved to learning-vault/reviewed/   │
+│  Output   │  Verified files moved to docs/user/learning-vault/reviewed/   │
 │  How      │  Batch script calls Codex on each file individually │
 │           │  using a shared review prompt file                  │
 │  Test?    │  Yes — user checks any flagged items                │
@@ -149,9 +154,9 @@ This step also checks for **duplicates** — if a concept already exists in `rev
 ├──────────────────────────────────────────────────────────────────┤
 │  Trigger  │  User types /generate-learning                      │
 │  When     │  After reviewing a batch of concepts                │
-│  Input    │  All files in learning-vault/reviewed/              │
-│  Output   │  Updated .md files in learning-vault/notebooks/     │
-│           │  Processed drafts moved to learning-vault/archived/ │
+│  Input    │  All files in docs/user/learning-vault/reviewed/              │
+│  Output   │  Updated .md files in docs/user/learning-vault/notebooks/     │
+│           │  Processed drafts moved to docs/user/learning-vault/archived/ │
 │  Skill    │  /generate-learning  (not yet created)             │
 │  Test?    │  No                                                 │
 └──────────────────────────────────────────────────────────────────┘
@@ -212,7 +217,7 @@ Card format follows the minimum information principle (one atomic concept per ca
 
 **Before creating a card**, the skill checks the existing deck via AnkiConnect to avoid duplicates.
 
-**If AnkiConnect is unavailable** (Anki is not running, or plugin not installed), the skill saves a `.tsv` import file to `learning-vault/anki-imports/` instead, and notifies you.
+**If AnkiConnect is unavailable** (Anki is not running, or plugin not installed), the skill saves a `.tsv` import file to `docs/user/learning-vault/anki-imports/` instead, and notifies you.
 
 > **Status:** The `/generate-learning` skill does not exist yet. AnkiConnect has not been installed yet. This phase is a placeholder.
 >
