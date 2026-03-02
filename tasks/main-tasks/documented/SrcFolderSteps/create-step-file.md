@@ -1,5 +1,22 @@
 # Create Step File — SrcFolder Refactoring
 
+## Context to load first
+
+Before filling in the template, read these two files:
+
+1. `tasks/main-tasks/documented/Refactoring_SrcFolderStructure.md` — the full agreed
+   file structure and move plan. Use it to verify that the parameters you were given
+   match the agreed mappings, and to cross-check the import depth reference below.
+
+2. `FEATURE_MAP.md` — the feature-to-file ownership map. Use it to understand what
+   each file being moved actually does. This feeds the risk justification and
+   "why it's safe" sections.
+
+Do not skip this step. The quality of the checklist and risk sections depends on
+knowing what the files do and how they relate to each other.
+
+---
+
 ## Your task
 
 Create exactly ONE step planning file for the src folder reorganization.

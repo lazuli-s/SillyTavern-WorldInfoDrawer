@@ -216,7 +216,11 @@ foreach ($step in $steps) {
     }
 
     $instruction = @"
-Follow the instructions in:
+Before starting, read these context files:
+  tasks/main-tasks/documented/Refactoring_SrcFolderStructure.md
+  FEATURE_MAP.md
+
+Then follow the instructions in:
   $promptFile
 
 Then create the step file for these parameters:
