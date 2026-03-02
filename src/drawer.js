@@ -1,18 +1,18 @@
-﻿import { getRequestHeaders } from '../../../../../script.js';
+// extensionNames is not exposed by SillyTavern.getContext(); keep direct import.
 import { extensionNames } from '../../../../extensions.js';
-import { Popup } from '../../../../popup.js';
-import { SlashCommandParser } from '../../../../slash-commands/SlashCommandParser.js';
+// renderTemplateAsync is not exposed by SillyTavern.getContext(); keep direct import.
 import { renderTemplateAsync } from '../../../../templates.js';
-import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean, uuidv4 } from '../../../../utils.js';
-import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, loadWorldInfo, onWorldInfoChange, saveWorldInfo, selected_world_info, world_names } from '../../../../world-info.js';
-import { Settings, SORT, SORT_DIRECTION } from './Settings.js';
+import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean } from '../../../../utils.js';
+// These world-info exports are not fully exposed via getContext(); keep direct imports for ST-owned globals and helper APIs.
+import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, onWorldInfoChange, selected_world_info, world_names } from '../../../../world-info.js';
+import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initEditorPanel } from './editorPanel.js';
 import { initListPanel } from './listPanel.js';
 import { registerFolderName } from './lorebookFolders.js';
 import { initOrderHelper } from './orderHelper.js';
-import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './sortHelpers.js';
+import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './worldEntry.js';
-import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './utils.js';
+import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './shared/utils.js';
 
 export const initDrawer = ({
     cache,
@@ -78,6 +78,51 @@ export const initDrawer = ({
     let listPanelApi;
     let selectionState;
     let editorPanelApi;
+    let moSel;
+    let moDrawer;
+
+    const context = SillyTavern.getContext();
+    const {
+        getRequestHeaders,
+        Popup,
+        SlashCommandParser,
+        loadWorldInfo,
+        saveWorldInfo,
+        uuidv4,
+    } = context;
+
+    /**
+     * Delete one entry from a loaded lorebook object.
+     * Wraps the ST World Info entry-delete helper (see WI API delete pattern: mutate + save).
+     * @param {object} book
+     * @param {number|string} uid
+     * @param {{silent?: boolean}} [options]
+     * @returns {Promise<boolean>}
+     */
+    const deleteWorldInfoEntryRuntime = (book, uid, options)=>deleteWorldInfoEntry(book, uid, options);
+
+    /**
+     * Notify the WI update handler after saving a lorebook.
+     * This syncs extension UI state after ST-owned book persistence completes.
+     * @param {string} bookName
+     * @param {object} bookData
+     * @returns {Promise<void>}
+     */
+    const updateWIChangeRuntime = (bookName, bookData)=>wiHandlerApi.updateWIChange(bookName, bookData);
+    const entryStateSaveQueueByBook = new Map();
+    const enqueueEntryStateSave = (bookName)=>{
+        const previousSave = entryStateSaveQueueByBook.get(bookName) ?? Promise.resolve();
+        const queuedSave = previousSave
+            .catch(()=>{})
+            .then(()=>saveWorldInfo(bookName, wiHandlerApi.buildSavePayload(bookName), true))
+        ;
+        entryStateSaveQueueByBook.set(bookName, queuedSave);
+        return queuedSave.finally(()=>{
+            if (entryStateSaveQueueByBook.get(bookName) === queuedSave) {
+                entryStateSaveQueueByBook.delete(bookName);
+            }
+        });
+    };
 
     const addDrawer = ()=>{
         const { openOrderHelper, refreshOrderHelperScope } = initOrderHelper({
@@ -176,6 +221,8 @@ export const initDrawer = ({
         // Best-effort cleanup: if ST tears down/reloads extensions, remove global listeners.
         globalThis.addEventListener?.('beforeunload', ()=>{
             document.removeEventListener('keydown', onDrawerKeydown);
+            moSel?.disconnect();
+            moDrawer?.disconnect();
             editorPanelApi?.cleanup?.();
             wiHandlerApi.cleanup?.();
             bookSourceLinksApi.cleanup();
@@ -554,7 +601,7 @@ export const initDrawer = ({
                         debounceAsync,
                         deleteWIOriginalDataValue,
                         deleteWorldInfo,
-                        deleteWorldInfoEntry,
+                        deleteWorldInfoEntry: deleteWorldInfoEntryRuntime,
                         delay,
                         dom,
                         download,
@@ -580,7 +627,7 @@ export const initDrawer = ({
                         getSelectedWorldInfo: ()=>selected_world_info,
                         getWorldNames: ()=>world_names,
                         sortEntries,
-                        updateWIChange: wiHandlerApi.updateWIChange,
+                        updateWIChange: updateWIChangeRuntime,
                         waitForWorldInfoUpdate: wiHandlerApi.waitForWorldInfoUpdate,
                         world_names,
                         createNewWorldInfo,
@@ -597,6 +644,7 @@ export const initDrawer = ({
                         buildSavePayload: wiHandlerApi.buildSavePayload,
                         cache,
                         dom,
+                        enqueueEntryStateSave,
                         getWorldEntry,
                         renderTemplateAsync,
                         saveWorldInfo,
@@ -879,11 +927,11 @@ export const initDrawer = ({
 
         const moSelTarget = document.querySelector('#world_editor_select');
         if (moSelTarget) {
-            const moSel = new MutationObserver(()=>wiHandlerApi.updateWIChangeDebounced());
+            moSel = new MutationObserver(()=>wiHandlerApi.updateWIChangeDebounced());
             moSel.observe(moSelTarget, { childList:true });
         }
 
-        const moDrawer = new MutationObserver(()=>{
+        moDrawer = new MutationObserver(()=>{
             const style = drawerContent.getAttribute('style') ?? '';
             if (style.includes('display: none;')) return;
 
@@ -919,3 +967,7 @@ export const initDrawer = ({
         selectionState,
     };
 };
+
+
+
+

@@ -1,5 +1,5 @@
-﻿import { setTooltip, formatCharacterFilter } from './orderHelperRender.utils.js';
-import { ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
+import { setTooltip, formatCharacterFilter } from './orderHelperRender.utils.js';
+import { ORDER_HELPER_RECURSION_OPTIONS } from './shared/constants.js';
 
 /**
  * Creates a per-book save serializer that coalesces concurrent save requests.
@@ -761,3 +761,4 @@ export function buildTableBody({
 
     return tbody;
 }
+

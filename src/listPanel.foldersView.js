@@ -102,7 +102,7 @@ const createFoldersViewSlice = ({
     const resetFolderDoms = ()=>{
         bulkFolderCollapsedIntent = null;
         for (const folderDom of listPanelState.getFolderDomValues()) {
-            folderDom.observer?.disconnect();
+            folderDom.cleanup?.();
         }
         listPanelState.clearFolderDoms();
     };
@@ -133,9 +133,9 @@ const createFoldersViewSlice = ({
 
     const updateFolderActiveToggles = ({ isBookDomFilteredOut })=>{
         const visibleBooksByFolder = getVisibleFolderBooks({ isBookDomFilteredOut });
-        for (const folderDom of listPanelState.getFolderDomValues()) {
-            const folderName = folderDom?.root?.dataset?.folder ?? '';
-            folderDom.updateActiveToggle?.(visibleBooksByFolder[folderName] ?? []);
+        for (const [folderName, visibleBookNames] of Object.entries(visibleBooksByFolder)) {
+            const folderDom = listPanelState.getFolderDom(folderName);
+            folderDom?.updateActiveToggle?.(visibleBookNames);
         }
         updateFolderVisibility({ isBookDomFilteredOut });
     };

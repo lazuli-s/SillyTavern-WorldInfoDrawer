@@ -55,7 +55,7 @@ const waitForDom = (condition, { timeoutMs = 5000, root = document } = {})=>new 
  *
  * @param {string} bookName
  * @param {{ waitForWorldInfoUpdate?: (()=>Promise<unknown>)|null, delay: (ms:number)=>Promise<unknown>, worldEditorSelectSelector?: string }} options
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean>} True only when the core select confirms the requested value.
  */
 const setSelectedBookInCoreUi = async(bookName, {
     waitForWorldInfoUpdate = null,
@@ -69,15 +69,14 @@ const setSelectedBookInCoreUi = async(bookName, {
 
     const previousValue = select.value;
     select.value = option.value;
-    select.dispatchEvent(new Event('change', { bubbles:true }));
-
-    // Wait for the selection to be reflected in the DOM/state.
-    // We can't rely on fixed delays because ST may update asynchronously.
-    // As a minimal robust check, wait until the select reports the new value
-    // and at least one mutation occurs in the WI area (common after change).
     if (select.value !== option.value) return false;
-    // If selection did not actually change (same value), still allow continuing.
+    // If selection did not actually change (same value), no change event is needed.
     if (previousValue === option.value) return true;
+
+    select.dispatchEvent(new Event('change', { bubbles:true }));
+    // Give ST a short processing window, then verify the selection was not rolled back.
+    await delay(50);
+    if (select.value !== option.value) return false;
 
     // Assumption guardrail:
     // Some host states do not emit WORLDINFO_UPDATED for selection switches.

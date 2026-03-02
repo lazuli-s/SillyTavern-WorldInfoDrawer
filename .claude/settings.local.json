@@ -19,7 +19,9 @@
       "Bash(powershell -Command:*)",
       "Bash(python3:*)",
       "Bash(git config core.symlinks true)",
-      "Bash(git config core.symlinks)"
+      "Bash(git config core.symlinks)",
+      "WebFetch(domain:github.com)",
+      "Bash(cmd /c \"move \"\"c:\\\\ST Test\\\\SillyTavern\\\\data\\\\default-user\\\\extensions\\\\SillyTavern-WorldInfoDrawer\\\\.claude\\\\skills\\\\cline-headless\"\" \"\"c:\\\\ST Test\\\\SillyTavern\\\\data\\\\default-user\\\\extensions\\\\SillyTavern-WorldInfoDrawer\\\\.claude\\\\skills\\\\script-cline\"\"\")"
     ]
   },
   "hooks": {

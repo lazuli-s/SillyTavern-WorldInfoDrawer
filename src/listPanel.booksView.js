@@ -1,4 +1,4 @@
-﻿import { cloneMetadata } from './sortHelpers.js';
+import { cloneMetadata } from './shared/sort-helpers.js';
 
 const createBooksViewSlice = ({
     listPanelState,
@@ -129,15 +129,7 @@ const createBooksViewSlice = ({
                             const newEntry = runtime.createWorldInfoEntry(name, saveData);
                             let entryRendered = false;
                             let editorOpened = false;
-                            try {
-                                runtime.cache[name].entries[newEntry.uid] = structuredClone(newEntry);
-                                await runtime.renderEntry(newEntry, name);
-                                entryRendered = true;
-                                runtime.cache[name].dom.entry[newEntry.uid].root.click();
-                                editorOpened = true;
-                                await runtime.saveWorldInfo(name, saveData, true);
-                            } catch (err) {
-                                console.error('[STWID] add-entry: save failed, rolling back optimistic state.', err);
+                            const rollbackOptimisticEntry = ()=>{
                                 delete runtime.cache[name]?.entries?.[newEntry.uid];
                                 if (entryRendered) {
                                     const entryDom = runtime.cache[name]?.dom?.entry?.[newEntry.uid];
@@ -151,6 +143,46 @@ const createBooksViewSlice = ({
                                 if (editorOpened) {
                                     runtime.resetEditor?.();
                                 }
+                            };
+                            try {
+                                runtime.cache[name].entries[newEntry.uid] = structuredClone(newEntry);
+                                await runtime.renderEntry(newEntry, name);
+                                entryRendered = true;
+                                runtime.cache[name].dom.entry[newEntry.uid].root.click();
+                                editorOpened = true;
+                                await runtime.saveWorldInfo(name, saveData, true);
+                            } catch (err) {
+                                console.error('[STWID] add-entry: save failed, rolling back optimistic state.', err);
+                                const hasUnsavedEditorChanges = Boolean(runtime.isDirtyCheck?.());
+                                const canConfirm = Boolean(runtime.Popup?.show?.confirm);
+                                if (editorOpened && hasUnsavedEditorChanges) {
+                                    if (canConfirm) {
+                                        const retryNow = await runtime.Popup.show.confirm(
+                                            'Failed to save this new entry. Retry now? Press Cancel to keep your edits open.',
+                                        );
+                                        if (retryNow) {
+                                            try {
+                                                const retryPayload = runtime.buildSavePayload(name);
+                                                await runtime.saveWorldInfo(name, retryPayload, true);
+                                                toastr.success('New entry saved after retry.');
+                                                return;
+                                            } catch (retryErr) {
+                                                console.error('[STWID] add-entry: retry save failed; keeping editor open.', retryErr);
+                                            }
+                                        }
+                                        const discardUnsaved = await runtime.Popup.show.confirm(
+                                            'Save still failed. Discard this unsaved entry and close the editor?',
+                                        );
+                                        if (!discardUnsaved) {
+                                            toastr.error('Entry was not saved. Keep this editor open and save again when ready.');
+                                            return;
+                                        }
+                                    } else {
+                                        toastr.error('Entry was not saved. Keep this editor open and save again when ready.');
+                                        return;
+                                    }
+                                }
+                                rollbackOptimisticEntry();
                                 toastr.error('Failed to create new entry. Please try again.');
                             }
                         });
@@ -284,3 +316,5 @@ const createBooksViewSlice = ({
 };
 
 export { createBooksViewSlice };
+
+

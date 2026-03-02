@@ -7,7 +7,7 @@ import {
     ORDER_HELPER_TABLE_COLUMNS,
     ORDER_HELPER_NUMBER_COLUMN_KEYS,
     ORDER_HELPER_RECURSION_OPTIONS,
-} from './constants.js';
+} from './shared/constants.js';
 
 /**
  * Builds the filter button + multiselect dropdown menu for a single column.
@@ -263,3 +263,4 @@ export function buildTableHeader({
         refreshGroupFilterIndicator:        refreshFilterIndicators.group        ?? (()=>{}),
     };
 }
+

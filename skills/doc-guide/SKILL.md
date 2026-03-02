@@ -1,12 +1,6 @@
 ---
 name: doc-guide
-description: Single source of truth for which authoritative docs to load and when. Invoke
-  at the start of any task on the SillyTavern-WorldInfoDrawer extension, before
-  reading code or making changes. Provides a conditional loading guide: always-load
-  docs (ARCHITECTURE.md, FEATURE_MAP.md), plus conditional docs based on whether
-  the task involves writing JS, reading/writing World Info, ownership questions,
-  or code review. All workflow and skill files that previously listed docs inline
-  now delegate here instead.
+description: 'Single source of truth for which authoritative docs to load and when. Invoke at the start of any task on the SillyTavern-WorldInfoDrawer extension, before reading code or making changes. Provides a conditional loading guide: always-load docs (ARCHITECTURE.md, FEATURE_MAP.md), plus conditional docs based on whether the task involves writing JS, reading/writing World Info, ownership questions, or code review. All workflow and skill files that previously listed docs inline now delegate here instead.'
 ---
 
 # doc-guide

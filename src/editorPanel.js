@@ -123,12 +123,7 @@
         isEditorDirty = false;
     };
 
-    const showActivationSettings = () => {
-        if (!activationBlock || !activationBlockParent) return;
-        dom.activationToggle.classList.add('stwid--state-active');
-        setCurrentEditor(null);
-        currentEditorKey = null;
-        isEditorDirty = false;
+    const renderActivationSettings = () => {
         clearEditor({ resetCurrent: false });
         if (dom.order.toggle.classList.contains('stwid--state-active')) {
             dom.order.toggle.click();
@@ -141,6 +136,15 @@
         dom.editor.append(activationBlock);
     };
 
+    const showActivationSettings = () => {
+        if (!activationBlock || !activationBlockParent) return;
+        dom.activationToggle.classList.add('stwid--state-active');
+        setCurrentEditor(null);
+        currentEditorKey = null;
+        isEditorDirty = false;
+        renderActivationSettings();
+    };
+
     const toggleActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
         const isActive = dom.activationToggle.classList.toggle('stwid--state-active');
@@ -148,16 +152,7 @@
         currentEditorKey = null;
         isEditorDirty = false;
         if (isActive) {
-            clearEditor({ resetCurrent: false });
-            if (dom.order.toggle.classList.contains('stwid--state-active')) {
-                dom.order.toggle.click();
-            }
-            clearEntryHighlights();
-            const h4 = document.createElement('h4'); {
-                h4.textContent = 'Global World Info/Lorebook activation settings';
-                dom.editor.append(h4);
-            }
-            dom.editor.append(activationBlock);
+            renderActivationSettings();
         } else {
             activationBlockParent.append(activationBlock);
             clearEditor({ resetCurrent: false });

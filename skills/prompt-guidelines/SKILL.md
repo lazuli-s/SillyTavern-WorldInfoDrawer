@@ -1,6 +1,6 @@
 ---
 name: prompt-guidelines
-description: Prompting guidelines for writing effective LLM prompts, workflows, skill instructions, and rule sets. Use when authoring new prompts, skills, workflow files, or instruction sets for any LLM. Invoked via /prompt-guidelines. Covers five rule families: XML/Markdown hybrid formatting (FMT), code fencing decisions (FENCE), single-responsibility principle for prompts (SRP), constraint and rule writing (RULE), and phase sequencing (PHASE).
+description: 'Prompting guidelines for writing effective LLM prompts, workflows, skill instructions, and rule sets. Use when authoring new prompts, skills, workflow files, or instruction sets for any LLM. Invoked via /prompt-guidelines. Covers five rule families: XML/Markdown hybrid formatting (FMT), code fencing decisions (FENCE), single-responsibility principle for prompts (SRP), constraint and rule writing (RULE), and phase sequencing (PHASE).'
 ---
 
 # Prompt Guidelines

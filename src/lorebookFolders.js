@@ -220,6 +220,14 @@ const getFolderImportBookNames = (payload)=>{
 };
 
 const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menuActions })=>{
+    let isDropTargetActive = false;
+    const clearDropTargetState = (evt)=>{
+        if (!onDrop) return;
+        root.classList.remove('stwid--state-target');
+        if (!isDropTargetActive) return;
+        isDropTargetActive = false;
+        onDragStateChange?.(false, evt);
+    };
     const root = document.createElement('div'); {
         root.classList.add('stwid--folder');
         root.dataset.folder = folderName;
@@ -235,20 +243,21 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
             });
             header.addEventListener('dragover', (evt)=>{
                 if (!onDrop) return;
-                const allowDrop = onDragStateChange?.(true, evt) ?? true;
-                if (!allowDrop) return;
+                if (!isDropTargetActive) {
+                    const allowDrop = onDragStateChange?.(true, evt) ?? true;
+                    if (!allowDrop) return;
+                    isDropTargetActive = true;
+                }
                 evt.preventDefault();
                 root.classList.add('stwid--state-target');
             });
             header.addEventListener('dragleave', (evt)=>{
-                if (!onDrop) return;
-                root.classList.remove('stwid--state-target');
-                onDragStateChange?.(false, evt);
+                clearDropTargetState(evt);
             });
             header.addEventListener('drop', async(evt)=>{
                 if (!onDrop) return;
                 evt.preventDefault();
-                root.classList.remove('stwid--state-target');
+                clearDropTargetState(evt);
                 await onDrop(evt);
             });
             const icon = document.createElement('i'); {
@@ -363,14 +372,12 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                                 return;
                                             }
                                             if (normalized === folderName) return;
-                                            const targetFolderExisted = getFolderRegistry().includes(normalized);
-                                            registerFolderName(normalized);
                                             const bookNames = getFolderBookNames(menuActions.cache, folderName);
                                             const failedBookNames = [];
                                             for (const bookName of bookNames) {
                                                 try {
                                                     const updated = await menuActions.setBookFolder(bookName, normalized);
-                                                    if (!updated) {
+                                                    if (!updated?.ok) {
                                                         failedBookNames.push(bookName);
                                                     }
                                                 } catch (error) {
@@ -378,13 +385,13 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                                     failedBookNames.push(bookName);
                                                 }
                                             }
+                                            const movedCount = Math.max(bookNames.length - failedBookNames.length, 0);
+                                            if (movedCount > 0) {
+                                                registerFolderName(normalized);
+                                            }
                                             if (!failedBookNames.length) {
                                                 removeFolderName(folderName);
                                             } else {
-                                                const movedCount = Math.max(bookNames.length - failedBookNames.length, 0);
-                                                if (movedCount === 0 && !targetFolderExisted) {
-                                                    removeFolderName(normalized);
-                                                }
                                                 toastr.warning(
                                                     `Folder rename partially completed (${movedCount}/${bookNames.length} books moved). Failed: ${summarizeBookNames(failedBookNames)}.`
                                                 );
@@ -467,16 +474,32 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                                 ? newNames.filter((name)=>expectedBookNames.includes(name)
                                                     || importPrefixes.some((prefix)=>name.startsWith(prefix)))
                                                 : [];
+                                            const unmatchedNames = newNames.filter((name)=>!attributedNames.includes(name));
 
-                                            // If there's a mismatch between expected names and what appeared,
-                                            // be conservative: don't move anything automatically.
-                                            if (expectedBookNames.length && attributedNames.length !== newNames.length) {
+                                            // Keep attribution conservative, but allow partial attribution.
+                                            if (!attributedNames.length) {
                                                 toastr.warning('Import finished, but new books could not be confidently identified. No books were moved into the folder.');
                                                 return;
                                             }
 
+                                            const failedMoveNames = [];
                                             for (const name of attributedNames) {
-                                                await menuActions.setBookFolder(name, folderName);
+                                                const moved = await menuActions.setBookFolder(name, folderName);
+                                                if (!moved?.ok) {
+                                                    console.warn(`[STWID] Failed to move imported book "${name}" into folder "${folderName}".`);
+                                                    failedMoveNames.push(name);
+                                                }
+                                            }
+                                            const movedCount = Math.max(attributedNames.length - failedMoveNames.length, 0);
+                                            if (unmatchedNames.length) {
+                                                toastr.info(
+                                                    `Moved ${movedCount} books to folder "${folderName}". Could not identify: ${summarizeBookNames(unmatchedNames)}.`
+                                                );
+                                            }
+                                            if (failedMoveNames.length) {
+                                                toastr.warning(
+                                                    `Import partially completed (${movedCount}/${attributedNames.length} identified books moved). Failed: ${summarizeBookNames(failedMoveNames)}.`
+                                                );
                                             }
                                             if (attributedNames.length) {
                                                 await menuActions.refreshList?.();
@@ -578,7 +601,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             for (const bookName of bookNames) {
                                                 try {
                                                     const updated = await menuActions.setBookFolder(bookName, null);
-                                                    if (!updated) {
+                                                    if (!updated?.ok) {
                                                         failedBookNames.push(bookName);
                                                     }
                                                 } catch (error) {
@@ -678,6 +701,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
         toggle,
         activeToggle,
         observer,
+        cleanup: ()=>observer.disconnect(),
         updateActiveToggle,
     };
 };
