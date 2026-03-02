@@ -7,7 +7,7 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 - Adds a full screen drawer layout for editing lorebook entries, so you can focus entirely on lore and worldbuilding.
 - Provides one-click collapse/expand for all books and a quick refresh to pull the latest lorebook state without reloading the page.
 - 📁 **LOREBOOK FOLDERS** for organizing your collection of lorebooks. You can create folders, export and import entire folder sets, and manage folder actions from a context menu.
-- 📇 **ORDER HELPER** panel for mass updates. Drag to reorder entries, filter by strategy/position/recursion/outlet/automation ID/inclusion group, choose which columns to show, and bulk-apply changes in order.
+- 📇 **ENTRY MANAGER** panel for mass updates. Drag to reorder entries, filter by strategy/position/recursion/outlet/automation ID/inclusion group, choose which columns to show, and bulk-apply changes in order.
 
 ## Installation
 
@@ -31,9 +31,9 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 - Import or export whole folder groups to move sets of books in one step.
 - Use the top list controls to collapse or expand all folders at once.
 - Use folder actions (rename, delete, export, import, create book) from one menu.
-- Run Order Helper on a single folder scope when you only want to reorder books in that folder.
+- Run Entry Manager on a single folder scope when you only want to reorder books in that folder.
 
-### 📇 Order Helper for bulk work
+### 📇 Entry Manager for bulk work
 - View active entries in a table and reorder them with drag-and-drop.
 - Choose your scope: all active books, one book, or one folder scope.
 - Filter by strategy, position, recursion flags, outlet, automation ID, and inclusion group to find exactly what you need.
@@ -53,7 +53,7 @@ This is a forked version of LenAnderson's WorldInfoDrawer extension for SillyTav
 ### Individual Lorebook Menu
 <img width="379" height="473" alt="individual_lorebook_menu" src="https://github.com/user-attachments/assets/2a1227a7-7ca1-4642-b671-d4265f462a3c" />
 
-### Order Helper
+### Entry Manager
 <img width="960" height="468" alt="order_helper" src="https://github.com/user-attachments/assets/d5d1f66f-bfa4-4548-b54c-d9da729b03d5" />
 
 

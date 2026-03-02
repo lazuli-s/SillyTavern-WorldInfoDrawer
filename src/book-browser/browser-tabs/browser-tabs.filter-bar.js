@@ -436,7 +436,7 @@ const createFilterBarSlice = ({
                 helperContainerLabel.textContent = 'Helper';
                 const helperContainerHint = document.createElement('i');
                 helperContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-                helperContainerHint.title = 'Open Order Helper for the books currently shown by Visibility filters.';
+                helperContainerHint.title = 'Open Entry Manager for the books currently shown by Visibility filters.';
                 helperContainerLabel.append(helperContainerHint);
                 helperContainer.append(helperContainerLabel);
 
@@ -457,7 +457,7 @@ const createFilterBarSlice = ({
                 const trigger = document.createElement('button');
                 trigger.type = 'button';
                 trigger.classList.add('menu_button', 'stwid--multiselectDropdownButton');
-                trigger.title = 'Select which book sources are visible in the list and Order Helper.';
+                trigger.title = 'Select which book sources are visible in the list and Entry Manager.';
                 trigger.setAttribute('aria-label', 'Visibility filters');
                 trigger.setAttribute('aria-expanded', 'false');
                 trigger.setAttribute('aria-haspopup', 'true');

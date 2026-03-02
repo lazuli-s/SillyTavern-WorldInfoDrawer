@@ -635,7 +635,7 @@ const createBookMenuSlice = ({
                             }
                             const txt = document.createElement('span'); {
                                 txt.classList.add('stwid--label');
-                                txt.textContent = 'Order Helper';
+                                txt.textContent = 'Entry Manager';
                                 orderHelper.append(txt);
                             }
                             menu.append(orderHelper);

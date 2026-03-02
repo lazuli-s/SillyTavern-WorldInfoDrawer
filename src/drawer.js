@@ -9,7 +9,7 @@ import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initEditorPanel } from './editor-panel/editor-panel.js';
 import { initBookBrowser } from './book-browser/book-browser.js';
 import { registerFolderName } from './book-browser/book-list/book-folders/book-folders.lorebook-folders.js';
-import { initOrderHelper } from './orderHelper.js';
+import { initOrderHelper } from './entry-manager/entry-manager.js';
 import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './book-browser/book-list/book-list.world-entry.js';
 import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './shared/utils.js';
@@ -410,8 +410,8 @@ export const initDrawer = ({
                             dom.order.toggle = order;
                             order.classList.add('menu_button');
                             order.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
-                            order.title = 'Open Order Helper (Book Visibility scope)';
-                            order.setAttribute('aria-label', 'Open Order Helper for current Book Visibility scope');
+                            order.title = 'Open Entry Manager (Book Visibility scope)';
+                            order.setAttribute('aria-label', 'Open Entry Manager for current Book Visibility scope');
                             order.addEventListener('click', ()=>{
                                 const isActive = order.classList.contains('stwid--state-active');
 
@@ -423,14 +423,14 @@ export const initDrawer = ({
                                 // Guard the open direction: don't allow a mode switch that clears/replaces the editor
                                 // while the current entry has unsaved edits.
                                 if (!isActive && isDirty) {
-                                    toastr.warning('Unsaved edits detected. Save or discard changes before opening Order Helper.');
+                                    toastr.warning('Unsaved edits detected. Save or discard changes before opening Entry Manager.');
                                     return;
                                 }
 
                                 if (isActive) {
                                     // Defensive: if an upstream flow left dirty state set, avoid clearing the editor.
                                     if (isDirty) {
-                                        toastr.warning('Unsaved edits detected. Save or discard changes before closing Order Helper.');
+                                        toastr.warning('Unsaved edits detected. Save or discard changes before closing Entry Manager.');
                                         return;
                                     }
 

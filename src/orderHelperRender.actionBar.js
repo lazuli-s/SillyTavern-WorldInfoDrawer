@@ -595,7 +595,7 @@ export function buildBulkEditRow({
     const getSafeTbodyRows = ()=>{
         const tbody = dom.order?.tbody;
         if (!(tbody instanceof HTMLElement)) {
-            toastr.warning('Order Helper table is not ready yet.');
+            toastr.warning('Entry Manager table is not ready yet.');
             return null;
         }
         return [...tbody.children].filter((child)=>child instanceof HTMLElement);

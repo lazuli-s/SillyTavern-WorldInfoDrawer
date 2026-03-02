@@ -8,9 +8,9 @@
     getPositionValues,
     getStrategyOptions,
     getStrategyValues,
-} from './orderHelperState.js';
-import { createOrderHelperFilters } from './orderHelperFilters.js';
-import { createOrderHelperRenderer } from './orderHelperRender.js';
+} from './logic/logic.state.js';
+import { createOrderHelperFilters } from './logic/logic.filters.js';
+import { createOrderHelperRenderer } from '../orderHelperRender.js';
 
 export const initOrderHelper = ({
     dom,
@@ -377,7 +377,7 @@ export const initOrderHelper = ({
         const currentEditor = getCurrentEditor?.();
         const dirty = Boolean(currentEditor && getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
         if (dirty) {
-            toastr.warning('Unsaved edits detected. Save or discard changes before opening Order Helper.');
+            toastr.warning('Unsaved edits detected. Save or discard changes before opening Entry Manager.');
             return;
         }
 

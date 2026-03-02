@@ -567,7 +567,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                     }
                                     const txt = document.createElement('span'); {
                                         txt.classList.add('stwid--label');
-                                        txt.textContent = 'Order Helper (Folder)';
+                                        txt.textContent = 'Entry Manager (Folder)';
                                         orderHelper.append(txt);
                                     }
                                     menu.append(orderHelper);
