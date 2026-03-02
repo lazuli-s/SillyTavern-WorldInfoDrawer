@@ -1,6 +1,6 @@
-import { getCharaFilename } from '../../../../utils.js';
+import { getCharaFilename } from '../../../../../../utils.js';
 // Keep direct world-info imports for values not available via context.
-import { METADATA_KEY, world_info, world_names } from '../../../../world-info.js';
+import { METADATA_KEY, world_info, world_names } from '../../../../../../world-info.js';
 
 const SOURCE_ICON_LOG_PREFIX = '[STWID][SOURCE_ICONS]';
 const EMPTY_BOOK_SOURCE_LINKS = Object.freeze({

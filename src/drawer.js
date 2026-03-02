@@ -11,7 +11,7 @@ import { initBookBrowser } from './book-browser/book-browser.js';
 import { registerFolderName } from './lorebookFolders.js';
 import { initOrderHelper } from './orderHelper.js';
 import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
-import { entryState, renderEntry, setWorldEntryContext } from './worldEntry.js';
+import { entryState, renderEntry, setWorldEntryContext } from './book-browser/book-list/book-list.world-entry.js';
 import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './shared/utils.js';
 
 export const initDrawer = ({

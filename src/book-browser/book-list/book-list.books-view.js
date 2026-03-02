@@ -1,4 +1,4 @@
-import { cloneMetadata } from './shared/sort-helpers.js';
+import { cloneMetadata } from '../../shared/sort-helpers.js';
 
 const createBooksViewSlice = ({
     listPanelState,

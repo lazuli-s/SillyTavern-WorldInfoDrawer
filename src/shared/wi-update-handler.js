@@ -3,7 +3,7 @@ import { loadWorldInfo, saveWorldInfo, selected_world_info, world_names } from '
 import { Settings } from './settings.js';
 import { refreshList } from '../book-browser/book-browser.js';
 import { cloneMetadata, getSortFromMetadata, sortEntries } from './sort-helpers.js';
-import { entryState, renderEntry } from '../worldEntry.js';
+import { entryState, renderEntry } from '../book-browser/book-list/book-list.world-entry.js';
 import { createDeferred } from './utils.js';
 
 const EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS = 15000;

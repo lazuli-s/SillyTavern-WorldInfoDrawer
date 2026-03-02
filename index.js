@@ -1,4 +1,4 @@
-import { initBookSourceLinks } from './src/bookSourceLinks.js';
+import { initBookSourceLinks } from './src/book-browser/book-list/book-list.book-source-links.js';
 import { initDrawer } from './src/drawer.js';
 import { refreshList } from './src/book-browser/book-browser.js';
 import { initWIUpdateHandler } from './src/shared/wi-update-handler.js';

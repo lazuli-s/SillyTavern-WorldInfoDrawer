@@ -25,10 +25,10 @@ import {
     BOOK_VISIBILITY_MODES,
     createFilterBarSlice,
 } from './browser-tabs/browser-tabs.filter-bar.js';
-import { createSelectionDnDSlice } from '../listPanel.selectionDnD.js';
-import { createBookMenuSlice } from '../listPanel.bookMenu.js';
+import { createSelectionDnDSlice } from './book-list/book-list.selection-dnd.js';
+import { createBookMenuSlice } from './book-list/book-list.book-menu.js';
 import { createFoldersViewSlice } from '../listPanel.foldersView.js';
-import { createBooksViewSlice } from '../listPanel.booksView.js';
+import { createBooksViewSlice } from './book-list/book-list.books-view.js';
 
 // Core SillyTavern DOM anchors used by this extension.
 // Keep these centralized so host selector drift is easier to audit.

@@ -1,4 +1,4 @@
-import { resetSelectionMemory } from './book-browser/book-browser.state.js';
+import { resetSelectionMemory } from '../book-browser.state.js';
 
 const createSelectionDnDSlice = ({
     listPanelState,
