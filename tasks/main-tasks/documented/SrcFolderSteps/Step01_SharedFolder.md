@@ -1,6 +1,6 @@
 # STEP 1 — Shared Folder
 
-**Status:** PENDING
+**Status:** IMPLEMENTED
 **Parent task:** [Refactoring_SrcFolderStructure.md](../Refactoring_SrcFolderStructure.md)
 **Folder:** `src/shared/`
 
@@ -20,15 +20,15 @@
 
 ## Implementation Checklist
 
-- [ ] Create the destination folder(s) if they do not exist
-- [ ] For each file in the table above, do the following atomically:
-  - [ ] Write the file to its new location with its new name
-  - [ ] Delete the original file
-  - [ ] Update all `import` statements INSIDE the moved file to use
+- [x] Create the destination folder(s) if they do not exist
+- [x] For each file in the table above, do the following atomically:
+  - [x] Write the file to its new location with its new name
+  - [x] Delete the original file
+  - [x] Update all `import` statements INSIDE the moved file to use
         the new relative paths (see import depth table below)
-  - [ ] Grep the entire codebase for any file that imports from the
+  - [x] Grep the entire codebase for any file that imports from the
         old path; update each reference to the new path
-- [ ] Verify: grep for all old filenames from this step; confirm
+- [x] Verify: grep for all old filenames from this step; confirm
       no file still imports from any of those old paths
 
 ---
@@ -56,3 +56,22 @@ Pure utility files with no UI or event handlers. The only risk is a missed impor
 ## Why It's Safe to Implement
 
 No logic, no UI, no events change. Only file locations and import strings change.
+
+---
+
+## IMPLEMENTATION
+
+**Status:** IMPLEMENTED
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/shared/constants.js`, `src/shared/utils.js`, `src/shared/settings.js`, `src/shared/sort-helpers.js`, `src/shared/wi-update-handler.js`
+  - Moved the 5 Shared modules to `src/shared/` with the new filenames, then deleted the original root-level files.
+  - Updated import paths inside moved files for new relative depth (including ST core imports in `wi-update-handler.js` and the SlashCommandParser fallback import in `utils.js`).
+  - Updated all old-path imports in code/tests to point at `src/shared/*` (including `index.js`, `src/drawer.js`, list/order-helper modules, and utils tests).
+  - Verified no JS import still targets old step paths: `src/constants.js`, `src/utils.js`, `src/Settings.js`, `src/sortHelpers.js`, `src/wiUpdateHandler.js`.
+
+- Risks / Side effects
+  - A missed runtime import outside test coverage could still block extension load on browser reload. (probability: ❗)
+      - **🟥 MANUAL CHECK**: [ ] Reload SillyTavern and open World Info Drawer; confirm drawer opens and book list renders without import errors in browser console.

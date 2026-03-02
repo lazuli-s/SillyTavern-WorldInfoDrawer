@@ -1,4 +1,4 @@
-﻿import { cloneMetadata } from './sortHelpers.js';
+import { cloneMetadata } from './shared/sort-helpers.js';
 
 const createBooksViewSlice = ({
     listPanelState,
@@ -316,3 +316,5 @@ const createBooksViewSlice = ({
 };
 
 export { createBooksViewSlice };
+
+

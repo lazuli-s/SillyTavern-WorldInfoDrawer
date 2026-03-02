@@ -1,7 +1,7 @@
 import {
     ORDER_HELPER_RECURSION_OPTIONS,
     ORDER_HELPER_TOGGLE_COLUMNS,
-} from './constants.js';
+} from './shared/constants.js';
 
 const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
 const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
@@ -124,3 +124,4 @@ export {
     getStrategyOptions,
     getStrategyValues,
 };
+

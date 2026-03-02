@@ -4,8 +4,8 @@ import {
   createDeferred,
   parseBooleanSetting,
   safeToSorted,
-} from "../src/utils.js";
-import { SORT, SORT_DIRECTION } from "../src/constants.js";
+} from "../src/shared/utils.js";
+import { SORT, SORT_DIRECTION } from "../src/shared/constants.js";
 
 describe("appendSortOptions", () => {
   let originalDocument;
@@ -161,3 +161,4 @@ describe("createDeferred", () => {
     await expect(d.promise).rejects.toThrow("nope");
   });
 });
+

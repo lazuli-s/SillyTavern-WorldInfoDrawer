@@ -1,4 +1,4 @@
-﻿import { cloneMetadata } from './sortHelpers.js';
+import { cloneMetadata } from './shared/sort-helpers.js';
 import {
     createBookInFolder,
     getFolderFromMetadata,
@@ -649,4 +649,6 @@ const initListPanel = (options)=>{
 };
 
 export { initListPanel, refreshList };
+
+
 

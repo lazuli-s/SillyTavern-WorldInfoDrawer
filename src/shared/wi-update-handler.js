@@ -1,9 +1,9 @@
-import { debounce, delay } from '../../../../utils.js';
-import { loadWorldInfo, saveWorldInfo, selected_world_info, world_names } from '../../../../world-info.js';
-import { Settings } from './Settings.js';
-import { refreshList } from './listPanel.js';
-import { cloneMetadata, getSortFromMetadata, sortEntries } from './sortHelpers.js';
-import { entryState, renderEntry } from './worldEntry.js';
+import { debounce, delay } from '../../../../../utils.js';
+import { loadWorldInfo, saveWorldInfo, selected_world_info, world_names } from '../../../../../world-info.js';
+import { Settings } from './settings.js';
+import { refreshList } from '../listPanel.js';
+import { cloneMetadata, getSortFromMetadata, sortEntries } from './sort-helpers.js';
+import { entryState, renderEntry } from '../worldEntry.js';
 import { createDeferred } from './utils.js';
 
 const EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS = 15000;
@@ -15,7 +15,7 @@ export const initWIUpdateHandler = ({
     getListPanelApi,
     getEditorPanelApi,
     getRefreshBookSourceLinks,
-})=>{
+}) => {
     const stContext = SillyTavern.getContext();
     const eventBus = stContext?.eventSource;
     const eventTypes = stContext?.eventTypes ?? stContext?.event_types;
@@ -32,7 +32,7 @@ export const initWIUpdateHandler = ({
     const editorDuplicateRefreshQueue = [];
     let isEditorDuplicateRefreshWorkerRunning = false;
 
-    const shouldAutoRefreshEditor = (name, uid)=>{
+    const shouldAutoRefreshEditor = (name, uid) => {
         const editorPanelApi = getEditorPanelApi();
         // When the user is actively typing in the editor, rebuilding the editor DOM
         // (via a synthetic click) can discard unsaved input.
@@ -41,12 +41,12 @@ export const initWIUpdateHandler = ({
         return !editorPanelApi.isDirty(name, uid);
     };
 
-    const buildSavePayload = (name)=>({
+    const buildSavePayload = (name) => ({
         entries: structuredClone(cache[name].entries),
         metadata: cloneMetadata(cache[name].metadata),
     });
 
-    const updateSettingsChange = ()=>{
+    const updateSettingsChange = () => {
         console.log('[STWID]', '[UPDATE-SETTINGS]');
         const listPanelApi = getListPanelApi();
         for (const [name, world] of Object.entries(cache)) {
@@ -60,7 +60,7 @@ export const initWIUpdateHandler = ({
         getRefreshBookSourceLinks()?.('worldinfo_settings_updated');
     };
 
-    const updateWIChange = async(name = null, data = null)=>{
+    const updateWIChange = async (name = null, data = null) => {
         console.log('[STWID]', '[UPDATE-WI]', name, data);
         const cycleFinished = createDeferred();
         updateWIChangeFinished = cycleFinished;
@@ -71,7 +71,7 @@ export const initWIUpdateHandler = ({
         try {
             const listPanelApi = getListPanelApi();
             const editorPanelApi = getEditorPanelApi();
-            const isCurrentEditor = (bookName, entryUid)=>{
+            const isCurrentEditor = (bookName, entryUid) => {
                 const currentEditor = getCurrentEditor();
                 return currentEditor?.name == bookName && currentEditor?.uid == entryUid;
             };
@@ -81,7 +81,7 @@ export const initWIUpdateHandler = ({
             if (name && cache[name] && !data) {
                 name = null;
             }
-    
+
             // removed books
             for (const [n, w] of Object.entries(cache)) {
                 if (world_names.includes(n)) continue;
@@ -94,13 +94,13 @@ export const initWIUpdateHandler = ({
             for (const worldName of world_names) {
                 if (cache[worldName]) continue;
                 else {
-                    const before = Object.keys(cache).find((it)=>it.toLowerCase().localeCompare(worldName.toLowerCase()) == 1);
+                    const before = Object.keys(cache).find((it) => it.toLowerCase().localeCompare(worldName.toLowerCase()) == 1);
                     const worldData = await loadWorldInfo(worldName);
                     await listPanelApi.renderBook(worldName, before ? cache[before].dom.root : null, worldData);
                 }
             }
             if (name && cache[name]) {
-                const world = { entries:{}, metadata: cloneMetadata(data.metadata) };
+                const world = { entries: {}, metadata: cloneMetadata(data.metadata) };
                 const updatedSort = getSortFromMetadata(world.metadata) ?? cache[name].sort;
                 const sortChoice = {
                     sort: updatedSort?.sort ?? Settings.instance.sortLogic,
@@ -129,7 +129,7 @@ export const initWIUpdateHandler = ({
                     if (cache[name].entries[e]) continue;
                     const a = world.entries[e];
                     const sorted = sortEntries([...Object.values(cache[name].entries), ...alreadyAdded, a], sortChoice.sort, sortChoice.direction);
-                    const before = sorted.find((it, idx)=>idx > sorted.indexOf(a));
+                    const before = sorted.find((it, idx) => idx > sorted.indexOf(a));
                     await renderEntry(a, name, before ? cache[name].dom.entry[before.uid].root : null);
                     alreadyAdded.push(a);
                 }
@@ -139,7 +139,7 @@ export const initWIUpdateHandler = ({
                     const n = world.entries[e];
                     let hasChange = false;
                     let needsEditorRefresh = false;
-                    const triggerEditorRefreshOnce = ()=>{
+                    const triggerEditorRefreshOnce = () => {
                         if (shouldAutoRefreshEditor(name, e)) {
                             needsEditorRefresh = true;
                         }
@@ -239,7 +239,7 @@ export const initWIUpdateHandler = ({
      * NOTE: This must not resolve due to an update cycle that started before the call,
      * otherwise callers that open dialogs and then await an update can get a false-positive.
      */
-    const waitForWorldInfoUpdate = async()=>{
+    const waitForWorldInfoUpdate = async () => {
         // Capture the token at call time so we only resolve for a strictly later update.
         const tokenAtCall = updateWIChangeToken;
 
@@ -261,7 +261,7 @@ export const initWIUpdateHandler = ({
         return true;
     };
 
-    const waitForWorldInfoUpdateWithTimeout = async(waitPromise, timeoutMs = EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS)=>{
+    const waitForWorldInfoUpdateWithTimeout = async (waitPromise, timeoutMs = EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS) => {
         const result = await Promise.race([
             waitPromise.then(() => true),
             delay(timeoutMs).then(() => false),
@@ -269,7 +269,7 @@ export const initWIUpdateHandler = ({
         return result;
     };
 
-    const reopenEditorEntry = (editorState)=>{
+    const reopenEditorEntry = (editorState) => {
         if (!editorState?.name || !editorState?.uid) return;
         const entryDom = cache[editorState.name]?.dom?.entry?.[editorState.uid]?.root;
         if (entryDom) {
@@ -277,7 +277,7 @@ export const initWIUpdateHandler = ({
         }
     };
 
-    const runEditorDuplicateRefreshWorker = async()=>{
+    const runEditorDuplicateRefreshWorker = async () => {
         if (isEditorDuplicateRefreshWorkerRunning) return;
         isEditorDuplicateRefreshWorkerRunning = true;
         try {
@@ -296,14 +296,14 @@ export const initWIUpdateHandler = ({
         }
     };
 
-    const queueEditorDuplicateRefresh = ()=>{
+    const queueEditorDuplicateRefresh = () => {
         // Capture the specific "next update cycle" at click time so each duplicate click
         // maps to the update it triggers, then process refreshes serially.
         editorDuplicateRefreshQueue.push(waitForWorldInfoUpdate());
         void runEditorDuplicateRefreshWorker();
     };
 
-    const fillEmptyTitlesWithKeywords = async(name)=>{
+    const fillEmptyTitlesWithKeywords = async (name) => {
         const data = await loadWorldInfo(name);
         if (!data || typeof data !== 'object' || !data.entries || typeof data.entries !== 'object') {
             return;
@@ -312,7 +312,7 @@ export const initWIUpdateHandler = ({
         for (const entry of Object.values(data.entries)) {
             const hasTitle = Boolean(entry.comment?.trim());
             if (hasTitle) continue;
-            const keywords = Array.isArray(entry.key) ? entry.key.map((it)=>it?.trim()).filter(Boolean) : [];
+            const keywords = Array.isArray(entry.key) ? entry.key.map((it) => it?.trim()).filter(Boolean) : [];
             if (keywords.length === 0) continue;
             entry.comment = keywords.join(', ');
             hasUpdates = true;
@@ -321,14 +321,14 @@ export const initWIUpdateHandler = ({
         await saveWorldInfo(name, data, true);
     };
 
-    const onWorldInfoUpdated = (name, world)=>updateWIChangeDebounced(name, world);
-    const onWorldInfoSettingsUpdated = ()=>updateSettingsChange();
+    const onWorldInfoUpdated = (name, world) => updateWIChangeDebounced(name, world);
+    const onWorldInfoSettingsUpdated = () => updateSettingsChange();
     if (eventBus && eventTypes) {
         eventBus.on(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
         eventBus.on(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
     }
 
-    const cleanup = ()=>{
+    const cleanup = () => {
         if (!eventBus || !eventTypes) return;
         eventBus.removeListener(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
         eventBus.removeListener(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
@@ -338,8 +338,8 @@ export const initWIUpdateHandler = ({
         buildSavePayload,
         cleanup,
         fillEmptyTitlesWithKeywords,
-        getUpdateWIChangeFinished: ()=>updateWIChangeFinished,
-        getUpdateWIChangeStarted: ()=>updateWIChangeStarted,
+        getUpdateWIChangeFinished: () => updateWIChangeFinished,
+        getUpdateWIChangeStarted: () => updateWIChangeStarted,
         queueEditorDuplicateRefresh,
         updateWIChange,
         updateWIChangeDebounced,

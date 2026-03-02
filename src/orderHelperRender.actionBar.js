@@ -6,7 +6,7 @@ import {
     wireMultiselectDropdown,
     wireCollapseRow,
 } from './orderHelperRender.utils.js';
-import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './constants.js';
+import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from './shared/constants.js';
 
 /**
  * Creates a `div.stwid--thinContainer` with a labeled hint icon — the shared
@@ -1440,3 +1440,4 @@ export function buildBulkEditRow({
 
     return { element: row, refreshSelectionCount, cleanup };
 }
+

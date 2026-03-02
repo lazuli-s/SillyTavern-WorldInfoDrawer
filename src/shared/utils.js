@@ -29,25 +29,25 @@ const SORT_OPTIONS = [
  * Creates a deferred promise that can be resolved or rejected externally.
  * @returns {{ promise: Promise<unknown>, resolve: (value?: unknown) => void, reject: (reason?: any) => void }}
  */
-const createDeferred = ()=>{
+const createDeferred = () => {
     /**@type {(value?: unknown) => void}*/
     let resolve;
     /**@type {(reason?: any) => void}*/
     let reject;
-    const promise = new Promise((res, rej)=>{
+    const promise = new Promise((res, rej) => {
         resolve = res;
         reject = rej;
     });
     return { promise, resolve, reject };
 };
 
-const safeToSorted = (array, comparator)=>typeof array.toSorted === 'function'
+const safeToSorted = (array, comparator) => typeof array.toSorted === 'function'
     ? array.toSorted(comparator)
     : array.slice().sort(comparator);
 
-const getSortLabel = (sort, direction)=>SORT_OPTIONS.find(([, s, d])=>s === sort && d === direction)?.[0];
+const getSortLabel = (sort, direction) => SORT_OPTIONS.find(([, s, d]) => s === sort && d === direction)?.[0];
 
-const appendSortOptions = (select, currentSort, currentDirection)=>{
+const appendSortOptions = (select, currentSort, currentDirection) => {
     for (const [label, sort, direction] of SORT_OPTIONS) {
         const opt = document.createElement('option');
         opt.value = JSON.stringify({ sort, direction });
@@ -59,7 +59,7 @@ const appendSortOptions = (select, currentSort, currentDirection)=>{
 
 let slashCommandParserCtor = null;
 let slashCommandParserCtorResolved = false;
-const getSlashCommandParserCtor = async()=>{
+const getSlashCommandParserCtor = async () => {
     if (slashCommandParserCtorResolved) return slashCommandParserCtor;
 
     const runtimeCtor = globalThis.SlashCommandParser;
@@ -71,7 +71,7 @@ const getSlashCommandParserCtor = async()=>{
 
     // Fallback for ST versions that do not expose the parser constructor globally.
     try {
-        const module = await import('../../../../slash-commands/SlashCommandParser.js');
+        const module = await import('../../../../../slash-commands/SlashCommandParser.js');
         slashCommandParserCtor = typeof module?.SlashCommandParser === 'function'
             ? module.SlashCommandParser
             : null;
@@ -83,7 +83,7 @@ const getSlashCommandParserCtor = async()=>{
     return slashCommandParserCtor;
 };
 
-const executeSlashCommand = async(command)=>{
+const executeSlashCommand = async (command) => {
     try {
         const SlashCommandParser = await getSlashCommandParserCtor();
         if (typeof SlashCommandParser !== 'function') {
@@ -122,9 +122,9 @@ const parseBooleanSetting = (value, defaultValue) => {
     return defaultValue;
 };
 
-const getOutletPositionValue = ()=>document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
+const getOutletPositionValue = () => document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')?.value;
 
-const isOutletPosition = (position)=>{
+const isOutletPosition = (position) => {
     const outletValue = getOutletPositionValue();
     if (outletValue === undefined) return false;
     return String(position) === String(outletValue);

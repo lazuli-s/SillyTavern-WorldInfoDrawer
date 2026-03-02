@@ -1,30 +1,30 @@
-import { Settings } from './Settings.js';
+import { Settings } from './settings.js';
 import { SORT, SORT_DIRECTION } from './constants.js';
 import { safeToSorted } from './utils.js';
 
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
 
-const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
+const sortEntries = (entries, sortLogic = null, sortDirection = null) => {
     sortLogic ??= Settings.instance.sortLogic;
     sortDirection ??= Settings.instance.sortDirection;
-    const x = (y)=>y.data ?? y;
-    const normalizeString = (value)=>{
+    const x = (y) => y.data ?? y;
+    const normalizeString = (value) => {
         if (value === undefined || value === null) return '';
         return String(value).toLowerCase();
     };
-    const defaultTitle = (entry)=>entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(', ') : '');
-    const defaultCompare = (a,b)=>normalizeString(defaultTitle(x(a))).localeCompare(normalizeString(defaultTitle(x(b))));
-    const stringSort = (getter)=>safeToSorted(entries, (a,b)=>{
+    const defaultTitle = (entry) => entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(', ') : '');
+    const defaultCompare = (a, b) => normalizeString(defaultTitle(x(a))).localeCompare(normalizeString(defaultTitle(x(b))));
+    const stringSort = (getter) => safeToSorted(entries, (a, b) => {
         const av = normalizeString(getter(x(a)));
         const bv = normalizeString(getter(x(b)));
         const cmp = av.localeCompare(bv);
         if (cmp !== 0) return cmp;
         return defaultCompare(a, b);
     });
-    const numericSort = (getter)=>{
+    const numericSort = (getter) => {
         const direction = sortDirection == SORT_DIRECTION.DESCENDING ? -1 : 1;
-        return safeToSorted(entries, (a,b)=>{
+        return safeToSorted(entries, (a, b) => {
             const av = getter(x(a));
             const bv = getter(x(b));
             const hasA = Number.isFinite(av);
@@ -35,11 +35,11 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
             return defaultCompare(a, b);
         });
     };
-    const getDisplayIndex = (entry)=>{
+    const getDisplayIndex = (entry) => {
         const displayIndex = Number(entry?.extensions?.display_index);
         return Number.isFinite(displayIndex) ? displayIndex : null;
     };
-    const customSort = ()=>safeToSorted(entries, (a,b)=>{
+    const customSort = () => safeToSorted(entries, (a, b) => {
         const av = getDisplayIndex(x(a));
         const bv = getDisplayIndex(x(b));
         const hasA = Number.isFinite(av);
@@ -59,17 +59,17 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
         case SORT.ALPHABETICAL:
         case SORT.TITLE: {
             shouldReverse = true;
-            result = stringSort((entry)=>entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(', ') : ''));
+            result = stringSort((entry) => entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(', ') : ''));
             break;
         }
         case SORT.TRIGGER: {
             shouldReverse = true;
-            result = stringSort((entry)=>Array.isArray(entry.key) ? entry.key.join(', ') : '');
+            result = stringSort((entry) => Array.isArray(entry.key) ? entry.key.join(', ') : '');
             break;
         }
         case SORT.PROMPT: {
             shouldReverse = true;
-            result = safeToSorted(entries, (a,b)=>{
+            result = safeToSorted(entries, (a, b) => {
                 if (x(a).position > x(b).position) return 1;
                 if (x(a).position < x(b).position) return -1;
                 if ((x(a).depth ?? Number.MAX_SAFE_INTEGER) < (x(b).depth ?? Number.MAX_SAFE_INTEGER)) return 1;
@@ -81,28 +81,28 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
             break;
         }
         case SORT.POSITION: {
-            result = numericSort((entry)=>Number(entry.position));
+            result = numericSort((entry) => Number(entry.position));
             break;
         }
         case SORT.DEPTH: {
-            result = numericSort((entry)=>Number(entry.depth));
+            result = numericSort((entry) => Number(entry.depth));
             break;
         }
         case SORT.ORDER: {
-            result = numericSort((entry)=>Number(entry.order));
+            result = numericSort((entry) => Number(entry.order));
             break;
         }
         case SORT.UID: {
-            result = numericSort((entry)=>Number(entry.uid));
+            result = numericSort((entry) => Number(entry.uid));
             break;
         }
         case SORT.LENGTH: {
-            const lengthCache = new Map(entries.map((item)=>{
+            const lengthCache = new Map(entries.map((item) => {
                 const entry = x(item);
                 if (typeof entry?.content !== 'string') return [entry, null];
                 return [entry, entry.content.split(/\s+/).filter(Boolean).length];
             }));
-            result = numericSort((entry)=>{
+            result = numericSort((entry) => {
                 return lengthCache.get(entry) ?? null;
             });
             break;
@@ -113,7 +113,7 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
         }
         default: {
             shouldReverse = true;
-            result = stringSort((entry)=>defaultTitle(entry));
+            result = stringSort((entry) => defaultTitle(entry));
             break;
         }
     }
@@ -121,9 +121,9 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null)=>{
     return result;
 };
 
-const cloneMetadata = (metadata)=>structuredClone(metadata ?? {});
+const cloneMetadata = (metadata) => structuredClone(metadata ?? {});
 
-const getSortFromMetadata = (metadata)=>{
+const getSortFromMetadata = (metadata) => {
     const sortData = metadata?.[METADATA_NAMESPACE]?.[METADATA_SORT_KEY];
     if (!sortData) return null;
     const sort = sortData.sort ?? sortData.logic ?? sortData.sortLogic;

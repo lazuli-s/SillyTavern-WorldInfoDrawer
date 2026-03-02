@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { getSortLabel } from "../src/utils.js";
-import { SORT, SORT_DIRECTION } from "../src/constants.js";
+import { getSortLabel } from "../src/shared/utils.js";
+import { SORT, SORT_DIRECTION } from "../src/shared/constants.js";
 
 describe("getSortLabel", () => {
   it("returns expected labels for core sort modes", () => {
@@ -38,3 +38,4 @@ describe("getSortLabel", () => {
     expect(label).toBeUndefined();
   });
 });
+

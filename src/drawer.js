@@ -5,14 +5,14 @@ import { renderTemplateAsync } from '../../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean } from '../../../../utils.js';
 // These world-info exports are not fully exposed via getContext(); keep direct imports for ST-owned globals and helper APIs.
 import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, onWorldInfoChange, selected_world_info, world_names } from '../../../../world-info.js';
-import { Settings, SORT, SORT_DIRECTION } from './Settings.js';
+import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initEditorPanel } from './editorPanel.js';
 import { initListPanel } from './listPanel.js';
 import { registerFolderName } from './lorebookFolders.js';
 import { initOrderHelper } from './orderHelper.js';
-import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './sortHelpers.js';
+import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './worldEntry.js';
-import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './utils.js';
+import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './shared/utils.js';
 
 export const initDrawer = ({
     cache,
