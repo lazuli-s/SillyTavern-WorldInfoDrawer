@@ -1,4 +1,4 @@
-﻿export const initEditorPanel = ({
+export const initEditorPanel = ({
     dom,
     activationBlock,
     activationBlockParent,
@@ -301,3 +301,9 @@
         markClean,
     };
 };
+</write_to_file>
+
+<execute_command>
+<command>del src\\editorPanel.js</command>
+<requires_approval>false</requires_approval>
+</execute_command>
