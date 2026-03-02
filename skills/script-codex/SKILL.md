@@ -1,11 +1,11 @@
 ---
 name: script-codex
-description: "Generates, reviews, and updates codex batch scripts (.ps1) in scripts/codex/. Each script loops over a folder of .md files, calls a codex skill on each file via codex exec --yolo, and commits at the end. Use when: (1) creating a new batch script to automate a codex skill over a folder, (2) reviewing an existing script for convention compliance, (3) updating a script to follow established patterns. Trigger phrases: 'create a codex batch script for [skill]', 'add a script for [phase]', 'make a batch script', 'review this codex script', 'update the batch script'."
+description: "Generates, reviews, and updates codex batch scripts (.ps1) inside the matching workflow folder under workflows/. Each script loops over a folder of .md files, calls a codex skill on each file via codex exec --yolo, and commits at the end. Use when: (1) creating a new batch script to automate a codex skill over a folder, (2) reviewing an existing script for convention compliance, (3) updating a script to follow established patterns. Trigger phrases: 'create a codex batch script for [skill]', 'add a script for [phase]', 'make a batch script', 'review this codex script', 'update the batch script'."
 ---
 
 # script-codex
 
-Generates, reviews, or updates a codex batch script in `scripts/codex/`.
+Generates, reviews, or updates a codex batch script inside the matching workflow folder.
 
 ---
 
@@ -69,12 +69,14 @@ If unsure, use `--yolo`.
 
 ## 5. File placement and naming
 
-- **Folder:** `scripts/codex/`
-- **Name pattern:** `<verb>-<noun>-batch.ps1` or `<skill-short-name>-batch.ps1` — lowercase, hyphenated
+- **Folder:** `workflows/<workflow-name>/` — scripts live inside the workflow folder they belong to
+- **Name pattern:** `<N>-codex-<purpose>.ps1` — number first, then tool indicator, then purpose; lowercase, hyphenated
+
+Where `<N>` is the execution order within the workflow and `<purpose>` is a short description of what the script does.
 
 Examples:
-- `triage-batch.ps1` → runs `triage-reviews` skill
-- `implement-bulk-batch.ps1` → runs `code-review-implement` on the `bulk/` subfolder
+- `3-codex-triage.ps1` → runs `triage-reviews` skill (step 3 of its workflow)
+- `4-codex-implement-bulk.ps1` → runs `code-review-implement` on the `bulk/` subfolder
 
 ---
 

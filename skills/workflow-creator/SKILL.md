@@ -1,6 +1,6 @@
 ---
 name: workflow-creator
-description: 'Creates a structured workflow documentation file (Workflow_<Name>.md) in tasks/workflows/ for any multi-step repeatable process. Interviews the user to capture all phases, tools, inputs, outputs, state-tracking folders, scripts, and edge cases, then generates the file using the project''s four-section visual format: quick-reference table, pipeline flow diagram, folder conveyor belt, and per-phase cards. Also creates a linked scripts-reference.md when the workflow involves automated scripts. Use when the user says "create a workflow", "document my process", "help me create a workflow file", "document this process", or invokes /workflow-creator.'
+description: 'Creates a self-contained workflow folder inside workflows/ for any multi-step repeatable process. Each workflow gets its own lowercase-hyphenated folder (e.g. workflows/code-review/) containing workflow.md, scripts-reference.md, numbered phase prompt files, and numbered automation scripts for Cline or Codex. Interviews the user to capture all phases, tools, inputs, outputs, state-tracking folders, scripts, and edge cases, then generates all files using the four-section visual format: quick-reference table, pipeline flow diagram, folder conveyor belt, and per-phase cards. Use when the user says "create a workflow", "document my process", "help me create a workflow file", "document this process", or invokes /workflow-creator.'
 ---
 
 # Workflow Creator
@@ -16,7 +16,7 @@ description: 'Creates a structured workflow documentation file (Workflow_<Name>.
 
 ## Step 1 — Check for Existing File
 
-Glob `tasks/workflows/`. If a relevant workflow file already exists, update it rather than creating a new one.
+Glob `workflows/`. If a relevant workflow folder already exists, update its files rather than creating a new folder.
 
 ---
 
@@ -49,9 +49,15 @@ Probe gaps and follow up. Do not ask about information already given.
 
 ### Naming and location
 
-- Main file: `tasks/workflows/Workflow_<NameWithNoSpaces>.md`
-- Scripts reference (only if automated scripts exist): `tasks/workflows/<name-lowercase>-scripts-reference.md`
-- Link to the scripts reference from the main file's header block.
+All files for a workflow live together in one folder:
+
+- **Workflow folder:** `workflows/<lowercase-hyphenated>/` (e.g. `workflows/code-review/`)
+- **Overview doc:** `workflows/<lowercase-hyphenated>/workflow.md`
+- **Phase prompt files:** `workflows/<lowercase-hyphenated>/phase-<N>-<purpose>.md` — one per phase that has a Cline or Codex prompt (e.g. `phase-1-first-review.md`)
+- **Cline scripts:** `workflows/<lowercase-hyphenated>/<N>-cline-<purpose>.sh` — only if the phase uses Cline automation
+- **Codex scripts:** `workflows/<lowercase-hyphenated>/<N>-codex-<purpose>.ps1` — only if the phase uses Codex automation
+- **Scripts reference** (only if any scripts exist): `workflows/<lowercase-hyphenated>/scripts-reference.md`
+- Link to the scripts reference from the overview doc's header block.
 
 ### Document structure (in order)
 
@@ -145,7 +151,7 @@ Only create this file if the workflow has automated scripts. Structure:
 # Scripts Reference — <Workflow Name>
 
 **Last updated:** <date>
-**Used by:** [Workflow_<Name>.md](Workflow_<Name>.md)
+**Used by:** [workflow.md](workflow.md)
 
 <brief description>
 

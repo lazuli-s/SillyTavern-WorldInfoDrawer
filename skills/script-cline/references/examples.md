@@ -1,4 +1,4 @@
-# Cline Headless — Script Examples
+# Script-Cline — Script Examples
 
 Complete, ready-to-run Git Bash scripts for each use case. Customize the `TASK` or file list sections as needed.
 
@@ -13,7 +13,7 @@ Complete, ready-to-run Git Bash scripts for each use case. Customize the `TASK` 
 ```bash
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────
-# cline-review-diff.sh
+# 1-cline-review-diff.sh
 # Task:   Review uncommitted changes with Cline
 # Risk:   LOW — Cline reads only. No files are modified.
 # ──────────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ git diff --cached | cline "Review these staged changes before I commit them."
 ```bash
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────
-# cline-fix-lint.sh
+# 2-cline-fix-lint.sh
 # Task:   Auto-fix ESLint errors in src/ with Cline
 # Risk:   MEDIUM — Cline edits source files directly.
 # Guardrail: Run on a feature branch before executing.
@@ -111,7 +111,7 @@ cline -y --timeout 600 "Run the test suite and fix any failing tests. Do not cha
 ```bash
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────
-# cline-commit-msg.sh
+# 3-cline-commit-msg.sh
 # Task:   Generate a commit message from staged changes
 # Risk:   LOW — Cline reads diff only. No files are modified.
 # ──────────────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ Output only the commit message — no extra commentary."
 ```bash
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────
-# cline-release-notes.sh
+# 4-cline-release-notes.sh
 # Task:   Generate release notes from git history between two tags
 # Risk:   LOW — Cline reads git log only. No files are modified.
 # ──────────────────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ git log --oneline -10 | cline "Write friendly release notes from these recent co
 ```bash
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────
-# cline-batch-files.sh
+# 5-cline-batch-files.sh
 # Task:   Apply a repeated Cline task to a list of files
 # Risk:   HIGH — Cline edits every file in the list.
 # Guardrail: Run on a feature branch before executing.
@@ -300,7 +300,7 @@ echo "Review all changes with: git diff"
 ```bash
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────────────────
-# code-review-batch.sh
+# 6-cline-code-review-batch.sh
 #
 # Task:    Run the code-review-first-review skill in a loop until the review
 #          queue is empty, then commit all new review report files.
@@ -313,15 +313,6 @@ echo "Review all changes with: git diff"
 set -e
 
 QUEUE="tasks/code-reviews/code-review-queue.md"
-LOG_DIR="scripts/cline-headless/logs"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="${LOG_DIR}/code-review-batch-${TIMESTAMP}.log"
-
-mkdir -p "$LOG_DIR"
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-log() { echo "$1" | tee -a "$LOG_FILE"; }
 
 # Count lines matching '- `...`' in the queue file.
 # grep -c exits 1 when count is 0; '|| true' keeps set -e happy.
@@ -350,11 +341,10 @@ if [ "${PENDING:-0}" -eq 0 ]; then
   exit 0
 fi
 
-log "═══════════════════════════════════════════════════════════════════════════"
-log "Code-review batch started: $(date)"
-log "Files in queue: $PENDING"
-log "Log file: $LOG_FILE"
-log "═══════════════════════════════════════════════════════════════════════════"
+echo "═══════════════════════════════════════════════════════════════════════════"
+echo "Code-review batch started: $(date)"
+echo "Files in queue: $PENDING"
+echo "═══════════════════════════════════════════════════════════════════════════"
 
 # ── Review loop ───────────────────────────────────────────────────────────────
 
@@ -364,17 +354,17 @@ REVIEWED=()
 while true; do
   PENDING=$(count_pending)
   if [ "${PENDING:-0}" -eq 0 ]; then
-    log ""
-    log "Queue is empty — all reviews complete."
+    echo ""
+    echo "Queue is empty — all reviews complete."
     break
   fi
 
   NEXT=$(next_file)
   RUN=$((RUN + 1))
 
-  log ""
-  log "── Run ${RUN} ── ${NEXT} ──────────────────────────────────────────────"
-  log "Started: $(date)"
+  echo ""
+  echo "── Run ${RUN} ── ${NEXT} ──────────────────────────────────────────────"
+  echo "Started: $(date)"
 
   # Each 'cline -y' invocation is a completely isolated task with a fresh
   # context. No conversation history is shared between runs.
@@ -393,15 +383,14 @@ Write the findings report, remove the file from the queue, and update the tracke
 Hard constraints — never violate these:
 - Do NOT edit any source files. This is a READ-ONLY review.
 - Do NOT modify anything under vendor/SillyTavern/
-- Use write_to_file or replace_in_file for all file writes. Never use apply_patch." \
-    2>&1 | tee -a "$LOG_FILE"
+- Use write_to_file or replace_in_file for all file writes. Never use apply_patch."
 
   REVIEWED+=("$NEXT")
-  log "Completed: $(date)"
+  echo "Completed: $(date)"
 done
 
-log ""
-log "Total reviews completed: ${RUN}"
+echo ""
+echo "Total reviews completed: ${RUN}"
 
 # ── Commit ────────────────────────────────────────────────────────────────────
 
@@ -409,7 +398,7 @@ log "Total reviews completed: ${RUN}"
 git add tasks/code-reviews/
 
 if git diff --cached --quiet; then
-  log "No review files were staged. Nothing to commit."
+  echo "No review files were staged. Nothing to commit."
   exit 0
 fi
 
@@ -421,15 +410,14 @@ done
 
 git commit -m "$(printf 'code-review(first-review): add review reports from batch run\n\nFiles reviewed:\n%s' "$BODY")"
 
-log ""
-log "Committed. Log saved to: ${LOG_FILE}"
+echo ""
+echo "Committed."
 ```
 
 **Notes:**
 
 - The queue file is `tasks/code-reviews/code-review-queue.md`. The script stops when there are no more `- \`...\`` lines under `## Files Pending Review`.
 - Each `cline -y` call is a completely isolated task — no context carries over between runs.
-- Log files land in `scripts/cline-headless/logs/` and are gitignored.
 - If a run times out before writing the report, the queue entry is not removed and the next run retries the same file. Increase `--timeout` if this happens repeatedly.
 
 ---

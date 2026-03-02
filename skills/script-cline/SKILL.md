@@ -1,9 +1,9 @@
 ---
-name: cline-headless
-description: 'Generate Cline CLI headless-mode bash scripts for local automation on Windows with Git Bash. Use when the user wants to automate a coding task with Cline CLI non-interactively — including code review (git diff, PR diffs), fixing lint or test failures, generating commit messages or release notes, and batch processing multiple files. Triggers on: "/cline-headless", "cline script", "automate with cline", "run cline headless", "cline yolo", "write a cline automation", "cline batch", or when the user describes a task they want Cline to handle autonomously without interaction.'
+name: script-cline
+description: 'Generate Cline CLI headless-mode bash scripts for local automation on Windows with Git Bash. Use when the user wants to automate a coding task with Cline CLI non-interactively — including code review (git diff, PR diffs), fixing lint or test failures, generating commit messages or release notes, and batch processing multiple files. Triggers on: "/script-cline", "cline script", "automate with cline", "run cline headless", "cline yolo", "write a cline automation", "cline batch", or when the user describes a task they want Cline to handle autonomously without interaction.'
 ---
 
-# Cline Headless Script Generator
+# Script — Cline
 
 Cline CLI headless mode runs Cline autonomously in a terminal — no human approval needed. This skill generates ready-to-run Git Bash scripts (`.sh`) for the four most common local automation workflows.
 
@@ -33,7 +33,7 @@ Always include these four items before the script block:
 
 Then show the complete `.sh` script.
 
-Then ask: *"Want me to save this as `scripts/cline-headless/<name>.sh` in your project?"*
+Then ask: *"Want me to save this as `workflows/<workflow-name>/<N>-cline-<purpose>.sh` in your project?"*
 
 ## Risk levels and guardrails
 
@@ -55,6 +55,7 @@ These are hard limits that apply to every generated script — never violate the
 - **Never touch `vendor/SillyTavern`.** If the task prompt would cause Cline to modify files under that path, add an explicit exclusion instruction to the Cline task prompt.
 - **One clear goal per script.** Reject or decompose vague, open-ended task descriptions. A prompt like "fix everything" is not actionable — ask the user to narrow it down before generating the script.
 - **Avoid `apply_patch` in Cline task prompts.** Instruct Cline to use `write_to_file` or `replace_in_file` instead. `apply_patch` produces unreliable results on Windows and can silently corrupt files that contain special characters or emoji.
+- **No log files.** Do not generate log file writing, `tee` to log files, or `LOG_DIR`/`LOG_FILE` variables. Output goes to the terminal only.
 
 ## Use cases
 
@@ -67,6 +68,21 @@ These are hard limits that apply to every generated script — never violate the
 **4. Batch file processing** — Cline loops through a list of files and applies a task to each. Risk: High.
 
 See `references/examples.md` for complete, ready-to-run scripts for each use case. Load it when generating or customizing scripts.
+
+## Script naming convention
+
+Scripts saved in a workflow folder follow this pattern:
+
+```
+<N>-cline-<purpose>.sh
+```
+
+Examples:
+- `1-cline-first-review.sh`
+- `2-cline-meta-review.sh`
+- `3-cline-batch-files.sh`
+
+Where `<N>` is the execution order within the workflow, and `<purpose>` is a short, lowercase-hyphenated description of what the script does.
 
 ## Script conventions
 
@@ -82,7 +98,6 @@ See `references/examples.md` for complete, ready-to-run scripts for each use cas
 Guidance for writing scripts that are safe, reviewable, and easy to debug:
 
 - **Run on a feature branch, not on `main` or `dev`.** For any Medium or High risk script, switching to a throwaway branch before running means a bad result is one `git checkout` away from being undone.
-- **Tee output to a log file.** Pipe the script's output with `| tee cline-run.log` so the full Cline session is reviewable after the terminal closes. Log files should be gitignored.
 - **Size `--timeout` to the task scope.** Suggested baselines: ~120 s for a single-file review or small fix; ~300 s for a multi-file batch; ~600 s for a full lint-fix pass. Tighter timeouts catch runaway sessions early.
 - **Test batch scripts on one file first.** Before looping over a directory, run the script against a single representative file and inspect the result. Only widen the loop once the single-file output looks correct.
 - **Keep the Cline task prompt under ~200 words.** Long, multi-objective prompts increase the chance of unintended edits. One goal, stated clearly, produces more predictable output than a list of goals.
@@ -93,8 +108,8 @@ Guidance for writing scripts that are safe, reviewable, and easy to debug:
 In VS Code:
 1. Open a terminal: `Terminal → New Terminal`
 2. Change shell: click the `+` dropdown → **Git Bash**
-3. Run: `bash ./scripts/cline-headless/script-name.sh`
+3. Run: `bash ./workflows/<workflow-name>/<script-name>.sh`
 
 To set Git Bash as the permanent default: `Ctrl+Shift+P → "Terminal: Select Default Profile" → Git Bash`.
 
-Scripts are saved to `scripts/cline-headless/` inside the project. Create the folder first if it does not exist: `mkdir -p scripts/cline-headless`.
+Scripts live inside the workflow folder they belong to: `workflows/<workflow-name>/`. Create the folder first if it does not exist: `mkdir -p workflows/<workflow-name>`.
