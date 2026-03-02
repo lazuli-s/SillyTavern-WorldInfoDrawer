@@ -11,7 +11,7 @@
 | # | Phase | How | Output location | Test? |
 | --- | --- | --- | --- | --- |
 | 1 | Capture concepts | `/document-concepts` skill | `learning-vault/drafts/` | No |
-| 2 | Review for accuracy | `/review-concepts` skill | `learning-vault/reviewed/` | Yes — user checks flagged items |
+| 2 | Review for accuracy | Codex batch script (one file at a time) | `learning-vault/reviewed/` | Yes — user checks flagged items |
 | 3 | Generate notebooks | `/generate-learning` skill | `learning-vault/notebooks/` | No |
 | 4 | *(if AnkiConnect set up)* Push Anki cards | `/generate-learning` skill | Anki deck directly | Yes — open Anki and verify |
 
@@ -30,9 +30,10 @@
                                  ▼
   PHASE 2 ── Review for Accuracy
   ┌──────────────────────────────────────────────────────────────┐
-  │  User types /review-concepts.                               │
-  │  Claude reads all files in drafts/, verifies each concept,  │
-  │  corrects mistakes, and moves approved content to reviewed/  │
+  │  User runs scripts/codex/review-concepts.ps1.               │
+  │  The script loops over drafts/ and calls Codex on each file │
+  │  individually using a shared review prompt. Each file is    │
+  │  verified, corrected if needed, then moved to reviewed/.    │
   └──────────┬───────────────────────────────┬───────────────────┘
              │ all approved                  │ some flagged
              │                               ▼
@@ -100,7 +101,7 @@ Claude automatically scans the conversation and decides what is worth saving. Yo
 - **Type** — one of: `terminology`, `mental model`, `code snippet`
 - **Plain-language explanation** — what it means, written for someone learning to read code
 - **Example** — a short code snippet or concrete illustration where relevant
-- **Topic tag** — one of: `JS`, `CSS`, `Git`, `Architecture`, `General`
+- **Topic tag** — one of: `JS`, `HTML`, `DOM`, `Async`, `CSS`, `Git`, `Patterns`, `Browser`, `Architecture`, `General`
 - **Source context** — a brief note about which conversation it came from
 
 Draft filename format: `YYYY-MM-DD_topic-slug.md`
@@ -114,17 +115,21 @@ Example: `2026-03-01_kebab-case-naming.md`
 ┌──────────────────────────────────────────────────────────────────┐
 │  PHASE 2  │  Review for Accuracy                                │
 ├──────────────────────────────────────────────────────────────────┤
-│  Trigger  │  User types /review-concepts                        │
+│  Trigger  │  User runs scripts/codex/review-concepts.ps1        │
 │  When     │  After accumulating a few drafts (not after every   │
 │           │  capture — batch them)                              │
-│  Input    │  All files in learning-vault/drafts/                │
+│  Input    │  Each file in learning-vault/drafts/ — one at a     │
+│           │  time, processed sequentially by the batch script   │
 │  Output   │  Verified files moved to learning-vault/reviewed/   │
-│  Skill    │  /review-concepts  (not yet created)               │
+│  How      │  Batch script calls Codex on each file individually │
+│           │  using a shared review prompt file                  │
 │  Test?    │  Yes — user checks any flagged items                │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-Claude reads each draft concept and checks it for accuracy. For each concept it either:
+The batch script (`scripts/codex/review-concepts.ps1`) loops over every `.md` file in `drafts/` and sends each one to Codex individually using a shared review prompt. Processing files one at a time keeps each review focused and avoids the context getting cluttered with unrelated concepts.
+
+For each file, Codex either:
 
 - **Approves** — moves the file to `reviewed/` as-is
 - **Corrects** — fixes the explanation or example, notes what changed, then moves to `reviewed/`
@@ -134,7 +139,7 @@ Flagged concepts are shown to the user with a specific question (e.g., "I'm not 
 
 This step also checks for **duplicates** — if a concept already exists in `reviewed/` or `notebooks/`, the skill notes it and skips rather than adding a redundant entry.
 
-> **Status:** The `/review-concepts` skill does not exist yet. This phase is a placeholder.
+> **Status:** The batch script and review prompt do not exist yet. This phase is a placeholder.
 
 ---
 
@@ -154,13 +159,18 @@ This step also checks for **duplicates** — if a concept already exists in `rev
 
 Claude reads all reviewed files and appends new entries to the correct notebook file by topic tag:
 
-| Topic tag | Notebook file |
-| --- | --- |
-| `JS` | `notebooks/JS.md` |
-| `CSS` | `notebooks/CSS.md` |
-| `Git` | `notebooks/Git.md` |
-| `Architecture` | `notebooks/Architecture.md` |
-| `General` | `notebooks/General.md` |
+| Topic tag | Notebook file | What belongs here |
+| --- | --- | --- |
+| `JS` | `notebooks/JS.md` | Variables, functions, loops, objects, arrays, modules |
+| `HTML` | `notebooks/HTML.md` | Elements, attributes, document structure, forms |
+| `DOM` | `notebooks/DOM.md` | Querying elements, parent/child, adding/removing nodes, events |
+| `Async` | `notebooks/Async.md` | Promises, async/await, callbacks, event loop |
+| `CSS` | `notebooks/CSS.md` | Selectors, properties, layout (flex/grid), variables |
+| `Git` | `notebooks/Git.md` | Commits, branches, diffs, merge vs rebase |
+| `Patterns` | `notebooks/Patterns.md` | Module pattern, observer/events, factory, strategy |
+| `Browser` | `notebooks/Browser.md` | DevTools, console, fetch, localStorage, network tab |
+| `Architecture` | `notebooks/Architecture.md` | Separation of concerns, DRY, single responsibility, cohesion |
+| `General` | `notebooks/General.md` | Concepts that don't fit elsewhere |
 
 Notebooks are **browsable reference files** — they use headings, short definitions, and examples. They are designed to be scanned in 30–60 seconds when you forget something. They are not tutorials.
 
@@ -188,8 +198,13 @@ Cards are pushed to Anki with sub-decks by topic:
 | Topic tag | Anki deck |
 | --- | --- |
 | `JS` | `Programming::JS` |
+| `HTML` | `Programming::HTML` |
+| `DOM` | `Programming::DOM` |
+| `Async` | `Programming::Async` |
 | `CSS` | `Programming::CSS` |
 | `Git` | `Programming::Git` |
+| `Patterns` | `Programming::Patterns` |
+| `Browser` | `Programming::Browser` |
 | `Architecture` | `Programming::Architecture` |
 | `General` | `Programming::General` |
 
