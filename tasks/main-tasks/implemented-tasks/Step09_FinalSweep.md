@@ -1,6 +1,6 @@
 # STEP 9 — Final Sweep
 
-**Status:** PENDING
+**Status:** IMPLEMENTED
 **Parent task:** [Refactoring_SrcFolderStructure.md](../Refactoring_SrcFolderStructure.md)
 **Scope:** Cross-cutting — drawer.js, index.js, and any remaining old-path references
 
@@ -8,11 +8,11 @@
 
 ## Implementation Checklist
 
-- [ ] Read `src/drawer.js`; confirm all imports point to new paths.
+- [x] Read `src/drawer.js`; confirm all imports point to new paths.
       Fix any that still reference old flat `src/*.js` paths.
-- [ ] Read `index.js` at the project root; confirm all imports point to
+- [x] Read `index.js` at the project root; confirm all imports point to
       new paths. Fix any that still reference old flat `src/*.js` paths.
-- [ ] Grep the entire codebase for each filename listed below. Any match
+- [x] Grep the entire codebase for each filename listed below. Any match
       found in an import statement is a missed update — fix it.
 
 Old filenames to grep:
@@ -41,3 +41,26 @@ accidentally left behind. No logic, structure, or behavior changes.
 
 Requirements:
 - Write the file using the Write tool — not Bash echo, printf, or heredoc.
+
+---
+
+## After Implementation
+*Implemented: March 2, 2026*
+
+### What changed
+
+- `tasks/main-tasks/documented/SrcFolderSteps/Step09_FinalSweep.md`
+- Marked all checklist items complete after verification.
+- Updated task status from `PENDING` to `IMPLEMENTED`.
+- Recorded that the final sweep found no remaining old flat `src/*.js` import paths in runtime code.
+
+### Risks / What might break
+
+- This only updates task tracking text, so runtime behavior is not expected to change.
+- If a legacy path exists only in a file type outside the search scope used here, it could still be missed.
+
+### Manual checks
+
+- Reload the extension in SillyTavern and confirm it opens normally with no module import errors in the browser console.
+- Open the drawer and verify the book list, editor, and order helper still load and respond.
+- If you want a stricter audit, run a full-text search for `src/listPanel.js` and `src/orderHelperRender.js`; success means no live import statements use those old flat paths.
