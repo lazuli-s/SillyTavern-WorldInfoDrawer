@@ -1,6 +1,6 @@
 # STEP 3 — Browser Tabs
 
-**Status:** PENDING
+**Status:** IMPLEMENTED
 **Parent task:** [Refactoring_SrcFolderStructure.md](../Refactoring_SrcFolderStructure.md)
 **Folder:** `src/book-browser/browser-tabs/`
 
@@ -16,15 +16,15 @@
 
 ## Implementation Checklist
 
-- [ ] Create the destination folder(s) if they do not exist
-- [ ] For each file in the table above, do the following atomically:
-  - [ ] Write the file to its new location with its new name
-  - [ ] Delete the original file
-  - [ ] Update all `import` statements INSIDE the moved file to use
+- [x] Create the destination folder(s) if they do not exist
+- [x] For each file in the table above, do the following atomically:
+  - [x] Write the file to its new location with its new name
+  - [x] Delete the original file
+  - [x] Update all `import` statements INSIDE the moved file to use
         the new relative paths (see import depth table below)
-  - [ ] Grep the entire codebase for any file that imports from the
+  - [x] Grep the entire codebase for any file that imports from the
         old path; update each reference to the new path
-- [ ] Verify: grep for all old filenames from this step; confirm
+- [x] Verify: grep for all old filenames from this step; confirm
       no file still imports from any of those old paths
 
 ---
@@ -52,3 +52,22 @@ Single file moved as-is with no code changes. The planned three-way split is def
 ## Why It's Safe to Implement
 
 No code changes inside the file. File is moved unchanged. Filter bar behavior is completely unaffected.
+
+---
+
+## IMPLEMENTATION
+
+**Status:** IMPLEMENTED
+
+#### Implementation Notes
+
+- What changed
+  - Files changed: `src/book-browser/browser-tabs/browser-tabs.filter-bar.js`
+  - Moved `src/listPanel.filterBar.js` into `src/book-browser/browser-tabs/` and renamed it to `browser-tabs.filter-bar.js`.
+  - The moved file has no internal imports, so no inside-file import rewrites were needed.
+  - Updated importer path in `src/book-browser/book-browser.js` to `./browser-tabs/browser-tabs.filter-bar.js`.
+
+- Risks / Side effects
+  - If any import was missed, the extension can fail to load this module (probability: ⭕)
+      - **🟥 MANUAL CHECK**: [ ] Reload SillyTavern and open the World Info Drawer. Success looks like: drawer opens normally and all tabs (`Visibility`, `Sorting`, `Search`) still appear.
+      - **🟥 MANUAL CHECK**: [ ] In the drawer, type in search and toggle visibility filters. Success looks like: filtering still updates the book list without console import errors.

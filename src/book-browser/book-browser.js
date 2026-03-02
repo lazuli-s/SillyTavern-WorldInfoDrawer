@@ -24,7 +24,7 @@ import {
 import {
     BOOK_VISIBILITY_MODES,
     createFilterBarSlice,
-} from '../listPanel.filterBar.js';
+} from './browser-tabs/browser-tabs.filter-bar.js';
 import { createSelectionDnDSlice } from '../listPanel.selectionDnD.js';
 import { createBookMenuSlice } from '../listPanel.bookMenu.js';
 import { createFoldersViewSlice } from '../listPanel.foldersView.js';
