@@ -28,7 +28,7 @@ When naming a new task file, use the following format:
 | Refactoring (code only, no behavior change) | `refactoring__<name-only-low-case>.md` | `refactoring__style.css.md` |
 | Documentation task | `docs__<name-only-low-case>.md` | `docs__architecture-update.md` |
 | Skill | `skill__<name-only-low-case>.md` | `skill__create-analyze-request.md` |
-| Code review | `code-review___<file-name-only-low-case>.md` | `code-review___listPanel.filterBar.js.md` |
+| Code review | `code-review___<file-name-only-low-case>.md` | `code-review___browser-tabs.filter-bar.js.md` |
 | Plan | `plan__<name-only-low-case>.md` | `plan__new-filter-system.md` |
 | Workflow / automation | `workflow__<name-only-low-case>.md` | `workflow__session-start-hook.md` |
 

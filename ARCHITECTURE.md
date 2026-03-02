@@ -8,27 +8,41 @@
 |-- manifest.json                # SillyTavern extension manifest
 |-- src/
 |   |-- drawer.js                # Drawer UI bootstrap + DOM map + control wiring
-|   |-- bookSourceLinks.js       # Character/chat/persona lorebook source-link tracking
-|   |-- wiUpdateHandler.js       # WORLDINFO update engine (cache sync, waits, duplicate-refresh queue)
-|   |-- listPanel.js             # Left panel composition: books/folders/entries and menu orchestration
-|   |-- listPanel.state.js       # List panel state container (UI/session state + lifecycle hydration/reset helpers)
-|   |-- listPanel.filterBar.js   # Filter/search/visibility slice for list panel
-|   |-- listPanel.foldersView.js # Folder view slice (folder DOM map wiring + collapse/visibility toggles)
-|   |-- listPanel.booksView.js   # Book view slice (`renderBook`/`loadList` + book row wiring)
-|   |-- listPanel.bookMenu.js    # Book dropdown menu items/actions + import dialog helpers
-|   |-- listPanel.selectionDnD.js # Entry selection model + entry/book drag/drop target handlers
-|   |-- listPanel.coreBridge.js  # Core WI DOM delegation helpers (wait/select/click wrappers)
-|   |-- editorPanel.js           # Entry editor panel integration with ST templates
-|   |-- worldEntry.js            # Entry row renderer + selection/toggle behaviors
-|   |-- orderHelper.js           # Order Helper orchestration
-|   |-- orderHelperRender.js     # Order Helper table rendering and inline edits
-|   |-- orderHelperFilters.js    # Order Helper filter logic
-|   |-- orderHelperState.js      # Order Helper persisted/default UI state
-|   |-- lorebookFolders.js       # Folder metadata and registry helpers
-|   |-- sortHelpers.js           # Sorting + metadata sort preference helpers
-|   |-- utils.js                 # Shared UI/util helpers
-|   |-- Settings.js              # Persistent extension settings singleton
-|   └-- constants.js             # Sort enums/constants
+|   |-- book-browser/
+|   |   |-- book-browser.js                    # Book Browser composition + orchestration
+|   |   |-- book-browser.state.js              # Book Browser state container
+|   |   |-- book-browser.core-bridge.js        # Core WI DOM delegation helpers
+|   |   |-- browser-tabs/
+|   |   |   └-- browser-tabs.filter-bar.js     # Browser tabs + filters/search/visibility
+|   |   └-- book-list/
+|   |       |-- book-list.books-view.js        # Book list render/load + row wiring
+|   |       |-- book-list.book-menu.js         # Per-book dropdown menu actions
+|   |       |-- book-list.selection-dnd.js     # Entry selection + drag/drop handlers
+|   |       |-- book-list.world-entry.js       # Entry row renderer + row interactions
+|   |       |-- book-list.book-source-links.js # Character/chat/persona source-link tracking
+|   |       └-- book-folders/
+|   |           |-- book-folders.folders-view.js      # Folder view DOM/collapse wiring
+|   |           └-- book-folders.lorebook-folders.js  # Folder metadata + registry helpers
+|   |-- editor-panel/
+|   |   └-- editor-panel.js                    # Entry editor panel integration with ST templates
+|   |-- entry-manager/
+|   |   |-- entry-manager.js                   # Entry Manager orchestration
+|   |   |-- logic/
+|   |   |   |-- logic.state.js                 # Entry Manager persisted/default UI state
+|   |   |   └-- logic.filters.js               # Entry Manager filter logic
+|   |   └-- bulk-editor/
+|   |       |-- bulk-editor.js                 # Bulk editor orchestrator
+|   |       |-- bulk-editor.utils.js           # Shared bulk editor utilities
+|   |       |-- bulk-editor.action-bar.js      # Bulk editor action bar controls
+|   |       |-- bulk-editor.filter-panel.js    # Script filter panel + preview wiring
+|   |       |-- bulk-editor.table-header.js    # Bulk editor table header
+|   |       └-- bulk-editor.table-body.js      # Bulk editor table body
+|   └-- shared/
+|       |-- settings.js                        # Persistent extension settings singleton
+|       |-- constants.js                       # Sort enums/constants
+|       |-- sort-helpers.js                    # Sorting + metadata sort preference helpers
+|       |-- utils.js                           # Shared UI/util helpers
+|       └-- wi-update-handler.js               # WORLDINFO update engine
 |-- docs/
 |   |-- user/                    # End-user and behavior docs (World Info / extension logic, state maps)
 |   |-- SillyTavernExtensionsDocumentation.md  # ST extension best-practice reference
@@ -66,32 +80,32 @@
 | --- | --- |
 | `index.js` | Extension entry point; composes module initialization and exposes `jumpToEntry` public API |
 | `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, desktop/mobile splitter behavior, and global interaction wiring |
-| `bookSourceLinks.js` | Derives and tracks lorebook source links (character/chat/persona); refreshes icons and filters |
-| `wiUpdateHandler.js` | Owns WORLDINFO event handling, incremental cache sync, update-wait primitives, and duplicate-refresh queue |
-| `listPanel.js` | Composes list panel slices and shared orchestration; exposes consolidated list-panel API |
-| `listPanel.booksView.js` | Book row render and full list load pipeline; wires per-book interactions |
-| `listPanel.foldersView.js` | Folder view wiring: DOM creation, collapse state sync, visibility/active-toggle refresh |
-| `listPanel.bookMenu.js` | Per-book dropdown menu: triggers, ARIA, keyboard support, actions, and import dialog helpers |
-| `listPanel.filterBar.js` | Icon-tab strip (Visibility/Sorting/Search); owns book visibility menu and active-filter chip rendering |
-| `listPanel.state.js` | Module-local mutable state container + lifecycle helpers (reset/hydration) |
-| `listPanel.selectionDnD.js` | Entry selection UI helpers; entry/book drag-drop move-copy persistence |
-| `listPanel.coreBridge.js` | Core WI DOM delegation utilities for rename/duplicate/delete actions |
-| `lorebookFolders.js` | Folder metadata, registry helpers, DOM construction, and folder menu actions |
-| `worldEntry.js` | Entry row renderer; selection UI, enable/disable toggle, click-to-open editor |
-| `editorPanel.js` | Entry editor panel using ST templates; focus/unfocus and `#wiActivationSettings` embedding |
-| `orderHelper.js` | Order Helper orchestration: state creation, scope gathering, derived filter options |
-| `orderHelperState.js` | Order Helper persisted state (sort/hide-keys/columns) via localStorage |
-| `orderHelperFilters.js` | Filter logic for Order Helper rows (strategy/position/recursion/outlet/group/script) |
-| `orderHelperRender.js` | Orchestrator: init, section assembly, and public `createOrderHelperRenderer`/`renderOrderHelper` API |
-| `orderHelperRender.utils.js` | Shared DOM/utility helpers across orderHelperRender.* slices, including multiselect dropdown wiring and collapsible row animation |
-| `orderHelperRender.actionBar.js` | Action bar: select-all, hide-keys, column visibility, sort, and apply-order controls |
-| `orderHelperRender.filterPanel.js` | Script-based filter panel with SlashCommandParser, highlight.js, and live preview |
-| `orderHelperRender.tableHeader.js` | `<thead>` with 6 multiselect column filter menus; returns refresh-indicator callbacks |
-| `orderHelperRender.tableBody.js` | `<tbody>` entry row loop with all cell types, drag sorting, and inline edits |
-| `sortHelpers.js` | Sorting implementations and per-book sort preference read/write |
-| `utils.js` | Shared UI/utility helpers and sort option labels |
-| `constants.js` | Sort enums, direction constants, and Order Helper column/option schema |
-| `Settings.js` | Persistent extension settings singleton (`extension_settings.worldInfoDrawer`) |
+| `src/book-browser/book-list/book-list.book-source-links.js` | Derives and tracks lorebook source links (character/chat/persona); refreshes icons and filters |
+| `src/shared/wi-update-handler.js` | Owns WORLDINFO event handling, incremental cache sync, update-wait primitives, and duplicate-refresh queue |
+| `src/book-browser/book-browser.js` | Composes Book Browser slices and shared orchestration; exposes consolidated Book Browser API |
+| `src/book-browser/book-list/book-list.books-view.js` | Book row render and full list load pipeline; wires per-book interactions |
+| `src/book-browser/book-list/book-folders/book-folders.folders-view.js` | Folder view wiring: DOM creation, collapse state sync, visibility/active-toggle refresh |
+| `src/book-browser/book-list/book-list.book-menu.js` | Per-book dropdown menu: triggers, ARIA, keyboard support, actions, and import dialog helpers |
+| `src/book-browser/browser-tabs/browser-tabs.filter-bar.js` | Icon-tab strip (Visibility/Sorting/Search); owns book visibility menu and active-filter chip rendering |
+| `src/book-browser/book-browser.state.js` | Module-local mutable state container + lifecycle helpers (reset/hydration) |
+| `src/book-browser/book-list/book-list.selection-dnd.js` | Entry selection UI helpers; entry/book drag-drop move-copy persistence |
+| `src/book-browser/book-browser.core-bridge.js` | Core WI DOM delegation utilities for rename/duplicate/delete actions |
+| `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js` | Folder metadata, registry helpers, DOM construction, and folder menu actions |
+| `src/book-browser/book-list/book-list.world-entry.js` | Entry row renderer; selection UI, enable/disable toggle, click-to-open editor |
+| `src/editor-panel/editor-panel.js` | Entry editor panel using ST templates; focus/unfocus and `#wiActivationSettings` embedding |
+| `src/entry-manager/entry-manager.js` | Entry Manager orchestration: state creation, scope gathering, derived filter options |
+| `src/entry-manager/logic/logic.state.js` | Entry Manager persisted state (sort/hide-keys/columns) via localStorage |
+| `src/entry-manager/logic/logic.filters.js` | Filter logic for Entry Manager rows (strategy/position/recursion/outlet/group/script) |
+| `src/entry-manager/bulk-editor/bulk-editor.js` | Orchestrator: init, section assembly, and public bulk editor rendering API |
+| `src/entry-manager/bulk-editor/bulk-editor.utils.js` | Shared DOM/utility helpers for bulk editor slices, including multiselect dropdown wiring and collapsible row animation |
+| `src/entry-manager/bulk-editor/bulk-editor.action-bar.js` | Action bar: select-all, hide-keys, column visibility, sort, and apply-order controls |
+| `src/entry-manager/bulk-editor/bulk-editor.filter-panel.js` | Script-based filter panel with SlashCommandParser, highlight.js, and live preview |
+| `src/entry-manager/bulk-editor/bulk-editor.table-header.js` | `<thead>` with multiselect column filter menus; returns refresh-indicator callbacks |
+| `src/entry-manager/bulk-editor/bulk-editor.table-body.js` | `<tbody>` entry row loop with all cell types, drag sorting, and inline edits |
+| `src/shared/sort-helpers.js` | Sorting implementations and per-book sort preference read/write |
+| `src/shared/utils.js` | Shared UI/utility helpers and sort option labels |
+| `src/shared/constants.js` | Sort enums, direction constants, and Entry Manager column/option schema |
+| `src/shared/settings.js` | Persistent extension settings singleton (`extension_settings.worldInfoDrawer`) |
 
 ## 2. High-Level System Diagram
 
@@ -118,7 +132,7 @@
 
 Name: WorldInfo Drawer Extension UI
 
-Description: Browser-side SillyTavern extension that replaces the default World Info editor with a full-screen drawer. It renders book/folder lists, entry rows, an embedded entry editor, and an Order Helper for bulk edits/reordering. It keeps an in-memory `cache` synchronized with SillyTavern world-info state and persists UI preferences.
+Description: Browser-side SillyTavern extension that replaces the default World Info editor with a full-screen drawer. It renders book/folder lists, entry rows, an embedded entry editor, and an Entry Manager for bulk edits/reordering. It keeps an in-memory `cache` synchronized with SillyTavern world-info state and persists UI preferences.
 
 Technologies: Vanilla JavaScript (ES modules), DOM APIs, jQuery/jQuery UI sortable (host-provided), highlight.js (host-provided), SillyTavern frontend APIs.
 
@@ -188,7 +202,7 @@ Type: In-memory JavaScript objects
 
 Purpose: Fast UI rendering and incremental updates without full reload on every interaction.
 
-Key objects: `cache`, `dom`, `currentEditor`, selection state, order-helper state, source-link maps.
+Key objects: `cache`, `dom`, `currentEditor`, selection state, entry-manager state, source-link maps.
 
 ## 5. External Integrations / APIs
 
@@ -212,7 +226,7 @@ Integration Method: Dynamic import and plugin API calls.
 
 Service Name 4: Optional companion extensions/plugins (Bulk Edit, External Editor, STLO)
 
-Purpose: Cross-extension actions from list-panel menus.
+Purpose: Cross-extension actions from Book Browser menus.
 
 Integration Method: Extension presence checks, slash commands, and authenticated `fetch` to plugin endpoint.
 
@@ -262,10 +276,10 @@ Code Quality Tools: ESLint (`eslint.config.js`), Stylelint (`.stylelintrc.json`)
 
 ## 9. Future Considerations / Roadmap
 
-- Improve Order Helper filter UX (from README to-do).
+- Improve Entry Manager filter UX (from README to-do).
 - Add lorebook tag system (classification/filtering/enable-disable by tag).
 - Resolve remaining CSS alignment issues.
-- Increase test coverage for high-coupling modules (`src/drawer.js`, `listPanel.js`, `orderHelperRender.js`) that currently rely heavily on host DOM and runtime APIs.
+- Increase test coverage for high-coupling modules (`src/drawer.js`, `src/book-browser/book-browser.js`, `src/entry-manager/bulk-editor/bulk-editor.js`) that currently rely heavily on host DOM and runtime APIs.
 - Track SillyTavern upstream template/API changes to avoid selector drift and integration regressions.
 
 ## 10. Project Identification
@@ -286,7 +300,7 @@ WI: World Info (SillyTavern lorebook system).
 
 STWID: Short prefix used by this extension (WorldInfo Drawer).
 
-Order Helper: Bulk-edit/reorder table UI for entries.
+Entry Manager: Bulk-edit/reorder table UI for entries.
 
 Book: A lorebook file in SillyTavern.
 

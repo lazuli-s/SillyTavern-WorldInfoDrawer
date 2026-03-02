@@ -69,7 +69,7 @@ Determine which CHANGELOG.md section this task's outcome belongs to. Use the tas
 ### 2c. Title
 
 Extract from the first `# ` heading. Strip the leading task-type label and colon, if present.
-- `# New Feature: List Panel Tabs` → title is `List Panel Tabs`
+- `# New Feature: Book Browser Tabs` → title is `Book Browser Tabs`
 - `# TASK: Remove redundant parent prefix` → title is `Remove redundant parent prefix`
 - `# Refactoring_stylecssNesting` → title is `style.css Nesting`
 
@@ -101,7 +101,7 @@ List the files that were touched. Check in this order:
 3. `## Changes Made` — file names mentioned (old format)
 4. PIR `### Files Inspected` list
 
-Present as a flat list of file names, e.g. `style.css`, `src/orderHelper.js`.
+Present as a flat list of file names, e.g. `style.css`, `src/entry-manager/entry-manager.js`.
 
 ### 2g. What changed
 
@@ -236,3 +236,4 @@ Print one short paragraph in plain language:
 > Changelog entry added for **\<Title\>** (\<task type\>) under **\<date\>** in `tasks/changelogs/<changelog file>`. Task file moved to `tasks/main-tasks/archived-tasks/`.
 
 Then stop.
+

@@ -26,7 +26,7 @@ Always use these exact pixel values. Do not introduce other breakpoints.
 |---|---|
 | RESP-01 | Use fluid units (`%`, `vw`, `vh`, `em`, `rem`) for panel widths and heights. Reserve `px` for borders, padding, gaps, and font sizes. |
 | RESP-02 | Any fixed pixel width on a panel or container must be accompanied by `max-width: 100%` so it cannot exceed the viewport on small screens. |
-| RESP-03 | Never use `width: Xpx` or `min-width: Xpx` on an element that fills a major layout region (drawer, list panel, editor panel, Order Helper). Use `min-width: 0` to allow shrinking inside flex containers instead. |
+| RESP-03 | Never use `width: Xpx` or `min-width: Xpx` on an element that fills a major layout region (drawer, Book Browser panel, editor panel, Entry Manager). Use `min-width: 0` to allow shrinking inside flex containers instead. |
 
 ### BRK — Breakpoints
 
@@ -42,18 +42,18 @@ Always use these exact pixel values. Do not introduce other breakpoints.
 | ID | Rule |
 |---|---|
 | OVF-01 | Never allow horizontal overflow at the `<body>` or drawer level. Any element that could be wider than the viewport must have `overflow-x: hidden` on its container or `overflow-x: auto` on its own scrollable wrapper. |
-| OVF-02 | Wide tables (e.g. the Order Helper table) must be wrapped in a container with `overflow-x: auto` — do not set `overflow-x: auto` directly on the `<table>`. |
+| OVF-02 | Wide tables (e.g. the Entry Manager table) must be wrapped in a container with `overflow-x: auto` — do not set `overflow-x: auto` directly on the `<table>`. |
 | OVF-03 | Long text in constrained containers must have `overflow: hidden` + `text-overflow: ellipsis` + `white-space: nowrap`, or allow wrapping with `overflow-wrap: break-word`. Never let text silently push the layout wider. |
 
 ### LAY — Layout
 
 | ID | Rule |
 |---|---|
-| LAY-01 | Any flex container using `flex-direction: row` that contains the list panel and editor/Order Helper side by side **must** include a `@media (max-width: 1000px)` override switching it to `flex-direction: column`. |
-| LAY-02 | On mobile, the list panel and editor panel each become full-width (`width: 100%`, `max-width: none`). Remove any fixed pixel width from both in the mobile block. |
+| LAY-01 | Any flex container using `flex-direction: row` that contains the Book Browser panel and editor/Entry Manager side by side **must** include a `@media (max-width: 1000px)` override switching it to `flex-direction: column`. |
+| LAY-02 | On mobile, the Book Browser panel and editor panel each become full-width (`width: 100%`, `max-width: none`). Remove any fixed pixel width from both in the mobile block. |
 | LAY-03 | The vertical splitter (`.stwid--splitter`, used for horizontal left/right resizing) must be hidden on mobile (`display: none`). A separate horizontal splitter element handles top/bottom resizing on mobile. |
 | LAY-04 | Filter rows, sort rows, and control rows that use `display: flex` must allow wrapping on mobile (`flex-wrap: wrap`) so controls don't clip off-screen. |
-| LAY-05 | On mobile, the Order Helper panel inherits full-width and stacks below the list. Its inner table container must be a block-level element with `overflow-x: auto`. |
+| LAY-05 | On mobile, the Entry Manager panel inherits full-width and stacks below the Book Browser. Its inner table container must be a block-level element with `overflow-x: auto`. |
 
 ## Guide Mode (writing new CSS)
 
