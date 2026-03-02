@@ -1,7 +1,7 @@
 import { debounce, delay } from '../../../../../utils.js';
 import { loadWorldInfo, saveWorldInfo, selected_world_info, world_names } from '../../../../../world-info.js';
 import { Settings } from './settings.js';
-import { refreshList } from '../listPanel.js';
+import { refreshList } from '../book-browser/book-browser.js';
 import { cloneMetadata, getSortFromMetadata, sortEntries } from './sort-helpers.js';
 import { entryState, renderEntry } from '../worldEntry.js';
 import { createDeferred } from './utils.js';

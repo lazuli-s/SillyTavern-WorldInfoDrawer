@@ -370,14 +370,14 @@ export function buildTableBody({
 
                     applyEnabledIcon(isEnabled, e.data.disable);
                     isEnabled.addEventListener('click', async()=>{
-                        // Phase 2: update cache → update e.data → update UI → sync list panel → save
+                        // Phase 2: update cache → update e.data → update UI → sync book browser → save
                         const entryData = cache[e.book].entries[e.data.uid];
                         const nextDisabled = !entryData.disable;
                         entryData.disable = nextDisabled;
                         e.data.disable = nextDisabled;
                         applyEnabledIcon(isEnabled, nextDisabled);
 
-                        // Keep list panel row icon in sync too.
+                        // Keep book browser row icon in sync too.
                         const listToggle = cache[e.book].dom.entry?.[e.data.uid]?.isEnabled;
                         if (listToggle) {
                             applyEnabledIcon(listToggle, nextDisabled);
@@ -438,7 +438,7 @@ export function buildTableBody({
                     setTooltip(strat, 'Entry strategy');
                     strat.value = entryState(e.data);
                     strat.addEventListener('change', async()=>{
-                        // Phase 2: update list panel DOM → update cache → apply filter → save
+                        // Phase 2: update book browser DOM → update cache → apply filter → save
                         const value = strat.value;
                         cache[e.book].dom.entry[e.data.uid].strategy.value = value;
                         switch (value) {

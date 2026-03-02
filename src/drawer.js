@@ -7,7 +7,7 @@ import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoole
 import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, onWorldInfoChange, selected_world_info, world_names } from '../../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initEditorPanel } from './editorPanel.js';
-import { initListPanel } from './listPanel.js';
+import { initBookBrowser } from './book-browser/book-browser.js';
 import { registerFolderName } from './lorebookFolders.js';
 import { initOrderHelper } from './orderHelper.js';
 import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
@@ -495,7 +495,7 @@ export const initDrawer = ({
                         globalSortingGroup.classList.add('stwid--globalSorting');
                         const sortSel = document.createElement('select'); {
                             sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
-                            sortSel.title = 'Global entry sort for the list panel';
+                            sortSel.title = 'Global entry sort for the book browser';
                             sortSel.setAttribute('aria-label', 'Global entry sort');
                             sortSel.addEventListener('change', ()=>{
                                 const value = JSON.parse(sortSel.value);
@@ -590,7 +590,7 @@ export const initDrawer = ({
                         getSelectFrom: ()=>selectionState?.selectFrom,
                         selectEnd: ()=>listPanelApi.selectEnd(),
                     });
-                    listPanelApi = initListPanel({
+                    listPanelApi = initBookBrowser({
                         Settings,
                         METADATA_NAMESPACE,
                         METADATA_SORT_KEY,

@@ -1,4 +1,4 @@
-﻿/*
+/*
   SillyTavern World Info Drawer (STWID)
 
   Phase 1 CSS refactor: organization + safe micro-dedup only.
@@ -135,7 +135,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 /* -------------------------------------------------------------------------- */
 
-/* 2) List Panel                                                              */
+/* 2) Book Browser                                                           */
 
 /* -------------------------------------------------------------------------- */
 

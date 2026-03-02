@@ -1,6 +1,6 @@
 import { initBookSourceLinks } from './src/bookSourceLinks.js';
 import { initDrawer } from './src/drawer.js';
-import { refreshList } from './src/listPanel.js';
+import { refreshList } from './src/book-browser/book-browser.js';
 import { initWIUpdateHandler } from './src/shared/wi-update-handler.js';
 
 // Entry point. Initializes runtime modules and exposes jumpToEntry.

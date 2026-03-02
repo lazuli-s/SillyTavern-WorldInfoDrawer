@@ -1,5 +1,5 @@
-﻿import { createFolderDom, getFolderFromMetadata, setFolderCollapsed } from './lorebookFolders.js';
-import { persistFolderCollapseStates, setFolderCollapsedAndPersist } from './listPanel.state.js';
+import { createFolderDom, getFolderFromMetadata, setFolderCollapsed } from './lorebookFolders.js';
+import { persistFolderCollapseStates, setFolderCollapsedAndPersist } from './book-browser/book-browser.state.js';
 
 const createFoldersViewSlice = ({
     listPanelState,

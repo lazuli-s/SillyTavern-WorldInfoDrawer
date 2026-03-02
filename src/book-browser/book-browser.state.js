@@ -1,4 +1,4 @@
-﻿import { setFolderCollapsed } from './lorebookFolders.js';
+import { setFolderCollapsed } from '../lorebookFolders.js';
 
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
 const MAX_ENTRY_CACHE_SIZE = 10000;

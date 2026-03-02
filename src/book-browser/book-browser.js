@@ -1,4 +1,4 @@
-import { cloneMetadata } from './shared/sort-helpers.js';
+import { cloneMetadata } from '../shared/sort-helpers.js';
 import {
     createBookInFolder,
     getFolderFromMetadata,
@@ -7,7 +7,7 @@ import {
     setFolderBooksActive,
     sanitizeFolderMetadata,
     setFolderInMetadata,
-} from './lorebookFolders.js';
+} from '../lorebookFolders.js';
 import {
     captureBookCollapseStatesFromDom,
     clearCacheBooks,
@@ -15,20 +15,20 @@ import {
     hydrateFolderCollapseStates,
     listPanelState,
     resetBookVisibilityState,
-} from './listPanel.state.js';
+} from './book-browser.state.js';
 import {
     CORE_UI_ACTION_SELECTORS,
     clickCoreUiAction as clickCoreUiActionBridge,
     setSelectedBookInCoreUi as setSelectedBookInCoreUiBridge,
-} from './listPanel.coreBridge.js';
+} from './book-browser.core-bridge.js';
 import {
     BOOK_VISIBILITY_MODES,
     createFilterBarSlice,
-} from './listPanel.filterBar.js';
-import { createSelectionDnDSlice } from './listPanel.selectionDnD.js';
-import { createBookMenuSlice } from './listPanel.bookMenu.js';
-import { createFoldersViewSlice } from './listPanel.foldersView.js';
-import { createBooksViewSlice } from './listPanel.booksView.js';
+} from '../listPanel.filterBar.js';
+import { createSelectionDnDSlice } from '../listPanel.selectionDnD.js';
+import { createBookMenuSlice } from '../listPanel.bookMenu.js';
+import { createFoldersViewSlice } from '../listPanel.foldersView.js';
+import { createBooksViewSlice } from '../listPanel.booksView.js';
 
 // Core SillyTavern DOM anchors used by this extension.
 // Keep these centralized so host selector drift is easier to audit.
@@ -601,9 +601,9 @@ const getListPanelApi = ()=>({
 });
 
 // Public module initialization + returned API surface.
-const initListPanel = (options)=>{
+const initBookBrowser = (options)=>{
     if (listPanelInitialized) {
-        console.warn('[STWID] initListPanel called more than once; resetting previous list panel instance.');
+        console.warn('[STWID] initBookBrowser called more than once; resetting previous book browser instance.');
         teardownListPanel();
     }
     state = options;
@@ -648,7 +648,7 @@ const initListPanel = (options)=>{
     return getListPanelApi();
 };
 
-export { initListPanel, refreshList };
+export { initBookBrowser, refreshList };
 
 
 
