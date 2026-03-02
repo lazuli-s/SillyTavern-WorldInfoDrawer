@@ -1,10 +1,10 @@
-// ── Order Helper render utilities ─────────────────────────────────────────────
-// Shared helpers used across orderHelperRender.* slice files.
-// These functions are self-contained: they depend only on browser globals
-// (document, HTMLElement) and each other — no factory parameters needed.
 
-// Property key used to attach a programmatic close function to each open menu
-// element so closeOpenMultiselectDropdownMenus can close them uniformly.
+
+
+
+
+
+
 export const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 
 export const setTooltip = (element, text, { ariaLabel = null } = {})=>{
@@ -58,7 +58,7 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
         const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
         trigger?.setAttribute('aria-expanded', 'false');
     }
-    // Also close list dropdown menus (blocker-based menus)
+    
     for (const blocker of document.querySelectorAll('.stwid--blocker')) {
         const menu = blocker.querySelector('.stwid--listDropdownMenu');
         const closeMenu = menu?.[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
@@ -73,11 +73,11 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
     }
 };
 
-// Wires open/close/outside-click behavior for any multiselect dropdown menu.
-// Registers a close function on the menu element so closeOpenMultiselectDropdownMenus
-// can close it externally. Stops click propagation inside the menu so outside-click
-// detection works correctly. Returns the closeMenu function for callers that need it
-// (e.g. to close after a preset action).
+
+
+
+
+
 export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     const closeMenu = ()=>{
         if (!menu.classList.contains('stwid--state-active')) return;
@@ -109,18 +109,7 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     return closeMenu;
 };
 
-/**
- * Wires collapse/expand toggle behavior onto a row.
- * The row title element triggers the toggle. The contentWrap element is
- * animated with maxHeight. The chevron icon switches between fa-chevron-down
- * and fa-chevron-right.
- *
- * @param {HTMLElement} rowTitle - The clickable title element.
- * @param {HTMLElement} row - The row container (receives `data-collapsed` and `stwid--collapsed`).
- * @param {HTMLElement} contentWrap - The element whose height is animated.
- * @param {HTMLElement} chevron - The icon element that rotates between down and right.
- * @param {{ initialCollapsed?: boolean }} [options]
- */
+
 export const wireCollapseRow = (rowTitle, row, contentWrap, chevron, { initialCollapsed = false } = {})=>{
     const applyCollapsedState = (collapsed)=>{
         row.dataset.collapsed = String(collapsed);

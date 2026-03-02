@@ -93,10 +93,10 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
             state.sort = stored.sort;
             state.direction = stored.direction;
         }
-    } catch { /* empty */ }
+    } catch {  }
     try {
         state.hideKeys = localStorage.getItem(ORDER_HELPER_HIDE_KEYS_STORAGE_KEY) === 'true';
-    } catch { /* empty */ }
+    } catch {  }
     try {
         const storedColumns = JSON.parse(localStorage.getItem(ORDER_HELPER_COLUMNS_STORAGE_KEY));
         if (storedColumns && typeof storedColumns === 'object') {
@@ -109,7 +109,7 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
                 }
             }
         }
-    } catch { /* empty */ }
+    } catch {  }
     return state;
 };
 

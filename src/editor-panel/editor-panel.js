@@ -1,3 +1,6 @@
+const ACTIVE_STATE_CLASS = 'stwid--state-active';
+const FOCUS_CLASS = 'stwid--focus';
+
 export const initEditorPanel = ({
     dom,
     activationBlock,
@@ -5,41 +8,40 @@ export const initEditorPanel = ({
     renderTemplateAsync,
     getWorldEntry,
     buildSavePayload,
-    cache,
     setCurrentEditor,
     getSelectFrom,
     selectEnd,
 }) => {
-    // Tracks whether the currently-open editor has user changes that may not yet
-    // have been saved back into the world-info data model.
-    // Used to avoid "auto-refresh" rebuilds that would discard typed input.
+    
+    
+    
     let isEditorDirty = false;
-    /**@type {{name:string, uid:string}|null}*/
+    
     let currentEditorKey = null;
-    /**@type {HTMLElement|null} */
-    // F05: Track the single active entry row so clearEntryHighlights() can target it
-    // directly instead of scanning every rendered entry in the cache.
+    
+    
+    
     let activeEntryDom = null;
 
     const markEditorClean = (name, uid)=>{
-        // F01: Use uid == null (not !uid) so UID 0 is accepted as valid.
+        
         if (!name || uid == null) return;
         currentEditorKey = { name, uid };
         isEditorDirty = false;
     };
 
     const markEditorDirtyIfCurrent = ()=>{
-        // If the editor is currently showing activation settings or order helper,
-        // we treat it as not-dirty from the entry-editor perspective.
+        
+        
         if (!currentEditorKey) return;
         isEditorDirty = true;
     };
 
-    // Only consider keydown inside typical editable controls.
+    
     const shouldMarkDirtyOnKeydown = (evt)=>{
-        // Ignore key combos that are commonly non-editing/navigation.
+        
         if (evt.ctrlKey || evt.metaKey || evt.altKey) return false;
-        const k = evt.key;
+        const pressedKey = evt.key;
         const nonEditingKeys = new Set([
             'Shift',
             'Control',
@@ -58,19 +60,19 @@ export const initEditorPanel = ({
             'Home',
             'End',
         ]);
-        if (nonEditingKeys.has(k)) return false;
+        if (nonEditingKeys.has(pressedKey)) return false;
 
-        const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+        const target =  (evt.target instanceof HTMLElement ? evt.target : null);
         if (!target) return false;
         return Boolean(target.closest('input, textarea, [contenteditable=""], [contenteditable="true"]'));
     };
 
-    // F07: Named handler references so cleanup() can remove them by reference.
+    
     const onEditorInput = markEditorDirtyIfCurrent;
     const onEditorChange = markEditorDirtyIfCurrent;
 
-    // Event delegation: any typing in the editor marks it dirty.
-    // (We use capture to catch events early, even if inner templates stopPropagation.)
+    
+    
     const onEditorKeydown = (evt)=>{
         if (shouldMarkDirtyOnKeydown(evt)) {
             markEditorDirtyIfCurrent();
@@ -78,12 +80,12 @@ export const initEditorPanel = ({
     };
 
     const onEditorPointerdown = (evt)=>{
-        // Conservative: any pointer interaction with mutable form elements marks dirty.
-        // This reduces the chance of background refreshes discarding edits.
-        // F06: Narrowed to direct data-entry elements only — excludes `button` and
-        // `.checkbox` which can match purely presentational controls and produce
-        // false-positive dirty flags that block mode switches.
-        const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+        
+        
+        
+        
+        
+        const target =  (evt.target instanceof HTMLElement ? evt.target : null);
         if (!target) return;
         if (target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) {
             markEditorDirtyIfCurrent();
@@ -95,11 +97,11 @@ export const initEditorPanel = ({
     dom.editor?.addEventListener?.('keydown', onEditorKeydown, true);
     dom.editor?.addEventListener?.('pointerdown', onEditorPointerdown, true);
 
-    // F05: Clear only the previously tracked active row rather than iterating every
-    // rendered entry in the cache — O(1) instead of O(total entries).
+    
+    
     const clearEntryHighlights = () => {
         if (activeEntryDom) {
-            activeEntryDom.classList.remove('stwid--state-active');
+            activeEntryDom.classList.remove(ACTIVE_STATE_CLASS);
             activeEntryDom = null;
         }
     };
@@ -113,44 +115,44 @@ export const initEditorPanel = ({
         }
     };
 
-    const hideActivationSettings = () => {
-        if (!activationBlock || !activationBlockParent) return;
-        dom.activationToggle.classList.remove('stwid--state-active');
-        activationBlockParent.append(activationBlock);
-        clearEditor({ resetCurrent: false });
+    const resetEditorOwnership = () => {
         setCurrentEditor(null);
         currentEditorKey = null;
         isEditorDirty = false;
     };
 
+    const hideActivationSettings = () => {
+        if (!activationBlock || !activationBlockParent) return;
+        dom.activationToggle.classList.remove(ACTIVE_STATE_CLASS);
+        activationBlockParent.append(activationBlock);
+        clearEditor({ resetCurrent: false });
+        resetEditorOwnership();
+    };
+
     const renderActivationSettings = () => {
         clearEditor({ resetCurrent: false });
-        if (dom.order.toggle.classList.contains('stwid--state-active')) {
+        if (dom.order.toggle.classList.contains(ACTIVE_STATE_CLASS)) {
             dom.order.toggle.click();
         }
         clearEntryHighlights();
-        const h4 = document.createElement('h4'); {
-            h4.textContent = 'Global World Info/Lorebook activation settings';
-            dom.editor.append(h4);
+        const activationHeading = document.createElement('h4'); {
+            activationHeading.textContent = 'Global World Info/Lorebook activation settings';
+            dom.editor.append(activationHeading);
         }
         dom.editor.append(activationBlock);
     };
 
     const showActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
-        dom.activationToggle.classList.add('stwid--state-active');
-        setCurrentEditor(null);
-        currentEditorKey = null;
-        isEditorDirty = false;
+        dom.activationToggle.classList.add(ACTIVE_STATE_CLASS);
+        resetEditorOwnership();
         renderActivationSettings();
     };
 
     const toggleActivationSettings = () => {
         if (!activationBlock || !activationBlockParent) return;
-        const isActive = dom.activationToggle.classList.toggle('stwid--state-active');
-        setCurrentEditor(null);
-        currentEditorKey = null;
-        isEditorDirty = false;
+        const isActive = dom.activationToggle.classList.toggle(ACTIVE_STATE_CLASS);
+        resetEditorOwnership();
         if (isActive) {
             renderActivationSettings();
         } else {
@@ -160,7 +162,7 @@ export const initEditorPanel = ({
     };
 
     const resetEditorState = () => {
-        if (dom.activationToggle.classList.contains('stwid--state-active')) {
+        if (dom.activationToggle.classList.contains(ACTIVE_STATE_CLASS)) {
             hideActivationSettings();
         } else {
             clearEditor();
@@ -168,64 +170,76 @@ export const initEditorPanel = ({
         clearEntryHighlights();
     };
 
+    const createFocusToggleButton = (toggleClass, iconClass, title) => {
+        const button = document.createElement('div');
+        button.classList.add(toggleClass);
+        button.classList.add('menu_button');
+        button.classList.add('fa-solid', 'fa-fw', iconClass);
+        button.title = title;
+        button.addEventListener('click', () => {
+            dom.editor.classList.toggle(FOCUS_CLASS);
+        });
+        return button;
+    };
+
     const appendUnfocusButton = () => {
-        const unfocus = document.createElement('div'); {
-            unfocus.classList.add('stwid--unfocusToggle');
-            unfocus.classList.add('menu_button');
-            unfocus.classList.add('fa-solid', 'fa-fw', 'fa-compress');
-            unfocus.title = 'Unfocus';
-            unfocus.addEventListener('click', () => {
-                dom.editor.classList.toggle('stwid--focus');
-            });
-            dom.editor.append(unfocus);
-        }
+        const unfocus = createFocusToggleButton('stwid--unfocusToggle', 'fa-compress', 'Unfocus');
+        dom.editor.append(unfocus);
     };
 
     const appendFocusButton = (editDom) => {
         const focusContainer = editDom.querySelector('label[for="content"] > small > span > span')
             ?? editDom.querySelector('label[for="content "] > small > span > span');
         if (!focusContainer) return;
-        const btn = document.createElement('div'); {
-            btn.classList.add('stwid--focusToggle');
-            btn.classList.add('menu_button');
-            btn.classList.add('fa-solid', 'fa-fw', 'fa-expand');
-            btn.title = 'Focus';
-            btn.addEventListener('click', () => {
-                dom.editor.classList.toggle('stwid--focus');
-            });
-            focusContainer.append(btn);
+        const btn = createFocusToggleButton('stwid--focusToggle', 'fa-expand', 'Focus');
+        focusContainer.append(btn);
+    };
+
+    const closeCompetingPanels = () => {
+        if (dom.activationToggle.classList.contains(ACTIVE_STATE_CLASS)) {
+            hideActivationSettings();
+        }
+        if (dom.order.toggle.classList.contains(ACTIVE_STATE_CLASS)) {
+            dom.order.toggle.click();
         }
     };
 
+    const fetchEntryHeaderElement = async (isTokenCurrent) => {
+        if (!isTokenCurrent()) return null;
+        const headerTemplate = await renderTemplateAsync('worldInfoKeywordHeaders');
+        if (!isTokenCurrent()) return null;
+        return document.createRange()
+            .createContextualFragment(headerTemplate)
+            .querySelector('#WIEntryHeaderTitlesPC');
+    };
+
+    const fixTextpoleHeights = (editDom) => {
+        editDom.querySelectorAll('.keyprimarytextpole, .keysecondarytextpole').forEach(textpoleTextarea => {
+            textpoleTextarea.style.height = '0px';
+            textpoleTextarea.style.height = `${textpoleTextarea.scrollHeight + 3}px`;
+        });
+    };
+
     const openEntryEditor = async ({ entry, entryDom, name, isTokenCurrent }) => {
-        // Fast-path: if this click is already stale, bail before we do any work.
-        // This prevents upstream template rendering/fetching from running for clicks
-        // that are no longer the "latest" selection.
+        
+        
+        
         if (!isTokenCurrent?.()) return;
         if (getSelectFrom()) selectEnd();
 
-        // F02: Close activation/order panels before async work begins, but do NOT
-        // touch dirty state or row highlights yet — those only commit on success.
-        if (dom.activationToggle.classList.contains('stwid--state-active')) {
-            hideActivationSettings();
-        }
-        if (dom.order.toggle.classList.contains('stwid--state-active')) {
-            dom.order.toggle.click();
-        }
-        // Defer clearEditor until new content is ready — keeps the old entry visible
-        // during async fetches, eliminating the blank-state flash between entries.
+        
+        
+        closeCompetingPanels();
+        
+        
 
-        // The header template is relatively cheap, but still async; avoid awaiting it
-        // if a newer click has already superseded this one.
+        
+        
+        const header = await fetchEntryHeaderElement(isTokenCurrent);
         if (!isTokenCurrent()) return;
-        const headerTemplate = await renderTemplateAsync('worldInfoKeywordHeaders');
-        if (!isTokenCurrent()) return;
-        const header = document.createRange()
-            .createContextualFragment(headerTemplate)
-            .querySelector('#WIEntryHeaderTitlesPC');
 
-        // getWorldEntry is the expensive step (template render + DOM construction).
-        // Guard it so rapid clicking doesn't queue up wasted work.
+        
+        
         if (!isTokenCurrent()) return;
         const payload = buildSavePayload(name);
         const payloadEntry = payload?.entries?.[entry.uid];
@@ -238,48 +252,45 @@ export const initEditorPanel = ({
         if (!isTokenCurrent()) return;
         appendFocusButton(editDom);
 
-        // Swap atomically: clear old entry and fill with new in one synchronous block.
+        
         clearEditor({ resetCurrent: false });
-        // F04: Apply highlight only after successful async completion — prevents
-        // stale-token and missing-payload aborts from leaving the list highlight
-        // desynced from the editor content currently on screen.
+        
+        
+        
         clearEntryHighlights();
-        entryDom.classList.add('stwid--state-active');
-        activeEntryDom = entryDom; // F05: record new active row for O(1) future clears
+        entryDom.classList.add(ACTIVE_STATE_CLASS);
+        activeEntryDom = entryDom; 
         appendUnfocusButton();
         if (header) dom.editor.append(header);
         dom.editor.append(editDom);
 
-        // initScrollHeight runs inside getWorldEntry before the element is in the DOM,
-        // so scrollHeight is 0 and height correction does nothing. Fix heights now that
-        // the textareas are live in the document.
-        editDom.querySelectorAll('.keyprimarytextpole, .keysecondarytextpole').forEach(el => {
-            el.style.height = '0px';
-            el.style.height = `${el.scrollHeight + 3}px`;
-        });
+        
+        
+        
+        fixTextpoleHeights(editDom);
 
         setCurrentEditor({ name, uid: entry.uid });
-        // F02: markEditorClean deferred to here — only committed after the DOM swap
-        // succeeds. Stale-token / missing-payload aborts leave prior dirty state intact.
+        
+        
         markEditorClean(name, entry.uid);
     };
 
     const isDirty = (name, uid)=>{
-        // F01: Use uid == null (not !uid) so UID 0 is accepted as valid.
+        
         if (!name || uid == null) return false;
         return Boolean(isEditorDirty && currentEditorKey?.name === name && currentEditorKey?.uid === uid);
     };
 
     const markClean = (name, uid)=>{
-        // F01: Use uid == null (not !uid) so UID 0 is accepted as valid.
+        
         if (!name || uid == null) return;
         if (currentEditorKey?.name !== name || currentEditorKey?.uid !== uid) return;
         isEditorDirty = false;
     };
 
-    // F07: Teardown path — removes all four capture listeners registered
-    // during initEditorPanel. Caller (drawer.js) should invoke this on beforeunload
-    // or whenever the editor panel is being disposed/re-initialized.
+    
+    
+    
     const cleanup = ()=>{
         dom.editor?.removeEventListener?.('input', onEditorInput, true);
         dom.editor?.removeEventListener?.('change', onEditorChange, true);
@@ -296,7 +307,7 @@ export const initEditorPanel = ({
         toggleActivationSettings,
         resetEditorState,
         openEntryEditor,
-        // Dirty-state helpers for updateWIChange guards.
+        
         isDirty,
         markClean,
     };

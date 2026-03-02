@@ -20,13 +20,13 @@ export const initWIUpdateHandler = ({
     const eventBus = stContext?.eventSource;
     const eventTypes = stContext?.eventTypes ?? stContext?.event_types;
 
-    /**@type {ReturnType<typeof createDeferred>} */
+    
     let updateWIChangeStarted = createDeferred();
-    /**@type {ReturnType<typeof createDeferred>} */
+    
     let updateWIChangeFinished;
 
-    // Monotonic token to correlate a wait call with the specific update cycle it should observe.
-    // This prevents a wait from resolving due to an earlier/later unrelated update.
+    
+    
     let updateWIChangeToken = 0;
     let isWIUpdateInProgress = false;
     const editorDuplicateRefreshQueue = [];
@@ -34,9 +34,9 @@ export const initWIUpdateHandler = ({
 
     const shouldAutoRefreshEditor = (name, uid) => {
         const editorPanelApi = getEditorPanelApi();
-        // When the user is actively typing in the editor, rebuilding the editor DOM
-        // (via a synthetic click) can discard unsaved input.
-        // Guard auto-refreshes to prefer preserving in-progress edits.
+        
+        
+        
         if (!editorPanelApi?.isDirty) return true;
         return !editorPanelApi.isDirty(name, uid);
     };
@@ -76,13 +76,13 @@ export const initWIUpdateHandler = ({
                 return currentEditor?.name == bookName && currentEditor?.uid == entryUid;
             };
 
-            // If called with a book name but without the corresponding data payload,
-            // fall back to a full refresh (robust against mutation observer / unexpected callers).
+            
+            
             if (name && cache[name] && !data) {
                 name = null;
             }
 
-            // removed books
+            
             for (const [n, w] of Object.entries(cache)) {
                 if (world_names.includes(n)) continue;
                 else {
@@ -90,7 +90,7 @@ export const initWIUpdateHandler = ({
                     delete cache[n];
                 }
             }
-            // added books
+            
             for (const worldName of world_names) {
                 if (cache[worldName]) continue;
                 else {
@@ -109,7 +109,7 @@ export const initWIUpdateHandler = ({
                 for (const [k, v] of Object.entries(data.entries)) {
                     world.entries[k] = structuredClone(v);
                 }
-                // removed entries
+                
                 for (const e of Object.keys(cache[name].entries)) {
                     if (world.entries[e]) continue;
                     cache[name].dom.entry[e].root.remove();
@@ -123,7 +123,7 @@ export const initWIUpdateHandler = ({
                         }
                     }
                 }
-                // added entries
+                
                 const alreadyAdded = [];
                 for (const e of Object.keys(world.entries)) {
                     if (cache[name].entries[e]) continue;
@@ -133,7 +133,7 @@ export const initWIUpdateHandler = ({
                     await renderEntry(a, name, before ? cache[name].dom.entry[before.uid].root : null);
                     alreadyAdded.push(a);
                 }
-                // updated entries
+                
                 let hasUpdate = false;
                 for (const [e, o] of Object.entries(cache[name].entries)) {
                     const n = world.entries[e];
@@ -152,7 +152,7 @@ export const initWIUpdateHandler = ({
                         switch (k) {
                             case 'content': {
                                 if (isCurrentEditor(name, e)) {
-                                    const inp = /**@type {HTMLTextAreaElement|HTMLInputElement|null}*/(document.querySelector('.stwid--editor [name="content"]'));
+                                    const inp = (document.querySelector('.stwid--editor [name="content"]'));
                                     if (!inp || inp.value != n.content) {
                                         triggerEditorRefreshOnce();
                                     }
@@ -161,7 +161,7 @@ export const initWIUpdateHandler = ({
                             }
                             case 'comment': {
                                 if (isCurrentEditor(name, e)) {
-                                    const inp = /**@type {HTMLTextAreaElement|HTMLInputElement|null}*/(document.querySelector('.stwid--editor [name="comment"]'));
+                                    const inp = (document.querySelector('.stwid--editor [name="comment"]'));
                                     if (!inp || inp.value != n.comment) {
                                         triggerEditorRefreshOnce();
                                     }
@@ -171,7 +171,7 @@ export const initWIUpdateHandler = ({
                             }
                             case 'key': {
                                 if (hasChange && isCurrentEditor(name, e)) {
-                                    const inp = /**@type {HTMLTextAreaElement|null}*/(document.querySelector(`.stwid--editor textarea[name="${k}"]`));
+                                    const inp = (document.querySelector(`.stwid--editor textarea[name="${k}"]`));
                                     if (!inp || inp.value != n[k].join(', ')) {
                                         triggerEditorRefreshOnce();
                                     }
@@ -197,7 +197,7 @@ export const initWIUpdateHandler = ({
                             }
                             default: {
                                 if (hasChange && isCurrentEditor(name, e)) {
-                                    const inp = /**@type {HTMLInputElement|null}*/(document.querySelector(`.stwid--editor [name="${k}"]`));
+                                    const inp = (document.querySelector(`.stwid--editor [name="${k}"]`));
                                     if (!inp || inp.value != n[k]) {
                                         triggerEditorRefreshOnce();
                                     }
@@ -209,9 +209,9 @@ export const initWIUpdateHandler = ({
                     if (needsEditorRefresh) {
                         cache[name].dom.entry[e].root.click();
                     } else if (isCurrentEditor(name, e) && editorPanelApi) {
-                        // F03: Current entry is confirmed in sync with incoming data and
-                        // no re-click was needed — clear dirty flag so mode-switch guards
-                        // don't block the user after a successful save cycle.
+                        
+                        
+                        
                         editorPanelApi.markClean(name, e);
                     }
                 }
@@ -233,30 +233,25 @@ export const initWIUpdateHandler = ({
 
     const updateWIChangeDebounced = debounce(updateWIChange);
 
-    /**
-     * Waits for the next WORLDINFO update cycle (start -> finish).
-     *
-     * NOTE: This must not resolve due to an update cycle that started before the call,
-     * otherwise callers that open dialogs and then await an update can get a false-positive.
-     */
+    
     const waitForWorldInfoUpdate = async () => {
-        // Capture the token at call time so we only resolve for a strictly later update.
+        
         const tokenAtCall = updateWIChangeToken;
 
-        // Wait until a new cycle starts.
+        
         while (updateWIChangeToken === tokenAtCall) {
             if (isWIUpdateInProgress) {
-                // If we're inside a currently running cycle, wait for it to finish
-                // so we can observe a later cycle start.
+                
+                
                 await updateWIChangeFinished?.promise;
                 continue;
             }
             await updateWIChangeStarted.promise;
-            // Loop to re-check token in case the promise resolved from an older resolve
-            // (e.g., if an update started and finished before this awaited line ran).
+            
+            
         }
 
-        // Now wait for the finish of the cycle that started after we entered.
+        
         await updateWIChangeFinished?.promise;
         return true;
     };
@@ -297,8 +292,8 @@ export const initWIUpdateHandler = ({
     };
 
     const queueEditorDuplicateRefresh = () => {
-        // Capture the specific "next update cycle" at click time so each duplicate click
-        // maps to the update it triggers, then process refreshes serially.
+        
+        
         editorDuplicateRefreshQueue.push(waitForWorldInfoUpdate());
         void runEditorDuplicateRefreshWorker();
     };

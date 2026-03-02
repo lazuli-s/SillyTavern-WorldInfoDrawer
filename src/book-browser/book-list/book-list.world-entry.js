@@ -24,8 +24,8 @@ export const renderEntry = async(e, name, before = null)=>{
         entry.dataset.uid = rowUid;
         entry.addEventListener('selectstart', (evt)=>evt.preventDefault());
         entry.addEventListener('dragstart', (evt)=>{
-            // Selection uses stable uid strings (not entry object identity).
-            // After cache refreshes, entry objects are re-cloned, so identity checks break.
+            
+            
             if (context.selectFrom === null || !context.selectList?.includes(rowUid)) {
                 evt.preventDefault();
                 return;
@@ -38,11 +38,11 @@ export const renderEntry = async(e, name, before = null)=>{
             sel.title = 'Click to select entry';
             sel.addEventListener('click', (evt)=>{
                 evt.preventDefault();
-                // can only select from one book at a time
+                
                 if (context.selectFrom !== null && context.selectFrom != name) return;
                 evt.stopPropagation();
                 if (context.selectLast && evt.shiftKey) {
-                    // range-select from last clicked entry
+                    
                     const start = [...world.dom.entryList.children].indexOf(context.selectLast);
                     const end = [...world.dom.entryList.children].indexOf(entry);
                     const from = Math.min(start, end);
@@ -59,7 +59,7 @@ export const renderEntry = async(e, name, before = null)=>{
                 } else {
                     if (context.selectFrom === null) {
                         context.selectFrom = name;
-                        // Store stable identifiers; entry objects are re-created on refresh.
+                        
                         context.selectList = [];
                         const help = document.createElement('ul'); {
                             help.classList.add('stwid--helpToast');
@@ -83,7 +83,7 @@ export const renderEntry = async(e, name, before = null)=>{
                             escapeHtml: false,
                         });
                     }
-                    // regular single select
+                    
                     if (context.selectList.includes(rowUid)) {
                         context.selectRemove(entry);
                         context.selectList.splice(context.selectList.indexOf(rowUid), 1);
@@ -123,18 +123,18 @@ export const renderEntry = async(e, name, before = null)=>{
         }
         const status = document.createElement('div'); {
             status.classList.add('stwid--status');
-            // F01: always stop propagation so status-control clicks never re-open the editor
+            
             status.addEventListener('click', (evt)=>{
                 evt.stopPropagation();
             });
-            // Per-row in-flight save guard: prevents duplicate clicks while queued save runs.
+            
             let isSavingState = false;
             const saveEntryState = ()=>typeof context.enqueueEntryStateSave === 'function'
                 ? context.enqueueEntryStateSave(name)
                 : context.saveWorldInfo(name, context.buildSavePayload(name), true);
             const isEnabledTemplate = document.querySelector('#entry_edit_template [name="entryKillSwitch"]');
-            const isEnabled = /**@type {HTMLSelectElement}*/(isEnabledTemplate?.cloneNode(true));
-            // F04: guard instead of early return — row construction continues if template is missing
+            const isEnabled = (isEnabledTemplate?.cloneNode(true));
+            
             if (isEnabled) {
                 world.dom.entry[e.uid].isEnabled = isEnabled;
                 isEnabled.classList.add('stwid--enabled');
@@ -148,9 +148,9 @@ export const renderEntry = async(e, name, before = null)=>{
 
                 applyEnabledIcon(e.disable);
                 isEnabled.addEventListener('click', async()=>{
-                    // F02: skip if a save is already in-flight for this row
+                    
                     if (isSavingState) return;
-                    // F03: snapshot previous state for rollback on save failure
+                    
                     const prevDisabled = context.cache[name].entries[e.uid].disable;
                     const nextDisabled = !prevDisabled;
                     context.cache[name].entries[e.uid].disable = nextDisabled;
@@ -159,8 +159,8 @@ export const renderEntry = async(e, name, before = null)=>{
                     isEnabled.disabled = true;
                     try {
                         await saveEntryState();
-                    } catch (err) {
-                        // F03: rollback cache and UI on save failure
+                    } catch {
+                        
                         context.cache[name].entries[e.uid].disable = prevDisabled;
                         applyEnabledIcon(prevDisabled);
                         toastr.error('Failed to save entry state. Changes were not persisted.');
@@ -172,8 +172,8 @@ export const renderEntry = async(e, name, before = null)=>{
                 status.append(isEnabled);
             }
             const stratTemplate = document.querySelector('#entry_edit_template [name="entryStateSelector"]');
-            const strat = /**@type {HTMLSelectElement}*/(stratTemplate?.cloneNode(true));
-            // F04: guard instead of early return — row construction continues if template is missing
+            const strat = (stratTemplate?.cloneNode(true));
+            
             if (strat) {
                 world.dom.entry[e.uid].strategy = strat;
                 strat.classList.add('stwid--strategy');
@@ -181,9 +181,9 @@ export const renderEntry = async(e, name, before = null)=>{
                 strat.setAttribute('aria-label', 'Entry strategy');
                 strat.value = entryState(e);
                 strat.addEventListener('change', async()=>{
-                    // F02: skip if a save is already in-flight for this row
+                    
                     if (isSavingState) return;
-                    // F03: snapshot previous state for rollback on save failure
+                    
                     const prevConstant = context.cache[name].entries[e.uid].constant;
                     const prevVectorized = context.cache[name].entries[e.uid].vectorized;
                     const value = strat.value;
@@ -208,8 +208,8 @@ export const renderEntry = async(e, name, before = null)=>{
                     strat.disabled = true;
                     try {
                         await saveEntryState();
-                    } catch (err) {
-                        // F03: rollback cache and UI on save failure
+                    } catch {
+                        
                         context.cache[name].entries[e.uid].constant = prevConstant;
                         context.cache[name].entries[e.uid].vectorized = prevVectorized;
                         strat.value = entryState({ constant: prevConstant, vectorized: prevVectorized });
@@ -227,7 +227,7 @@ export const renderEntry = async(e, name, before = null)=>{
             actions.classList.add('stwid--actions');
             entry.append(actions);
         }
-        /**@type {string} */
+        
         let clickToken;
         entry.addEventListener('click', async(evt)=>{
             const token = context.uuidv4();
@@ -240,16 +240,16 @@ export const renderEntry = async(e, name, before = null)=>{
             });
         });
 
-        // Make SHIFT range-selected entries actually draggable.
-        // The selection UI (orange highlight) is applied via CSS classes, but HTML drag-and-drop
-        // only starts when the element has draggable=true. Single-click selection sets this,
-        // but the SHIFT range-path was missing it.
+        
+        
+        
+        
         entry.addEventListener('pointerdown', (evt)=>{
-            if (evt.button !== 0) return; // left-click only
+            if (evt.button !== 0) return; 
             if (context.selectFrom !== name) return;
             if (!context.selectList?.includes?.(rowUid)) return;
-            // Ensure the dragstart event can fire for any selected row.
-            // (Without this, the UI can look selected but never start dragging.)
+            
+            
             entry.setAttribute('draggable', 'true');
         });
 

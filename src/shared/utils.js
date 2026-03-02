@@ -1,10 +1,6 @@
 import { SORT, SORT_DIRECTION } from './constants.js';
 
-/**
- * Sort options available to dropdowns. Each tuple is
- * [Label, Sort Logic, Sort Direction].
- * @type {[string, SORT, SORT_DIRECTION][]}
- */
+
 const SORT_OPTIONS = [
     ['Custom', SORT.CUSTOM, SORT_DIRECTION.ASCENDING],
     ['Title A-Z', SORT.TITLE, SORT_DIRECTION.ASCENDING],
@@ -25,14 +21,11 @@ const SORT_OPTIONS = [
     ['Prompt ↘', SORT.PROMPT, SORT_DIRECTION.DESCENDING],
 ];
 
-/**
- * Creates a deferred promise that can be resolved or rejected externally.
- * @returns {{ promise: Promise<unknown>, resolve: (value?: unknown) => void, reject: (reason?: any) => void }}
- */
+
 const createDeferred = () => {
-    /**@type {(value?: unknown) => void}*/
+    
     let resolve;
-    /**@type {(reason?: any) => void}*/
+    
     let reject;
     const promise = new Promise((res, rej) => {
         resolve = res;
@@ -69,7 +62,7 @@ const getSlashCommandParserCtor = async () => {
         return slashCommandParserCtor;
     }
 
-    // Fallback for ST versions that do not expose the parser constructor globally.
+    
     try {
         const module = await import('../../../../../slash-commands/SlashCommandParser.js');
         slashCommandParserCtor = typeof module?.SlashCommandParser === 'function'
@@ -106,15 +99,7 @@ const executeSlashCommand = async (command) => {
     }
 };
 
-/**
- * Parses a potentially non-boolean setting value tolerantly.
- * Accepts native booleans, the strings "true"/"false", and the numbers 1/0.
- * Returns `defaultValue` for all other unrecognized inputs, ensuring the
- * caller's intended default is preserved even when serialization coerces types.
- * @param {*} value
- * @param {boolean} defaultValue
- * @returns {boolean}
- */
+
 const parseBooleanSetting = (value, defaultValue) => {
     if (typeof value === 'boolean') return value;
     if (value === 'true' || value === 1) return true;

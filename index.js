@@ -3,20 +3,20 @@ import { initDrawer } from './src/drawer.js';
 import { refreshList } from './src/book-browser/book-browser.js';
 import { initWIUpdateHandler } from './src/shared/wi-update-handler.js';
 
-// Entry point. Initializes runtime modules and exposes jumpToEntry.
+
 
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
-// F03: Cleanup handle stored at module scope so re-init teardown is symmetric.
+
 let cleanupCssWatch = null;
 
 const watchCss = async()=>{
-    // Tear down any existing watcher before creating a new one.
+    
     cleanupCssWatch?.();
     cleanupCssWatch = null;
     if (new URL(import.meta.url).pathname.split('/').includes('reload')) return;
     try {
         const FilesPluginApi = (await import('../SillyTavern-FilesPluginApi/api.js')).FilesPluginApi;
-        // watch CSS for changes
+        
         const style = document.createElement('style');
         document.body.append(style);
         const path = [
@@ -26,8 +26,8 @@ const watchCss = async()=>{
             'style.css',
         ].join('/');
         const ev = await FilesPluginApi.watch(path);
-        // F03: Named reference so it can be removed by reference in cleanup.
-        const onCssMessage = async(/**@type {boolean}*/exists)=>{
+        
+        const onCssMessage = async(exists)=>{
             if (!exists) return;
             style.innerHTML = await (await FilesPluginApi.get(path)).text();
             document.querySelector(`#third-party_${NAME}-css`)?.remove();
@@ -44,7 +44,7 @@ const watchCss = async()=>{
 watchCss();
 
 const cache = {};
-/**@type {{name:string, uid:string}|null} */
+
 let currentEditor = null;
 let listPanelApi;
 let editorPanelApi;
@@ -76,16 +76,16 @@ const drawerApi = initDrawer({
 listPanelApi = drawerApi.listPanelApi;
 editorPanelApi = drawerApi.editorPanelApi;
 
-// F02: Attach explicit rejection handler so startup failures are logged and
-// do not produce unhandled-promise noise.
+
+
 void refreshList().catch((error)=>{ console.error('[STWID] Startup list load failed', error); });
 
 export const jumpToEntry = async(name, uid)=>{
     const entryDom = cache[name]?.dom?.entry?.[uid]?.root;
     if (!entryDom) return false;
 
-    // F01: Guard against discarding unsaved editor work. If the current editor
-    // is dirty, abort navigation and let the caller handle the false return.
+    
+    
     if (currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid)) {
         return false;
     }
@@ -106,4 +106,4 @@ export const jumpToEntry = async(name, uid)=>{
     return true;
 };
 
-// NOTE: Discord/non-Discord layout detection removed.
+

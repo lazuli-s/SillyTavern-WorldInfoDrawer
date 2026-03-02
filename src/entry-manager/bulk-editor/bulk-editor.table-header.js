@@ -1,5 +1,4 @@
 import {
-    setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
 } from './bulk-editor.utils.js';
@@ -9,28 +8,7 @@ import {
     ORDER_HELPER_RECURSION_OPTIONS,
 } from '../../shared/constants.js';
 
-/**
- * Builds the filter button + multiselect dropdown menu for a single column.
- *
- * When `normalizeFilters` is null (recursion mode): reads state values directly from
- * `orderHelperState[stateValuesKey]`, returns early from `updateFilterIndicator` if empty,
- * and resets to all values if `filters[stateKey]` is empty — no normalize step.
- *
- * When `normalizeFilters` is a function (standard mode): calls it to normalize the
- * current filter selection and uses `getValues()` as a live fallback for stateValuesKey.
- *
- * @param {{
- *   stateKey: string,
- *   stateValuesKey: string,
- *   getOptions: function(): Array<{value: string, label: string}>,
- *   getValues: function(): string[] | null,
- *   normalizeFilters: function(string[]): string[] | null,
- *   applyFilters: function(): void,
- *   onFilterChange: function(): void,
- *   orderHelperState: object,
- * }} config
- * @returns {{ menuWrap: HTMLElement, updateFilterIndicator: function }}
- */
+
 function buildFilterMenu({ stateKey, stateValuesKey, getOptions, getValues, normalizeFilters, applyFilters, onFilterChange, orderHelperState }) {
     const menuWrap = document.createElement('div');
     menuWrap.classList.add('stwid--multiselectDropdownWrap');
@@ -53,7 +31,7 @@ function buildFilterMenu({ stateKey, stateValuesKey, getOptions, getValues, norm
     let updateFilters;
 
     if (normalizeFilters === null) {
-        // Recursion mode: no normalize function; read state values directly.
+        
         updateFilterIndicator = ()=>{
             const allValues = orderHelperState[stateValuesKey] ?? [];
             if (!allValues.length) return;
@@ -73,7 +51,7 @@ function buildFilterMenu({ stateKey, stateValuesKey, getOptions, getValues, norm
             onFilterChange();
         };
     } else {
-        // Standard mode: normalize filters and use getValues() as live fallback.
+        
         updateFilterIndicator = ()=>{
             const allValues = orderHelperState[stateValuesKey].length
                 ? orderHelperState[stateValuesKey]
@@ -128,14 +106,7 @@ function buildFilterMenu({ stateKey, stateValuesKey, getOptions, getValues, norm
     return { menuWrap, updateFilterIndicator };
 }
 
-/**
- * Builds a `div.stwid--columnHeader` containing the column label and a filter dropdown.
- *
- * @param {string} label - Column header text.
- * @param {object} menuConfig - Config forwarded to `buildFilterMenu` (plus onFilterChange).
- * @param {object} orderHelperState
- * @returns {{ header: HTMLElement, updateFilterIndicator: function }}
- */
+
 function buildFilterColumnHeader(label, menuConfig, orderHelperState) {
     const header = document.createElement('div');
     header.classList.add('stwid--columnHeader');
@@ -150,49 +121,7 @@ function buildFilterColumnHeader(label, menuConfig, orderHelperState) {
     return { header, updateFilterIndicator };
 }
 
-/**
- * Builds the Order Helper table header (`<thead>`) with 6 multiselect column filter menus.
- *
- * Returns the thead element plus six refresh-indicator callbacks.
- * These callbacks are assigned here (they are the `updateFilterIndicator` functions
- * created inside the outlet, automationId, and group filter menus) and must be passed
- * to buildTableBody so that row-level edits can refresh the header filter button state.
- *
- * @param {{
- *   orderHelperState: object,
- *   applyOrderHelperStrategyFilters: function,
- *   applyOrderHelperPositionFilters: function,
- *   applyOrderHelperRecursionFilters: function,
- *   applyOrderHelperOutletFilters: function,
- *   applyOrderHelperAutomationIdFilters: function,
- *   applyOrderHelperGroupFilters: function,
- *   normalizeStrategyFilters: function,
- *   normalizePositionFilters: function,
- *   normalizeOutletFilters: function,
- *   normalizeAutomationIdFilters: function,
- *   normalizeGroupFilters: function,
- *   getStrategyOptions: function,
- *   getStrategyValues: function,
- *   getPositionOptions: function,
- *   getPositionValues: function,
- *   getOutletOptions: function,
- *   getOutletValues: function,
- *   getAutomationIdOptions: function,
- *   getAutomationIdValues: function,
- *   getGroupOptions: function,
- *   getGroupValues: function,
- *   onFilterChange: function,
- * }} ctx
- * @returns {{
- *   thead: HTMLElement,
- *   refreshStrategyFilterIndicator: function,
- *   refreshPositionFilterIndicator: function,
- *   refreshRecursionFilterIndicator: function,
- *   refreshOutletFilterIndicator: function,
- *   refreshAutomationIdFilterIndicator: function,
- *   refreshGroupFilterIndicator: function,
- * }}
- */
+
 export function buildTableHeader({
     orderHelperState,
     applyOrderHelperStrategyFilters,

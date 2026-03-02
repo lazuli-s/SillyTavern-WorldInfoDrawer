@@ -140,7 +140,7 @@ const getFolderActiveState = (cache, selected, folderName, bookNamesOverride = n
 };
 
 const setFolderBooksActive = async(bookNames, isActive, onWorldInfoChange)=>{
-    const select = /**@type {HTMLSelectElement}*/(document.querySelector('#world_info'));
+    const select = (document.querySelector('#world_info'));
     if (!select) return;
     const targets = new Set(bookNames ?? []);
     for (const option of select.options) {
@@ -418,16 +418,16 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                         menuTrigger.style.anchorName = '';
                                         if (!menuActions.openImportDialog || !menuActions.getWorldNames) return;
 
-                                        // Prevent overlapping imports from racing and mis-assigning books.
+                                        
                                         if (menuActions.isFolderImporting?.()) return;
                                         menuActions.setFolderImporting?.(true);
 
                                         try {
-                                            // F4: Avoid mis-assigning books when other actions create/duplicate
-                                            // books during the import window.
-                                            //
-                                            // Prefer an import-specific identifier: the JSON file's declared
-                                            // book names. This lets us only assign imported books to the folder.
+                                            
+                                            
+                                            
+                                            
+                                            
                                             const beforeNames = new Set(menuActions.getWorldNames());
                                             const updatePromise = menuActions.waitForWorldInfoUpdate?.();
                                             const importPayload = await menuActions.openImportDialog();
@@ -447,8 +447,8 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                                 return;
                                             }
 
-                                            // Allow the list of world names to settle (some imports can trigger
-                                            // multiple update cycles).
+                                            
+                                            
                                             const deadline = Date.now() + 4000;
                                             let lastSnapshot = menuActions.getWorldNames().slice().sort();
                                             while (Date.now() < deadline) {
@@ -464,11 +464,11 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                             const afterNames = menuActions.getWorldNames();
                                             const newNames = afterNames.filter((name)=>!beforeNames.has(name));
 
-                                            // If we could read the folder import file, only assign books that we
-                                            // can strongly attribute to this import.
-                                            //
-                                            // importFolderFile() can rename books if the raw name already exists,
-                                            // so we match by prefix.
+                                            
+                                            
+                                            
+                                            
+                                            
                                             const importPrefixes = expectedBookNames.map((name)=>`${name} (imported`);
                                             const attributedNames = expectedBookNames.length
                                                 ? newNames.filter((name)=>expectedBookNames.includes(name)
@@ -476,7 +476,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
                                                 : [];
                                             const unmatchedNames = newNames.filter((name)=>!attributedNames.includes(name));
 
-                                            // Keep attribution conservative, but allow partial attribution.
+                                            
                                             if (!attributedNames.length) {
                                                 toastr.warning('Import finished, but new books could not be confidently identified. No books were moved into the folder.');
                                                 return;

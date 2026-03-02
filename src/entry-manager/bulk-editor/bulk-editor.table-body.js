@@ -1,27 +1,11 @@
 import { setTooltip, formatCharacterFilter } from './bulk-editor.utils.js';
 import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
-/**
- * Creates a per-book save serializer that coalesces concurrent save requests.
- *
- * When a save is in progress for a book, any additional save requests are
- * coalesced into a single follow-up save using a fresh `buildSavePayload`
- * snapshot taken after the in-flight save completes. This prevents
- * last-write-wins races when multiple inline-edit handlers fire in quick
- * succession on the same book.
- *
- * Usage: `const enqueueSave = createBookSaveSerializer(saveWorldInfo, buildSavePayload);`
- * Replace direct `await saveWorldInfo(book, buildSavePayload(book), true)` calls
- * with `await enqueueSave(book)`.
- *
- * @param {function} saveWorldInfo
- * @param {function} buildSavePayload
- * @returns {function(string): Promise<void>} enqueueSave(bookName)
- */
+
 function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
-    /** @type {Map<string, Promise<void>>} */
+    
     const inFlightByBook = new Map();
-    /** @type {Set<string>} */
+    
     const pendingByBook = new Set();
 
     async function runSave(bookName) {
@@ -36,14 +20,7 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
         inFlightByBook.delete(bookName);
     }
 
-    /**
-     * Enqueue a save for the given book. If a save is already in progress,
-     * marks the book as pending and awaits the current run (which will
-     * perform one additional save with a fresh payload after it completes).
-     *
-     * @param {string} bookName
-     * @returns {Promise<void>}
-     */
+    
     return async function enqueueSave(bookName) {
         if (inFlightByBook.has(bookName)) {
             pendingByBook.add(bookName);
@@ -56,19 +33,7 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
     };
 }
 
-/**
- * Builds a `<td>` containing a number input wired to save on change.
- *
- * @param {{
- *   col: string,
- *   name: string,
- *   tooltip: string,
- *   max?: string,
- *   getValue: function(): number | undefined | null,
- *   onSave: function(number | undefined): Promise<void>,
- * }} config
- * @returns {HTMLElement} The `<td>` element.
- */
+
 function buildNumberInputCell({ col, name, tooltip, max = '99999', getValue, onSave }) {
     const td = document.createElement('td');
     td.setAttribute('data-col', col);
@@ -89,53 +54,9 @@ function buildNumberInputCell({ col, name, tooltip, max = '99999', getValue, onS
     return td;
 }
 
-/**
- * Builds the Order Helper table body (`<tbody>`) with one row per entry.
- * Also wires jQuery sortable drag reordering and runs all structured filters
- * at the end so the initial view is correctly filtered.
- *
- * @param {{
- *   entries: Array,
- *   orderHelperState: object,
- *   dom: object,
- *   cache: object,
- *   refreshOutletFilterIndicator: function,
- *   refreshAutomationIdFilterIndicator: function,
- *   refreshGroupFilterIndicator: function,
- *   isOutletPosition: function,
- *   saveWorldInfo: function,
- *   buildSavePayload: function,
- *   focusWorldEntry: function,
- *   isOrderHelperRowSelected: function,
- *   setOrderHelperRowSelected: function,
- *   updateOrderHelperSelectAllButton: function,
- *   refreshSelectionCount: function,
- *   setOrderHelperRowFilterState: function,
- *   applyOrderHelperStrategyFilterToRow: function,
- *   applyOrderHelperPositionFilterToRow: function,
- *   applyOrderHelperRecursionFilterToRow: function,
- *   applyOrderHelperStrategyFilters: function,
- *   applyOrderHelperRecursionFilters: function,
- *   applyOrderHelperOutletFilters: function,
- *   applyOrderHelperAutomationIdFilters: function,
- *   applyOrderHelperGroupFilters: function,
- *   syncOrderHelperOutletFilters: function,
- *   syncOrderHelperAutomationIdFilters: function,
- *   syncOrderHelperGroupFilters: function,
- *   getEditorPanelApi: function,
- *   entryState: function,
- *   getOrderHelperRows: function,
- *   setOrderHelperSort: function,
- *   SORT: object,
- *   SORT_DIRECTION: object,
- *   getSortableDelay: function,
- *   $: function,
- * }} ctx
- * @returns {HTMLElement} The `<tbody>` element to insert into the table.
- */
+
 export function buildTableBody({
     entries,
-    orderHelperState,
     dom,
     cache,
     refreshOutletFilterIndicator,
@@ -149,7 +70,6 @@ export function buildTableBody({
     setOrderHelperRowSelected,
     updateOrderHelperSelectAllButton,
     refreshSelectionCount,
-    setOrderHelperRowFilterState,
     applyOrderHelperStrategyFilterToRow,
     applyOrderHelperPositionFilterToRow,
     applyOrderHelperRecursionFilterToRow,
@@ -161,7 +81,6 @@ export function buildTableBody({
     syncOrderHelperOutletFilters,
     syncOrderHelperAutomationIdFilters,
     syncOrderHelperGroupFilters,
-    getEditorPanelApi,
     entryState,
     getOrderHelperRows,
     setOrderHelperSort,
@@ -173,13 +92,13 @@ export function buildTableBody({
     const tbody = document.createElement('tbody');
     dom.order.tbody = tbody;
 
-    // F01: Per-book serialized save worker — coalesces concurrent inline-edit saves to
-    // prevent last-write-wins races when multiple handlers fire in quick succession.
+    
+    
     const enqueueSave = createBookSaveSerializer(saveWorldInfo, buildSavePayload);
 
-    // Phase 4 – Invariant: these three template controls must exist in the host DOM
-    // (#entry_edit_template) before Order Helper renders. If any is missing, a later
-    // cloneNode call would silently produce a broken element; fail fast here instead.
+    
+    
+    
     const entryEditTemplate = document.querySelector('#entry_edit_template');
     const enabledToggleTemplate = entryEditTemplate?.querySelector('[name="entryKillSwitch"]');
     const strategyTemplate = entryEditTemplate?.querySelector('[name="entryStateSelector"]');
@@ -194,7 +113,7 @@ export function buildTableBody({
     };
 
     const updateCustomOrderFromDom = async()=>{
-        // F02: Early exit if tbody is gone (e.g. Order Helper was closed mid-operation).
+        
         if (!dom.order.tbody) return;
         setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
         const rows = [...dom.order.tbody.querySelectorAll('tr')];
@@ -203,10 +122,10 @@ export function buildTableBody({
         for (const row of rows) {
             const bookName = row.getAttribute('data-book');
             const uid = row.getAttribute('data-uid');
-            // F02: Skip rows with missing/empty data-book or data-uid attributes.
+            
             if (!bookName || !uid) continue;
-            // F02: Skip rows whose book or entry have been removed from cache
-            // (e.g. concurrent WORLDINFO_UPDATED while Order Helper is open).
+            
+            
             if (!cache[bookName]?.entries) continue;
             const entry = cache[bookName].entries[uid];
             if (!entry) continue;
@@ -230,16 +149,16 @@ export function buildTableBody({
         },
     });
 
-    // ── Per-entry rows ────────────────────────────────────────────────────────
+    
     for (const e of entries) {
         const tr = document.createElement('tr'); {
             tr.setAttribute('data-book', e.book);
             tr.setAttribute('data-uid', e.data.uid);
 
-            // Phase 4 – Invariant: these dataset keys are the single source of truth
-            // for row filter visibility. They must be kept in sync with the filter key
-            // names used by orderHelperFilters.js (setOrderHelperRowFilterState).
-            // Never rename or remove a key here without updating that module too.
+            
+            
+            
+            
             tr.dataset.stwidFilterStrategy = 'false';
             tr.dataset.stwidFilterPosition = 'false';
             tr.dataset.stwidFilterRecursion = 'false';
@@ -253,7 +172,7 @@ export function buildTableBody({
             }
             dom.order.entries[e.book][e.data.uid] = tr;
 
-            // Select cell
+            
             const select = document.createElement('td'); {
                 select.setAttribute('data-col', 'select');
                 const btn = document.createElement('div'); {
@@ -274,7 +193,7 @@ export function buildTableBody({
                 tr.append(select);
             }
 
-            // Drag handle + move-up/down buttons
+            
             const handle = document.createElement('td'); {
                 handle.setAttribute('data-col', 'drag');
                 const controls = document.createElement('div'); {
@@ -356,10 +275,10 @@ export function buildTableBody({
                 tr.append(handle);
             }
 
-            // Enabled toggle
+            
             const active = document.createElement('td'); {
                 active.setAttribute('data-col', 'enabled');
-                const isEnabled = /**@type {HTMLSelectElement}*/(enabledToggleTemplate.cloneNode(true)); {
+                const isEnabled = (enabledToggleTemplate.cloneNode(true)); {
                     isEnabled.classList.add('stwid--enabled');
                     setTooltip(isEnabled, 'Enable/disable this entry');
 
@@ -370,14 +289,14 @@ export function buildTableBody({
 
                     applyEnabledIcon(isEnabled, e.data.disable);
                     isEnabled.addEventListener('click', async()=>{
-                        // Phase 2: update cache → update e.data → update UI → sync book browser → save
+                        
                         const entryData = cache[e.book].entries[e.data.uid];
                         const nextDisabled = !entryData.disable;
                         entryData.disable = nextDisabled;
                         e.data.disable = nextDisabled;
                         applyEnabledIcon(isEnabled, nextDisabled);
 
-                        // Keep book browser row icon in sync too.
+                        
                         const listToggle = cache[e.book].dom.entry?.[e.data.uid]?.isEnabled;
                         if (listToggle) {
                             applyEnabledIcon(listToggle, nextDisabled);
@@ -390,7 +309,7 @@ export function buildTableBody({
                 tr.append(active);
             }
 
-            // Entry cell (book label, comment link, key text)
+            
             const entry = document.createElement('td'); {
                 entry.setAttribute('data-col', 'entry');
                 const wrap = document.createElement('div'); {
@@ -411,8 +330,8 @@ export function buildTableBody({
                     const comment = document.createElement('a'); {
                         comment.classList.add('stwid--comment', 'stwid--commentLink');
                         comment.href = `#world_entry/${encodeURIComponent(e.data.uid)}`;
-                        // F03: Coalesce undefined/null comment to empty string to avoid
-                        // the browser rendering "undefined" as a visible text label.
+                        
+                        
                         comment.textContent = e.data.comment ?? '';
                         comment.addEventListener('click', (evt)=>{
                             evt.preventDefault();
@@ -430,15 +349,15 @@ export function buildTableBody({
                 tr.append(entry);
             }
 
-            // Strategy cell
+            
             const strategy = document.createElement('td'); {
                 strategy.setAttribute('data-col', 'strategy');
-                const strat = /**@type {HTMLSelectElement}*/(strategyTemplate.cloneNode(true)); {
+                const strat = (strategyTemplate.cloneNode(true)); {
                     strat.classList.add('stwid--strategy', 'stwid--smallSelectTextPole');
                     setTooltip(strat, 'Entry strategy');
                     strat.value = entryState(e.data);
                     strat.addEventListener('change', async()=>{
-                        // Phase 2: update book browser DOM → update cache → apply filter → save
+                        
                         const value = strat.value;
                         cache[e.book].dom.entry[e.data.uid].strategy.value = value;
                         switch (value) {
@@ -466,11 +385,11 @@ export function buildTableBody({
                 tr.append(strategy);
             }
 
-            // Position cell
-            // updateOutlet is declared here and assigned inside the outlet cell below,
-            // so the position change handler can call it to refresh outlet visibility.
+            
+            
+            
             let updateOutlet;
-            const pos = /**@type {HTMLSelectElement}*/(positionTemplate.cloneNode(true));
+            const pos = (positionTemplate.cloneNode(true));
             const position = document.createElement('td'); {
                 position.setAttribute('data-col', 'position');
                 cache[e.book].dom.entry[e.data.uid].position = pos;
@@ -478,7 +397,7 @@ export function buildTableBody({
                 setTooltip(pos, 'Where this entry is inserted');
                 pos.value = e.data.position;
                 pos.addEventListener('change', async()=>{
-                    // Phase 2: update cache → update e.data → apply filter → refresh outlet → save
+                    
                     const value = pos.value;
                     cache[e.book].dom.entry[e.data.uid].position.value = value;
                     cache[e.book].entries[e.data.uid].position = value;
@@ -491,14 +410,14 @@ export function buildTableBody({
                 tr.append(position);
             }
 
-            // Depth cell
+            
             tr.append(buildNumberInputCell({
                 col: 'depth', name: 'depth', tooltip: 'Entry depth',
                 getValue: ()=>e.data.depth,
                 onSave: async (value)=>{ cache[e.book].entries[e.data.uid].depth = value; await enqueueSave(e.book); },
             }));
 
-            // Outlet cell
+            
             const outlet = document.createElement('td'); {
                 outlet.setAttribute('data-col', 'outlet');
                 const wrap = document.createElement('div'); {
@@ -521,8 +440,8 @@ export function buildTableBody({
                         };
                         updateOutlet();
                         input.addEventListener('change', async()=>{
-                            // Phase 2: update cache → update e.data → sync filter options
-                            // → refresh header indicator → apply filter → save → refresh visibility
+                            
+                            
                             const value = input.value;
                             cache[e.book].entries[e.data.uid].outletName = value;
                             e.data.outletName = value;
@@ -539,7 +458,7 @@ export function buildTableBody({
                 tr.append(outlet);
             }
 
-            // Inclusion group cell (group name + prioritize checkbox)
+            
             const group = document.createElement('td'); {
                 group.setAttribute('data-col', 'group');
                 const wrap = document.createElement('div'); {
@@ -555,8 +474,8 @@ export function buildTableBody({
                         input.type = 'text';
                         input.value = cache[e.book].entries[e.data.uid].group ?? '';
                         input.addEventListener('change', async()=>{
-                            // Phase 2: update cache → update e.data → sync filter options
-                            // → refresh header indicator → apply filter → save
+                            
+                            
                             const value = input.value;
                             const entryData = cache[e.book].entries[e.data.uid];
                             entryData.group = value;
@@ -592,35 +511,35 @@ export function buildTableBody({
                 tr.append(group);
             }
 
-            // Order cell
+            
             tr.append(buildNumberInputCell({
                 col: 'order', name: 'order', tooltip: 'Order value',
                 getValue: ()=>e.data.order,
                 onSave: async (value)=>{ cache[e.book].entries[e.data.uid].order = value; await enqueueSave(e.book); },
             }));
 
-            // Sticky cell
+            
             tr.append(buildNumberInputCell({
                 col: 'sticky', name: 'sticky', tooltip: 'Sticky duration',
                 getValue: ()=>e.data.sticky,
                 onSave: async (value)=>{ cache[e.book].entries[e.data.uid].sticky = value; await enqueueSave(e.book); },
             }));
 
-            // Cooldown cell
+            
             tr.append(buildNumberInputCell({
                 col: 'cooldown', name: 'cooldown', tooltip: 'Cooldown duration',
                 getValue: ()=>e.data.cooldown,
                 onSave: async (value)=>{ cache[e.book].entries[e.data.uid].cooldown = value; await enqueueSave(e.book); },
             }));
 
-            // Delay cell
+            
             tr.append(buildNumberInputCell({
                 col: 'delay', name: 'delay', tooltip: 'Delay before activation',
                 getValue: ()=>e.data.delay,
                 onSave: async (value)=>{ cache[e.book].entries[e.data.uid].delay = value; await enqueueSave(e.book); },
             }));
 
-            // Automation ID cell
+            
             const automationId = document.createElement('td'); {
                 automationId.setAttribute('data-col', 'automationId');
                 automationId.classList.add('stwid--orderTable--NumberColumns');
@@ -633,8 +552,8 @@ export function buildTableBody({
                     inp.type = 'text';
                     inp.value = cache[e.book].entries[e.data.uid].automationId ?? e.data.automationId ?? '';
                     inp.addEventListener('change', async()=>{
-                        // Phase 2: update cache → update e.data → sync filter options
-                        // → refresh header indicator → apply filter → save
+                        
+                        
                         const value = inp.value;
                         cache[e.book].entries[e.data.uid].automationId = value;
                         e.data.automationId = value;
@@ -648,14 +567,14 @@ export function buildTableBody({
                 tr.append(automationId);
             }
 
-            // Trigger % cell
+            
             tr.append(buildNumberInputCell({
                 col: 'trigger', name: 'selective_probability', tooltip: 'Trigger chance percentage', max: '100',
                 getValue: ()=>e.data.selective_probability,
                 onSave: async (value)=>{ cache[e.book].entries[e.data.uid].selective_probability = value; await enqueueSave(e.book); },
             }));
 
-            // Recursion cell (uses ORDER_HELPER_RECURSION_OPTIONS shared with the header filter)
+            
             const recursion = document.createElement('td'); {
                 recursion.setAttribute('data-col', 'recursion');
                 const wrap = document.createElement('div'); {
@@ -689,7 +608,7 @@ export function buildTableBody({
                 tr.append(recursion);
             }
 
-            // Budget cell (ignore-budget toggle)
+            
             const budget = document.createElement('td'); {
                 budget.setAttribute('data-col', 'budget');
                 const wrap = document.createElement('div'); {
@@ -717,7 +636,7 @@ export function buildTableBody({
                 tr.append(budget);
             }
 
-            // Character filter cell (read-only display)
+            
             const characterFilter = document.createElement('td'); {
                 characterFilter.setAttribute('data-col', 'characterFilter');
                 const wrap = document.createElement('div'); {
@@ -751,7 +670,7 @@ export function buildTableBody({
         }
     }
 
-    // ── Post-build: apply all structured filters then update select-all state ─
+    
     applyOrderHelperStrategyFilters();
     applyOrderHelperRecursionFilters();
     applyOrderHelperOutletFilters();

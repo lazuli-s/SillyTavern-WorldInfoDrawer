@@ -69,7 +69,7 @@ const createOrderHelperRenderer = ({
     $,
     getEditorPanelApi,
 }) => {
-    /** @type {null | (() => void)} */
+    
     let cleanupBulkEditRow = null;
 
     const renderOrderHelper = async (book = null)=>{
@@ -78,11 +78,11 @@ const createOrderHelperRenderer = ({
             cleanupBulkEditRow = null;
         }
 
-        // ── Init ──────────────────────────────────────────────────────────────
+        
         orderHelperState.book = book;
 
-        // Sync filter option lists to the current book scope before building any UI.
-        // This ensures header filter menus reflect the entries that will be rendered.
+        
+        
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
         syncOrderHelperOutletFilters();
@@ -92,7 +92,7 @@ const createOrderHelperRenderer = ({
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
 
-        // Clear stale DOM refs so partial renders do not persist across reopens.
+        
         dom.order.entries = {};
         dom.order.filter.root = undefined;
         dom.order.filter.preview = undefined;
@@ -111,13 +111,13 @@ const createOrderHelperRenderer = ({
         }
         const entries = getOrderHelperEntries(book);
 
-        // ── Body container ────────────────────────────────────────────────────
+        
         const body = document.createElement('div');
         body.classList.add('stwid--orderHelper');
         body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
         applyOrderHelperColumnVisibility(body);
 
-        // ── Section builders ──────────────────────────────────────────────────
+        
 
         const filterIndicatorRefs = {};
 
@@ -231,8 +231,8 @@ const createOrderHelperRenderer = ({
             onFilterChange: ()=>{ refreshVisibilityRow(); refreshSelectionCount(); },
         });
 
-        // Populate filterIndicatorRefs after tableHeader is built so chip X
-        // handlers in buildVisibilityRow can call these at click time.
+        
+        
         filterIndicatorRefs.strategy     = refreshStrategyFilterIndicator;
         filterIndicatorRefs.position     = refreshPositionFilterIndicator;
         filterIndicatorRefs.recursion    = refreshRecursionFilterIndicator;
@@ -278,7 +278,7 @@ const createOrderHelperRenderer = ({
             $,
         });
 
-        // ── Assemble table ────────────────────────────────────────────────────
+        
         const tbl = document.createElement('table');
         tbl.classList.add('stwid--orderTable');
         tbl.append(thead, tbody);
@@ -287,13 +287,13 @@ const createOrderHelperRenderer = ({
         wrap.classList.add('stwid--orderTableWrap');
         wrap.append(tbl);
 
-        // Initial counts after tbody is built.
+        
         refreshVisibilityRow();
         refreshSelectionCount();
 
         body.append(visibilityRowEl, bulkEditRowEl, filterEl, wrap);
 
-        // ── Mount ─────────────────────────────────────────────────────────────
+        
         dom.editor.append(body);
     };
 

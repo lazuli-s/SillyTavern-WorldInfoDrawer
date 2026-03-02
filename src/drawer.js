@@ -1,9 +1,9 @@
-// extensionNames is not exposed by SillyTavern.getContext(); keep direct import.
+
 import { extensionNames } from '../../../../extensions.js';
-// renderTemplateAsync is not exposed by SillyTavern.getContext(); keep direct import.
+
 import { renderTemplateAsync } from '../../../../templates.js';
 import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoolean } from '../../../../utils.js';
-// These world-info exports are not fully exposed via getContext(); keep direct imports for ST-owned globals and helper APIs.
+
 import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, onWorldInfoChange, selected_world_info, world_names } from '../../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initEditorPanel } from './editor-panel/editor-panel.js';
@@ -23,51 +23,51 @@ export const initDrawer = ({
 })=>{
     const dom = {
         drawer: {
-            /**@type {HTMLElement} */
+            
             body: undefined,
         },
-        /**@type {HTMLElement} */
+        
         books: undefined,
-        /**@type {HTMLElement} */
+        
         editor: undefined,
-        /**@type {HTMLButtonElement} */
+        
         collapseAllToggle: undefined,
-        /**@type {HTMLButtonElement} */
+        
         collapseAllFoldersToggle: undefined,
-        /**@type {HTMLElement} */
+        
         activationToggle: undefined,
-        /**@type {HTMLElement} */
+        
         visibilityAndSettingsRow: undefined,
-        /**@type {HTMLElement} */
+        
         controlsRow: undefined,
-        /**@type {HTMLElement} */
+        
         sortingRow: undefined,
         order: {
-            /**@type {HTMLElement} */
+            
             toggle: undefined,
-            /**@type {HTMLInputElement} */
+            
             start: undefined,
-            /**@type {HTMLInputElement} */
+            
             step: undefined,
             direction: {
-                /**@type {HTMLInputElement} */
+                
                 up: undefined,
-                /**@type {HTMLInputElement} */
+                
                 down: undefined,
             },
             filter: {
-                /**@type {HTMLElement} */
+                
                 root: undefined,
-                /**@type {HTMLElement} */
+                
                 preview: undefined,
             },
-            /**@type {HTMLElement} */
+            
             selectAll: undefined,
-            /**@type {HTMLSelectElement} */
+            
             sortSelect: undefined,
-            /**@type {{[book:string]:{[uid:string]:HTMLElement}}} */
+            
             entries: {},
-            /**@type {HTMLElement} */
+            
             tbody: undefined,
         },
     };
@@ -91,23 +91,10 @@ export const initDrawer = ({
         uuidv4,
     } = context;
 
-    /**
-     * Delete one entry from a loaded lorebook object.
-     * Wraps the ST World Info entry-delete helper (see WI API delete pattern: mutate + save).
-     * @param {object} book
-     * @param {number|string} uid
-     * @param {{silent?: boolean}} [options]
-     * @returns {Promise<boolean>}
-     */
+    
     const deleteWorldInfoEntryRuntime = (book, uid, options)=>deleteWorldInfoEntry(book, uid, options);
 
-    /**
-     * Notify the WI update handler after saving a lorebook.
-     * This syncs extension UI state after ST-owned book persistence completes.
-     * @param {string} bookName
-     * @param {object} bookData
-     * @returns {Promise<void>}
-     */
+    
     const updateWIChangeRuntime = (bookName, bookData)=>wiHandlerApi.updateWIChange(bookName, bookData);
     const entryStateSaveQueueByBook = new Map();
     const enqueueEntryStateSave = (bookName)=>{
@@ -149,19 +136,19 @@ export const initDrawer = ({
         });
 
         const onDrawerKeydown = async(evt)=>{
-            // only run when drawer is open
+            
             const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
             if (!centerEl?.closest?.('.stwid--body')) return;
 
-            // Prevent global Delete from firing while the user is typing/editing.
-            // This avoids accidental deletion when focus is in any input/textarea/select/contenteditable.
-            const target = /** @type {HTMLElement|null} */ (evt.target instanceof HTMLElement ? evt.target : null);
+            
+            
+            const target =  (evt.target instanceof HTMLElement ? evt.target : null);
             const isTextEditing = Boolean(
                 target?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'),
             );
             if (isTextEditing) return;
 
-            // abort if no active selection
+            
             if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
 
             console.log('[STWID]', evt.key);
@@ -170,14 +157,14 @@ export const initDrawer = ({
                     evt.preventDefault();
                     evt.stopPropagation();
 
-                    // Snapshot selection at keypress time so changes during async operations
-                    // can't affect which book/uids are deleted.
+                    
+                    
                     const selectFrom = selectionState.selectFrom;
                     const selectedUids = [...(selectionState.selectList ?? [])];
                     if (selectFrom === null || !selectedUids.length) return;
 
-                    // Guard: if the source book or selected entries are hidden by active filters,
-                    // require explicit confirmation before deleting invisible entries.
+                    
+                    
                     const isSelectionVisible = ()=>{
                         const bookRoot = cache[selectFrom]?.dom?.root;
                         if (!bookRoot) return false;
@@ -218,7 +205,7 @@ export const initDrawer = ({
         };
         document.addEventListener('keydown', onDrawerKeydown);
 
-        // Best-effort cleanup: if ST tears down/reloads extensions, remove global listeners.
+        
         globalThis.addEventListener?.('beforeunload', ()=>{
             document.removeEventListener('keydown', onDrawerKeydown);
             moSel?.disconnect();
@@ -253,7 +240,7 @@ export const initDrawer = ({
             const saveSplitterSize = (primaryKey, legacyKey, value)=>{
                 const roundedValue = String(Math.round(value));
                 localStorage.setItem(primaryKey, roundedValue);
-                // Keep writing legacy keys so older builds still restore the last size.
+                
                 localStorage.setItem(legacyKey, roundedValue);
             };
             const body = document.createElement('div'); {
@@ -300,7 +287,7 @@ export const initDrawer = ({
                         settingsGroupLabel.append(settingsGroupHint);
                         settingsGroup.append(settingsGroupLabel);
                         controlsPrimary.append(settingsGroup);
-                        const add = /**@type {HTMLElement}*/(document.querySelector('#world_create_button').cloneNode(true)); {
+                        const add = (document.querySelector('#world_create_button').cloneNode(true)); {
                             add.removeAttribute('id');
                             add.classList.add('stwid--addBook');
                             add.title = 'Create New Book';
@@ -311,7 +298,7 @@ export const initDrawer = ({
                                 const finalName = await Popup.show.input('Create a new World Info', 'Enter a name for the new file:', tempName);
                                 if (!finalName) return;
 
-                                // Register the wait BEFORE creating the book so we can't miss the next update cycle.
+                                
                                 const waitForUpdate = wiHandlerApi.waitForWorldInfoUpdate();
                                 const created = await createNewWorldInfo(finalName, { interactive: true });
                                 if (!created) return;
@@ -319,7 +306,7 @@ export const initDrawer = ({
                                 await waitForUpdate;
                                 await wiHandlerApi.getUpdateWIChangeFinished()?.promise;
 
-                                // Expand and center the new book once it exists in cache/DOM.
+                                
                                 listPanelApi.setBookCollapsed(finalName, false);
 
                                 if (!cache[finalName]?.dom?.root) {
@@ -358,7 +345,7 @@ export const initDrawer = ({
                             imp.title = 'Import Book';
                             imp.setAttribute('aria-label', 'Import Book');
                             imp.addEventListener('click', ()=>{
-                                /**@type {HTMLInputElement}*/(document.querySelector('#world_import_file')).click();
+                                (document.querySelector('#world_import_file')).click();
                             });
                             lorebooksGroup.append(imp);
                         }
@@ -385,8 +372,8 @@ export const initDrawer = ({
                                     currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid),
                                 );
 
-                                // Only guard the "open" direction. Closing activation settings doesn't discard entry edits
-                                // because opening it already clears the entry editor (which this guard prevents while dirty).
+                                
+                                
                                 if (isDirty && !settings.classList.contains('stwid--state-active')) {
                                     toastr.warning('Unsaved edits detected. Save or discard changes before opening Activation Settings.');
                                     return;
@@ -420,15 +407,15 @@ export const initDrawer = ({
                                     currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid),
                                 );
 
-                                // Guard the open direction: don't allow a mode switch that clears/replaces the editor
-                                // while the current entry has unsaved edits.
+                                
+                                
                                 if (!isActive && isDirty) {
                                     toastr.warning('Unsaved edits detected. Save or discard changes before opening Entry Manager.');
                                     return;
                                 }
 
                                 if (isActive) {
-                                    // Defensive: if an upstream flow left dirty state set, avoid clearing the editor.
+                                    
                                     if (isDirty) {
                                         toastr.warning('Unsaved edits detected. Save or discard changes before closing Entry Manager.');
                                         return;
@@ -806,7 +793,7 @@ export const initDrawer = ({
                             try {
                                 splitter.releasePointerCapture(endEvt.pointerId);
                             } catch {
-                                // ignore (capture may already be released/canceled)
+                                
                             }
 
                             window.removeEventListener('pointermove', onMove);
@@ -861,7 +848,7 @@ export const initDrawer = ({
                             try {
                                 splitterH.releasePointerCapture(endEvt.pointerId);
                             } catch {
-                                // ignore (capture may already be released/canceled)
+                                
                             }
 
                             window.removeEventListener('pointermove', onMove);
@@ -935,9 +922,9 @@ export const initDrawer = ({
             const style = drawerContent.getAttribute('style') ?? '';
             if (style.includes('display: none;')) return;
 
-            // Drawer just became visible. Re-run the splitter restore now that
-            // the element has real dimensions. (On initial load the drawer is
-            // hidden, so the first restore call produces zero-width results.)
+            
+            
+            
             restoreSplitterForCurrentLayout();
 
             const currentEditor = getCurrentEditor();

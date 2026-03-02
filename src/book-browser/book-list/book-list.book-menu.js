@@ -14,12 +14,12 @@ const createBookMenuSlice = ({
     applyBookFolderChange,
 })=>{
     const openImportDialog = ()=>{
-        const input = /**@type {HTMLInputElement}*/(document.querySelector(coreUiSelectors.importFileInput));
+        const input = (document.querySelector(coreUiSelectors.importFileInput));
         if (!input) return null;
 
-        // Allow callers (folder import into folder) to attribute imported
-        // books without diffing world_names.
-        // We sniff the selected file before ST consumes it.
+        
+        
+        
         const filePromise = new Promise((resolve)=>{
             let isDone = false;
             const abortController = new AbortController();
@@ -43,8 +43,8 @@ const createBookMenuSlice = ({
                 }
             };
             const onWindowFocus = ()=>{
-                // Browser file pickers usually return focus once closed.
-                // If no file is selected at that point, treat it as cancel.
+                
+                
                 setTimeout(()=>{
                     if (isDone) return;
                     if ((input.files?.length ?? 0) === 0) {
@@ -66,10 +66,10 @@ const createBookMenuSlice = ({
     };
 
     const importFolderFile = async(file)=>{
-        // Manual verification note:
-        // - Valid folder JSON imports expected books
-        // - Invalid JSON shows an error toast
-        // - Name collision suffixing remains stable
+        
+        
+        
+        
         if (!file) return false;
         let payload;
         try {
@@ -159,7 +159,7 @@ const createBookMenuSlice = ({
         listPanelState.folderImportInput.click();
     };
 
-    // Book duplicate/delete actions delegated to core WI behavior.
+    
     const duplicateBook = async(name)=>{
         const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
         const initialNames = [...(getNames() ?? [])];
@@ -167,27 +167,27 @@ const createBookMenuSlice = ({
         const selected = await setSelectedBookInCoreUi(name);
         if (!selected) return null;
 
-        // Click the duplicate action once it exists.
-        // Keep selector list flexible to tolerate minor ST UI changes.
+        
+        
         const clicked = await clickCoreUiAction(coreUiActionSelectors.duplicateBook);
         if (!clicked) return null;
 
         const findNewName = ()=>{
             const currentNames = getNames() ?? [];
             const addedNames = currentNames.filter((entry)=>!initialNameSet.has(entry));
-            // Only return a name when exactly one new book appeared; reject ambiguous results.
+            
             return addedNames.length === 1 ? addedNames[0] : null;
         };
 
-        // Fast path: if ST immediately updated world_names synchronously.
+        
         const immediate = findNewName();
         if (immediate) return immediate;
 
         const timeoutMs = 8000;
 
         if (state.waitForWorldInfoUpdate) {
-            // Capture the wait promise once, right after the click, so it targets
-            // the specific update cycle the duplicate triggers — not a later unrelated one.
+            
+            
             const updated = await Promise.race([
                 state.waitForWorldInfoUpdate().then(() => true),
                 state.delay(timeoutMs).then(() => false),
@@ -195,7 +195,7 @@ const createBookMenuSlice = ({
             return updated ? findNewName() : null;
         }
 
-        // Fallback: polling when event-based detection is unavailable.
+        
         const start = Date.now();
         while (Date.now() - start < timeoutMs) {
             await state.delay(250);
@@ -206,10 +206,10 @@ const createBookMenuSlice = ({
     };
 
     const duplicateBookIntoFolder = async(name, folderName)=>{
-        // Manual verification note:
-        // - Duplicate to root and folder
-        // - Duplicate while target folder is collapsed
-        // - Confirm list refresh reflects the new book location
+        
+        
+        
+        
         const duplicatedName = await duplicateBook(name);
         if (!duplicatedName) return false;
         await setBookFolder(duplicatedName, folderName);
@@ -316,12 +316,12 @@ const createBookMenuSlice = ({
                         return;
                     }
 
-                    // Guard: block folder move when editor has unsaved changes.
+                    
                     if (state.isDirtyCheck?.()) {
                         toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
                         return;
                     }
-                    // Requirement: immediately add the book to the new folder.
+                    
                     await applyBookFolderChange(name, reg.folder, { centerAfterRefresh: true });
                     modal.close();
                 });
@@ -341,7 +341,7 @@ const createBookMenuSlice = ({
                         toastr.info('Book is already not in a folder.');
                         return;
                     }
-                    // Guard: block folder move when editor has unsaved changes.
+                    
                     if (state.isDirtyCheck?.()) {
                         toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
                         return;
@@ -374,7 +374,7 @@ const createBookMenuSlice = ({
                         return;
                     }
 
-                    // Guard: block folder move when editor has unsaved changes.
+                    
                     if (state.isDirtyCheck?.()) {
                         toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
                         return;

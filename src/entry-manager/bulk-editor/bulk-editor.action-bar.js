@@ -8,15 +8,7 @@ import {
 } from './bulk-editor.utils.js';
 import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
-/**
- * Creates a `div.stwid--thinContainer` with a labeled hint icon — the shared
- * scaffolding used by every bulk-edit field container.
- *
- * @param {string} fieldKey - Value for `data-field` attribute.
- * @param {string} labelText - Visible label text.
- * @param {string} hintText - Tooltip on the hint icon.
- * @returns {HTMLElement}
- */
+
 function createLabeledBulkContainer(fieldKey, labelText, hintText) {
     const container = document.createElement('div');
     container.classList.add('stwid--thinContainer');
@@ -32,15 +24,7 @@ function createLabeledBulkContainer(fieldKey, labelText, hintText) {
     return container;
 }
 
-/**
- * Creates a `div.menu_button.fa-check` apply button, registers it in the
- * apply registry, and returns it.
- *
- * @param {string} tooltip
- * @param {function(): Promise<void>} runFn
- * @param {Array<{isDirty: function(): boolean, runApply: function(): Promise<void>}>} applyRegistry
- * @returns {HTMLElement}
- */
+
 function createApplyButton(tooltip, runFn, applyRegistry) {
     const btn = document.createElement('div');
     btn.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
@@ -53,52 +37,7 @@ function createApplyButton(tooltip, runFn, applyRegistry) {
     return btn;
 }
 
-/**
- * Builds the Order Helper visibility row (Row 1).
- *
- * Left side: select-all, key visibility, column visibility dropdown, divider, sort selector, script filter toggle.
- * Right side: entry count span + active column-filter chips.
- *
- * @param {{
- *   body: HTMLElement,
- *   orderHelperState: object,
- *   dom: object,
- *   ORDER_HELPER_HIDE_KEYS_STORAGE_KEY: string,
- *   ORDER_HELPER_COLUMNS_STORAGE_KEY: string,
- *   ORDER_HELPER_DEFAULT_COLUMNS: object,
- *   applyOrderHelperColumnVisibility: function,
- *   clearOrderHelperScriptFilters: function,
- *   setOrderHelperSort: function,
- *   applyOrderHelperSortToDom: function,
- *   ensureCustomDisplayIndex: function,
- *   saveWorldInfo: function,
- *   buildSavePayload: function,
- *   appendSortOptions: function,
- *   getOrderHelperEntries: function,
- *   updateOrderHelperPreview: function,
- *   SORT: object,
- *   SORT_DIRECTION: object,
- *   applyOrderHelperStrategyFilters: function,
- *   applyOrderHelperPositionFilters: function,
- *   applyOrderHelperRecursionFilters: function,
- *   applyOrderHelperOutletFilters: function,
- *   applyOrderHelperAutomationIdFilters: function,
- *   applyOrderHelperGroupFilters: function,
- *   getStrategyOptions: function,
- *   getPositionOptions: function,
- *   getOutletOptions: function,
- *   getAutomationIdOptions: function,
- *   getGroupOptions: function,
- *   getStrategyValues: function,
- *   getPositionValues: function,
- *   getOutletValues: function,
- *   getAutomationIdValues: function,
- *   getGroupValues: function,
- *   filterIndicatorRefs: object,
- *   initialCollapsed: boolean,
- * }} ctx
- * @returns {{ element: HTMLElement, refresh: function }}
- */
+
 export function buildVisibilityRow({
     body,
     orderHelperState,
@@ -117,7 +56,6 @@ export function buildVisibilityRow({
     getOrderHelperEntries,
     updateOrderHelperPreview,
     SORT,
-    SORT_DIRECTION, // eslint-disable-line no-unused-vars
     applyOrderHelperStrategyFilters,
     applyOrderHelperPositionFilters,
     applyOrderHelperRecursionFilters,
@@ -140,7 +78,7 @@ export function buildVisibilityRow({
     const row = document.createElement('div');
     row.classList.add('stwid--order-action-bar');
 
-    // ── Row title ─────────────────────────────────────────────────────────
+    
     const rowTitle = document.createElement('div');
     rowTitle.classList.add('stwid--RowTitle');
     rowTitle.textContent = 'Visibility';
@@ -167,7 +105,7 @@ export function buildVisibilityRow({
         return container;
     };
 
-    // ── Key column visibility toggle ──────────────────────────────────────
+    
     const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
     const keyToggle = document.createElement('div'); {
         keyToggle.classList.add('menu_button');
@@ -180,7 +118,7 @@ export function buildVisibilityRow({
         };
         applyKeyToggleStyle();
         keyToggle.addEventListener('click', ()=>{
-            // Phase 2: update state → update DOM → persist
+            
             orderHelperState.hideKeys = !orderHelperState.hideKeys;
             localStorage.setItem(ORDER_HELPER_HIDE_KEYS_STORAGE_KEY, orderHelperState.hideKeys);
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
@@ -190,7 +128,7 @@ export function buildVisibilityRow({
     }
     row.append(keyToggleContainer);
 
-    // ── Column visibility dropdown ────────────────────────────────────────
+    
     const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
     const columnVisibilityWrap = document.createElement('div'); {
         columnVisibilityWrap.classList.add('stwid--columnVisibility');
@@ -214,7 +152,7 @@ export function buildVisibilityRow({
                         .map(([key, value])=>[key, Boolean(value)]),
                 );
                 const setColumnVisibility = (overrides)=>{
-                    // Phase 2: update state → update checkboxes → persist → apply to DOM → close
+                    
                     for (const column of ORDER_HELPER_TOGGLE_COLUMNS) {
                         const nextValue = Boolean(overrides[column.key]);
                         orderHelperState.columns[column.key] = nextValue;
@@ -226,7 +164,7 @@ export function buildVisibilityRow({
                         JSON.stringify(orderHelperState.columns),
                     );
                     applyOrderHelperColumnVisibility(body);
-                    // Close via stored handler so this works regardless of declaration order.
+                    
                     const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
                     if (typeof closeMenu === 'function') closeMenu();
                 };
@@ -266,7 +204,7 @@ export function buildVisibilityRow({
                         );
                         columnInputs.set(column.key, inputControl);
                         inputControl.input.addEventListener('change', ()=>{
-                            // Phase 2: update state → persist → apply to DOM
+                            
                             orderHelperState.columns[column.key] = inputControl.input.checked;
                             localStorage.setItem(
                                 ORDER_HELPER_COLUMNS_STORAGE_KEY,
@@ -282,7 +220,7 @@ export function buildVisibilityRow({
                         menu.append(option);
                     }
                 }
-                // Phase 3: wire open/close/outside-click.
+                
                 wireMultiselectDropdown(menu, menuButton, menuWrap);
                 menuWrap.append(menu);
             }
@@ -298,7 +236,7 @@ export function buildVisibilityRow({
         row.append(divider);
     };
 
-    // ── Sort select ───────────────────────────────────────────────────────
+    
     const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
     const sortWrap = document.createElement('label'); {
         sortWrap.classList.add('stwid--table-sort');
@@ -326,7 +264,7 @@ export function buildVisibilityRow({
     row.append(tableSortContainer);
     addDivider();
 
-    // ── Filter panel toggle ───────────────────────────────────────────────
+    
     const filterToggle = document.createElement('div'); {
         filterToggle.classList.add('menu_button');
         filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -342,7 +280,7 @@ export function buildVisibilityRow({
         row.append(filterToggle);
     }
 
-    // ── Right side: visibility info ───────────────────────────────────────
+    
     const visibilityInfo = document.createElement('div');
     visibilityInfo.classList.add('stwid--visibilityInfo');
 
@@ -359,12 +297,12 @@ export function buildVisibilityRow({
 
     row.append(visibilityInfo);
 
-    // ── Filter label lookup ───────────────────────────────────────────────
+    
     const FILTER_KEY_LABELS = Object.fromEntries(
         ORDER_HELPER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
     );
 
-    // ── Option label lookup for chip text ─────────────────────────────────
+    
     const getFilterValueLabels = (filterKey, selectedValues)=>{
         let options;
         switch (filterKey) {
@@ -380,12 +318,12 @@ export function buildVisibilityRow({
         return selectedValues.map((v)=>labelMap[v] ?? String(v));
     };
 
-    // ── refresh() — rebuilds count + chips ───────────────────────────────
-    // Declared as `let` so clearFilterHandlers (defined below) can reference
-    // it in closures that only fire after this function body completes.
+    
+    
+    
     let refresh = ()=>{};
 
-    // ── Chip X click handlers ─────────────────────────────────────────────
+    
     const clearFilterHandlers = {
         strategy: ()=>{
             const allValues = orderHelperState.strategyValues.length
@@ -442,7 +380,7 @@ export function buildVisibilityRow({
     };
 
     refresh = ()=>{
-        // Chips
+        
         chipContainer.innerHTML = '';
         const filters = orderHelperState.filters;
         const filterConfigs = [
@@ -482,11 +420,11 @@ export function buildVisibilityRow({
         activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
     };
 
-    // Gather all content after rowTitle into a collapsible wrapper
+    
     const contentWrap = document.createElement('div');
     contentWrap.classList.add('stwid--rowContentWrap');
     while (row.children.length > 1) {
-        contentWrap.append(row.children[1]); // row.children[0] is rowTitle
+        contentWrap.append(row.children[1]); 
     }
     row.append(contentWrap);
 
@@ -495,38 +433,9 @@ export function buildVisibilityRow({
     return { element: row, refresh };
 }
 
-/**
- * Builds the Order Helper bulk edit row (Row 2).
- *
- * Left side: bordered Select container (select-all toggle + selection count).
- * Right side: bordered Order container (start / spacing / direction / apply).
- *
- * @param {{
- *   dom: object,
- *   orderHelperState: object,
- *   cache: object,
- *   saveWorldInfo: function,
- *   buildSavePayload: function,
- *   isOrderHelperRowSelected: function,
- *   setAllOrderHelperRowSelected: function,
- *   updateOrderHelperSelectAllButton: function,
- *   getOrderHelperRows: function,
- *   getStrategyOptions: function,
- *   getPositionOptions: function,
- *   applyOrderHelperPositionFilterToRow: function,
- *   isOutletPosition: function,
- *   getOutletOptions: function,
- *   applyOrderHelperOutletFilterToRow: function,
- *   syncOrderHelperOutletFilters: function,
- *   filterIndicatorRefs: object,
- *   applyOrderHelperRecursionFilterToRow: function,
- *   initialCollapsed: boolean,
- * }} ctx
- * @returns {{ element: HTMLElement, refreshSelectionCount: function, cleanup: function }}
- */
+
 export function buildBulkEditRow({
     dom,
-    orderHelperState, // eslint-disable-line no-unused-vars
     cache,
     saveWorldInfo,
     buildSavePayload,
@@ -549,7 +458,7 @@ export function buildBulkEditRow({
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
 
-    // ── Row title ─────────────────────────────────────────────────────────
+    
     const rowTitle = document.createElement('div');
     rowTitle.classList.add('stwid--RowTitle');
     rowTitle.textContent = 'Bulk Editor';
@@ -559,7 +468,7 @@ export function buildBulkEditRow({
     rowTitle.classList.add('stwid--collapsibleTitle');
     row.append(rowTitle);
 
-    // ── Select container ──────────────────────────────────────────────────
+    
     const selectContainer = createLabeledBulkContainer('select', 'Select', 'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.');
 
     const selectAll = document.createElement('div'); {
@@ -650,11 +559,11 @@ export function buildBulkEditRow({
         }
     };
 
-    // Registry used by "Apply All Changes" to iterate dirty containers.
-    // Each entry: { isDirty: () => boolean, runApply: async () => void }
+    
+    
     const applyRegistry = [];
 
-    // ── Toggle Active State container ─────────────────────────────────────
+    
     const activeStateContainer = createLabeledBulkContainer('activeState', 'State', 'Choose enabled or disabled and apply it to all selected entries at once.');
 
     const activeToggle = document.createElement('div'); {
@@ -708,7 +617,7 @@ export function buildBulkEditRow({
 
     row.append(activeStateContainer);
 
-    // ── Strategy container ────────────────────────────────────────────────
+    
     const strategyContainer = createLabeledBulkContainer('strategy', 'Strategy', 'Choose a strategy and apply it to all selected entries at once.');
 
     const strategySelect = document.createElement('select'); {
@@ -747,7 +656,7 @@ export function buildBulkEditRow({
                 books.add(bookName);
                 entryData.constant = value === 'constant';
                 entryData.vectorized = value === 'vectorized';
-                const rowStrat = /**@type {HTMLSelectElement}*/(tr.querySelector('[name="entryStateSelector"]'));
+                const rowStrat = (tr.querySelector('[name="entryStateSelector"]'));
                 if (rowStrat) rowStrat.value = value;
                 const domStrat = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
                 if (domStrat) domStrat.value = value;
@@ -766,7 +675,7 @@ export function buildBulkEditRow({
 
     row.append(strategyContainer);
 
-    // ── Position container ────────────────────────────────────────────────
+    
     const positionContainer = createLabeledBulkContainer('position', 'Position', 'Choose a position and apply it to all selected entries at once.');
 
     const positionSelect = document.createElement('select'); {
@@ -814,7 +723,7 @@ export function buildBulkEditRow({
 
     row.append(positionContainer);
 
-    // ── Depth container ───────────────────────────────────────────────────
+    
     const depthContainer = createLabeledBulkContainer('depth', 'Depth', 'Apply a Depth value to all selected entries at once. Depth controls how many messages back from the latest the trigger check looks (0 = last message). Leave blank to clear depth.');
 
     const depthInput = document.createElement('input'); {
@@ -846,7 +755,7 @@ export function buildBulkEditRow({
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
             entryData.depth = parsedDepth;
-            const rowDepth = /**@type {HTMLInputElement}*/(tr.querySelector('[name="depth"]'));
+            const rowDepth = (tr.querySelector('[name="depth"]'));
             if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
         }
         await saveUpdatedBooks(books);
@@ -858,7 +767,7 @@ export function buildBulkEditRow({
 
     row.append(depthContainer);
 
-    // ── Depth visibility: enabled only when position is atDepth (value 4) ─
+    
     const applyDepthContainerState = ()=>{
         const isDepth = positionSelect.value === '4';
         depthContainer.classList.toggle('stwid--state-disabled', !isDepth);
@@ -867,7 +776,7 @@ export function buildBulkEditRow({
     positionSelect.addEventListener('change', applyDepthContainerState);
     applyDepthContainerState();
 
-    // ── Outlet container ──────────────────────────────────────────────────
+    
     const outletContainer = createLabeledBulkContainer('outlet', 'Outlet', 'Apply an Outlet name to all selected entries at once. Only interactable when Position is set to Outlet.');
 
     const outletDropdownWrap = document.createElement('div');
@@ -954,16 +863,16 @@ export function buildBulkEditRow({
         if (!rows) return;
         const targets = getBulkTargets(rows);
         const books = new Set();
-        // Pass 1: mutate all entries before syncing the filter snapshot.
+        
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
             entryData.outletName = value;
-            const rowOutlet = /**@type {HTMLInputElement}*/(tr.querySelector('[name="outletName"]'));
+            const rowOutlet = (tr.querySelector('[name="outletName"]'));
             if (rowOutlet) rowOutlet.value = value;
         }
-        // Refresh the snapshot so the new outlet value is included in the allowed list.
+        
         syncOrderHelperOutletFilters();
-        // Pass 2: apply the updated filter to each row.
+        
         for (const { tr, entryData } of targets) {
             applyOrderHelperOutletFilterToRow(tr, entryData);
         }
@@ -977,7 +886,7 @@ export function buildBulkEditRow({
 
     row.append(outletContainer);
 
-    // ── Outlet visibility: enabled only when position is outlet ───────────
+    
     const applyOutletContainerState = ()=>{
         const isOutlet = isOutletPosition(positionSelect.value);
         outletContainer.classList.toggle('stwid--state-disabled', !isOutlet);
@@ -986,7 +895,7 @@ export function buildBulkEditRow({
     positionSelect.addEventListener('change', applyOutletContainerState);
     applyOutletContainerState();
 
-    // ── Order container ───────────────────────────────────────────────────
+    
     const orderContainer = createLabeledBulkContainer('order', 'Order', 'Assign sequential Order numbers to selected entries using the start value, spacing, and direction below.');
 
     const runApplyOrder = async () => {
@@ -1012,7 +921,7 @@ export function buildBulkEditRow({
                 const { tr, bookName, entryData } = targets[i];
                 books.add(bookName);
                 entryData.order = order;
-                const orderInput = /**@type {HTMLInputElement | null}*/(tr.querySelector('[name="order"]'));
+                const orderInput = (tr.querySelector('[name="order"]'));
                 if (orderInput) orderInput.value = order.toString();
                 order += step;
                 if ((i + 1) % 200 === 0) {
@@ -1023,10 +932,10 @@ export function buildBulkEditRow({
             apply.classList.remove('stwid--applyDirty');
         });
     };
-    // Apply Order button is declared here (after runApplyOrder) and appended after the inputs.
+    
     const apply = createApplyButton('Apply current row order to the Order field', runApplyOrder, applyRegistry);
 
-    // Start + Spacing are stacked vertically inside a sub-wrapper (Feature 1).
+    
     const startSpacingPair = document.createElement('div');
     startSpacingPair.classList.add('stwid--orderStartSpacingPair');
 
@@ -1122,10 +1031,10 @@ export function buildBulkEditRow({
     orderContainer.append(apply);
     row.append(orderContainer);
 
-    // ── Recursion container ────────────────────────────────────────────────
+    
     const recursionContainer = createLabeledBulkContainer('recursion', 'Recursion', 'Set recursion flags on all selected entries. Overwrites the existing values of all three flags.');
 
-    /** @type {Map<string, HTMLInputElement>} */
+    
     const recursionCheckboxes = new Map();
     const recursionOptions = document.createElement('div'); {
         recursionOptions.classList.add('stwid--recursionOptions');
@@ -1174,7 +1083,7 @@ export function buildBulkEditRow({
 
     row.append(recursionContainer);
 
-    // ── Budget container ───────────────────────────────────────────────────
+    
     const budgetContainer = createLabeledBulkContainer('budget', 'Budget', 'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.');
 
     let budgetIgnoreCheckbox;
@@ -1216,7 +1125,7 @@ export function buildBulkEditRow({
 
     row.append(budgetContainer);
 
-    // ── Probability container ──────────────────────────────────────────────
+    
     const probabilityContainer = createLabeledBulkContainer('probability', 'Probability', 'Trigger probability (0–100%). Sets how likely the entry fires when its keywords match. Leave blank to skip.');
 
     const probabilityInput = document.createElement('input'); {
@@ -1264,7 +1173,7 @@ export function buildBulkEditRow({
 
     row.append(probabilityContainer);
 
-    // ── Sticky container ───────────────────────────────────────────────────
+    
     const stickyContainer = createLabeledBulkContainer('sticky', 'Sticky', 'Sticky turns — keeps the entry active for N turns after it triggers. Leave blank to skip.');
 
     const stickyInput = document.createElement('input'); {
@@ -1311,7 +1220,7 @@ export function buildBulkEditRow({
 
     row.append(stickyContainer);
 
-    // ── Cooldown container ─────────────────────────────────────────────────
+    
     const cooldownContainer = createLabeledBulkContainer('cooldown', 'Cooldown', 'Cooldown turns — prevents the entry from re-triggering for N turns after activation. Leave blank to skip.');
 
     const cooldownInput = document.createElement('input'); {
@@ -1358,7 +1267,7 @@ export function buildBulkEditRow({
 
     row.append(cooldownContainer);
 
-    // ── Delay container ────────────────────────────────────────────────────
+    
     const bulkDelayContainer = createLabeledBulkContainer('bulkDelay', 'Delay', 'Delay turns — the entry will not activate until N messages have passed since the chat started. Leave blank to skip.');
 
     const bulkDelayInput = document.createElement('input'); {
@@ -1405,7 +1314,7 @@ export function buildBulkEditRow({
 
     row.append(bulkDelayContainer);
 
-    // ── Apply All Changes container ────────────────────────────────────────
+    
     const applyAllContainer = createLabeledBulkContainer('applyAll', 'Apply All Changes', 'Applies all containers that have unsaved changes. Skips containers that have not been modified.');
 
     const applyAll = document.createElement('div'); {
@@ -1428,11 +1337,11 @@ export function buildBulkEditRow({
 
     row.append(applyAllContainer);
 
-    // Gather all content after rowTitle into a collapsible wrapper
+    
     const contentWrap = document.createElement('div');
     contentWrap.classList.add('stwid--rowContentWrap');
     while (row.children.length > 1) {
-        contentWrap.append(row.children[1]); // row.children[0] is rowTitle
+        contentWrap.append(row.children[1]); 
     }
     row.append(contentWrap);
 

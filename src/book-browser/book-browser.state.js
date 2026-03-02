@@ -267,14 +267,14 @@ export const setFolderCollapsedAndPersist = (
 )=>{
     const folderDom = listPanelState.getFolderDom(folderName);
     if (transientExpand && !isCollapsed) {
-        // View-only expand: do not mutate persisted defaults.
+        
         setFolderCollapsed(folderDom, false);
         return;
     }
 
     listPanelState.setFolderCollapseState(folderName, isCollapsed);
 
-    // "transientExpand" means: show expanded right now, but keep the stored default unchanged.
+    
     if (!transientExpand && persist) {
         const saved = saveFolderCollapseStates();
         if (!saved) {
@@ -318,11 +318,7 @@ export const resetSelectionMemory = (clearToast)=>{
     }
 };
 
-/**
- * Reads current collapse state from DOM classes.
- * Call this only after collapse toggle handlers finish updating classList.
- * In this module, collapse class updates are synchronous.
- */
+
 export const captureBookCollapseStatesFromDom = (cache, setCollapseState)=>{
     for (const [bookName, bookData] of Object.entries(cache ?? {})) {
         const isCollapsed = bookData?.dom?.entryList?.classList.contains('stwid--state-collapsed');

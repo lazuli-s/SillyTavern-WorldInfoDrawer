@@ -27,17 +27,17 @@ const createBooksViewSlice = ({
             world.entries[k] = structuredClone(v);
         }
         world.dom = {
-            /**@type {HTMLElement} */
+            
             root: undefined,
-            /**@type {HTMLElement} */
+            
             name: undefined,
-            /**@type {HTMLElement} */
+            
             sourceLinks: undefined,
-            /**@type {HTMLElement} */
+            
             active: undefined,
-            /**@type {HTMLElement} */
+            
             entryList: undefined,
-            /**@type {{ [uid:string]:{root:HTMLElement, comment:HTMLElement, key:HTMLElement}}} */
+            
             entry: {},
         };
         runtime.cache[name] = world;
@@ -108,7 +108,7 @@ const createBooksViewSlice = ({
                         active.checked = selected.includes(name);
                         active.addEventListener('click', async()=>{
                             active.disabled = true;
-                            const select = /**@type {HTMLSelectElement}*/(document.querySelector(coreUiSelectors.worldInfoSelect));
+                            const select = (document.querySelector(coreUiSelectors.worldInfoSelect));
                             const option = select ? [...select.options].find((opt)=>opt.textContent === name) : null;
                             if (option && select) {
                                 option.selected = active.checked;
@@ -244,15 +244,15 @@ const createBooksViewSlice = ({
         runtime.dom.books.innerHTML = '';
         foldersViewSlice.resetFolderDoms();
 
-        // Yield to the UI thread periodically to avoid long main-thread stalls on very
-        // large lore collections.
+        
+        
         const yieldToUi = ()=>new Promise((resolve)=>setTimeout(resolve, 0));
 
         const worldNames = runtime.getWorldNames ? runtime.getWorldNames() : runtime.world_names;
         const sortedNames = runtime.safeToSorted(worldNames ?? [], (a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
 
-        // Load sequentially with occasional yields. This is slower than Promise.all,
-        // but keeps the UI responsive for large datasets.
+        
+        
         const books = [];
         for (let i = 0; i < sortedNames.length; i++) {
             const name = sortedNames[i];

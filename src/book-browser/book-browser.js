@@ -30,14 +30,14 @@ import { createBookMenuSlice } from './book-list/book-list.book-menu.js';
 import { createFoldersViewSlice } from './book-list/book-folders/book-folders.folders-view.js';
 import { createBooksViewSlice } from './book-list/book-list.books-view.js';
 
-// Core SillyTavern DOM anchors used by this extension.
-// Keep these centralized so host selector drift is easier to audit.
+
+
 const CORE_UI_SELECTORS = Object.freeze({
     importFileInput: '#world_import_file',
     worldInfoSelect: '#world_info',
 });
 
-// Module-level runtime references and UI state.
+
 let state = {};
 
 let filterBarSlice = null;
@@ -52,14 +52,14 @@ let refreshRequestToken = 0;
 let refreshCompletedToken = 0;
 let refreshWorkerPromise = null;
 
-// Source-link UI constants.
+
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
     { key:'character', icon:'fa-user', label:'Character' },
     { key:'chat', icon:'fa-comments', label:'Chat' },
     { key:'persona', icon:'fa-id-badge', label:'Persona' },
 ]);
 
-// Book/folder collapse helpers.
+
 const setCollapseState = (name, isCollapsed)=>{
     listPanelState.setCollapseState(name, isCollapsed);
 };
@@ -110,7 +110,7 @@ const setBookCollapsed = (name, isCollapsed)=>{
     updateCollapseAllToggle();
 };
 
-// Book sort and source-link helpers.
+
 const getBookSortChoice = (name)=>{
     const bookSort = state.Settings.instance.useBookSorts ? state.cache[name]?.sort : null;
     return {
@@ -211,7 +211,7 @@ const updateAllBookSourceLinks = (linksByBook = null)=>{
     }
 };
 
-// Book metadata + sort preference helpers.
+
 const sortEntriesIfNeeded = (name)=>{
     if (!hasSortableBookDom(name)) {
         return false;
@@ -294,7 +294,7 @@ const setBookSortPreference = async(name, sort = null, direction = null)=>{
             nextPayload.metadata = {};
         }
     }
-    // Any refresh request while save is in-flight invalidates post-save DOM sorting.
+    
     const refreshTokenBeforeSave = refreshRequestToken;
     try {
         await state.saveWorldInfo(name, nextPayload, true);
@@ -340,7 +340,7 @@ const clearBookSortPreferences = async()=>{
     return { ok: true, failedBooks };
 };
 
-// Folder assignment helper (persists through WI APIs).
+
 const setBookFolder = async(name, folderName)=>{
     let latest;
     try {
@@ -371,7 +371,7 @@ const setBookFolder = async(name, folderName)=>{
     return { ok: true };
 };
 
-// Shared book action helpers (used by menu flows and drag/drop flows).
+
 const refreshAndCenterBook = async(name)=>{
     await refreshList();
     const target = state.cache[name]?.dom?.root;
@@ -397,10 +397,10 @@ const applyBookFolderChange = async(name, folderName, { centerAfterRefresh = fal
 };
 
 const handleDraggedBookMoveOrCopy = async(draggedName, targetFolder, isCopy, { skipIfSameFolder = true } = {})=>{
-    // Manual verification note:
-    // - Move root->folder, folder->root, and folder->folder
-    // - Ctrl-copy in each direction
-    // - Same-folder drop should remain a no-op when skipIfSameFolder is true
+    
+    
+    
+    
     if (!isCopy) {
         if (skipIfSameFolder) {
             const currentFolder = getFolderFromMetadata(state.cache[draggedName]?.metadata);
@@ -412,7 +412,7 @@ const handleDraggedBookMoveOrCopy = async(draggedName, targetFolder, isCopy, { s
     return duplicated ? { ok: true } : { ok: false, error: 'duplicate_failed' };
 };
 
-// Core WI UI delegation helpers (select + trigger vanilla actions).
+
 const setSelectedBookInCoreUi = (bookName)=>setSelectedBookInCoreUiBridge(bookName, {
     waitForWorldInfoUpdate: state.waitForWorldInfoUpdate,
     delay: state.delay,
@@ -420,7 +420,7 @@ const setSelectedBookInCoreUi = (bookName)=>setSelectedBookInCoreUiBridge(bookNa
 
 const clickCoreUiAction = (possibleSelectors, options = {})=>clickCoreUiActionBridge(possibleSelectors, options);
 
-// Book and folder view rendering are owned by dedicated slices.
+
 const renderBook = async(...args)=>booksViewSlice?.renderBook(...args);
 const loadList = async()=>booksViewSlice?.loadList();
 
@@ -442,7 +442,7 @@ const runRefreshWorker = async()=>{
     }
 };
 
-// Contract: `refreshList()` resolves only after the newest pending refresh finished.
+
 const refreshList = async()=>{
     refreshRequestToken += 1;
     refreshWorkerPromise ??= runRefreshWorker();
@@ -455,10 +455,10 @@ const refreshList = async()=>{
 const isBookDomFilteredOut = (bookRoot)=>bookRoot.classList.contains('stwid--filter-query')
     || bookRoot.classList.contains('stwid--filter-visibility');
 
-// Folder summary visibility/active-state refresh.
+
 const updateFolderActiveToggles = ()=>foldersViewSlice?.updateFolderActiveToggles({ isBookDomFilteredOut });
 
-// Books container setup.
+
 const setupBooks = (list)=>{
     const books = document.createElement('div'); {
         state.dom.books = books;
@@ -509,7 +509,7 @@ const teardownListPanel = ()=>{
     listPanelInitialized = false;
 };
 
-// Panel bootstrap helpers.
+
 const setupListPanel = (list)=>{
     filterBarSlice?.setupFilter(list);
     setupBooks(list);
@@ -600,7 +600,7 @@ const getListPanelApi = ()=>({
     updateCollapseAllFoldersToggle,
 });
 
-// Public module initialization + returned API surface.
+
 const initBookBrowser = (options)=>{
     if (listPanelInitialized) {
         console.warn('[STWID] initBookBrowser called more than once; resetting previous book browser instance.');

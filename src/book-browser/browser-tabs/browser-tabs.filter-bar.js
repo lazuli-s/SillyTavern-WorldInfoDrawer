@@ -160,7 +160,7 @@ const createFilterBarSlice = ({
                 const entryMatchesQuery = (bookName, entry, normalizedQuery)=>getEntrySearchText(bookName, entry).includes(normalizedQuery);
 
                 const applySearchFilter = ()=>{
-                    // Prune stale book keys from entry search cache (deleted/renamed books).
+                    
                     listPanelState.pruneEntrySearchCacheStaleBooks(Object.keys(runtime.cache));
 
                     const query = search.value.toLowerCase();
@@ -172,13 +172,13 @@ const createFilterBarSlice = ({
                             const bookMatch = b.toLowerCase().includes(query);
                             if (shouldScanEntries) {
                                 if (bookMatch) {
-                                    // Book name matches — no per-entry query needed; clear all entry filters.
+                                    
                                     setQueryFiltered(runtime.cache[b].dom.root, false);
                                     for (const e of Object.values(runtime.cache[b].entries)) {
                                         setQueryFiltered(runtime.cache[b].dom.entry[e.uid]?.root, false);
                                     }
                                 } else {
-                                    // No book match — single-pass entry scan (eliminates .find() + full loop).
+                                    
                                     let anyEntryMatch = false;
                                     for (const e of Object.values(runtime.cache[b].entries)) {
                                         const entryMatch = entryMatchesQuery(b, e, query);
@@ -188,7 +188,7 @@ const createFilterBarSlice = ({
                                     setQueryFiltered(runtime.cache[b].dom.root, !anyEntryMatch);
                                 }
                             } else {
-                                // Not scanning entries — book-level filter only; clear stale entry filters.
+                                
                                 setQueryFiltered(runtime.cache[b].dom.root, !bookMatch);
                                 for (const e of Object.values(runtime.cache[b].entries)) {
                                     setQueryFiltered(runtime.cache[b].dom.entry[e.uid]?.root, false);

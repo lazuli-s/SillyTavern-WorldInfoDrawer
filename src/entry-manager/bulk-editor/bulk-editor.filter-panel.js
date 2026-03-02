@@ -1,18 +1,4 @@
-/**
- * Builds the Order Helper script-filter panel DOM element.
- *
- * @param {{
- *   dom: object,
- *   orderHelperState: object,
- *   getOrderHelperEntries: function,
- *   setOrderHelperRowFilterState: function,
- *   SlashCommandParser: object,
- *   debounce: function,
- *   hljs: object,
- *   isTrueBoolean: function,
- * }} ctx
- * @returns {HTMLElement} The filter panel element to append to the body container.
- */
+
 export function buildFilterPanel({
     dom,
     orderHelperState,
@@ -46,9 +32,9 @@ export function buildFilterPanel({
             main.append(hint);
         }
 
-        // Phase 3: errorEl lives outside the inp block for clearer reading order.
-        // It is appended here so it appears between the hint and the script editor.
-        // showFilterError (defined inside the inp block) holds a reference to it.
+        
+        
+        
         const errorEl = document.createElement('div');
         errorEl.classList.add('stwid--orderFilterError');
         errorEl.hidden = true;
@@ -73,15 +59,15 @@ export function buildFilterPanel({
                 inp.name = 'filter';
                 inp.value = storedFilter ?? defaultFilter;
 
-                // Seed localStorage on first open so the default and future edits persist.
+                
                 if (storedFilter == null) {
                     localStorage.setItem(orderFilterStorageKey, inp.value);
                 }
 
-                // Phase 2: filterStack prevents stale async results from overwriting the UI.
-                // Each compile run pushes its closure; when a newer run starts before this
-                // one finishes, the old one checks filterStack.at(-1) !== closure and exits
-                // early without touching row state.
+                
+                
+                
+                
                 let filterStack = [];
 
                 const updateScroll = ()=>{
@@ -97,7 +83,7 @@ export function buildFilterPanel({
                 const saveFilterDebounced = debounce(()=>localStorage.setItem(orderFilterStorageKey, inp.value), 200);
                 const isActive = ()=>dom.order.filter.root?.classList.contains('stwid--state-active');
 
-                // Show filter compile/runtime errors inline (non-toastr) to avoid spam.
+                
                 const showFilterError = (message)=>{
                     if (!message) {
                         errorEl.hidden = true;
@@ -123,8 +109,8 @@ export function buildFilterPanel({
 
                         const entries = getOrderHelperEntries(orderHelperState.book, true);
 
-                        // Start optimistic: mark all rows as "kept" by the script, then flip to filtered
-                        // when the script result is not truthy.
+                        
+                        
                         for (const e of entries) {
                             const row = dom.order.entries?.[e.book]?.[e.data.uid];
                             if (!row) continue;
@@ -136,7 +122,7 @@ export function buildFilterPanel({
                             closure.scope.setVariable('entry', JSON.stringify(Object.assign({ book:e.book }, e.data)));
                             const result = (await closure.execute()).pipe;
 
-                            // If a newer closure was queued, abort without touching UI further.
+                            
                             if (filterStack.at(-1) !== closure) {
                                 return;
                             }
@@ -148,8 +134,8 @@ export function buildFilterPanel({
 
                         showFilterError(null);
                     } catch (error) {
-                        // Keep previous filter results (avoid "everything" flipping due to transient errors)
-                        // and surface the error to the user.
+                        
+                        
                         const msg = error instanceof Error ? error.message : String(error);
                         showFilterError(`Filter error: ${msg}`);
                     } finally {

@@ -1,5 +1,5 @@
 import { getCharaFilename } from '../../../../../../utils.js';
-// Keep direct world-info imports for values not available via context.
+
 import { METADATA_KEY, world_info, world_names } from '../../../../../../world-info.js';
 
 const SOURCE_ICON_LOG_PREFIX = '[STWID][SOURCE_ICONS]';
@@ -124,7 +124,7 @@ export const initBookSourceLinks = ({ getListPanelApi })=>{
     };
 
     const buildLorebookSourceLinks = ()=>{
-        /**@type {{[book:string]:{character:boolean,chat:boolean,persona:boolean,characterNames:string[],personaName:string}}} */
+        
         const linksByBook = {};
         const runtime = getBookSourceRuntimeContext();
         const allWorldNames = Array.isArray(world_names) ? world_names : [];

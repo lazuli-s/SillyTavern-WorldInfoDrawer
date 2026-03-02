@@ -371,9 +371,9 @@ export const initOrderHelper = ({
     const openOrderHelper = (book = null, scope = null)=>{
         if (!dom.order.toggle) return;
 
-        // Dirty guard: block opening if the entry editor has unsaved changes.
-        // Protects all callers (toggle button, book-menu shortcut, etc.)
-        // without requiring each call site to implement its own check.
+        
+        
+        
         const currentEditor = getCurrentEditor?.();
         const dirty = Boolean(currentEditor && getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
         if (dirty) {
@@ -381,9 +381,9 @@ export const initOrderHelper = ({
             return;
         }
 
-        // Ensure DOM-derived filter option lists (strategy/position) are loaded
-        // at the time Order Helper is opened. These can be empty during early init
-        // if SillyTavern templates are not yet present.
+        
+        
+        
         syncOrderHelperStrategyFilters();
         syncOrderHelperPositionFilters();
 

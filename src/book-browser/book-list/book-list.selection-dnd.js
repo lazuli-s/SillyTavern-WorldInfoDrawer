@@ -123,7 +123,7 @@ const createSelectionDnDSlice = ({
                         } else {
                             failedUids.push(uid);
                         }
-                    } catch (_error) {
+                    } catch {
                         failedUids.push(uid);
                     }
                 }
