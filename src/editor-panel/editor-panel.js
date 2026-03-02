@@ -301,9 +301,3 @@ export const initEditorPanel = ({
         markClean,
     };
 };
-</write_to_file>
-
-<execute_command>
-<command>del src\\editorPanel.js</command>
-<requires_approval>false</requires_approval>
-</execute_command>

@@ -6,7 +6,7 @@ import { debounce, debounceAsync, delay, download, getSortableDelay, isTrueBoole
 // These world-info exports are not fully exposed via getContext(); keep direct imports for ST-owned globals and helper APIs.
 import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, deleteWorldInfo, deleteWorldInfoEntry, getFreeWorldName, getWorldEntry, onWorldInfoChange, selected_world_info, world_names } from '../../../../world-info.js';
 import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
-import { initEditorPanel } from './editorPanel.js';
+import { initEditorPanel } from './editor-panel/editor-panel.js';
 import { initBookBrowser } from './book-browser/book-browser.js';
 import { registerFolderName } from './book-browser/book-list/book-folders/book-folders.lorebook-folders.js';
 import { initOrderHelper } from './orderHelper.js';
