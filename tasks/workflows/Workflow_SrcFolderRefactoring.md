@@ -221,6 +221,9 @@ The 9 step files Phase 1 must create, in implementation order:
 │  Output   │  Updated src/ files + step file marked     │
 │           │  Status: IMPLEMENTED                        │
 │  Test?    │  Yes — reload ST browser tab after each     │
+│  Script   │  scripts/codex/implement-src-low-risk-      │
+│           │  batch.ps1 — runs all Low 🟢 steps in batch │
+│           │  Steps 02 + 07 (Medium 🟡) must be manual   │
 └──────────────────────────────────────────────────────────┘
 ```
 
