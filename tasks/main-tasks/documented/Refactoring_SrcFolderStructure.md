@@ -70,9 +70,7 @@ src/
     book-browser.core-bridge.js                      ← listPanel.coreBridge.js
 
     browser-tabs/
-      browser-tabs.visibility.js                     ← listPanel.filterBar.js (split — see note)
-      browser-tabs.sorting.js                        ← listPanel.filterBar.js (split — see note)
-      browser-tabs.search.js                         ← listPanel.filterBar.js (split — see note)
+      browser-tabs.filter-bar.js                     ← listPanel.filterBar.js (no split — deferred to Phase 3)
 
     book-list/
       book-list.books-view.js                        ← listPanel.booksView.js
@@ -109,9 +107,9 @@ src/
 ```
 
 > **filterBar.js split note:** `listPanel.filterBar.js` handles three distinct tabs:
-> Visibility, Sorting, and Search. Splitting it into three files is agreed and is part
-> of this task, but it requires careful reading of the file first. If the split turns
-> out to be too complex to do in one pass, it may be extracted into a follow-up task.
+> Visibility, Sorting, and Search. The planned three-way split is **definitively deferred
+> to Phase 3** of this project. In this task, the file is moved as-is and renamed to
+> `browser-tabs.filter-bar.js`. No code splitting.
 
 > **drawer.js note:** During planning, a possible unused close/minimize button was
 > flagged for investigation. This is unrelated to the reorganization but should be
@@ -148,15 +146,31 @@ Every file in `src/` is affected. The changes break down into these categories:
 7. **`CLAUDE.md` and `AGENTS.md`** — a migration warning note must be added so that
    future LLM sessions are not confused by old paths in changelogs, code reviews, or
    other archived task files. (Highest risk — do last.)
+8. **Rename-specific items (Step02 and Step07 only)** — the two concept renames
+   (List Panel → Book Browser, Order Helper → Entry Manager) require additional fixes
+   beyond file moves and import updates:
+   - `README.md` — any mention of the old concept name
+   - `style.css` — CSS class names matching the old name pattern (e.g. `.listPanel-*`, `.orderHelper-*`); rename classes and update all usages
+   - JS files — tooltip strings, `title=`, `aria-label=` values containing the old name
+   - JS/HTML template literals — any UI-visible label the user sees (e.g. panel header text)
 
 ---
 
 ## Implementation Plan
 
+> **Authoritative implementation guide:**
+> [`tasks/workflows/Workflow_SrcFolderRefactoring.md`](../../workflows/Workflow_SrcFolderRefactoring.md)
+>
+> The workflow defines the 4-phase process: (1) create per-folder step files in
+> `SrcFolderSteps/`, (2) implement each step file one at a time with a browser reload
+> between steps, (3) update documentation, (4) add migration warning. The numbered
+> steps below are a reference index only — the workflow is the source of truth.
+>
 > **Before starting:** Read every file being moved to understand its current imports.
 > Do NOT move files one by one without updating imports — broken imports will prevent
-> the extension from loading entirely. Move all files first, then update all imports
-> in one sweep, or do both atomically per file.
+> the extension from loading entirely. Each step must be done atomically: move the
+> file, fix its internal imports, AND update all external references to it, before
+> moving to the next file.
 
 ### Step 1 — Create the new folder structure
 
