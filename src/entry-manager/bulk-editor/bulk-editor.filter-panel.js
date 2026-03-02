@@ -1,4 +1,4 @@
-﻿import { DOMPurify } from '../../../../../lib.js';
+import { DOMPurify } from '../../../../../../../lib.js';
 
 /**
  * Builds the Order Helper script-filter panel DOM element.
@@ -188,4 +188,5 @@ export function buildFilterPanel({
 
     return filter;
 }
+
 

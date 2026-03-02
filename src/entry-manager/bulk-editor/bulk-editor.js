@@ -1,7 +1,7 @@
-import { buildVisibilityRow, buildBulkEditRow } from './orderHelperRender.actionBar.js';
-import { buildFilterPanel }  from './orderHelperRender.filterPanel.js';
-import { buildTableHeader }  from './orderHelperRender.tableHeader.js';
-import { buildTableBody }    from './orderHelperRender.tableBody.js';
+import { buildVisibilityRow, buildBulkEditRow } from './bulk-editor.action-bar.js';
+import { buildFilterPanel }  from './bulk-editor.filter-panel.js';
+import { buildTableHeader }  from './bulk-editor.table-header.js';
+import { buildTableBody }    from './bulk-editor.table-body.js';
 
 const createOrderHelperRenderer = ({
     dom,

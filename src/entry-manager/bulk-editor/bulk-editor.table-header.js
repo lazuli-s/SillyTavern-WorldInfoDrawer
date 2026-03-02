@@ -2,12 +2,12 @@ import {
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
-} from './orderHelperRender.utils.js';
+} from './bulk-editor.utils.js';
 import {
     ORDER_HELPER_TABLE_COLUMNS,
     ORDER_HELPER_NUMBER_COLUMN_KEYS,
     ORDER_HELPER_RECURSION_OPTIONS,
-} from './shared/constants.js';
+} from '../../shared/constants.js';
 
 /**
  * Builds the filter button + multiselect dropdown menu for a single column.

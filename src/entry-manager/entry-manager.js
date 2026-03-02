@@ -10,7 +10,7 @@
     getStrategyValues,
 } from './logic/logic.state.js';
 import { createOrderHelperFilters } from './logic/logic.filters.js';
-import { createOrderHelperRenderer } from '../orderHelperRender.js';
+import { createOrderHelperRenderer } from './bulk-editor/bulk-editor.js';
 
 export const initOrderHelper = ({
     dom,
