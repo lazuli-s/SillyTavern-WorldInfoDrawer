@@ -2,6 +2,23 @@
 
 This repository is a **third-party SillyTavern frontend extension** that replaces the default World Info editor with a custom full-screen drawer UI.
 
+> **⚠ Recent structural change (March 2026):** The `/src` folder was reorganized into
+> feature subfolders. Old flat paths like `src/listPanel.js` or `src/orderHelper*.js`
+> no longer exist. If you encounter those paths in changelogs, code review files, or
+> archived task files, they are pre-reorganization artifacts — do not treat them as
+> current file locations.
+>
+> Key renames:
+> - List Panel → Book Browser (`src/book-browser/`)
+> - Order Helper → Entry Manager (`src/entry-manager/`)
+> - `listPanel.*` files → `src/book-browser/**`
+> - `orderHelper*` files → `src/entry-manager/**`
+> - `editorPanel.js` → `src/editor-panel/editor-panel.js`
+> - `worldEntry.js` → `src/book-browser/book-list/book-list.world-entry.js`
+> - `lorebookFolders.js` → `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`
+>
+> See `ARCHITECTURE.md` for the current authoritative file map.
+
 This file defines **mandatory rules and constraints** for AI agents modifying this codebase.
 
 All instructions below MUST be followed unless explicitly overridden by the user.
