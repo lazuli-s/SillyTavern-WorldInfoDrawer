@@ -1,11 +1,11 @@
 ---
-name: script-cline
-description: 'Generate Cline CLI headless-mode PowerShell scripts (.ps1) for local automation on Windows. Use when the user wants to automate a coding task with Cline CLI non-interactively — including code review (git diff), fixing lint or test failures, and batch processing multiple files. Triggers on: "/script-cline", "cline script", "automate with cline", "run cline headless", "cline yolo", "write a cline automation", "cline batch", or when the user describes a task they want Cline to handle autonomously without interaction. For Bash (.sh) scripts, use script-cline-bash instead.'
+name: script-cline-bash
+description: 'Generate Cline CLI headless-mode Bash scripts (.sh) for local automation on Windows with Git Bash. Use when the user explicitly wants a Bash script — including code review (git diff, PR diffs), fixing lint or test failures, generating commit messages or release notes, and batch processing multiple files. Triggers on: "/script-cline-bash", "cline bash script", "bash cline script", "cline sh script". For PowerShell (.ps1) scripts, use the script-cline skill instead.'
 ---
 
-# Script — Cline (PowerShell)
+# Script — Cline (Bash)
 
-Cline CLI headless mode runs Cline autonomously in a terminal — no human approval needed. This skill generates ready-to-run PowerShell scripts (`.ps1`) for the most common local automation workflows.
+Cline CLI headless mode runs Cline autonomously in a terminal — no human approval needed. This skill generates ready-to-run Git Bash scripts (`.sh`) for the four most common local automation workflows.
 
 ## Workflow
 
@@ -18,7 +18,8 @@ Pick a Cline headless automation:
 
 1. Code review      — analyze git diff or last commit for bugs and issues
 2. Fix lint/tests   — auto-fix ESLint errors or failing tests
-3. Batch files      — apply a repeated task to multiple files in a folder
+3. Commit message   — generate from staged changes or git log
+4. Batch files      — apply a repeated task to multiple files
 ```
 
 ## Response format for every script
@@ -30,9 +31,9 @@ Always include these four items before the script block:
 - **What Cline may change:** List exactly what files or state Cline could modify.
 - **Suggested guardrails:** Risk-appropriate options the user may choose to apply.
 
-Then show the complete `.ps1` script.
+Then show the complete `.sh` script.
 
-Then ask: *"Want me to save this as `workflows/<workflow-name>/<N>-cline-<purpose>.ps1` in your project?"*
+Then ask: *"Want me to save this as `workflows/<workflow-name>/<N>-cline-<purpose>.sh` in your project?"*
 
 ## Risk levels and guardrails
 
@@ -40,7 +41,7 @@ Then ask: *"Want me to save this as `workflows/<workflow-name>/<N>-cline-<purpos
 |------|------|-----------------------|
 | Low | Read-only (review, generate text) | None required |
 | Medium | Edits source files | Feature branch before running; review `git diff` after |
-| High | Edits many files or runs long autonomously | Feature branch + stash check; `$env:CLINE_COMMAND_PERMISSIONS` to restrict commands; `--timeout` to cap runtime |
+| High | Edits many files or runs long autonomously | Feature branch + stash check; `CLINE_COMMAND_PERMISSIONS` to restrict commands; `--timeout` to cap runtime |
 
 Do not enforce guardrails in code. Document them clearly and let the user decide.
 
@@ -48,12 +49,13 @@ Do not enforce guardrails in code. Document them clearly and let the user decide
 
 These are hard limits that apply to every generated script — never violate them:
 
-- **Shell target is PowerShell 7+.** Do not generate Bash, CMD, or Python scripts. For Bash scripts, use the `script-cline-bash` skill instead.
+- **Shell target is Git Bash only.** Do not generate PowerShell, CMD, or Python scripts. The user runs Windows and Git Bash is the only supported shell for this skill.
 - **Headless mode only.** Scripts must invoke Cline non-interactively. Do not generate scripts that open an interactive Cline session.
 - **No destructive git operations without explicit instruction.** Scripts must not force-push, reset the working tree (`git reset --hard`), or delete branches unless the user has explicitly asked for that behavior.
 - **Never touch `vendor/SillyTavern`.** If the task prompt would cause Cline to modify files under that path, add an explicit exclusion instruction to the Cline task prompt.
 - **One clear goal per script.** Reject or decompose vague, open-ended task descriptions. A prompt like "fix everything" is not actionable — ask the user to narrow it down before generating the script.
-- **No log files.** Do not generate log file writing or log-related variables. Output goes to the terminal only.
+- **Avoid `apply_patch` in Cline task prompts.** Instruct Cline to use `write_to_file` or `replace_in_file` instead. `apply_patch` produces unreliable results on Windows and can silently corrupt files that contain special characters or emoji.
+- **No log files.** Do not generate log file writing, `tee` to log files, or `LOG_DIR`/`LOG_FILE` variables. Output goes to the terminal only.
 
 ## Use cases
 
@@ -61,41 +63,39 @@ These are hard limits that apply to every generated script — never violate the
 
 **2. Fix lint/tests** — Cline edits source files to fix ESLint or test failures. Risk: Medium.
 
-**3. Batch file processing** — Cline loops through a folder of files and applies a task to each. Risk: High.
+**3. Commit message / release notes** — Cline reads staged diff or git log and generates text. No files modified. Risk: Low.
+
+**4. Batch file processing** — Cline loops through a list of files and applies a task to each. Risk: High.
 
 See `references/examples.md` for complete, ready-to-run scripts for each use case. Load it when generating or customizing scripts.
-
-For batch scripts that follow a standard loop pattern, use `references/template.ps1` as the starting point and fill in the `# <<< CUSTOMIZE` placeholders.
 
 ## Script naming convention
 
 Scripts saved in a workflow folder follow this pattern:
 
 ```
-<N>-cline-<purpose>.ps1
+<N>-cline-<purpose>.sh
 ```
 
 Examples:
-- `1-cline-review-diff.ps1`
-- `2-cline-fix-lint.ps1`
-- `3-cline-batch-files.ps1`
+- `1-cline-first-review.sh`
+- `2-cline-meta-review.sh`
+- `3-cline-batch-files.sh`
 
 Where `<N>` is the execution order within the workflow, and `<purpose>` is a short, lowercase-hyphenated description of what the script does.
 
 ## Script conventions
 
-- Top: `#!/usr/bin/env pwsh` + `#requires -Version 7.0`
-- `Set-StrictMode -Version Latest` + `$ErrorActionPreference = 'Stop'`
-- UTF-8 encoding block (three `[Console]` + `$OutputEncoding` lines) — required to prevent emoji/Unicode corruption on Windows
-- Branch check with `& git branch --show-current` for Medium/High risk scripts
-- `Read-Host` pause before continuing if risk is High
-- `& cline -y --timeout <seconds> $prompt` pattern for headless invocation
-- `if ($LASTEXITCODE -ne 0) { throw "..." }` for error handling after cline calls
-- `Write-Host` for all console output
-- Use here-strings (`@"..."@`) for multi-line prompts
-- Use `$env:CLINE_COMMAND_PERMISSIONS` to restrict cline's shell access when needed
+- Start with `#!/bin/bash`
+- Use `set -e` to stop on errors
+- Top comment block: task name, risk level, guardrail reminder
+- Branch check with `git branch --show-current` for Medium/High risk scripts
+- `read -r` pause before continuing if risk is High
+- Add `--timeout <seconds>` for any task that edits files (Medium/High)
 
 ## Best practices
+
+Guidance for writing scripts that are safe, reviewable, and easy to debug:
 
 - **Run on a feature branch, not on `main` or `dev`.** For any Medium or High risk script, switching to a throwaway branch before running means a bad result is one `git checkout` away from being undone.
 - **Size `--timeout` to the task scope.** Suggested baselines: ~120 s for a single-file review or small fix; ~300 s for a multi-file batch; ~600 s for a full lint-fix pass. Tighter timeouts catch runaway sessions early.
@@ -103,13 +103,13 @@ Where `<N>` is the execution order within the workflow, and `<purpose>` is a sho
 - **Keep the Cline task prompt under ~200 words.** Long, multi-objective prompts increase the chance of unintended edits. One goal, stated clearly, produces more predictable output than a list of goals.
 - **Stash or commit local changes before a Medium/High run.** A clean working tree means `git diff` after the run shows only what Cline changed, with no noise from pre-existing edits.
 
-## Running scripts on Windows (PowerShell)
+## Running scripts on Windows (Git Bash)
 
 In VS Code:
 1. Open a terminal: `Terminal → New Terminal`
-2. If not already in PowerShell 7: click the `+` dropdown → **PowerShell**
-3. Run: `pwsh ./workflows/<workflow-name>/<script-name>.ps1`
+2. Change shell: click the `+` dropdown → **Git Bash**
+3. Run: `bash ./workflows/<workflow-name>/<script-name>.sh`
 
-To set PowerShell as the permanent default: `Ctrl+Shift+P → "Terminal: Select Default Profile" → PowerShell`.
+To set Git Bash as the permanent default: `Ctrl+Shift+P → "Terminal: Select Default Profile" → Git Bash`.
 
-Scripts live inside the workflow folder they belong to: `workflows/<workflow-name>/`. Create the folder first if it does not exist: `New-Item -ItemType Directory -Force -Path workflows/<workflow-name>`.
+Scripts live inside the workflow folder they belong to: `workflows/<workflow-name>/`. Create the folder first if it does not exist: `mkdir -p workflows/<workflow-name>`.
