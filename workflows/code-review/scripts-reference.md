@@ -1,7 +1,7 @@
 # Scripts Reference — Code Review Cycle
 
 **Last updated:** 2026-03-01
-**Used by:** [Workflow_CodeReviewCycle.md](Workflow_CodeReviewCycle.md)
+**Used by:** [workflow.md](workflow.md)
 
 This file documents the scripts and commands used to run Phases 2–4 and Phase 7
 of the code review cycle in batch mode. Each phase runs in a **fresh agent session**.
@@ -10,7 +10,7 @@ of the code review cycle in batch mode. Each phase runs in a **fresh agent sessi
 
 ## Step 2 — First Review
 
-**Skill:** `code-review-first-review`
+**Skill/tool:** `code-review-first-review`
 **Runs:** Once per file in the queue (the skill picks the next file automatically).
 **Repeat until:** `tasks/code-reviews/code-review-queue.md` has no remaining entries.
 
@@ -30,7 +30,7 @@ Run the /code-review-first-review skill.
 
 ## Step 3 — Meta Review
 
-**Skill:** `code-review-meta-review`
+**Skill/tool:** `code-review-meta-review`
 **Runs:** Once per file in `pending-meta-review/` (picks the first file each run).
 **Repeat until:** `tasks/code-reviews/pending-meta-review/` is empty.
 
@@ -50,7 +50,7 @@ Run the /code-review-meta-review skill.
 
 ## Step 4 — Triage
 
-**Skill:** `triage-reviews`
+**Skill/tool:** `triage-reviews`
 **Runs:** Once per file in `pending-implementation/` (picks the first file each run).
 **Repeat until:** `tasks/code-reviews/pending-implementation/` is empty.
 
@@ -69,15 +69,15 @@ codex exec --sandbox workspace-write --full-auto "Run the /triage-reviews skill 
 ### Batch script (loops until folder is empty)
 
 ```text
-scripts/codex/triage-batch.sh      ← bash (Linux / macOS / WSL / Git Bash)
-scripts/codex/triage-batch.ps1     ← PowerShell (Windows)
+4-codex-triage.sh      ← bash (Linux / macOS / WSL / Git Bash)
+4-codex-triage.ps1     ← PowerShell (Windows)
 ```
 
 ---
 
 ## Step 7 — Bulk Implement
 
-**Skill:** `code-review-implement`
+**Skill/tool:** `code-review-implement`
 **Runs:** Once per file in `ready-for-implementation/bulk/` — loops until the folder is empty.
 **Commits:** Once at the end, after all files are processed.
 **Note:** Only use this script for `bulk/`. Files in `single/` must be run manually, one at a time.
@@ -85,13 +85,13 @@ scripts/codex/triage-batch.ps1     ← PowerShell (Windows)
 ### Batch script (loops until folder is empty, then commits)
 
 ```text
-scripts/codex/implement-bulk-batch.ps1     <- PowerShell (Windows)
+7-codex-implement-bulk.ps1     <- PowerShell (Windows)
 ```
 
 **Optional parameter** — override the source folder:
 
 ```text
-.\scripts\codex\implement-bulk-batch.ps1 -BulkDir "tasks/code-reviews/ready-for-implementation/bulk"
+.\workflows\code-review\7-codex-implement-bulk.ps1 -BulkDir "tasks/code-reviews/ready-for-implementation/bulk"
 ```
 
 **What the script does:**

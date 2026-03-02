@@ -296,13 +296,10 @@ Re-queued files always go to `single/` (treated as higher-risk after a failure).
 
 ### Phase 8 — Failed Implementation Recovery *(conditional)*
 
-> **Trigger:** ST breaks after a Phase 7 commit.
-> Skip this phase entirely if all implementations succeed.
-
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │  PHASE 8  │  Failed Implementation Recovery             │
-│           │  conditional — only if ST broke             │
+│           │  *(conditional — only if ST broke)*         │
 ├──────────────────────────────────────────────────────────┤
 │  Skill    │  failed-implementation  (not yet created)   │
 │  Trigger  │  ST breaks after a Phase 7 commit           │
@@ -318,6 +315,8 @@ Re-queued files always go to `single/` (treated as higher-risk after a failure).
 │           │  its new plan                               │
 └──────────────────────────────────────────────────────────┘
 ```
+
+**Trigger:** ST breaks after a Phase 7 commit. Skip this phase entirely if all implementations succeed.
 
 > **Status:** The `failed-implementation` skill does not exist yet.
 > This phase is a placeholder until the skill is created.
