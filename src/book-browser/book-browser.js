@@ -7,7 +7,7 @@ import {
     setFolderBooksActive,
     sanitizeFolderMetadata,
     setFolderInMetadata,
-} from '../lorebookFolders.js';
+} from './book-list/book-folders/book-folders.lorebook-folders.js';
 import {
     captureBookCollapseStatesFromDom,
     clearCacheBooks,
@@ -27,7 +27,7 @@ import {
 } from './browser-tabs/browser-tabs.filter-bar.js';
 import { createSelectionDnDSlice } from './book-list/book-list.selection-dnd.js';
 import { createBookMenuSlice } from './book-list/book-list.book-menu.js';
-import { createFoldersViewSlice } from '../listPanel.foldersView.js';
+import { createFoldersViewSlice } from './book-list/book-folders/book-folders.folders-view.js';
 import { createBooksViewSlice } from './book-list/book-list.books-view.js';
 
 // Core SillyTavern DOM anchors used by this extension.

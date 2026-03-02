@@ -1,4 +1,4 @@
-﻿const FOLDER_METADATA_KEY = 'folder';
+const FOLDER_METADATA_KEY = 'folder';
 const FOLDER_REGISTRY_STORAGE_KEY = 'stwid--folder-registry';
 
 const normalizeFolderName = (value)=>String(value ?? '').trim();

@@ -8,7 +8,7 @@ import { createNewWorldInfo, createWorldInfoEntry, deleteWIOriginalDataValue, de
 import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initEditorPanel } from './editorPanel.js';
 import { initBookBrowser } from './book-browser/book-browser.js';
-import { registerFolderName } from './lorebookFolders.js';
+import { registerFolderName } from './book-browser/book-list/book-folders/book-folders.lorebook-folders.js';
 import { initOrderHelper } from './orderHelper.js';
 import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './book-browser/book-list/book-list.world-entry.js';
