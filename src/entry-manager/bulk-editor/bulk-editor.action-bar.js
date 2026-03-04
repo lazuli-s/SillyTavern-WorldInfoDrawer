@@ -8,6 +8,9 @@ import {
 } from './bulk-editor.utils.js';
 import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
+const BULK_APPLY_BATCH_SIZE = 200;
+const APPLY_DIRTY_CLASS = 'stwid--applyDirty';
+
 
 function createLabeledBulkContainer(fieldKey, labelText, hintText) {
     const container = document.createElement('div');
@@ -25,16 +28,387 @@ function createLabeledBulkContainer(fieldKey, labelText, hintText) {
 }
 
 
+function createActionThinContainer(labelText, hintText) {
+    const container = document.createElement('div');
+    container.classList.add('stwid--thinContainer');
+
+    const containerLabel = document.createElement('div');
+    containerLabel.classList.add('stwid--thinContainerLabel');
+    containerLabel.textContent = labelText;
+
+    const containerHint = document.createElement('i');
+    containerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+    setTooltip(containerHint, hintText);
+    containerLabel.append(containerHint);
+
+    container.append(containerLabel);
+    return container;
+}
+
+
 function createApplyButton(tooltip, runFn, applyRegistry) {
-    const btn = document.createElement('div');
-    btn.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-    setTooltip(btn, tooltip);
-    btn.addEventListener('click', ()=>runFn());
+    const applyButtonEl = document.createElement('div');
+    applyButtonEl.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+    setTooltip(applyButtonEl, tooltip);
+    applyButtonEl.addEventListener('click', ()=>runFn());
     applyRegistry.push({
-        isDirty: ()=>btn.classList.contains('stwid--applyDirty'),
+        isDirty: ()=>applyButtonEl.classList.contains(APPLY_DIRTY_CLASS),
         runApply: runFn,
     });
-    return btn;
+    return applyButtonEl;
+}
+
+
+function createCollapsibleRowTitle(titleText) {
+    const rowTitle = document.createElement('div');
+    rowTitle.classList.add('stwid--RowTitle');
+    rowTitle.textContent = titleText;
+
+    const collapseChevron = document.createElement('i');
+    collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
+    rowTitle.prepend(collapseChevron);
+    rowTitle.classList.add('stwid--collapsibleTitle');
+
+    return { rowTitle, collapseChevron };
+}
+
+
+function wrapRowContent(row, rowTitle, collapseChevron, initialCollapsed) {
+    const contentWrap = document.createElement('div');
+    contentWrap.classList.add('stwid--rowContentWrap');
+    while (row.children.length > 1) {
+        contentWrap.append(row.children[1]);
+    }
+    row.append(contentWrap);
+    wireCollapseRow(rowTitle, row, contentWrap, collapseChevron, { initialCollapsed });
+    return contentWrap;
+}
+
+
+function makeClearFilterHandler(key, getAllValues, applyFn, stateRef, indicatorRef, refreshFn) {
+    return ()=>{
+        stateRef.filters[key] = [...getAllValues()];
+        applyFn();
+        indicatorRef?.();
+        refreshFn();
+    };
+}
+
+
+function buildColumnDropdownButton(hint) {
+    const menuButton = document.createElement('div');
+    menuButton.classList.add('menu_button', 'stwid--multiselectDropdownButton');
+    menuButton.textContent = 'Select';
+    setTooltip(menuButton, hint);
+
+    const caret = document.createElement('i');
+    caret.classList.add('fa-solid', 'fa-fw', 'fa-caret-down');
+    menuButton.append(caret);
+    return menuButton;
+}
+
+
+function buildColumnCheckboxOptions(menu, columns, orderHelperState, columnInputs, onColumnChange) {
+    for (const column of columns) {
+        const option = document.createElement('label');
+        option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+        const inputControl = createMultiselectDropdownCheckbox(Boolean(orderHelperState.columns[column.key]));
+        columnInputs.set(column.key, inputControl);
+        inputControl.input.addEventListener('change', ()=>onColumnChange(column, inputControl));
+        option.append(inputControl.input);
+        option.append(inputControl.checkbox);
+        const optionLabel = document.createElement('span');
+        optionLabel.textContent = column.label;
+        option.append(optionLabel);
+        menu.append(option);
+    }
+}
+
+
+function buildDirectionRadio(groupName, value, labelText, hint, directionStorageKey, applyButton) {
+    const directionRow = document.createElement('label');
+    directionRow.classList.add('stwid--inputWrap');
+    setTooltip(directionRow, hint);
+
+    const radioInput = document.createElement('input');
+    radioInput.type = 'radio';
+    radioInput.name = groupName;
+    radioInput.value = value;
+    radioInput.checked = (localStorage.getItem(directionStorageKey) ?? 'down') === value;
+    radioInput.addEventListener('change', ()=>{
+        if (!radioInput.checked) return;
+        localStorage.setItem(directionStorageKey, value);
+    });
+    radioInput.addEventListener('change', () => applyButton.classList.add(APPLY_DIRTY_CLASS));
+    directionRow.append(radioInput);
+    directionRow.append(labelText);
+    return { directionRow, radioInput };
+}
+
+
+function buildRecursionCheckboxRow(value, label, recursionCheckboxes) {
+    const recursionRow = document.createElement('label');
+    recursionRow.classList.add('stwid--small-check-row');
+
+    const recursionCheckbox = document.createElement('input');
+    recursionCheckbox.type = 'checkbox';
+    recursionCheckbox.classList.add('checkbox');
+    setTooltip(recursionCheckbox, label);
+    recursionCheckboxes.set(value, recursionCheckbox);
+    recursionRow.append(recursionCheckbox);
+    recursionRow.append(label);
+    return recursionRow;
+}
+
+function getSafeTbodyRows(dom) {
+    const tbody = dom.order?.tbody;
+    if (!(tbody instanceof HTMLElement)) {
+        toastr.warning('Entry Manager table is not ready yet.');
+        return null;
+    }
+    return [...tbody.children].filter((child)=>child instanceof HTMLElement);
+}
+
+
+function getBulkTargets(rows, cache, isOrderHelperRowSelected, { reverse = false } = {}) {
+    const orderedRows = reverse ? [...rows].reverse() : rows;
+    const targets = [];
+    let skippedInvalidRow = false;
+    for (const tr of orderedRows) {
+        if (tr.classList.contains('stwid--state-filtered')) continue;
+        if (!isOrderHelperRowSelected(tr)) continue;
+        const bookName = tr.getAttribute('data-book');
+        const uid = tr.getAttribute('data-uid');
+        if (!bookName || uid === null) {
+            skippedInvalidRow = true;
+            continue;
+        }
+        const entryData = cache?.[bookName]?.entries?.[uid];
+        if (!entryData) {
+            skippedInvalidRow = true;
+            continue;
+        }
+        targets.push({ tr, bookName, uid, entryData });
+    }
+    if (skippedInvalidRow) {
+        console.warn('STWID: skipped one or more bulk-edit rows due to missing book/entry data.');
+    }
+    return targets;
+}
+
+
+async function saveUpdatedBooks(books, saveWorldInfo, buildSavePayload) {
+    for (const bookName of books) {
+        await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+    }
+}
+
+
+function setApplyButtonBusy(button, isBusy) {
+    button.dataset.stwidBusy = isBusy ? '1' : '0';
+    button.style.pointerEvents = isBusy ? 'none' : '';
+    button.classList.toggle('stwid--state-disabled', isBusy);
+    button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+}
+
+
+async function withApplyButtonLock(button, callback) {
+    if (button.dataset.stwidBusy === '1') return;
+    setApplyButtonBusy(button, true);
+    try {
+        await callback();
+    } finally {
+        setApplyButtonBusy(button, false);
+    }
+}
+
+
+function buildColumnVisibilityDropdown({
+    body,
+    orderHelperState,
+    ORDER_HELPER_COLUMNS_STORAGE_KEY,
+    ORDER_HELPER_DEFAULT_COLUMNS,
+    applyOrderHelperColumnVisibility,
+}) {
+    const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
+    const columnVisibilityWrap = document.createElement('div');
+    columnVisibilityWrap.classList.add('stwid--columnVisibility');
+
+    const menuWrap = document.createElement('div');
+    menuWrap.classList.add('stwid--multiselectDropdownWrap');
+    const menuButton = buildColumnDropdownButton('Choose which columns are visible');
+    menuWrap.append(menuButton);
+
+    const menu = document.createElement('div');
+    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
+    const columnInputs = new Map();
+    const mainColumnDefaults = Object.fromEntries(
+        Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)
+            .map(([key, value])=>[key, Boolean(value)]),
+    );
+    const setColumnVisibility = (overrides)=>{
+        for (const column of ORDER_HELPER_TOGGLE_COLUMNS) {
+            const nextValue = Boolean(overrides[column.key]);
+            orderHelperState.columns[column.key] = nextValue;
+            const inputControl = columnInputs.get(column.key);
+            if (inputControl) inputControl.setChecked(nextValue);
+        }
+        localStorage.setItem(
+            ORDER_HELPER_COLUMNS_STORAGE_KEY,
+            JSON.stringify(orderHelperState.columns),
+        );
+        applyOrderHelperColumnVisibility(body);
+
+        const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
+        if (typeof closeMenu === 'function') closeMenu();
+    };
+    const addColumnAction = ({ label, icon, onClick })=>{
+        const action = document.createElement('div');
+        action.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+        action.style.fontWeight = 'bold';
+        const iconEl = document.createElement('i');
+        iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--multiselectDropdownOptionIcon');
+        action.append(iconEl);
+        const labelText = document.createElement('span');
+        labelText.textContent = label;
+        action.append(labelText);
+        action.addEventListener('click', onClick);
+        menu.append(action);
+    };
+
+    addColumnAction({
+        label: 'SELECT ALL',
+        icon: 'fa-check-double',
+        onClick: ()=>setColumnVisibility(
+            Object.fromEntries(ORDER_HELPER_TOGGLE_COLUMNS.map((column)=>[column.key, true])),
+        ),
+    });
+    addColumnAction({
+        label: 'MAIN COLUMNS',
+        icon: 'fa-table-columns',
+        onClick: ()=>setColumnVisibility(mainColumnDefaults),
+    });
+    buildColumnCheckboxOptions(
+        menu,
+        ORDER_HELPER_TOGGLE_COLUMNS,
+        orderHelperState,
+        columnInputs,
+        (column, inputControl)=>{
+            orderHelperState.columns[column.key] = inputControl.input.checked;
+            localStorage.setItem(
+                ORDER_HELPER_COLUMNS_STORAGE_KEY,
+                JSON.stringify(orderHelperState.columns),
+            );
+            applyOrderHelperColumnVisibility(body);
+        },
+    );
+    wireMultiselectDropdown(menu, menuButton, menuWrap);
+    menuWrap.append(menu);
+    columnVisibilityWrap.append(menuWrap);
+    columnVisibilityContainer.append(columnVisibilityWrap);
+    return columnVisibilityContainer;
+}
+
+
+function buildSortSelector({
+    dom,
+    orderHelperState,
+    appendSortOptions,
+    setOrderHelperSort,
+    SORT,
+    ensureCustomDisplayIndex,
+    saveWorldInfo,
+    buildSavePayload,
+    applyOrderHelperSortToDom,
+}) {
+    const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
+    const sortWrap = document.createElement('label');
+    sortWrap.classList.add('stwid--table-sort');
+    setTooltip(sortWrap, 'Sort rows in the table');
+    const sortSel = document.createElement('select');
+    sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
+    setTooltip(sortSel, 'Sort rows in the table');
+    dom.order.sortSelect = sortSel;
+    appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
+    sortSel.addEventListener('change', async()=>{
+        const value = JSON.parse(sortSel.value);
+        setOrderHelperSort(value.sort, value.direction);
+        if (value.sort === SORT.CUSTOM) {
+            const updatedBooks = ensureCustomDisplayIndex(orderHelperState.book);
+            for (const bookName of updatedBooks) {
+                await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+            }
+        }
+        applyOrderHelperSortToDom();
+    });
+    sortWrap.append(sortSel);
+    tableSortContainer.append(sortWrap);
+    return { tableSortContainer, sortSel };
+}
+
+
+function buildFilterChipDisplay({
+    orderHelperState,
+    getStrategyValues,
+    getPositionValues,
+    getOutletValues,
+    getAutomationIdValues,
+    getGroupValues,
+    clearFilterHandlers,
+    FILTER_KEY_LABELS,
+    getFilterValueLabels,
+}) {
+    const activeFiltersEl = document.createElement('div');
+    activeFiltersEl.classList.add('stwid--activeFilters');
+    activeFiltersEl.style.display = 'none';
+    const activeFiltersLabel = document.createElement('span');
+    activeFiltersLabel.textContent = 'Active filters:';
+    activeFiltersEl.append(activeFiltersLabel);
+    const chipContainer = document.createElement('div');
+    chipContainer.classList.add('stwid--filterChipContainer');
+    activeFiltersEl.append(chipContainer);
+
+    const refresh = ()=>{
+        chipContainer.innerHTML = '';
+        const filters = orderHelperState.filters;
+        const filterConfigs = [
+            { key: 'strategy', allValues: orderHelperState.strategyValues.length ? orderHelperState.strategyValues : getStrategyValues() },
+            { key: 'position', allValues: orderHelperState.positionValues.length ? orderHelperState.positionValues : getPositionValues() },
+            { key: 'recursion', allValues: orderHelperState.recursionValues ?? [] },
+            { key: 'outlet', allValues: orderHelperState.outletValues.length ? orderHelperState.outletValues : getOutletValues() },
+            { key: 'automationId', allValues: orderHelperState.automationIdValues.length ? orderHelperState.automationIdValues : getAutomationIdValues() },
+            { key: 'group', allValues: orderHelperState.groupValues.length ? orderHelperState.groupValues : getGroupValues() },
+        ];
+
+        let hasActiveFilter = false;
+        for (const { key, allValues } of filterConfigs) {
+            const selected = filters[key] ?? [];
+            if (!allValues.length) continue;
+            if (selected.length >= allValues.length) continue;
+            hasActiveFilter = true;
+
+            const chip = document.createElement('div');
+            chip.classList.add('stwid--filterChip');
+
+            const chipLabel = document.createElement('span');
+            const headerName = FILTER_KEY_LABELS[key] ?? key;
+            const valueLabels = getFilterValueLabels(key, selected);
+            chipLabel.textContent = `${headerName}: ${valueLabels.join(', ')}`;
+            chip.append(chipLabel);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('stwid--chipRemove');
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', clearFilterHandlers[key]);
+            chip.append(removeBtn);
+
+            chipContainer.append(chip);
+        }
+
+        activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
+    };
+
+    return { activeFiltersEl, chipContainer, refresh };
 }
 
 
@@ -78,32 +452,8 @@ export function buildVisibilityRow({
     const row = document.createElement('div');
     row.classList.add('stwid--order-action-bar');
 
-    
-    const rowTitle = document.createElement('div');
-    rowTitle.classList.add('stwid--RowTitle');
-    rowTitle.textContent = 'Visibility';
-    const collapseChevron = document.createElement('i');
-    collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
-    rowTitle.prepend(collapseChevron);
-    rowTitle.classList.add('stwid--collapsibleTitle');
+    const { rowTitle, collapseChevron } = createCollapsibleRowTitle('Visibility');
     row.append(rowTitle);
-
-    const createActionThinContainer = (labelText, hintText)=>{
-        const container = document.createElement('div');
-        container.classList.add('stwid--thinContainer');
-
-        const containerLabel = document.createElement('div');
-        containerLabel.classList.add('stwid--thinContainerLabel');
-        containerLabel.textContent = labelText;
-
-        const containerHint = document.createElement('i');
-        containerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-        setTooltip(containerHint, hintText);
-        containerLabel.append(containerHint);
-
-        container.append(containerLabel);
-        return container;
-    };
 
     
     const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
@@ -128,106 +478,13 @@ export function buildVisibilityRow({
     }
     row.append(keyToggleContainer);
 
-    
-    const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
-    const columnVisibilityWrap = document.createElement('div'); {
-        columnVisibilityWrap.classList.add('stwid--columnVisibility');
-        const menuWrap = document.createElement('div'); {
-            menuWrap.classList.add('stwid--multiselectDropdownWrap');
-            const menuButton = document.createElement('div'); {
-                menuButton.classList.add('menu_button', 'stwid--multiselectDropdownButton');
-                menuButton.textContent = 'Select';
-                setTooltip(menuButton, 'Choose which columns are visible');
-                const caret = document.createElement('i'); {
-                    caret.classList.add('fa-solid', 'fa-fw', 'fa-caret-down');
-                    menuButton.append(caret);
-                }
-                menuWrap.append(menuButton);
-            }
-            const menu = document.createElement('div'); {
-                menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-                const columnInputs = new Map();
-                const mainColumnDefaults = Object.fromEntries(
-                    Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)
-                        .map(([key, value])=>[key, Boolean(value)]),
-                );
-                const setColumnVisibility = (overrides)=>{
-                    
-                    for (const column of ORDER_HELPER_TOGGLE_COLUMNS) {
-                        const nextValue = Boolean(overrides[column.key]);
-                        orderHelperState.columns[column.key] = nextValue;
-                        const inputControl = columnInputs.get(column.key);
-                        if (inputControl) inputControl.setChecked(nextValue);
-                    }
-                    localStorage.setItem(
-                        ORDER_HELPER_COLUMNS_STORAGE_KEY,
-                        JSON.stringify(orderHelperState.columns),
-                    );
-                    applyOrderHelperColumnVisibility(body);
-                    
-                    const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
-                    if (typeof closeMenu === 'function') closeMenu();
-                };
-                const addColumnAction = ({ label, icon, onClick })=>{
-                    const action = document.createElement('div'); {
-                        action.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                        action.style.fontWeight = 'bold';
-                        const iconEl = document.createElement('i'); {
-                            iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--multiselectDropdownOptionIcon');
-                            action.append(iconEl);
-                        }
-                        const labelText = document.createElement('span'); {
-                            labelText.textContent = label;
-                            action.append(labelText);
-                        }
-                        action.addEventListener('click', onClick);
-                        menu.append(action);
-                    }
-                };
-                addColumnAction({
-                    label: 'SELECT ALL',
-                    icon: 'fa-check-double',
-                    onClick: ()=>setColumnVisibility(
-                        Object.fromEntries(ORDER_HELPER_TOGGLE_COLUMNS.map((column)=>[column.key, true])),
-                    ),
-                });
-                addColumnAction({
-                    label: 'MAIN COLUMNS',
-                    icon: 'fa-table-columns',
-                    onClick: ()=>setColumnVisibility(mainColumnDefaults),
-                });
-                for (const column of ORDER_HELPER_TOGGLE_COLUMNS) {
-                    const option = document.createElement('label'); {
-                        option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-                        const inputControl = createMultiselectDropdownCheckbox(
-                            Boolean(orderHelperState.columns[column.key]),
-                        );
-                        columnInputs.set(column.key, inputControl);
-                        inputControl.input.addEventListener('change', ()=>{
-                            
-                            orderHelperState.columns[column.key] = inputControl.input.checked;
-                            localStorage.setItem(
-                                ORDER_HELPER_COLUMNS_STORAGE_KEY,
-                                JSON.stringify(orderHelperState.columns),
-                            );
-                            applyOrderHelperColumnVisibility(body);
-                        });
-                        option.append(inputControl.input);
-                        option.append(inputControl.checkbox);
-                        const optionLabel = document.createElement('span');
-                        optionLabel.textContent = column.label;
-                        option.append(optionLabel);
-                        menu.append(option);
-                    }
-                }
-                
-                wireMultiselectDropdown(menu, menuButton, menuWrap);
-                menuWrap.append(menu);
-            }
-            columnVisibilityWrap.append(menuWrap);
-        }
-        columnVisibilityContainer.append(columnVisibilityWrap);
-    }
+    const columnVisibilityContainer = buildColumnVisibilityDropdown({
+        body,
+        orderHelperState,
+        ORDER_HELPER_COLUMNS_STORAGE_KEY,
+        ORDER_HELPER_DEFAULT_COLUMNS,
+        applyOrderHelperColumnVisibility,
+    });
     row.append(columnVisibilityContainer);
 
     const addDivider = ()=>{
@@ -236,31 +493,17 @@ export function buildVisibilityRow({
         row.append(divider);
     };
 
-    
-    const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
-    const sortWrap = document.createElement('label'); {
-        sortWrap.classList.add('stwid--table-sort');
-        setTooltip(sortWrap, 'Sort rows in the table');
-        const sortSel = document.createElement('select'); {
-            sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
-            setTooltip(sortSel, 'Sort rows in the table');
-            dom.order.sortSelect = sortSel;
-            appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
-            sortSel.addEventListener('change', async()=>{
-                const value = JSON.parse(sortSel.value);
-                setOrderHelperSort(value.sort, value.direction);
-                if (value.sort === SORT.CUSTOM) {
-                    const updatedBooks = ensureCustomDisplayIndex(orderHelperState.book);
-                    for (const bookName of updatedBooks) {
-                        await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-                    }
-                }
-                applyOrderHelperSortToDom();
-            });
-            sortWrap.append(sortSel);
-        }
-        tableSortContainer.append(sortWrap);
-    }
+    const { tableSortContainer } = buildSortSelector({
+        dom,
+        orderHelperState,
+        appendSortOptions,
+        setOrderHelperSort,
+        SORT,
+        ensureCustomDisplayIndex,
+        saveWorldInfo,
+        buildSavePayload,
+        applyOrderHelperSortToDom,
+    });
     row.append(tableSortContainer);
     addDivider();
 
@@ -284,17 +527,6 @@ export function buildVisibilityRow({
     const visibilityInfo = document.createElement('div');
     visibilityInfo.classList.add('stwid--visibilityInfo');
 
-    const activeFiltersEl = document.createElement('div');
-    activeFiltersEl.classList.add('stwid--activeFilters');
-    activeFiltersEl.style.display = 'none';
-    const activeFiltersLabel = document.createElement('span');
-    activeFiltersLabel.textContent = 'Active filters:';
-    activeFiltersEl.append(activeFiltersLabel);
-    const chipContainer = document.createElement('div');
-    chipContainer.classList.add('stwid--filterChipContainer');
-    activeFiltersEl.append(chipContainer);
-    visibilityInfo.append(activeFiltersEl);
-
     row.append(visibilityInfo);
 
     
@@ -314,8 +546,8 @@ export function buildVisibilityRow({
             case 'recursion':    options = ORDER_HELPER_RECURSION_OPTIONS; break;
             default: return selectedValues.map(String);
         }
-        const labelMap = Object.fromEntries(options.map((o)=>[o.value, o.label]));
-        return selectedValues.map((v)=>labelMap[v] ?? String(v));
+        const labelMap = Object.fromEntries(options.map((opt)=>[opt.value, opt.label]));
+        return selectedValues.map((selectedValue)=>labelMap[selectedValue] ?? String(selectedValue));
     };
 
     
@@ -325,110 +557,71 @@ export function buildVisibilityRow({
 
     
     const clearFilterHandlers = {
-        strategy: ()=>{
-            const allValues = orderHelperState.strategyValues.length
-                ? [...orderHelperState.strategyValues]
-                : getStrategyValues();
-            orderHelperState.filters.strategy = allValues;
-            applyOrderHelperStrategyFilters();
-            filterIndicatorRefs.strategy?.();
-            refresh();
-        },
-        position: ()=>{
-            const allValues = orderHelperState.positionValues.length
-                ? [...orderHelperState.positionValues]
-                : getPositionValues();
-            orderHelperState.filters.position = allValues;
-            applyOrderHelperPositionFilters();
-            filterIndicatorRefs.position?.();
-            refresh();
-        },
-        recursion: ()=>{
-            const allValues = orderHelperState.recursionValues ?? [];
-            orderHelperState.filters.recursion = [...allValues];
-            applyOrderHelperRecursionFilters();
-            filterIndicatorRefs.recursion?.();
-            refresh();
-        },
-        outlet: ()=>{
-            const allValues = orderHelperState.outletValues.length
-                ? [...orderHelperState.outletValues]
-                : getOutletValues();
-            orderHelperState.filters.outlet = allValues;
-            applyOrderHelperOutletFilters();
-            filterIndicatorRefs.outlet?.();
-            refresh();
-        },
-        automationId: ()=>{
-            const allValues = orderHelperState.automationIdValues.length
-                ? [...orderHelperState.automationIdValues]
-                : getAutomationIdValues();
-            orderHelperState.filters.automationId = allValues;
-            applyOrderHelperAutomationIdFilters();
-            filterIndicatorRefs.automationId?.();
-            refresh();
-        },
-        group: ()=>{
-            const allValues = orderHelperState.groupValues.length
-                ? [...orderHelperState.groupValues]
-                : getGroupValues();
-            orderHelperState.filters.group = allValues;
-            applyOrderHelperGroupFilters();
-            filterIndicatorRefs.group?.();
-            refresh();
-        },
+        strategy: makeClearFilterHandler(
+            'strategy',
+            ()=>orderHelperState.strategyValues.length ? orderHelperState.strategyValues : getStrategyValues(),
+            applyOrderHelperStrategyFilters,
+            orderHelperState,
+            filterIndicatorRefs.strategy,
+            ()=>refresh(),
+        ),
+        position: makeClearFilterHandler(
+            'position',
+            ()=>orderHelperState.positionValues.length ? orderHelperState.positionValues : getPositionValues(),
+            applyOrderHelperPositionFilters,
+            orderHelperState,
+            filterIndicatorRefs.position,
+            ()=>refresh(),
+        ),
+        recursion: makeClearFilterHandler(
+            'recursion',
+            ()=>orderHelperState.recursionValues ?? [],
+            applyOrderHelperRecursionFilters,
+            orderHelperState,
+            filterIndicatorRefs.recursion,
+            ()=>refresh(),
+        ),
+        outlet: makeClearFilterHandler(
+            'outlet',
+            ()=>orderHelperState.outletValues.length ? orderHelperState.outletValues : getOutletValues(),
+            applyOrderHelperOutletFilters,
+            orderHelperState,
+            filterIndicatorRefs.outlet,
+            ()=>refresh(),
+        ),
+        automationId: makeClearFilterHandler(
+            'automationId',
+            ()=>orderHelperState.automationIdValues.length ? orderHelperState.automationIdValues : getAutomationIdValues(),
+            applyOrderHelperAutomationIdFilters,
+            orderHelperState,
+            filterIndicatorRefs.automationId,
+            ()=>refresh(),
+        ),
+        group: makeClearFilterHandler(
+            'group',
+            ()=>orderHelperState.groupValues.length ? orderHelperState.groupValues : getGroupValues(),
+            applyOrderHelperGroupFilters,
+            orderHelperState,
+            filterIndicatorRefs.group,
+            ()=>refresh(),
+        ),
     };
 
-    refresh = ()=>{
-        
-        chipContainer.innerHTML = '';
-        const filters = orderHelperState.filters;
-        const filterConfigs = [
-            { key: 'strategy',     allValues: orderHelperState.strategyValues.length    ? orderHelperState.strategyValues    : getStrategyValues()    },
-            { key: 'position',     allValues: orderHelperState.positionValues.length    ? orderHelperState.positionValues    : getPositionValues()    },
-            { key: 'recursion',    allValues: orderHelperState.recursionValues ?? []                                                                  },
-            { key: 'outlet',       allValues: orderHelperState.outletValues.length      ? orderHelperState.outletValues      : getOutletValues()      },
-            { key: 'automationId', allValues: orderHelperState.automationIdValues.length? orderHelperState.automationIdValues: getAutomationIdValues()},
-            { key: 'group',        allValues: orderHelperState.groupValues.length       ? orderHelperState.groupValues       : getGroupValues()       },
-        ];
+    const filterChipDisplay = buildFilterChipDisplay({
+        orderHelperState,
+        getStrategyValues,
+        getPositionValues,
+        getOutletValues,
+        getAutomationIdValues,
+        getGroupValues,
+        clearFilterHandlers,
+        FILTER_KEY_LABELS,
+        getFilterValueLabels,
+    });
+    visibilityInfo.append(filterChipDisplay.activeFiltersEl);
+    refresh = filterChipDisplay.refresh;
 
-        let hasActiveFilter = false;
-        for (const { key, allValues } of filterConfigs) {
-            const selected = filters[key] ?? [];
-            if (!allValues.length) continue;
-            if (selected.length >= allValues.length) continue;
-            hasActiveFilter = true;
-
-            const chip = document.createElement('div');
-            chip.classList.add('stwid--filterChip');
-
-            const chipLabel = document.createElement('span');
-            const headerName = FILTER_KEY_LABELS[key] ?? key;
-            const valueLabels = getFilterValueLabels(key, selected);
-            chipLabel.textContent = `${headerName}: ${valueLabels.join(', ')}`;
-            chip.append(chipLabel);
-
-            const removeBtn = document.createElement('button');
-            removeBtn.classList.add('stwid--chipRemove');
-            removeBtn.textContent = '×';
-            removeBtn.addEventListener('click', clearFilterHandlers[key]);
-            chip.append(removeBtn);
-
-            chipContainer.append(chip);
-        }
-
-        activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
-    };
-
-    
-    const contentWrap = document.createElement('div');
-    contentWrap.classList.add('stwid--rowContentWrap');
-    while (row.children.length > 1) {
-        contentWrap.append(row.children[1]); 
-    }
-    row.append(contentWrap);
-
-    wireCollapseRow(rowTitle, row, contentWrap, collapseChevron, { initialCollapsed });
+    wrapRowContent(row, rowTitle, collapseChevron, initialCollapsed);
 
     return { element: row, refresh };
 }
@@ -458,14 +651,7 @@ export function buildBulkEditRow({
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
 
-    
-    const rowTitle = document.createElement('div');
-    rowTitle.classList.add('stwid--RowTitle');
-    rowTitle.textContent = 'Bulk Editor';
-    const collapseChevron = document.createElement('i');
-    collapseChevron.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down', 'stwid--collapseChevron');
-    rowTitle.prepend(collapseChevron);
-    rowTitle.classList.add('stwid--collapsibleTitle');
+    const { rowTitle, collapseChevron } = createCollapsibleRowTitle('Bulk Editor');
     row.append(rowTitle);
 
     
@@ -478,7 +664,7 @@ export function buildBulkEditRow({
         setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
         selectAll.addEventListener('click', ()=>{
             const rows = getOrderHelperRows();
-            const shouldSelect = !rows.length || rows.some(r=>!isOrderHelperRowSelected(r));
+            const shouldSelect = !rows.length || rows.some((tableRow)=>!isOrderHelperRowSelected(tableRow));
             setAllOrderHelperRowSelected(shouldSelect);
             updateOrderHelperSelectAllButton();
             refreshSelectionCount();
@@ -495,68 +681,10 @@ export function buildBulkEditRow({
 
     const refreshSelectionCount = ()=>{
         const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
-        const visible = rows.filter((r)=>!r.classList.contains('stwid--state-filtered'));
+        const visible = rows.filter((tableRow)=>!tableRow.classList.contains('stwid--state-filtered'));
         const total = visible.length;
-        const selected = visible.filter((r)=>isOrderHelperRowSelected(r)).length;
+        const selected = visible.filter((tableRow)=>isOrderHelperRowSelected(tableRow)).length;
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
-    };
-
-    const getSafeTbodyRows = ()=>{
-        const tbody = dom.order?.tbody;
-        if (!(tbody instanceof HTMLElement)) {
-            toastr.warning('Entry Manager table is not ready yet.');
-            return null;
-        }
-        return [...tbody.children].filter((child)=>child instanceof HTMLElement);
-    };
-
-    const getBulkTargets = (rows, { reverse = false } = {})=>{
-        const orderedRows = reverse ? [...rows].reverse() : rows;
-        const targets = [];
-        let skippedInvalidRow = false;
-        for (const tr of orderedRows) {
-            if (tr.classList.contains('stwid--state-filtered')) continue;
-            if (!isOrderHelperRowSelected(tr)) continue;
-            const bookName = tr.getAttribute('data-book');
-            const uid = tr.getAttribute('data-uid');
-            if (!bookName || uid === null) {
-                skippedInvalidRow = true;
-                continue;
-            }
-            const entryData = cache?.[bookName]?.entries?.[uid];
-            if (!entryData) {
-                skippedInvalidRow = true;
-                continue;
-            }
-            targets.push({ tr, bookName, uid, entryData });
-        }
-        if (skippedInvalidRow) {
-            console.warn('STWID: skipped one or more bulk-edit rows due to missing book/entry data.');
-        }
-        return targets;
-    };
-
-    const saveUpdatedBooks = async (books)=>{
-        for (const bookName of books) {
-            await saveWorldInfo(bookName, buildSavePayload(bookName), true);
-        }
-    };
-
-    const setApplyButtonBusy = (button, isBusy)=>{
-        button.dataset.stwidBusy = isBusy ? '1' : '0';
-        button.style.pointerEvents = isBusy ? 'none' : '';
-        button.classList.toggle('stwid--state-disabled', isBusy);
-        button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
-    };
-
-    const withApplyButtonLock = async (button, callback)=>{
-        if (button.dataset.stwidBusy === '1') return;
-        setApplyButtonBusy(button, true);
-        try {
-            await callback();
-        } finally {
-            setApplyButtonBusy(button, false);
-        }
     };
 
     
@@ -583,11 +711,11 @@ export function buildBulkEditRow({
 
     const runApplyActiveState = async () => {
         await withApplyButtonLock(applyActiveState, async()=>{
-            const rows = getSafeTbodyRows();
+            const rows = getSafeTbodyRows(dom);
             if (!rows) return;
 
             const willDisable = activeToggle.classList.contains('fa-toggle-off');
-            const targets = getBulkTargets(rows);
+            const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
             const books = new Set();
             for (let i = 0; i < targets.length; i++) {
                 const { tr, bookName, uid, entryData } = targets[i];
@@ -603,16 +731,16 @@ export function buildBulkEditRow({
                     listToggle.classList.toggle('fa-toggle-off', willDisable);
                     listToggle.classList.toggle('fa-toggle-on', !willDisable);
                 }
-                if ((i + 1) % 200 === 0) {
+                if ((i + 1) % BULK_APPLY_BATCH_SIZE === 0) {
                     await new Promise((resolve)=>setTimeout(resolve, 0));
                 }
             }
-            await saveUpdatedBooks(books);
-            applyActiveState.classList.remove('stwid--applyDirty');
+            await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+            applyActiveState.classList.remove(APPLY_DIRTY_CLASS);
         });
     };
     const applyActiveState = createApplyButton('Apply the active state to all selected entries', runApplyActiveState, applyRegistry);
-    activeToggle.addEventListener('click', () => applyActiveState.classList.add('stwid--applyDirty'));
+    activeToggle.addEventListener('click', () => applyActiveState.classList.add(APPLY_DIRTY_CLASS));
     activeStateContainer.append(activeToggle, applyActiveState);
 
     row.append(activeStateContainer);
@@ -630,7 +758,7 @@ export function buildBulkEditRow({
             strategySelect.append(option);
         }
         const storedStrategy = localStorage.getItem('stwid--bulk-strategy-value');
-        if (storedStrategy && [...strategySelect.options].some((o)=>o.value === storedStrategy)) {
+        if (storedStrategy && [...strategySelect.options].some((opt)=>opt.value === storedStrategy)) {
             strategySelect.value = storedStrategy;
         }
         strategySelect.addEventListener('change', ()=>{
@@ -646,10 +774,10 @@ export function buildBulkEditRow({
                 toastr.warning('No strategy selected.');
                 return;
             }
-            const rows = getSafeTbodyRows();
+            const rows = getSafeTbodyRows(dom);
             if (!rows) return;
 
-            const targets = getBulkTargets(rows);
+            const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
             const books = new Set();
             for (let i = 0; i < targets.length; i++) {
                 const { tr, bookName, uid, entryData } = targets[i];
@@ -661,16 +789,16 @@ export function buildBulkEditRow({
                 const domStrat = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
                 if (domStrat) domStrat.value = value;
                 applyOrderHelperStrategyFilterToRow(tr, entryData);
-                if ((i + 1) % 200 === 0) {
+                if ((i + 1) % BULK_APPLY_BATCH_SIZE === 0) {
                     await new Promise((resolve)=>setTimeout(resolve, 0));
                 }
             }
-            await saveUpdatedBooks(books);
-            applyStrategy.classList.remove('stwid--applyDirty');
+            await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+            applyStrategy.classList.remove(APPLY_DIRTY_CLASS);
         });
     };
     const applyStrategy = createApplyButton('Apply selected strategy to all selected entries', runApplyStrategy, applyRegistry);
-    strategySelect.addEventListener('change', () => applyStrategy.classList.add('stwid--applyDirty'));
+    strategySelect.addEventListener('change', () => applyStrategy.classList.add(APPLY_DIRTY_CLASS));
     strategyContainer.append(applyStrategy);
 
     row.append(strategyContainer);
@@ -688,7 +816,7 @@ export function buildBulkEditRow({
             positionSelect.append(option);
         }
         const storedPosition = localStorage.getItem('stwid--bulk-position-value');
-        if (storedPosition && [...positionSelect.options].some((o)=>o.value === storedPosition)) {
+        if (storedPosition && [...positionSelect.options].some((opt)=>opt.value === storedPosition)) {
             positionSelect.value = storedPosition;
         }
         positionSelect.addEventListener('change', ()=>{
@@ -703,9 +831,9 @@ export function buildBulkEditRow({
             toastr.warning('No position selected.');
             return;
         }
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, uid, entryData } of targets) {
             books.add(bookName);
@@ -714,11 +842,11 @@ export function buildBulkEditRow({
             if (domPos) domPos.value = value;
             applyOrderHelperPositionFilterToRow(tr, entryData);
         }
-        await saveUpdatedBooks(books);
-        applyPosition.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyPosition.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyPosition = createApplyButton('Apply selected position to all selected entries', runApplyPosition, applyRegistry);
-    positionSelect.addEventListener('change', () => applyPosition.classList.add('stwid--applyDirty'));
+    positionSelect.addEventListener('change', () => applyPosition.classList.add(APPLY_DIRTY_CLASS));
     positionContainer.append(applyPosition);
 
     row.append(positionContainer);
@@ -748,9 +876,9 @@ export function buildBulkEditRow({
             toastr.warning('Depth must be a non-negative whole number, or blank to clear.');
             return;
         }
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -758,11 +886,11 @@ export function buildBulkEditRow({
             const rowDepth = (tr.querySelector('[name="depth"]'));
             if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
         }
-        await saveUpdatedBooks(books);
-        applyDepth.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyDepth.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyDepth = createApplyButton('Apply depth value to all selected entries', runApplyDepth, applyRegistry);
-    depthInput.addEventListener('change', () => applyDepth.classList.add('stwid--applyDirty'));
+    depthInput.addEventListener('change', () => applyDepth.classList.add(APPLY_DIRTY_CLASS));
     depthContainer.append(applyDepth);
 
     row.append(depthContainer);
@@ -797,7 +925,7 @@ export function buildBulkEditRow({
         outletMenu.innerHTML = '';
         const filter = outletInput.value.toLowerCase();
         const allOptions = getOutletOptions();
-        const visible = filter ? allOptions.filter((o)=>o.value.toLowerCase().includes(filter)) : allOptions;
+        const visible = filter ? allOptions.filter((opt)=>opt.value.toLowerCase().includes(filter)) : allOptions;
         for (const opt of visible) {
             const optEl = document.createElement('div');
             optEl.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
@@ -859,9 +987,9 @@ export function buildBulkEditRow({
 
     const runApplyOutlet = async () => {
         const value = outletInput.value.trim();
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         
         for (const { tr, bookName, entryData } of targets) {
@@ -877,11 +1005,11 @@ export function buildBulkEditRow({
             applyOrderHelperOutletFilterToRow(tr, entryData);
         }
         filterIndicatorRefs.outlet?.();
-        await saveUpdatedBooks(books);
-        applyOutlet.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyOutlet.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyOutlet = createApplyButton('Apply outlet name to all selected entries', runApplyOutlet, applyRegistry);
-    outletInput.addEventListener('input', () => applyOutlet.classList.add('stwid--applyDirty'));
+    outletInput.addEventListener('input', () => applyOutlet.classList.add(APPLY_DIRTY_CLASS));
     outletContainer.append(applyOutlet);
 
     row.append(outletContainer);
@@ -899,7 +1027,7 @@ export function buildBulkEditRow({
     const orderContainer = createLabeledBulkContainer('order', 'Order', 'Assign sequential Order numbers to selected entries using the start value, spacing, and direction below.');
 
     const runApplyOrder = async () => {
-        await withApplyButtonLock(apply, async()=>{
+        await withApplyButtonLock(applyOrder, async()=>{
             const start = Number.parseInt(dom.order.start.value, 10);
             const step = Number.parseInt(dom.order.step.value, 10);
             if (!Number.isInteger(start) || start <= 0) {
@@ -910,11 +1038,11 @@ export function buildBulkEditRow({
                 toastr.warning('Spacing must be a positive whole number.');
                 return;
             }
-            const rows = getSafeTbodyRows();
+            const rows = getSafeTbodyRows(dom);
             if (!rows) return;
 
             const up = dom.order.direction.up.checked;
-            const targets = getBulkTargets(rows, { reverse: up });
+            const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected, { reverse: up });
             let order = start;
             const books = new Set();
             for (let i = 0; i < targets.length; i++) {
@@ -924,16 +1052,16 @@ export function buildBulkEditRow({
                 const orderInput = (tr.querySelector('[name="order"]'));
                 if (orderInput) orderInput.value = order.toString();
                 order += step;
-                if ((i + 1) % 200 === 0) {
+                if ((i + 1) % BULK_APPLY_BATCH_SIZE === 0) {
                     await new Promise((resolve)=>setTimeout(resolve, 0));
                 }
             }
-            await saveUpdatedBooks(books);
-            apply.classList.remove('stwid--applyDirty');
+            await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+            applyOrder.classList.remove(APPLY_DIRTY_CLASS);
         });
     };
     
-    const apply = createApplyButton('Apply current row order to the Order field', runApplyOrder, applyRegistry);
+    const applyOrder = createApplyButton('Apply current row order to the Order field', runApplyOrder, applyRegistry);
 
     
     const startSpacingPair = document.createElement('div');
@@ -978,57 +1106,41 @@ export function buildBulkEditRow({
     }
 
     orderContainer.append(startSpacingPair);
-    dom.order.start.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
-    dom.order.step.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
+    dom.order.start.addEventListener('change', () => applyOrder.classList.add(APPLY_DIRTY_CLASS));
+    dom.order.step.addEventListener('change', () => applyOrder.classList.add(APPLY_DIRTY_CLASS));
 
-    const dir = document.createElement('div'); {
-        dir.classList.add('stwid--inputWrap');
-        setTooltip(dir, 'Direction used when applying Order values');
-        dir.append('Direction: ');
+    const directionGroup = document.createElement('div'); {
+        directionGroup.classList.add('stwid--inputWrap');
+        setTooltip(directionGroup, 'Direction used when applying Order values');
+        directionGroup.append('Direction: ');
         const directionRadioGroupName = 'stwid--order-direction';
-        const wrap = document.createElement('div'); {
-            wrap.classList.add('stwid--toggleWrap');
-            const up = document.createElement('label'); {
-                up.classList.add('stwid--inputWrap');
-                setTooltip(up, 'Start from the bottom row');
-                const inp = document.createElement('input'); {
-                    dom.order.direction.up = inp;
-                    inp.type = 'radio';
-                    inp.name = directionRadioGroupName;
-                    inp.checked = (localStorage.getItem('stwid--order-direction') ?? 'down') == 'up';
-                    inp.addEventListener('change', ()=>{
-                        if (!inp.checked) return;
-                        localStorage.setItem('stwid--order-direction', 'up');
-                    });
-                    inp.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
-                    up.append(inp);
-                }
-                up.append('up');
-                wrap.append(up);
-            }
-            const down = document.createElement('label'); {
-                down.classList.add('stwid--inputWrap');
-                setTooltip(down, 'Start from the top row');
-                const inp = document.createElement('input'); {
-                    dom.order.direction.down = inp;
-                    inp.type = 'radio';
-                    inp.name = directionRadioGroupName;
-                    inp.checked = (localStorage.getItem('stwid--order-direction') ?? 'down') == 'down';
-                    inp.addEventListener('change', ()=>{
-                        if (!inp.checked) return;
-                        localStorage.setItem('stwid--order-direction', 'down');
-                    });
-                    inp.addEventListener('change', () => apply.classList.add('stwid--applyDirty'));
-                    down.append(inp);
-                }
-                down.append('down');
-                wrap.append(down);
-            }
-            dir.append(wrap);
+        const radioToggleWrap = document.createElement('div'); {
+            radioToggleWrap.classList.add('stwid--toggleWrap');
+            const upDirection = buildDirectionRadio(
+                directionRadioGroupName,
+                'up',
+                'up',
+                'Start from the bottom row',
+                'stwid--order-direction',
+                applyOrder,
+            );
+            dom.order.direction.up = upDirection.radioInput;
+            radioToggleWrap.append(upDirection.directionRow);
+            const downDirection = buildDirectionRadio(
+                directionRadioGroupName,
+                'down',
+                'down',
+                'Start from the top row',
+                'stwid--order-direction',
+                applyOrder,
+            );
+            dom.order.direction.down = downDirection.radioInput;
+            radioToggleWrap.append(downDirection.directionRow);
+            directionGroup.append(radioToggleWrap);
         }
-        orderContainer.append(dir);
+        orderContainer.append(directionGroup);
     }
-    orderContainer.append(apply);
+    orderContainer.append(applyOrder);
     row.append(orderContainer);
 
     
@@ -1039,26 +1151,15 @@ export function buildBulkEditRow({
     const recursionOptions = document.createElement('div'); {
         recursionOptions.classList.add('stwid--recursionOptions');
         for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
-            const row = document.createElement('label'); {
-                row.classList.add('stwid--small-check-row');
-                const input = document.createElement('input'); {
-                    input.type = 'checkbox';
-                    input.classList.add('checkbox');
-                    setTooltip(input, label);
-                    recursionCheckboxes.set(value, input);
-                    row.append(input);
-                }
-                row.append(label);
-                recursionOptions.append(row);
-            }
+            recursionOptions.append(buildRecursionCheckboxRow(value, label, recursionCheckboxes));
         }
         recursionContainer.append(recursionOptions);
     }
 
     const runApplyRecursion = async () => {
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -1072,12 +1173,12 @@ export function buildBulkEditRow({
             }
             applyOrderHelperRecursionFilterToRow(tr, entryData);
         }
-        await saveUpdatedBooks(books);
-        applyRecursion.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyRecursion = createApplyButton('Apply recursion flags to all selected entries, overwriting their current values', runApplyRecursion, applyRegistry);
     for (const input of recursionCheckboxes.values()) {
-        input.addEventListener('change', () => applyRecursion.classList.add('stwid--applyDirty'));
+        input.addEventListener('change', () => applyRecursion.classList.add(APPLY_DIRTY_CLASS));
     }
     recursionContainer.append(applyRecursion);
 
@@ -1089,26 +1190,26 @@ export function buildBulkEditRow({
     let budgetIgnoreCheckbox;
     const budgetOptions = document.createElement('div'); {
         budgetOptions.classList.add('stwid--recursionOptions');
-        const row = document.createElement('label'); {
-            row.classList.add('stwid--small-check-row');
+        const budgetRow = document.createElement('label'); {
+            budgetRow.classList.add('stwid--small-check-row');
             const input = document.createElement('input'); {
                 input.type = 'checkbox';
                 input.classList.add('checkbox');
                 setTooltip(input, 'Ignore World Info budget limit for this entry');
                 budgetIgnoreCheckbox = input;
-                row.append(input);
+                budgetRow.append(input);
             }
-            row.append('Ignore budget');
-            budgetOptions.append(row);
+            budgetRow.append('Ignore budget');
+            budgetOptions.append(budgetRow);
         }
         budgetContainer.append(budgetOptions);
     }
 
     const runApplyBudget = async () => {
         const checked = budgetIgnoreCheckbox.checked;
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -1116,11 +1217,11 @@ export function buildBulkEditRow({
             const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
             if (domInput) domInput.checked = checked;
         }
-        await saveUpdatedBooks(books);
-        applyBudget.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyBudget.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyBudget = createApplyButton('Apply Ignore Budget to all selected entries, overwriting their current values', runApplyBudget, applyRegistry);
-    budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add('stwid--applyDirty'));
+    budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add(APPLY_DIRTY_CLASS));
     budgetContainer.append(applyBudget);
 
     row.append(budgetContainer);
@@ -1154,9 +1255,9 @@ export function buildBulkEditRow({
             toastr.warning('Probability must be a whole number between 0 and 100.');
             return;
         }
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -1164,11 +1265,11 @@ export function buildBulkEditRow({
             const rowInp = tr.querySelector('[name="selective_probability"]');
             if (rowInp) rowInp.value = String(parsed);
         }
-        await saveUpdatedBooks(books);
-        applyProbability.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyProbability.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyProbability = createApplyButton('Apply this probability to all selected entries', runApplyProbability, applyRegistry);
-    probabilityInput.addEventListener('change', () => applyProbability.classList.add('stwid--applyDirty'));
+    probabilityInput.addEventListener('change', () => applyProbability.classList.add(APPLY_DIRTY_CLASS));
     probabilityContainer.append(applyProbability);
 
     row.append(probabilityContainer);
@@ -1201,9 +1302,9 @@ export function buildBulkEditRow({
             toastr.warning('Sticky must be a non-negative whole number.');
             return;
         }
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -1211,11 +1312,11 @@ export function buildBulkEditRow({
             const rowInp = tr.querySelector('[name="sticky"]');
             if (rowInp) rowInp.value = String(parsed);
         }
-        await saveUpdatedBooks(books);
-        applySticky.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applySticky.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applySticky = createApplyButton('Apply this sticky value to all selected entries', runApplySticky, applyRegistry);
-    stickyInput.addEventListener('change', () => applySticky.classList.add('stwid--applyDirty'));
+    stickyInput.addEventListener('change', () => applySticky.classList.add(APPLY_DIRTY_CLASS));
     stickyContainer.append(applySticky);
 
     row.append(stickyContainer);
@@ -1248,9 +1349,9 @@ export function buildBulkEditRow({
             toastr.warning('Cooldown must be a non-negative whole number.');
             return;
         }
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -1258,11 +1359,11 @@ export function buildBulkEditRow({
             const rowInp = tr.querySelector('[name="cooldown"]');
             if (rowInp) rowInp.value = String(parsed);
         }
-        await saveUpdatedBooks(books);
-        applyCooldown.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyCooldown.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyCooldown = createApplyButton('Apply this cooldown value to all selected entries', runApplyCooldown, applyRegistry);
-    cooldownInput.addEventListener('change', () => applyCooldown.classList.add('stwid--applyDirty'));
+    cooldownInput.addEventListener('change', () => applyCooldown.classList.add(APPLY_DIRTY_CLASS));
     cooldownContainer.append(applyCooldown);
 
     row.append(cooldownContainer);
@@ -1295,9 +1396,9 @@ export function buildBulkEditRow({
             toastr.warning('Delay must be a non-negative whole number.');
             return;
         }
-        const rows = getSafeTbodyRows();
+        const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows);
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -1305,11 +1406,11 @@ export function buildBulkEditRow({
             const rowInp = tr.querySelector('[name="delay"]');
             if (rowInp) rowInp.value = String(parsed);
         }
-        await saveUpdatedBooks(books);
-        applyBulkDelay.classList.remove('stwid--applyDirty');
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyBulkDelay.classList.remove(APPLY_DIRTY_CLASS);
     };
     const applyBulkDelay = createApplyButton('Apply this delay value to all selected entries', runApplyBulkDelay, applyRegistry);
-    bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add('stwid--applyDirty'));
+    bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add(APPLY_DIRTY_CLASS));
     bulkDelayContainer.append(applyBulkDelay);
 
     row.append(bulkDelayContainer);
@@ -1337,16 +1438,10 @@ export function buildBulkEditRow({
 
     row.append(applyAllContainer);
 
-    
-    const contentWrap = document.createElement('div');
-    contentWrap.classList.add('stwid--rowContentWrap');
-    while (row.children.length > 1) {
-        contentWrap.append(row.children[1]); 
-    }
-    row.append(contentWrap);
-
-    wireCollapseRow(rowTitle, row, contentWrap, collapseChevron, { initialCollapsed });
+    wrapRowContent(row, rowTitle, collapseChevron, initialCollapsed);
 
     return { element: row, refreshSelectionCount, cleanup };
 }
+
+
 
