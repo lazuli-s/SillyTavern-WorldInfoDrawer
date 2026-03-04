@@ -79,23 +79,9 @@ export const initEditorPanel = ({
         }
     };
 
-    const onEditorPointerdown = (evt)=>{
-        
-        
-        
-        
-        
-        const target =  (evt.target instanceof HTMLElement ? evt.target : null);
-        if (!target) return;
-        if (target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) {
-            markEditorDirtyIfCurrent();
-        }
-    };
-
     dom.editor?.addEventListener?.('input', onEditorInput, true);
     dom.editor?.addEventListener?.('change', onEditorChange, true);
     dom.editor?.addEventListener?.('keydown', onEditorKeydown, true);
-    dom.editor?.addEventListener?.('pointerdown', onEditorPointerdown, true);
 
     
     
@@ -171,7 +157,9 @@ export const initEditorPanel = ({
     };
 
     const createFocusToggleButton = (toggleClass, iconClass, title) => {
-        const button = document.createElement('div');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-label', title);
         button.classList.add(toggleClass);
         button.classList.add('menu_button');
         button.classList.add('fa-solid', 'fa-fw', iconClass);
@@ -295,7 +283,6 @@ export const initEditorPanel = ({
         dom.editor?.removeEventListener?.('input', onEditorInput, true);
         dom.editor?.removeEventListener?.('change', onEditorChange, true);
         dom.editor?.removeEventListener?.('keydown', onEditorKeydown, true);
-        dom.editor?.removeEventListener?.('pointerdown', onEditorPointerdown, true);
     };
 
     return {
