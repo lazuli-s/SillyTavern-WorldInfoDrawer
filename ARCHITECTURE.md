@@ -182,18 +182,6 @@ Type: `localStorage` + `extension_settings.worldInfoDrawer`
 
 Purpose: Persists client-side UI preferences and extension behavior.
 
-Key keys:
-
-- `extension_settings.worldInfoDrawer` (global sort logic/direction and per-book-sort toggle)
-- `stwid--folder-registry`
-- `stwid--folder-collapse-states`
-- `stwid--order-helper-sort`
-- `stwid--order-helper-hide-keys`
-- `stwid--order-helper-columns`
-- `stwid--order-start`, `stwid--order-step`, `stwid--order-direction`, `stwid--order-filter`
-- `stwid--splitter-size` (desktop splitter width; legacy mirror: `stwid--list-width`)
-- `stwid--splitter-size-mobile` (mobile splitter height; legacy mirror: `stwid--list-height`)
-
 ### 4.3. Runtime In-Memory State
 
 Name: Extension cache/state maps
@@ -230,22 +218,7 @@ Purpose: Cross-extension actions from Book Browser menus.
 
 Integration Method: Extension presence checks, slash commands, and authenticated `fetch` to plugin endpoint.
 
-## 6. Deployment & Infrastructure
-
-Cloud Provider: N/A for this repository (client-side extension code only).
-
-Key Services Used: SillyTavern host runtime in browser, GitHub Actions for CI/security checks.
-
-CI/CD Pipeline: GitHub Actions workflows in `.github/workflows`:
-
-- `ci.yml` (parse/lint/stylelint/prettier on PRs to `dev`)
-- `vitest.yml` (tests on PR activity)
-- `codeql.yml` (JavaScript CodeQL analysis)
-- `prepare-main.yml` / `clean-main.yml` (manual branch/file allowlist automation)
-
-Monitoring & Logging: Browser console logging (`console.log/debug/warn/error`) and CI status checks. No dedicated runtime telemetry stack in this repository.
-
-## 7. Security Considerations
+## 6. Security Considerations
 
 Authentication: Inherited from SillyTavern session/runtime context; extension does not implement its own auth.
 
@@ -260,7 +233,7 @@ Key Security Tools/Practices:
 - Linting and formatting checks in CI.
 - Avoids backend secret handling in extension code.
 
-## 8. Development & Testing Environment
+## 7. Development & Testing Environment
 
 Local Setup Instructions:
 
@@ -274,7 +247,7 @@ Testing Frameworks: Vitest (`test/*.test.js`).
 
 Code Quality Tools: ESLint (`eslint.config.js`), Stylelint (`.stylelintrc.json`), Prettier (`.prettierrc.json`), CodeQL (`.github/workflows/codeql.yml`).
 
-## 9. Future Considerations / Roadmap
+## 8. Future Considerations / Roadmap
 
 - Improve Entry Manager filter UX (from README to-do).
 - Add lorebook tag system (classification/filtering/enable-disable by tag).
@@ -282,15 +255,11 @@ Code Quality Tools: ESLint (`eslint.config.js`), Stylelint (`.stylelintrc.json`)
 - Increase test coverage for high-coupling modules (`src/drawer.js`, `src/book-browser/book-browser.js`, `src/entry-manager/bulk-editor/bulk-editor.js`) that currently rely heavily on host DOM and runtime APIs.
 - Track SillyTavern upstream template/API changes to avoid selector drift and integration regressions.
 
-## 10. Project Identification
+## 9. Project Identification
 
 Project Name: SillyTavern-WorldInfoDrawer (WorldInfo Drawer)
 
 Repository URL: `https://github.com/lazuli-s/SillyTavern-WorldInfoDrawer`
-
-Primary Contact/Team: Lazuli
-
-Date of Last Update: 2026-02-25
 
 ## 11. Glossary / Acronyms
 
