@@ -181,7 +181,6 @@ const createOrderHelperRenderer = ({
             syncOrderHelperOutletFilters,
             filterIndicatorRefs,
             applyOrderHelperRecursionFilterToRow,
-            initialCollapsed: false,
         });
         cleanupBulkEditRow = cleanup;
 

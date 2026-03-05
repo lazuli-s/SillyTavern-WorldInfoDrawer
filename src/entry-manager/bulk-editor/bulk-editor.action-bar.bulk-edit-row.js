@@ -8,6 +8,8 @@ import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 const BULK_APPLY_BATCH_SIZE = 200;
 const APPLY_DIRTY_CLASS = 'stwid--applyDirty';
+const NON_NEGATIVE_PLACEHOLDER = '0+';
+const MAX_ORDER_INPUT = '10000';
 
 function createLabeledBulkContainer(fieldKey, labelText, hintText) {
     const container = document.createElement('div');
@@ -133,54 +135,98 @@ async function withApplyButtonLock(button, callback) {
     }
 }
 
-export function buildBulkEditRow({
+function createPersistedBulkNumberInput({
+    container,
+    storageKey,
+    min,
+    max,
+    placeholder,
+    tooltip,
+}) {
+    const input = document.createElement('input');
+    input.classList.add('stwid-compactInput', 'text_pole');
+    input.type = 'number';
+    input.min = min;
+    if (max !== undefined) input.max = max;
+    input.placeholder = placeholder ?? '';
+    setTooltip(input, tooltip);
+
+    const storedValue = localStorage.getItem(storageKey);
+    if (storedValue !== null) input.value = storedValue;
+
+    input.addEventListener('change', ()=>{
+        localStorage.setItem(storageKey, input.value);
+    });
+    container.append(input);
+    return input;
+}
+
+async function runApplyNonNegativeIntegerField({
+    input,
+    entryField,
+    rowInputName,
+    emptyValueWarning,
+    invalidValueWarning,
     dom,
     cache,
+    isOrderHelperRowSelected,
     saveWorldInfo,
     buildSavePayload,
+    applyButton,
+}) {
+    const rawValue = input.value.trim();
+    if (rawValue === '') {
+        toastr.warning(emptyValueWarning);
+        return;
+    }
+
+    const parsedValue = parseInt(rawValue, 10);
+    if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+        toastr.warning(invalidValueWarning);
+        return;
+    }
+
+    const rows = getSafeTbodyRows(dom);
+    if (!rows) return;
+
+    const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+    const books = new Set();
+    for (const { tr, bookName, entryData } of targets) {
+        books.add(bookName);
+        entryData[entryField] = parsedValue;
+        const rowInput = tr.querySelector(`[name="${rowInputName}"]`);
+        if (rowInput) rowInput.value = String(parsedValue);
+    }
+    await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+    applyButton.classList.remove(APPLY_DIRTY_CLASS);
+}
+
+function applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes) {
+    let recursionInputIndex = 0;
+    for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
+        const checked = recursionCheckboxes.get(value).checked;
+        entryData[value] = checked;
+        if (domInputs[recursionInputIndex]) domInputs[recursionInputIndex].checked = checked;
+        recursionInputIndex++;
+    }
+}
+
+function buildBulkSelectSection({
+    dom,
+    getOrderHelperRows,
     isOrderHelperRowSelected,
     setAllOrderHelperRowSelected,
     updateOrderHelperSelectAllButton,
-    getOrderHelperRows,
-    getStrategyOptions,
-    applyOrderHelperStrategyFilterToRow,
-    getPositionOptions,
-    applyOrderHelperPositionFilterToRow,
-    isOutletPosition,
-    getOutletOptions,
-    applyOrderHelperOutletFilterToRow,
-    syncOrderHelperOutletFilters,
-    filterIndicatorRefs,
-    applyOrderHelperRecursionFilterToRow,
-    initialCollapsed = false,
 }) {
-    const row = document.createElement('div');
-    row.classList.add('stwid--bulkEditRow');
-
-    
-    const selectContainer = createLabeledBulkContainer('select', 'Select', 'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.');
-
-    const selectAll = document.createElement('div'); {
-        dom.order.selectAll = selectAll;
-        selectAll.classList.add('menu_button', 'interactable');
-        selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--state-active');
-        setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
-        selectAll.addEventListener('click', ()=>{
-            const rows = getOrderHelperRows();
-            const shouldSelect = !rows.length || rows.some((tableRow)=>!isOrderHelperRowSelected(tableRow));
-            setAllOrderHelperRowSelected(shouldSelect);
-            updateOrderHelperSelectAllButton();
-            refreshSelectionCount();
-        });
-        selectContainer.append(selectAll);
-    }
+    const selectContainer = createLabeledBulkContainer(
+        'select',
+        'Select',
+        'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.',
+    );
 
     const selectionCountEl = document.createElement('span');
     selectionCountEl.classList.add('stwid--visibilityCount');
     selectionCountEl.textContent = 'Selected 0 out of 0 entries';
-    selectContainer.append(selectionCountEl);
-
-    row.append(selectContainer);
 
     const refreshSelectionCount = ()=>{
         const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
@@ -190,27 +236,279 @@ export function buildBulkEditRow({
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
     };
 
-    
-    
-    const applyRegistry = [];
+    const selectAll = document.createElement('div');
+    dom.order.selectAll = selectAll;
+    selectAll.classList.add('menu_button', 'interactable');
+    selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--state-active');
+    setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
+    selectAll.addEventListener('click', ()=>{
+        const rows = getOrderHelperRows();
+        const shouldSelect = !rows.length || rows.some((tableRow)=>!isOrderHelperRowSelected(tableRow));
+        setAllOrderHelperRowSelected(shouldSelect);
+        updateOrderHelperSelectAllButton();
+        refreshSelectionCount();
+    });
 
-    
-    const activeStateContainer = createLabeledBulkContainer('activeState', 'State', 'Choose enabled or disabled and apply it to all selected entries at once.');
+    selectContainer.append(selectAll, selectionCountEl);
+    return { selectContainer, refreshSelectionCount };
+}
 
-    const activeToggle = document.createElement('div'); {
-        activeToggle.classList.add('fa-solid', 'killSwitch');
-        const storedActive = localStorage.getItem('stwid--bulk-active-value');
-        const isActiveOn = storedActive !== 'false';
-        activeToggle.classList.toggle('fa-toggle-on', isActiveOn);
-        activeToggle.classList.toggle('fa-toggle-off', !isActiveOn);
-        setTooltip(activeToggle, 'State to apply: toggle on = enable entries, toggle off = disable entries');
-        activeToggle.addEventListener('click', ()=>{
-            const isOn = activeToggle.classList.contains('fa-toggle-on');
-            activeToggle.classList.toggle('fa-toggle-on', !isOn);
-            activeToggle.classList.toggle('fa-toggle-off', isOn);
-            localStorage.setItem('stwid--bulk-active-value', String(!isOn));
+function buildApplyAllSection(applyRegistry) {
+    const applyAllContainer = createLabeledBulkContainer(
+        'applyAll',
+        'Apply All Changes',
+        'Applies all containers that have unsaved changes. Skips containers that have not been modified.',
+    );
+
+    const applyAll = document.createElement('div');
+    applyAll.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
+    setTooltip(applyAll, 'Apply all containers with unsaved changes');
+    applyAll.addEventListener('click', async () => {
+        await withApplyButtonLock(applyAll, async () => {
+            const dirty = applyRegistry.filter(({ isDirty }) => isDirty());
+            if (!dirty.length) {
+                toastr.info('No changes to apply.');
+                return;
+            }
+            for (const { runApply } of dirty) {
+                await runApply();
+            }
         });
-    }
+    });
+
+    applyAllContainer.append(applyAll);
+    return applyAllContainer;
+}
+
+function buildBulkProbabilitySection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyRegistry,
+}) {
+    const probabilityContainer = createLabeledBulkContainer(
+        'probability',
+        'Probability',
+        'Trigger probability (0–100%). Sets how likely the entry fires when its keywords match. Leave blank to skip.',
+    );
+
+    const probabilityInput = createPersistedBulkNumberInput({
+        container: probabilityContainer,
+        storageKey: 'stwid--bulk-probability-value',
+        min: '0',
+        max: '100',
+        placeholder: '0–100',
+        tooltip: 'Probability value to apply (0–100)',
+    });
+
+    const runApplyProbability = async () => {
+        const rawValue = probabilityInput.value.trim();
+        if (rawValue === '') {
+            toastr.warning('Enter a probability value (0–100).');
+            return;
+        }
+        const parsed = parseInt(rawValue, 10);
+        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+            toastr.warning('Probability must be a whole number between 0 and 100.');
+            return;
+        }
+        const rows = getSafeTbodyRows(dom);
+        if (!rows) return;
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.selective_probability = parsed;
+            const rowInp = tr.querySelector('[name="selective_probability"]');
+            if (rowInp) rowInp.value = String(parsed);
+        }
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyProbability.classList.remove(APPLY_DIRTY_CLASS);
+    };
+
+    const applyProbability = createApplyButton(
+        'Apply this probability to all selected entries',
+        runApplyProbability,
+        applyRegistry,
+    );
+    probabilityInput.addEventListener('change', () => applyProbability.classList.add(APPLY_DIRTY_CLASS));
+    probabilityContainer.append(applyProbability);
+    return probabilityContainer;
+}
+
+function buildBulkStickySection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyRegistry,
+}) {
+    const stickyContainer = createLabeledBulkContainer(
+        'sticky',
+        'Sticky',
+        'Sticky turns — keeps the entry active for N turns after it triggers. Leave blank to skip.',
+    );
+
+    const stickyInput = createPersistedBulkNumberInput({
+        container: stickyContainer,
+        storageKey: 'stwid--bulk-sticky-value',
+        min: '0',
+        placeholder: NON_NEGATIVE_PLACEHOLDER,
+        tooltip: 'Sticky turns value to apply',
+    });
+
+    const runApplySticky = async () => {
+        await runApplyNonNegativeIntegerField({
+            input: stickyInput,
+            entryField: 'sticky',
+            rowInputName: 'sticky',
+            emptyValueWarning: 'Enter a sticky value (0 or more).',
+            invalidValueWarning: 'Sticky must be a non-negative whole number.',
+            dom,
+            cache,
+            isOrderHelperRowSelected,
+            saveWorldInfo,
+            buildSavePayload,
+            applyButton: applySticky,
+        });
+    };
+
+    const applySticky = createApplyButton(
+        'Apply this sticky value to all selected entries',
+        runApplySticky,
+        applyRegistry,
+    );
+    stickyInput.addEventListener('change', () => applySticky.classList.add(APPLY_DIRTY_CLASS));
+    stickyContainer.append(applySticky);
+    return stickyContainer;
+}
+
+function buildBulkCooldownSection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyRegistry,
+}) {
+    const cooldownContainer = createLabeledBulkContainer(
+        'cooldown',
+        'Cooldown',
+        'Cooldown turns — prevents the entry from re-triggering for N turns after activation. Leave blank to skip.',
+    );
+
+    const cooldownInput = createPersistedBulkNumberInput({
+        container: cooldownContainer,
+        storageKey: 'stwid--bulk-cooldown-value',
+        min: '0',
+        placeholder: NON_NEGATIVE_PLACEHOLDER,
+        tooltip: 'Cooldown turns value to apply',
+    });
+
+    const runApplyCooldown = async () => {
+        await runApplyNonNegativeIntegerField({
+            input: cooldownInput,
+            entryField: 'cooldown',
+            rowInputName: 'cooldown',
+            emptyValueWarning: 'Enter a cooldown value (0 or more).',
+            invalidValueWarning: 'Cooldown must be a non-negative whole number.',
+            dom,
+            cache,
+            isOrderHelperRowSelected,
+            saveWorldInfo,
+            buildSavePayload,
+            applyButton: applyCooldown,
+        });
+    };
+
+    const applyCooldown = createApplyButton(
+        'Apply this cooldown value to all selected entries',
+        runApplyCooldown,
+        applyRegistry,
+    );
+    cooldownInput.addEventListener('change', () => applyCooldown.classList.add(APPLY_DIRTY_CLASS));
+    cooldownContainer.append(applyCooldown);
+    return cooldownContainer;
+}
+
+function buildBulkDelaySection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyRegistry,
+}) {
+    const bulkDelayContainer = createLabeledBulkContainer(
+        'bulkDelay',
+        'Delay',
+        'Delay turns — the entry will not activate until N messages have passed since the chat started. Leave blank to skip.',
+    );
+
+    const bulkDelayInput = createPersistedBulkNumberInput({
+        container: bulkDelayContainer,
+        storageKey: 'stwid--bulk-delay-value',
+        min: '0',
+        placeholder: NON_NEGATIVE_PLACEHOLDER,
+        tooltip: 'Delay turns value to apply',
+    });
+
+    const runApplyBulkDelay = async () => {
+        await runApplyNonNegativeIntegerField({
+            input: bulkDelayInput,
+            entryField: 'delay',
+            rowInputName: 'delay',
+            emptyValueWarning: 'Enter a delay value (0 or more).',
+            invalidValueWarning: 'Delay must be a non-negative whole number.',
+            dom,
+            cache,
+            isOrderHelperRowSelected,
+            saveWorldInfo,
+            buildSavePayload,
+            applyButton: applyBulkDelay,
+        });
+    };
+
+    const applyBulkDelay = createApplyButton(
+        'Apply this delay value to all selected entries',
+        runApplyBulkDelay,
+        applyRegistry,
+    );
+    bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add(APPLY_DIRTY_CLASS));
+    bulkDelayContainer.append(applyBulkDelay);
+    return bulkDelayContainer;
+}
+
+function buildBulkStateSection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyRegistry,
+}) {
+    const activeStateContainer = createLabeledBulkContainer(
+        'activeState',
+        'State',
+        'Choose enabled or disabled and apply it to all selected entries at once.',
+    );
+
+    const activeToggle = document.createElement('div');
+    activeToggle.classList.add('fa-solid', 'killSwitch');
+    const storedActive = localStorage.getItem('stwid--bulk-active-value');
+    const isActiveOn = storedActive !== 'false';
+    activeToggle.classList.toggle('fa-toggle-on', isActiveOn);
+    activeToggle.classList.toggle('fa-toggle-off', !isActiveOn);
+    setTooltip(activeToggle, 'State to apply: toggle on = enable entries, toggle off = disable entries');
+    activeToggle.addEventListener('click', ()=>{
+        const isOn = activeToggle.classList.contains('fa-toggle-on');
+        activeToggle.classList.toggle('fa-toggle-on', !isOn);
+        activeToggle.classList.toggle('fa-toggle-off', isOn);
+        localStorage.setItem('stwid--bulk-active-value', String(!isOn));
+    });
 
     const runApplyActiveState = async () => {
         await withApplyButtonLock(applyActiveState, async()=>{
@@ -242,33 +540,50 @@ export function buildBulkEditRow({
             applyActiveState.classList.remove(APPLY_DIRTY_CLASS);
         });
     };
-    const applyActiveState = createApplyButton('Apply the active state to all selected entries', runApplyActiveState, applyRegistry);
+
+    const applyActiveState = createApplyButton(
+        'Apply the active state to all selected entries',
+        runApplyActiveState,
+        applyRegistry,
+    );
     activeToggle.addEventListener('click', () => applyActiveState.classList.add(APPLY_DIRTY_CLASS));
     activeStateContainer.append(activeToggle, applyActiveState);
+    return activeStateContainer;
+}
 
-    row.append(activeStateContainer);
+function buildBulkStrategySection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    getStrategyOptions,
+    applyOrderHelperStrategyFilterToRow,
+    applyRegistry,
+}) {
+    const strategyContainer = createLabeledBulkContainer(
+        'strategy',
+        'Strategy',
+        'Choose a strategy and apply it to all selected entries at once.',
+    );
 
-    
-    const strategyContainer = createLabeledBulkContainer('strategy', 'Strategy', 'Choose a strategy and apply it to all selected entries at once.');
-
-    const strategySelect = document.createElement('select'); {
-        strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
-        setTooltip(strategySelect, 'Strategy to apply to selected entries');
-        for (const opt of getStrategyOptions()) {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.label;
-            strategySelect.append(option);
-        }
-        const storedStrategy = localStorage.getItem('stwid--bulk-strategy-value');
-        if (storedStrategy && [...strategySelect.options].some((opt)=>opt.value === storedStrategy)) {
-            strategySelect.value = storedStrategy;
-        }
-        strategySelect.addEventListener('change', ()=>{
-            localStorage.setItem('stwid--bulk-strategy-value', strategySelect.value);
-        });
-        strategyContainer.append(strategySelect);
+    const strategySelect = document.createElement('select');
+    strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
+    setTooltip(strategySelect, 'Strategy to apply to selected entries');
+    for (const opt of getStrategyOptions()) {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        strategySelect.append(option);
     }
+    const storedStrategy = localStorage.getItem('stwid--bulk-strategy-value');
+    if (storedStrategy && [...strategySelect.options].some((opt)=>opt.value === storedStrategy)) {
+        strategySelect.value = storedStrategy;
+    }
+    strategySelect.addEventListener('change', ()=>{
+        localStorage.setItem('stwid--bulk-strategy-value', strategySelect.value);
+    });
+    strategyContainer.append(strategySelect);
 
     const runApplyStrategy = async () => {
         await withApplyButtonLock(applyStrategy, async()=>{
@@ -300,11 +615,176 @@ export function buildBulkEditRow({
             applyStrategy.classList.remove(APPLY_DIRTY_CLASS);
         });
     };
-    const applyStrategy = createApplyButton('Apply selected strategy to all selected entries', runApplyStrategy, applyRegistry);
+
+    const applyStrategy = createApplyButton(
+        'Apply selected strategy to all selected entries',
+        runApplyStrategy,
+        applyRegistry,
+    );
     strategySelect.addEventListener('change', () => applyStrategy.classList.add(APPLY_DIRTY_CLASS));
     strategyContainer.append(applyStrategy);
+    return strategyContainer;
+}
 
-    row.append(strategyContainer);
+function buildBulkRecursionSection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyOrderHelperRecursionFilterToRow,
+    applyRegistry,
+}) {
+    const recursionContainer = createLabeledBulkContainer(
+        'recursion',
+        'Recursion',
+        'Set recursion flags on all selected entries. Overwrites the existing values of all three flags.',
+    );
+
+    const recursionCheckboxes = new Map();
+    const recursionOptions = document.createElement('div');
+    recursionOptions.classList.add('stwid--recursionOptions');
+    for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
+        recursionOptions.append(buildRecursionCheckboxRow(value, label, recursionCheckboxes));
+    }
+    recursionContainer.append(recursionOptions);
+
+    const runApplyRecursion = async () => {
+        const rows = getSafeTbodyRows(dom);
+        if (!rows) return;
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
+            applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes);
+            applyOrderHelperRecursionFilterToRow(tr, entryData);
+        }
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
+    };
+
+    const applyRecursion = createApplyButton(
+        'Apply recursion flags to all selected entries, overwriting their current values',
+        runApplyRecursion,
+        applyRegistry,
+    );
+    for (const input of recursionCheckboxes.values()) {
+        input.addEventListener('change', () => applyRecursion.classList.add(APPLY_DIRTY_CLASS));
+    }
+    recursionContainer.append(applyRecursion);
+    return recursionContainer;
+}
+
+function buildBulkBudgetSection({
+    dom,
+    cache,
+    isOrderHelperRowSelected,
+    saveWorldInfo,
+    buildSavePayload,
+    applyRegistry,
+}) {
+    const budgetContainer = createLabeledBulkContainer(
+        'budget',
+        'Budget',
+        'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.',
+    );
+
+    let budgetIgnoreCheckbox;
+    const budgetOptions = document.createElement('div');
+    budgetOptions.classList.add('stwid--recursionOptions');
+    const budgetRow = document.createElement('label');
+    budgetRow.classList.add('stwid--small-check-row');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.classList.add('checkbox');
+    setTooltip(input, 'Ignore World Info budget limit for this entry');
+    budgetIgnoreCheckbox = input;
+    budgetRow.append(input);
+    budgetRow.append('Ignore budget');
+    budgetOptions.append(budgetRow);
+    budgetContainer.append(budgetOptions);
+
+    const runApplyBudget = async () => {
+        const checked = budgetIgnoreCheckbox.checked;
+        const rows = getSafeTbodyRows(dom);
+        if (!rows) return;
+        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const books = new Set();
+        for (const { tr, bookName, entryData } of targets) {
+            books.add(bookName);
+            entryData.ignoreBudget = checked;
+            const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
+            if (domInput) domInput.checked = checked;
+        }
+        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+        applyBudget.classList.remove(APPLY_DIRTY_CLASS);
+    };
+
+    const applyBudget = createApplyButton(
+        'Apply Ignore Budget to all selected entries, overwriting their current values',
+        runApplyBudget,
+        applyRegistry,
+    );
+    budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add(APPLY_DIRTY_CLASS));
+    budgetContainer.append(applyBudget);
+    return budgetContainer;
+}
+
+export function buildBulkEditRow({
+    dom,
+    cache,
+    saveWorldInfo,
+    buildSavePayload,
+    isOrderHelperRowSelected,
+    setAllOrderHelperRowSelected,
+    updateOrderHelperSelectAllButton,
+    getOrderHelperRows,
+    getStrategyOptions,
+    applyOrderHelperStrategyFilterToRow,
+    getPositionOptions,
+    applyOrderHelperPositionFilterToRow,
+    isOutletPosition,
+    getOutletOptions,
+    applyOrderHelperOutletFilterToRow,
+    syncOrderHelperOutletFilters,
+    filterIndicatorRefs,
+    applyOrderHelperRecursionFilterToRow,
+}) {
+    const row = document.createElement('div');
+    row.classList.add('stwid--bulkEditRow');
+
+    const { selectContainer, refreshSelectionCount } = buildBulkSelectSection({
+        dom,
+        getOrderHelperRows,
+        isOrderHelperRowSelected,
+        setAllOrderHelperRowSelected,
+        updateOrderHelperSelectAllButton,
+    });
+    row.append(selectContainer);
+
+    
+    
+    const applyRegistry = [];
+
+    row.append(buildBulkStateSection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyRegistry,
+    }));
+    row.append(buildBulkStrategySection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        getStrategyOptions,
+        applyOrderHelperStrategyFilterToRow,
+        applyRegistry,
+    }));
 
     
     const positionContainer = createLabeledBulkContainer('position', 'Position', 'Choose a position and apply it to all selected entries at once.');
@@ -579,7 +1059,7 @@ export function buildBulkEditRow({
             start.classList.add('stwid-compactInput', 'text_pole');
             start.type = 'number';
             start.min = '1';
-            start.max = '10000';
+            start.max = MAX_ORDER_INPUT;
             start.value = localStorage.getItem('stwid--order-start') ?? '100';
             start.addEventListener('change', ()=>{
                 localStorage.setItem('stwid--order-start', start.value);
@@ -598,7 +1078,7 @@ export function buildBulkEditRow({
             step.classList.add('stwid-compactInput', 'text_pole');
             step.type = 'number';
             step.min = '1';
-            step.max = '10000';
+            step.max = MAX_ORDER_INPUT;
             step.value = localStorage.getItem('stwid--order-step') ?? '10';
             step.addEventListener('change', ()=>{
                 localStorage.setItem('stwid--order-step', step.value);
@@ -646,300 +1126,58 @@ export function buildBulkEditRow({
     orderContainer.append(applyOrder);
     row.append(orderContainer);
 
-    
-    const recursionContainer = createLabeledBulkContainer('recursion', 'Recursion', 'Set recursion flags on all selected entries. Overwrites the existing values of all three flags.');
+    row.append(buildBulkRecursionSection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyOrderHelperRecursionFilterToRow,
+        applyRegistry,
+    }));
+    row.append(buildBulkBudgetSection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyRegistry,
+    }));
 
-    
-    const recursionCheckboxes = new Map();
-    const recursionOptions = document.createElement('div'); {
-        recursionOptions.classList.add('stwid--recursionOptions');
-        for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
-            recursionOptions.append(buildRecursionCheckboxRow(value, label, recursionCheckboxes));
-        }
-        recursionContainer.append(recursionOptions);
-    }
+    row.append(buildBulkProbabilitySection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyRegistry,
+    }));
+    row.append(buildBulkStickySection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyRegistry,
+    }));
+    row.append(buildBulkCooldownSection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyRegistry,
+    }));
+    row.append(buildBulkDelaySection({
+        dom,
+        cache,
+        isOrderHelperRowSelected,
+        saveWorldInfo,
+        buildSavePayload,
+        applyRegistry,
+    }));
 
-    const runApplyRecursion = async () => {
-        const rows = getSafeTbodyRows(dom);
-        if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
-            let i = 0;
-            for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
-                const checked = recursionCheckboxes.get(value).checked;
-                entryData[value] = checked;
-                if (domInputs[i]) domInputs[i].checked = checked;
-                i++;
-            }
-            applyOrderHelperRecursionFilterToRow(tr, entryData);
-        }
-        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-        applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
-    };
-    const applyRecursion = createApplyButton('Apply recursion flags to all selected entries, overwriting their current values', runApplyRecursion, applyRegistry);
-    for (const input of recursionCheckboxes.values()) {
-        input.addEventListener('change', () => applyRecursion.classList.add(APPLY_DIRTY_CLASS));
-    }
-    recursionContainer.append(applyRecursion);
-
-    row.append(recursionContainer);
-
-    
-    const budgetContainer = createLabeledBulkContainer('budget', 'Budget', 'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.');
-
-    let budgetIgnoreCheckbox;
-    const budgetOptions = document.createElement('div'); {
-        budgetOptions.classList.add('stwid--recursionOptions');
-        const budgetRow = document.createElement('label'); {
-            budgetRow.classList.add('stwid--small-check-row');
-            const input = document.createElement('input'); {
-                input.type = 'checkbox';
-                input.classList.add('checkbox');
-                setTooltip(input, 'Ignore World Info budget limit for this entry');
-                budgetIgnoreCheckbox = input;
-                budgetRow.append(input);
-            }
-            budgetRow.append('Ignore budget');
-            budgetOptions.append(budgetRow);
-        }
-        budgetContainer.append(budgetOptions);
-    }
-
-    const runApplyBudget = async () => {
-        const checked = budgetIgnoreCheckbox.checked;
-        const rows = getSafeTbodyRows(dom);
-        if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            entryData.ignoreBudget = checked;
-            const domInput = tr.querySelector('[data-col="budget"] .stwid--recursionOptions input[type="checkbox"]');
-            if (domInput) domInput.checked = checked;
-        }
-        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-        applyBudget.classList.remove(APPLY_DIRTY_CLASS);
-    };
-    const applyBudget = createApplyButton('Apply Ignore Budget to all selected entries, overwriting their current values', runApplyBudget, applyRegistry);
-    budgetIgnoreCheckbox.addEventListener('change', () => applyBudget.classList.add(APPLY_DIRTY_CLASS));
-    budgetContainer.append(applyBudget);
-
-    row.append(budgetContainer);
-
-    
-    const probabilityContainer = createLabeledBulkContainer('probability', 'Probability', 'Trigger probability (0–100%). Sets how likely the entry fires when its keywords match. Leave blank to skip.');
-
-    const probabilityInput = document.createElement('input'); {
-        probabilityInput.classList.add('stwid-compactInput', 'text_pole');
-        probabilityInput.type = 'number';
-        probabilityInput.min = '0';
-        probabilityInput.max = '100';
-        probabilityInput.placeholder = '0–100';
-        setTooltip(probabilityInput, 'Probability value to apply (0–100)');
-        const stored = localStorage.getItem('stwid--bulk-probability-value');
-        if (stored !== null) probabilityInput.value = stored;
-        probabilityInput.addEventListener('change', ()=>{
-            localStorage.setItem('stwid--bulk-probability-value', probabilityInput.value);
-        });
-        probabilityContainer.append(probabilityInput);
-    }
-
-    const runApplyProbability = async () => {
-        const rawValue = probabilityInput.value.trim();
-        if (rawValue === '') {
-            toastr.warning('Enter a probability value (0–100).');
-            return;
-        }
-        const parsed = parseInt(rawValue, 10);
-        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
-            toastr.warning('Probability must be a whole number between 0 and 100.');
-            return;
-        }
-        const rows = getSafeTbodyRows(dom);
-        if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            entryData.selective_probability = parsed;
-            const rowInp = tr.querySelector('[name="selective_probability"]');
-            if (rowInp) rowInp.value = String(parsed);
-        }
-        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-        applyProbability.classList.remove(APPLY_DIRTY_CLASS);
-    };
-    const applyProbability = createApplyButton('Apply this probability to all selected entries', runApplyProbability, applyRegistry);
-    probabilityInput.addEventListener('change', () => applyProbability.classList.add(APPLY_DIRTY_CLASS));
-    probabilityContainer.append(applyProbability);
-
-    row.append(probabilityContainer);
-
-    
-    const stickyContainer = createLabeledBulkContainer('sticky', 'Sticky', 'Sticky turns — keeps the entry active for N turns after it triggers. Leave blank to skip.');
-
-    const stickyInput = document.createElement('input'); {
-        stickyInput.classList.add('stwid-compactInput', 'text_pole');
-        stickyInput.type = 'number';
-        stickyInput.min = '0';
-        stickyInput.placeholder = '0+';
-        setTooltip(stickyInput, 'Sticky turns value to apply');
-        const stored = localStorage.getItem('stwid--bulk-sticky-value');
-        if (stored !== null) stickyInput.value = stored;
-        stickyInput.addEventListener('change', ()=>{
-            localStorage.setItem('stwid--bulk-sticky-value', stickyInput.value);
-        });
-        stickyContainer.append(stickyInput);
-    }
-
-    const runApplySticky = async () => {
-        const rawValue = stickyInput.value.trim();
-        if (rawValue === '') {
-            toastr.warning('Enter a sticky value (0 or more).');
-            return;
-        }
-        const parsed = parseInt(rawValue, 10);
-        if (!Number.isInteger(parsed) || parsed < 0) {
-            toastr.warning('Sticky must be a non-negative whole number.');
-            return;
-        }
-        const rows = getSafeTbodyRows(dom);
-        if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            entryData.sticky = parsed;
-            const rowInp = tr.querySelector('[name="sticky"]');
-            if (rowInp) rowInp.value = String(parsed);
-        }
-        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-        applySticky.classList.remove(APPLY_DIRTY_CLASS);
-    };
-    const applySticky = createApplyButton('Apply this sticky value to all selected entries', runApplySticky, applyRegistry);
-    stickyInput.addEventListener('change', () => applySticky.classList.add(APPLY_DIRTY_CLASS));
-    stickyContainer.append(applySticky);
-
-    row.append(stickyContainer);
-
-    
-    const cooldownContainer = createLabeledBulkContainer('cooldown', 'Cooldown', 'Cooldown turns — prevents the entry from re-triggering for N turns after activation. Leave blank to skip.');
-
-    const cooldownInput = document.createElement('input'); {
-        cooldownInput.classList.add('stwid-compactInput', 'text_pole');
-        cooldownInput.type = 'number';
-        cooldownInput.min = '0';
-        cooldownInput.placeholder = '0+';
-        setTooltip(cooldownInput, 'Cooldown turns value to apply');
-        const stored = localStorage.getItem('stwid--bulk-cooldown-value');
-        if (stored !== null) cooldownInput.value = stored;
-        cooldownInput.addEventListener('change', ()=>{
-            localStorage.setItem('stwid--bulk-cooldown-value', cooldownInput.value);
-        });
-        cooldownContainer.append(cooldownInput);
-    }
-
-    const runApplyCooldown = async () => {
-        const rawValue = cooldownInput.value.trim();
-        if (rawValue === '') {
-            toastr.warning('Enter a cooldown value (0 or more).');
-            return;
-        }
-        const parsed = parseInt(rawValue, 10);
-        if (!Number.isInteger(parsed) || parsed < 0) {
-            toastr.warning('Cooldown must be a non-negative whole number.');
-            return;
-        }
-        const rows = getSafeTbodyRows(dom);
-        if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            entryData.cooldown = parsed;
-            const rowInp = tr.querySelector('[name="cooldown"]');
-            if (rowInp) rowInp.value = String(parsed);
-        }
-        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-        applyCooldown.classList.remove(APPLY_DIRTY_CLASS);
-    };
-    const applyCooldown = createApplyButton('Apply this cooldown value to all selected entries', runApplyCooldown, applyRegistry);
-    cooldownInput.addEventListener('change', () => applyCooldown.classList.add(APPLY_DIRTY_CLASS));
-    cooldownContainer.append(applyCooldown);
-
-    row.append(cooldownContainer);
-
-    
-    const bulkDelayContainer = createLabeledBulkContainer('bulkDelay', 'Delay', 'Delay turns — the entry will not activate until N messages have passed since the chat started. Leave blank to skip.');
-
-    const bulkDelayInput = document.createElement('input'); {
-        bulkDelayInput.classList.add('stwid-compactInput', 'text_pole');
-        bulkDelayInput.type = 'number';
-        bulkDelayInput.min = '0';
-        bulkDelayInput.placeholder = '0+';
-        setTooltip(bulkDelayInput, 'Delay turns value to apply');
-        const stored = localStorage.getItem('stwid--bulk-delay-value');
-        if (stored !== null) bulkDelayInput.value = stored;
-        bulkDelayInput.addEventListener('change', ()=>{
-            localStorage.setItem('stwid--bulk-delay-value', bulkDelayInput.value);
-        });
-        bulkDelayContainer.append(bulkDelayInput);
-    }
-
-    const runApplyBulkDelay = async () => {
-        const rawValue = bulkDelayInput.value.trim();
-        if (rawValue === '') {
-            toastr.warning('Enter a delay value (0 or more).');
-            return;
-        }
-        const parsed = parseInt(rawValue, 10);
-        if (!Number.isInteger(parsed) || parsed < 0) {
-            toastr.warning('Delay must be a non-negative whole number.');
-            return;
-        }
-        const rows = getSafeTbodyRows(dom);
-        if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            entryData.delay = parsed;
-            const rowInp = tr.querySelector('[name="delay"]');
-            if (rowInp) rowInp.value = String(parsed);
-        }
-        await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-        applyBulkDelay.classList.remove(APPLY_DIRTY_CLASS);
-    };
-    const applyBulkDelay = createApplyButton('Apply this delay value to all selected entries', runApplyBulkDelay, applyRegistry);
-    bulkDelayInput.addEventListener('change', () => applyBulkDelay.classList.add(APPLY_DIRTY_CLASS));
-    bulkDelayContainer.append(applyBulkDelay);
-
-    row.append(bulkDelayContainer);
-
-    
-    const applyAllContainer = createLabeledBulkContainer('applyAll', 'Apply All Changes', 'Applies all containers that have unsaved changes. Skips containers that have not been modified.');
-
-    const applyAll = document.createElement('div'); {
-        applyAll.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
-        setTooltip(applyAll, 'Apply all containers with unsaved changes');
-        applyAll.addEventListener('click', async () => {
-            await withApplyButtonLock(applyAll, async () => {
-                const dirty = applyRegistry.filter(({ isDirty }) => isDirty());
-                if (!dirty.length) {
-                    toastr.info('No changes to apply.');
-                    return;
-                }
-                for (const { runApply } of dirty) {
-                    await runApply();
-                }
-            });
-        });
-        applyAllContainer.append(applyAll);
-    }
-
-    row.append(applyAllContainer);
+    row.append(buildApplyAllSection(applyRegistry));
 
     wrapRowContent(row);
 
