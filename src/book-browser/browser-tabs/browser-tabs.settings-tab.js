@@ -78,5 +78,6 @@ export const createSettingsTabContent = ({
     settingsGroup.append(order);
 
     root.append(settingsGroup);
-    return root;
+    const setToggleVisible = (visible)=>{ order.hidden = !visible; };
+    return { root, setToggleVisible };
 };

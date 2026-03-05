@@ -248,13 +248,15 @@ export const initDrawer = ({
                         Popup,
                         getListPanelApi: ()=>listPanelApi,
                     });
-                    dom.settingsTabContent = createSettingsTabContent({
+                    const { root: settingsTabRoot, setToggleVisible: setOrderToggleVisible } = createSettingsTabContent({
                         dom,
                         openOrderHelper,
                         getListPanelApi: ()=>listPanelApi,
                         getEditorPanelApi: ()=>editorPanelApi,
                         getCurrentEditor,
                     });
+                    dom.settingsTabContent = settingsTabRoot;
+                    dom.setOrderToggleVisible = setOrderToggleVisible;
                     const controls = document.createElement('div'); {
                         controls.classList.add('stwid--controls');
                         const controlsSecondary = document.createElement('div');

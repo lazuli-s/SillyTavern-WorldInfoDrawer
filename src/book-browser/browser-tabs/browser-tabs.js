@@ -38,7 +38,6 @@ const createFilterBarSlice = ({
     setApplyActiveFilter,
     onBookVisibilityScopeChange,
 })=>{
-    let orderHelperToggleVisible = true;
     if (!Object.values(BOOK_VISIBILITY_MODES).includes(listPanelState.bookVisibilityMode)) {
         listPanelState.bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
     }
@@ -52,12 +51,6 @@ const createFilterBarSlice = ({
         setMultiselectDropdownOptionCheckboxState,
         visibilityChipClass: CSS_VISIBILITY_CHIP,
     });
-
-    const applyOrderHelperToggleVisibility = ()=>{
-        const orderHelperToggle = runtime?.dom?.order?.toggle;
-        if (!(orderHelperToggle instanceof HTMLElement)) return;
-        orderHelperToggle.hidden = !orderHelperToggleVisible;
-    };
 
     const buildIconTabBar = (runtime, visibilityRow, sortingRow, searchRow)=>{
         const iconTab = document.createElement('div');
@@ -153,7 +146,6 @@ const createFilterBarSlice = ({
             buildSearchRow(searchRow, listPanelState, runtime, updateFolderActiveToggles);
             const iconTab = buildIconTabBar(runtime, visibilityRow, sortingRow, searchRow);
             const onDocClickCloseMenu = visibilitySlice.setupVisibilitySection(visibilityRow);
-            applyOrderHelperToggleVisibility();
             docClickHandler = onDocClickCloseMenu;
             document.addEventListener('click', onDocClickCloseMenu);
             filter.append(iconTab);
@@ -171,8 +163,7 @@ const createFilterBarSlice = ({
         },
         getBookVisibilityScope: (...args)=>visibilitySlice.getBookVisibilityScope(...args),
         setOrderHelperToggleVisibility: (enabled)=>{
-            orderHelperToggleVisible = Boolean(enabled);
-            applyOrderHelperToggleVisibility();
+            runtime?.dom?.setOrderToggleVisible?.(Boolean(enabled));
         },
         setupFilter,
     };

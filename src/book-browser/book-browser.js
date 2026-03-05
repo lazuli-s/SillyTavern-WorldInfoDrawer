@@ -25,7 +25,7 @@ import {
 } from './book-browser.core-bridge.js';
 import {
     createFilterBarSlice,
-} from './browser-tabs/browser-tabs.filter-bar.js';
+} from './browser-tabs/browser-tabs.js';
 import { BOOK_VISIBILITY_MODES } from './browser-tabs/browser-tabs.visibility-tab.js';
 import { createSelectionDnDSlice } from './book-list/book-list.selection-dnd.js';
 import { createBookMenuSlice } from './book-list/book-list.book-menu.js';

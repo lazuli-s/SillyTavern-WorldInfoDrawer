@@ -20,7 +20,7 @@ Where each feature or behavior is implemented in the codebase.
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/book-browser/book-list/book-list.books-view.js
-- Top control row groups moved into permanent browser tabs: Settings (activation + refresh + Entry Manager toggle) -> Settings tab (tab 1, default); Lorebooks (new book, import, collapse-all-books) -> Lorebooks tab (tab 2); Folders (new folder, import, collapse-all-folders) -> Folders tab (tab 3). All tabs are always visible on all screen sizes. Tab content factories owned by `src/book-browser/browser-tabs/browser-tabs.settings-tab.js`, `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js`, and `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`; tab registration owned by `src/book-browser/browser-tabs/browser-tabs.filter-bar.js`. → src/drawer.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js, src/book-browser/browser-tabs/browser-tabs.folders-tab.js, src/book-browser/browser-tabs/browser-tabs.filter-bar.js
+- Top control row groups moved into permanent browser tabs: Settings (activation + refresh + Entry Manager toggle) -> Settings tab (tab 1, default); Lorebooks (new book, import, collapse-all-books) -> Lorebooks tab (tab 2); Folders (new folder, import, collapse-all-folders) -> Folders tab (tab 3). All tabs are always visible on all screen sizes. Tab content factories owned by `src/book-browser/browser-tabs/browser-tabs.settings-tab.js`, `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js`, and `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`; tab registration owned by `src/book-browser/browser-tabs/browser-tabs.js`. → src/drawer.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js, src/book-browser/browser-tabs/browser-tabs.folders-tab.js, src/book-browser/browser-tabs/browser-tabs.js
 - Book active toggle (global active status) → src/book-browser/book-list/book-list.books-view.js
 - Book collapse/expand and collapse-all behavior → src/book-browser/book-list/book-list.books-view.js, src/book-browser/book-browser.js, src/drawer.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/book-browser/book-list/book-list.books-view.js, src/book-browser/book-list/book-list.selection-dnd.js, src/book-browser/book-browser.js
@@ -68,11 +68,11 @@ Where each feature or behavior is implemented in the codebase.
 - Click select, toggle select, and Shift range select behavior → src/book-browser/book-list/book-list.world-entry.js
 - Selection visual state add/remove/clear helpers → src/book-browser/book-list/book-list.selection-dnd.js
 - Delete selected entries (Del key) with save/update propagation → src/drawer.js, src/shared/wi-update-handler.js
-- Search books by name and optional entry text search (title/keys) → src/book-browser/browser-tabs/browser-tabs.search-tab.js, src/book-browser/browser-tabs/browser-tabs.filter-bar.js
-- List-panel icon tabs now ordered as Settings (1st/default), Lorebooks (2nd), Folders (3rd), Visibility (4th), Sorting (5th), Search (6th), with active-state switching and real control rows mounted per tab. Mounting for Visibility/Sorting/Search tabs is split into `src/book-browser/browser-tabs/browser-tabs.visibility-tab.js`, `src/book-browser/browser-tabs/browser-tabs.sorting-tab.js`, and `src/book-browser/browser-tabs/browser-tabs.search-tab.js`. → src/book-browser/browser-tabs/browser-tabs.filter-bar.js, src/book-browser/browser-tabs/browser-tabs.visibility-tab.js, src/book-browser/browser-tabs/browser-tabs.sorting-tab.js, src/book-browser/browser-tabs/browser-tabs.search-tab.js, style.css
-- Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/book-browser/browser-tabs/browser-tabs.visibility-tab.js, src/book-browser/browser-tabs/browser-tabs.filter-bar.js
+- Search books by name and optional entry text search (title/keys) → src/book-browser/browser-tabs/browser-tabs.search-tab.js, src/book-browser/browser-tabs/browser-tabs.js
+- List-panel icon tabs now ordered as Settings (1st/default), Lorebooks (2nd), Folders (3rd), Visibility (4th), Sorting (5th), Search (6th), with active-state switching and real control rows mounted per tab. Mounting for Visibility/Sorting/Search tabs is split into `src/book-browser/browser-tabs/browser-tabs.visibility-tab.js`, `src/book-browser/browser-tabs/browser-tabs.sorting-tab.js`, and `src/book-browser/browser-tabs/browser-tabs.search-tab.js`. → src/book-browser/browser-tabs/browser-tabs.js, src/book-browser/browser-tabs/browser-tabs.visibility-tab.js, src/book-browser/browser-tabs/browser-tabs.sorting-tab.js, src/book-browser/browser-tabs/browser-tabs.search-tab.js, style.css
+- Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/book-browser/browser-tabs/browser-tabs.visibility-tab.js, src/book-browser/browser-tabs/browser-tabs.js
 - Book visibility control/chip layout (chips wrap inline beside the trigger button; no separate help icon in the row) → style.css
-- Visibility tab row (`stwid--visibilityRow`) contains Book Visibility trigger + chips only; Entry Manager toggle and activation/refresh actions are in the Settings tab. → src/book-browser/browser-tabs/browser-tabs.filter-bar.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, style.css
+- Visibility tab row (`stwid--visibilityRow`) contains Book Visibility trigger + chips only; Entry Manager toggle and activation/refresh actions are in the Settings tab. → src/book-browser/browser-tabs/browser-tabs.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, style.css
 
 ## Sorting & ordering
 
@@ -80,7 +80,7 @@ Where each feature or behavior is implemented in the codebase.
 - Global sort settings and persistence bridge (`extension_settings.worldInfoDrawer`) → src/shared/settings.js
 - Entry sort implementations (title, trigger, prompt, position, depth, order, uid, length, custom) → src/shared/sort-helpers.js
 - Sort option labels/options for dropdowns → src/shared/utils.js
-- Sorting controls row (`stwid--sortingRow`) split into two labeled thin containers: `Global Sorting` (sort select + `stwid--smallSelectTextPole`) and `Per-book Sorting` (enable/disable toggle + clear preferences); mounted in icon tab 2 (`Sorting`) → src/drawer.js, src/book-browser/browser-tabs/browser-tabs.filter-bar.js, style.css
+- Sorting controls row (`stwid--sortingRow`) split into two labeled thin containers: `Global Sorting` (sort select + `stwid--smallSelectTextPole`) and `Per-book Sorting` (enable/disable toggle + clear preferences); mounted in icon tab 2 (`Sorting`) → src/drawer.js, src/book-browser/browser-tabs/browser-tabs.js, style.css
 - Book-level sort choice resolution and DOM reorder application → src/book-browser/book-browser.js, src/book-browser/book-list/book-list.books-view.js
 - Per-book metadata sort read/write (`stwid.sort`) → src/shared/sort-helpers.js, src/book-browser/book-browser.js
 
@@ -98,7 +98,7 @@ Where each feature or behavior is implemented in the codebase.
 
 - ST Extensions drawer settings panel template (`settings.html`) and injection/wiring logic → index.js
 - Feature visibility registry and runtime apply loop for UI toggles → index.js
-- Entry Manager toggle button hide/show wiring in Visibility tab → src/book-browser/browser-tabs/browser-tabs.filter-bar.js
+- Entry Manager toggle button hide/show wiring → src/book-browser/browser-tabs/browser-tabs.settings-tab.js
 - Entry Manager open guard when feature is disabled → src/entry-manager/entry-manager.js
 - Folder rows hide/show behavior for feature toggling → src/book-browser/book-list/book-folders/book-folders.folders-view.js
 - Folder control buttons hide/show behavior (New Folder, Import Folder, Collapse/Expand Folders) → src/drawer.js
@@ -118,18 +118,18 @@ Where each feature or behavior is implemented in the codebase.
 - Entry Manager open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → src/drawer.js, src/entry-manager/entry-manager.js, src/book-browser/book-browser.js, src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
 - Entry Manager state creation (defaults + restored localStorage state) → src/entry-manager/logic/logic.state.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/entry-manager/entry-manager.js
-- Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/entry-manager/bulk-editor/bulk-editor.action-bar.visibility-row.js, src/entry-manager/bulk-editor/bulk-editor.js
-- Bulk edit row structure (field containers: Select, State, Strategy, Position, Depth, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay, Apply All Changes) → src/entry-manager/bulk-editor/bulk-editor.action-bar.bulk-edit-row.js
-- Entry Manager tab bar (Display and Bulk Editor tabs wrapping the two action rows; Display default active tab) → src/entry-manager/bulk-editor/bulk-editor.js
-- Dirty indicator on bulk edit Apply buttons (amber highlight when inputs changed, clears on successful apply) → src/entry-manager/bulk-editor/bulk-editor.action-bar.bulk-edit-row.js, style.css
-- Apply All Changes container (runs all dirty containers in sequence, skips clean ones) → src/entry-manager/bulk-editor/bulk-editor.action-bar.bulk-edit-row.js
-- Row drag sorting and custom order persistence (`extensions.display_index`) → src/entry-manager/bulk-editor/bulk-editor.table-body.js, src/entry-manager/entry-manager.js
-- Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/entry-manager/bulk-editor/bulk-editor.table-body.js
-- Recursion flags and budget-ignore controls → src/entry-manager/bulk-editor/bulk-editor.table-body.js
-- Column visibility controls and hide-keys toggle → src/entry-manager/bulk-editor/bulk-editor.action-bar.visibility-row.js, src/entry-manager/logic/logic.state.js
-- Structured row filters (strategy, position, recursion, outlet, automation ID, group) → src/entry-manager/logic/logic.filters.js, src/entry-manager/bulk-editor/bulk-editor.table-header.js, src/entry-manager/bulk-editor/bulk-editor.table-body.js
-- Script-based filtering with SlashCommandParser + syntax-highlighted input → src/entry-manager/bulk-editor/bulk-editor.filter-panel.js
-- Live preview panel for script filter context data → src/entry-manager/entry-manager.js, src/entry-manager/bulk-editor/bulk-editor.filter-panel.js
+- Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/entry-manager/display-tab/bulk-editor.action-bar.visibility-row.js, src/entry-manager/bulk-editor-tab/bulk-editor.js
+- Bulk edit row structure (field containers: Select, State, Strategy, Position, Depth, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay, Apply All Changes) → src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.position.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.order.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.helpers.js, src/entry-manager/bulk-editor.action-bar.helpers.js
+- Entry Manager tab bar (Display and Bulk Editor tabs wrapping the two action rows; Display default active tab) → src/entry-manager/bulk-editor-tab/bulk-editor.js
+- Dirty indicator on bulk edit Apply buttons (amber highlight when inputs changed, clears on successful apply) → src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.helpers.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.position.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.order.js, style.css
+- Apply All Changes container (runs all dirty containers in sequence, skips clean ones) → src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js
+- Row drag sorting and custom order persistence (`extensions.display_index`) → src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js, src/entry-manager/entry-manager.js
+- Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js
+- Recursion flags and budget-ignore controls → src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js
+- Column visibility controls and hide-keys toggle → src/entry-manager/display-tab/bulk-editor.action-bar.visibility-row.js, src/entry-manager/logic/logic.state.js
+- Structured row filters (strategy, position, recursion, outlet, automation ID, group) → src/entry-manager/logic/logic.filters.js, src/entry-manager/bulk-editor-tab/bulk-editor.table-header.js, src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js
+- Script-based filtering with SlashCommandParser + syntax-highlighted input → src/entry-manager/bulk-editor-tab/bulk-editor.filter-panel.js
+- Live preview panel for script filter context data → src/entry-manager/entry-manager.js, src/entry-manager/bulk-editor-tab/bulk-editor.filter-panel.js
 - Character filter column display (read-only) → src/entry-manager/bulk-editor/bulk-editor.table-body.js
 - Focus entry in main list/editor from Entry Manager row link → src/entry-manager/entry-manager.js, src/entry-manager/bulk-editor/bulk-editor.table-body.js
 - Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox); `closeOpenMultiselectDropdownMenus` closes both multiselect and list dropdown menus and returns focus to trigger; `wireCollapseRow` wires collapse/expand animation shared by Visibility and Bulk Editor rows → src/entry-manager/bulk-editor/bulk-editor.utils.js
