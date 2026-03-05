@@ -33,14 +33,14 @@ Where each feature or behavior is implemented in the codebase.
 
 - Folder metadata key handling on lorebook metadata (`folder`) → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
 - Folder registry persistence (`stwid--folder-registry`) → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
-- Folder DOM creation (header, count, active toggle, collapse toggle) → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
+- Folder DOM creation (header, count, active toggle, collapse toggle) → src/book-browser/book-list/book-folders/book-folders.folder-dom.js
 - Folder collapse state persistence (`stwid--folder-collapse-states`) → src/book-browser/book-browser.state.js
 - Folder collapse/expand-all toggle behavior (all folders, transient expand path) → src/book-browser/book-list/book-folders/book-folders.folders-view.js, src/book-browser/book-browser.js, src/drawer.js
 - Folder visibility refresh while search/visibility filters are active → src/book-browser/book-list/book-folders/book-folders.folders-view.js
 - Folder active-toggle tri-state refresh based on currently visible books → src/book-browser/book-list/book-folders/book-folders.folders-view.js
-- Folder context menu actions (rename, import into folder, export folder, delete folder) → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
-- Create new book directly inside a folder → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
-- Set active/inactive state for all books in a folder → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
+- Folder context menu actions (rename, import into folder, export folder, delete folder) → src/book-browser/book-list/book-folders/book-folders.folder-actions.js
+- Create new book directly inside a folder → src/book-browser/book-list/book-folders/book-folders.folder-actions.js
+- Set active/inactive state for all books in a folder → src/book-browser/book-list/book-folders/book-folders.folder-actions.js
 
 ## Entry-level behavior
 

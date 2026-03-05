@@ -23,7 +23,9 @@
 |   |       |-- book-list.book-source-links.js # Character/chat/persona source-link tracking
 |   |       └-- book-folders/
 |   |           |-- book-folders.folders-view.js      # Folder view DOM/collapse wiring
-|   |           └-- book-folders.lorebook-folders.js  # Folder metadata + registry helpers
+|   |           |-- book-folders.lorebook-folders.js  # Folder metadata + registry + folder data helpers
+|   |           |-- book-folders.folder-actions.js     # Folder actions (create/toggle/menu handlers)
+|   |           └-- book-folders.folder-dom.js         # Folder DOM construction + count/collapse helpers
 |   |-- editor-panel/
 |   |   └-- editor-panel.js                    # Entry editor panel integration with ST templates
 |   |-- entry-manager/
@@ -94,7 +96,9 @@
 | `src/book-browser/book-browser.state.js` | Module-local mutable state container + lifecycle helpers (reset/hydration) |
 | `src/book-browser/book-list/book-list.selection-dnd.js` | Entry selection UI helpers; entry/book drag-drop move-copy persistence |
 | `src/book-browser/book-browser.core-bridge.js` | Core WI DOM delegation utilities for rename/duplicate/delete actions |
-| `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js` | Folder metadata, registry helpers, DOM construction, and folder menu actions |
+| `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js` | Folder metadata, registry helpers, and folder book/active-state data utilities (no DOM/actions) |
+| `src/book-browser/book-list/book-folders/book-folders.folder-actions.js` | Folder actions: create book in folder, set folder books active/inactive, and folder menu actions (rename/import/export/Entry Manager/delete) |
+| `src/book-browser/book-list/book-folders/book-folders.folder-dom.js` | Folder DOM construction (`createFolderDom`) plus folder count and collapse DOM helpers |
 | `src/book-browser/book-list/book-list.world-entry.js` | Entry row renderer; selection UI, enable/disable toggle, click-to-open editor |
 | `src/editor-panel/editor-panel.js` | Entry editor panel using ST templates; focus/unfocus and `#wiActivationSettings` embedding |
 | `src/entry-manager/entry-manager.js` | Entry Manager orchestration: state creation, scope gathering, derived filter options, and feature-toggle open guard |

@@ -1,4 +1,4 @@
-import { setFolderCollapsed } from './book-list/book-folders/book-folders.lorebook-folders.js';
+import { setFolderCollapsed } from './book-list/book-folders/book-folders.folder-dom.js';
 
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
 const MAX_ENTRY_CACHE_SIZE = 10000;
@@ -332,3 +332,4 @@ export const clearCacheBooks = (cache, clearToast)=>{
     }
     resetSelectionMemory(clearToast);
 };
+

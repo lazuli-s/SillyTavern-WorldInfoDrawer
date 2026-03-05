@@ -1,4 +1,5 @@
-import { createFolderDom, getFolderFromMetadata, setFolderCollapsed } from './book-folders.lorebook-folders.js';
+import { getFolderFromMetadata } from './book-folders.lorebook-folders.js';
+import { createFolderDom, setFolderCollapsed } from './book-folders.folder-dom.js';
 import { persistFolderCollapseStates, setFolderCollapsedAndPersist } from '../../book-browser.state.js';
 
 const createFoldersViewSlice = ({
@@ -169,3 +170,4 @@ const createFoldersViewSlice = ({
 };
 
 export { createFoldersViewSlice };
+

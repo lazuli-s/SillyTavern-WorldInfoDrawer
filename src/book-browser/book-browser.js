@@ -1,13 +1,15 @@
 import { cloneMetadata } from '../shared/sort-helpers.js';
 import {
-    createBookInFolder,
     getFolderFromMetadata,
     getFolderRegistry,
     registerFolderName,
-    setFolderBooksActive,
     sanitizeFolderMetadata,
     setFolderInMetadata,
 } from './book-list/book-folders/book-folders.lorebook-folders.js';
+import {
+    createBookInFolder,
+    setFolderBooksActive,
+} from './book-list/book-folders/book-folders.folder-actions.js';
 import {
     captureBookCollapseStatesFromDom,
     clearCacheBooks,
@@ -653,6 +655,7 @@ const initBookBrowser = (options)=>{
 };
 
 export { initBookBrowser, refreshList };
+
 
 
 

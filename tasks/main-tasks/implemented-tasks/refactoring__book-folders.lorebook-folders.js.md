@@ -2,7 +2,7 @@
 *Created: March 4, 2026*
 
 **Type:** Refactoring
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -69,7 +69,10 @@ Documentation that must be updated:
 
 ## Implementation Plan
 
+Plan review against JS best practices and WI API rules: no corrections required.
+
 ### Step 1 — Create `book-folders.folder-actions.js`
+- [x] Completed
 
 Create the new file at:
 `src/book-browser/book-list/book-folders/book-folders.folder-actions.js`
@@ -173,6 +176,7 @@ export {
 ---
 
 ### Step 2 — Create `book-folders.folder-dom.js`
+- [x] Completed
 
 Create the new file at:
 `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`
@@ -266,6 +270,7 @@ export {
 ---
 
 ### Step 3 — Trim `lorebook-folders.js`
+- [x] Completed
 
 Remove from the file:
 - `setFolderBooksActive` (moved to `folder-actions.js`)
@@ -302,6 +307,7 @@ export {
 ---
 
 ### Step 4 — Update caller import paths
+- [x] Completed
 
 **4a. `src/book-browser/book-browser.js`**
 
@@ -359,6 +365,7 @@ import { createFolderDom, setFolderCollapsed } from './book-folders.folder-dom.j
 ---
 
 ### Step 5 — Update `ARCHITECTURE.md`
+- [x] Completed
 
 In the project structure tree (section 1) and the module responsibility table, replace the
 single `book-folders.lorebook-folders.js` entry with three entries:
@@ -372,6 +379,7 @@ single `book-folders.lorebook-folders.js` entry with three entries:
 ---
 
 ### Step 6 — Update `FEATURE_MAP.md`
+- [x] Completed
 
 In the **Folder behavior** section, update the source file references for:
 
@@ -380,3 +388,47 @@ In the **Folder behavior** section, update the source file references for:
 - "Create new book directly inside a folder" → `book-folders.folder-actions.js`
 - "Set active/inactive state for all books in a folder" → `book-folders.folder-actions.js`
 - "Folder metadata key handling" and "Folder registry persistence" → `book-folders.lorebook-folders.js` (unchanged)
+
+---
+
+## After Implementation
+*Implemented: March 5, 2026*
+
+### What changed
+
+- `src/book-browser/book-list/book-folders/book-folders.folder-actions.js`
+  - Added a new focused module for folder actions (create, activate/deactivate, rename, import, export, Entry Manager, delete).
+  - Moved menu action logic out of the DOM builder so behavior code is separate from UI structure.
+- `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`
+  - Added a new focused module for folder DOM construction and folder DOM helpers.
+  - Kept the same folder card API and event wiring, but action handlers now call imported action functions.
+- `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`
+  - Trimmed to metadata/registry/data helper functions only.
+  - Exported shared helper functions now used by the new action/DOM modules.
+- `src/book-browser/book-browser.js`
+  - Updated imports to read action functions from `book-folders.folder-actions.js`.
+- `src/book-browser/book-browser.state.js`
+  - Updated import of `setFolderCollapsed` to come from `book-folders.folder-dom.js`.
+- `src/book-browser/book-list/book-folders/book-folders.folders-view.js`
+  - Updated imports so DOM helpers come from `book-folders.folder-dom.js` and metadata helper stays in `book-folders.lorebook-folders.js`.
+- `ARCHITECTURE.md`
+  - Updated project structure and module responsibilities to list the new three-file split.
+- `FEATURE_MAP.md`
+  - Updated folder behavior ownership entries to point to the new DOM/actions modules.
+
+### Risks / What might break
+
+- This touches all folder menu actions, so folder rename/import/export/delete might fail if any moved callback was wired incorrectly.
+- This touches folder DOM construction and collapse helpers, so folder collapse/expand visuals might not update correctly.
+- This touches active-toggle behavior split across modules, so folder-level active toggles might not reflect visible book state in some filter states.
+
+### Manual checks
+
+- Open the drawer and verify folder cards still render with icon, name, count, active checkbox, menu button, and collapse toggle.
+  Success: all elements appear and counts update when books are added/removed.
+- Use each folder menu action once: Rename, Import Into Folder, Export Folder, Entry Manager (Folder), Delete Folder.
+  Success: each action opens/runs and produces the same user-visible result as before.
+- Toggle folder collapse and “Collapse/Expand All Folders”.
+  Success: folder rows collapse/expand correctly and state persists after reload.
+- Toggle folder active checkbox with visibility/search filters on and off.
+  Success: checkbox state changes correctly (`on/off/partial`) and applies to visible books only.
