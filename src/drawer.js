@@ -41,6 +41,12 @@ export const initDrawer = ({
         visibilityAndSettingsRow: undefined,
         
         controlsRow: undefined,
+        folderControls: {
+            group: undefined,
+            add: undefined,
+            import: undefined,
+            collapseAll: undefined,
+        },
         
         sortingRow: undefined,
         order: {
@@ -243,6 +249,8 @@ export const initDrawer = ({
                         controlsPrimary.append(lorebooksGroup);
                         const foldersGroup = document.createElement('div');
                         foldersGroup.classList.add('stwid--thinContainer');
+                        foldersGroup.classList.add('stwid--foldersGroup');
+                        dom.folderControls.group = foldersGroup;
                         const foldersGroupLabel = document.createElement('span');
                         foldersGroupLabel.classList.add('stwid--thinContainerLabel');
                         foldersGroupLabel.textContent = 'Folders';
@@ -295,8 +303,10 @@ export const initDrawer = ({
                             lorebooksGroup.append(add);
                         }
                         const addFolder = document.createElement('div'); {
+                            dom.folderControls.add = addFolder;
                             addFolder.classList.add('menu_button');
                             addFolder.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
+                            addFolder.classList.add('stwid--control-folder-add');
                             addFolder.title = 'New Folder';
                             addFolder.setAttribute('aria-label', 'New Folder');
                             addFolder.addEventListener('click', async()=>{
@@ -326,8 +336,10 @@ export const initDrawer = ({
                             lorebooksGroup.append(imp);
                         }
                         const impFolder = document.createElement('div'); {
+                            dom.folderControls.import = impFolder;
                             impFolder.classList.add('menu_button');
                             impFolder.classList.add('fa-solid', 'fa-fw', 'fa-file-import');
+                            impFolder.classList.add('stwid--control-folder-import');
                             impFolder.title = 'Import Folder';
                             impFolder.setAttribute('aria-label', 'Import Folder');
                             impFolder.addEventListener('click', ()=>{
@@ -427,6 +439,7 @@ export const initDrawer = ({
                         }
                         const collapseAllFoldersToggle = document.createElement('button'); {
                             dom.collapseAllFoldersToggle = collapseAllFoldersToggle;
+                            dom.folderControls.collapseAll = collapseAllFoldersToggle;
                             collapseAllFoldersToggle.type = 'button';
                             collapseAllFoldersToggle.classList.add('menu_button');
                             collapseAllFoldersToggle.classList.add('stwid--collapseAllFoldersToggle');
@@ -714,6 +727,25 @@ export const initDrawer = ({
     return {
         editorPanelApi,
         getActivationToggle: ()=>dom.activationToggle,
+        setFolderControlsVisibility: (enabled)=>{
+            const visible = Boolean(enabled);
+            const group = dom.folderControls.group;
+            if (group instanceof HTMLElement) {
+                group.hidden = !visible;
+            }
+            const add = dom.folderControls.add;
+            if (add instanceof HTMLElement) {
+                add.hidden = !visible;
+            }
+            const importButton = dom.folderControls.import;
+            if (importButton instanceof HTMLElement) {
+                importButton.hidden = !visible;
+            }
+            const collapseAll = dom.folderControls.collapseAll;
+            if (collapseAll instanceof HTMLElement) {
+                collapseAll.hidden = !visible;
+            }
+        },
         getListPanelApi: ()=>listPanelApi,
         getOrderToggle: ()=>dom.order.toggle,
         listPanelApi,

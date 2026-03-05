@@ -68,9 +68,15 @@ const createFilterBarSlice = ({
     setApplyActiveFilter,
     onBookVisibilityScopeChange,
 })=>{
+    let orderHelperToggleVisible = true;
     const isAllBooksVisibility = ()=>listPanelState.bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
     const isAllActiveVisibility = ()=>listPanelState.bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
     const getSelectedWorldInfo = ()=>runtime.getSelectedWorldInfo ? runtime.getSelectedWorldInfo() : runtime.selected_world_info;
+    const applyOrderHelperToggleVisibility = ()=>{
+        const orderHelperToggle = runtime?.dom?.order?.toggle;
+        if (!(orderHelperToggle instanceof HTMLElement)) return;
+        orderHelperToggle.hidden = !orderHelperToggleVisible;
+    };
 
     const getBookVisibilityFlags = (name, selectedLookup = null)=>{
         const links = normalizeBookSourceLinks(runtime.getBookSourceLinks?.(name));
@@ -527,6 +533,7 @@ const createFilterBarSlice = ({
                 if (orderHelperToggle instanceof HTMLElement) {
                     helperContainer.append(orderHelperToggle);
                 }
+                applyOrderHelperToggleVisibility();
                 visibilityContainer.append(menuWrap, chips);
                 visibilityRow.append(helperContainer, visibilityContainer);
 
@@ -553,6 +560,10 @@ const createFilterBarSlice = ({
             }
         },
         getBookVisibilityScope,
+        setOrderHelperToggleVisibility: (enabled)=>{
+            orderHelperToggleVisible = Boolean(enabled);
+            applyOrderHelperToggleVisibility();
+        },
         setupFilter,
     };
 };

@@ -81,23 +81,23 @@
 
 | Module | Design Intent |
 | --- | --- |
-| `index.js` | Extension entry point; composes module initialization and exposes `jumpToEntry` public API |
-| `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, and global interaction wiring |
+| `index.js` | Extension entry point; composes module initialization, injects/wires ST Extensions settings panel, applies feature visibility registry, and exposes `jumpToEntry` public API |
+| `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, folder-controls visibility hooks, and global interaction wiring |
 | `src/drawer.splitter.js` | Desktop/mobile splitter DOM creation, drag-resize handlers, size persistence, and layout-restore logic |
 | `src/book-browser/book-list/book-list.book-source-links.js` | Derives and tracks lorebook source links (character/chat/persona); refreshes icons and filters |
 | `src/shared/wi-update-handler.js` | Owns WORLDINFO event handling, incremental cache sync, update-wait primitives, and duplicate-refresh queue |
 | `src/book-browser/book-browser.js` | Composes Book Browser slices and shared orchestration; exposes consolidated Book Browser API |
 | `src/book-browser/book-list/book-list.books-view.js` | Book row render and full list load pipeline; wires per-book interactions |
-| `src/book-browser/book-list/book-folders/book-folders.folders-view.js` | Folder view wiring: DOM creation, collapse state sync, visibility/active-toggle refresh |
+| `src/book-browser/book-list/book-folders/book-folders.folders-view.js` | Folder view wiring: DOM creation, collapse state sync, visibility/active-toggle refresh, and folder-grouping visibility state |
 | `src/book-browser/book-list/book-list.book-menu.js` | Per-book dropdown menu: triggers, ARIA, keyboard support, actions, and import dialog helpers |
-| `src/book-browser/browser-tabs/browser-tabs.filter-bar.js` | Icon-tab strip (Visibility/Sorting/Search); owns book visibility menu and active-filter chip rendering |
+| `src/book-browser/browser-tabs/browser-tabs.filter-bar.js` | Icon-tab strip (Visibility/Sorting/Search); owns book visibility menu, active-filter chip rendering, and Entry Manager toggle visibility state |
 | `src/book-browser/book-browser.state.js` | Module-local mutable state container + lifecycle helpers (reset/hydration) |
 | `src/book-browser/book-list/book-list.selection-dnd.js` | Entry selection UI helpers; entry/book drag-drop move-copy persistence |
 | `src/book-browser/book-browser.core-bridge.js` | Core WI DOM delegation utilities for rename/duplicate/delete actions |
 | `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js` | Folder metadata, registry helpers, DOM construction, and folder menu actions |
 | `src/book-browser/book-list/book-list.world-entry.js` | Entry row renderer; selection UI, enable/disable toggle, click-to-open editor |
 | `src/editor-panel/editor-panel.js` | Entry editor panel using ST templates; focus/unfocus and `#wiActivationSettings` embedding |
-| `src/entry-manager/entry-manager.js` | Entry Manager orchestration: state creation, scope gathering, derived filter options |
+| `src/entry-manager/entry-manager.js` | Entry Manager orchestration: state creation, scope gathering, derived filter options, and feature-toggle open guard |
 | `src/entry-manager/logic/logic.state.js` | Entry Manager persisted state (sort/hide-keys/columns) via localStorage |
 | `src/entry-manager/logic/logic.filters.js` | Filter logic for Entry Manager rows (strategy/position/recursion/outlet/group/script) |
 | `src/entry-manager/bulk-editor/bulk-editor.js` | Orchestrator: init, section assembly, and public bulk editor rendering API |
@@ -111,7 +111,7 @@
 | `src/shared/sort-helpers.js` | Sorting implementations and per-book sort preference read/write |
 | `src/shared/utils.js` | Shared UI/utility helpers and sort option labels |
 | `src/shared/constants.js` | Sort enums, direction constants, and Entry Manager column/option schema |
-| `src/shared/settings.js` | Persistent extension settings singleton (`extension_settings.worldInfoDrawer`) |
+| `src/shared/settings.js` | Persistent extension settings singleton (`extension_settings.worldInfoDrawer`), including feature toggles |
 
 ## 2. High-Level System Diagram
 

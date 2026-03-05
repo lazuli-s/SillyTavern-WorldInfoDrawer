@@ -4,7 +4,7 @@ import { parseBooleanSetting } from './utils.js';
 export { SORT, SORT_DIRECTION } from './constants.js';
 
 
-const KNOWN_SETTINGS_KEYS =  (['sortLogic', 'sortDirection', 'useBookSorts']);
+const KNOWN_SETTINGS_KEYS =  (['sortLogic', 'sortDirection', 'useBookSorts', 'featureFolderGrouping']);
 
 function getSettingsContext() {
     const { saveSettingsDebounced, extensionSettings } = SillyTavern.getContext();
@@ -26,6 +26,8 @@ export class Settings {
     sortDirection = SORT_DIRECTION.ASCENDING;
     
     useBookSorts = true;
+
+    featureFolderGrouping = true;
 
     constructor() {
         const { extensionSettings } = getSettingsContext();
@@ -56,6 +58,7 @@ export class Settings {
         
         
         this.useBookSorts = parseBooleanSetting(this.useBookSorts, true);
+        this.featureFolderGrouping = parseBooleanSetting(this.featureFolderGrouping, true);
     }
 
     toJSON() {
@@ -63,6 +66,7 @@ export class Settings {
             sortLogic: this.sortLogic,
             sortDirection: this.sortDirection,
             useBookSorts: this.useBookSorts,
+            featureFolderGrouping: this.featureFolderGrouping,
         };
     }
 

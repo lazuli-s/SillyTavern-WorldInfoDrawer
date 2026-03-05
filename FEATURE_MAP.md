@@ -86,11 +86,21 @@ Where each feature or behavior is implemented in the codebase.
 ## Persistence & settings
 
 - Extension settings object serialization/save (`sortLogic`, `sortDirection`, `useBookSorts`) → src/shared/settings.js
+- Feature toggle settings persistence (`featureBulkEditor`, `featureFolderGrouping`) → src/shared/settings.js
 - Folder registry storage and normalization → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
 - Folder collapse state storage → src/book-browser/book-browser.state.js
 - Entry Manager persisted state keys (`sort`, `hide-keys`, `columns`) → src/entry-manager/logic/logic.state.js
 - Entry Manager local state keys (`start`, `step`, `direction`, `filter`) → src/entry-manager/bulk-editor/bulk-editor.js
 - List panel width persistence (`stwid--splitter-size`) and mobile list height persistence (`stwid--splitter-size-mobile`) with legacy key mirroring (`stwid--list-width`, `stwid--list-height`) → src/drawer.splitter.js
+
+## Settings panel
+
+- ST Extensions drawer settings panel template (`settings.html`) and injection/wiring logic → index.js
+- Feature visibility registry and runtime apply loop for UI toggles → index.js
+- Entry Manager toggle button hide/show wiring in Visibility tab → src/book-browser/browser-tabs/browser-tabs.filter-bar.js
+- Entry Manager open guard when feature is disabled → src/entry-manager/entry-manager.js
+- Folder rows hide/show behavior for feature toggling → src/book-browser/book-list/book-folders/book-folders.folders-view.js
+- Folder control buttons hide/show behavior (New Folder, Import Folder, Collapse/Expand Folders) → src/drawer.js
 
 ## Integration with SillyTavern
 

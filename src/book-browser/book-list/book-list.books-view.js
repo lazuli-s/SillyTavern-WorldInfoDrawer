@@ -16,6 +16,8 @@ const createBooksViewSlice = ({
     updateBookSourceLinks,
     updateCollapseAllToggle,
 })=>{
+    const isFolderGroupingEnabled = ()=>Boolean(runtime?.Settings?.instance?.featureFolderGrouping);
+
     const renderBook = async(name, before = null, bookData = null, parent = null)=>{
         const data = bookData ?? await runtime.loadWorldInfo(name);
         if (!data || typeof data !== 'object') {
@@ -45,7 +47,7 @@ const createBooksViewSlice = ({
         let targetParent = parent ?? runtime.dom.books;
         if (!parent) {
             const folderName = getFolderFromMetadata(runtime.cache[name].metadata);
-            if (folderName) {
+            if (isFolderGroupingEnabled() && folderName) {
                 const folderDom = foldersViewSlice.ensureFolderDom(folderName);
                 targetParent = folderDom?.books ?? targetParent;
             }
@@ -271,7 +273,7 @@ const createBooksViewSlice = ({
         const rootBooks = [];
         for (const book of books) {
             const folderName = getFolderFromMetadata(book.data?.metadata);
-            if (folderName) {
+            if (isFolderGroupingEnabled() && folderName) {
                 registerFolderName(folderName);
                 if (!folderGroups.has(folderName)) folderGroups.set(folderName, []);
                 folderGroups.get(folderName).push(book);

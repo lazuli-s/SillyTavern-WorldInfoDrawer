@@ -2,7 +2,7 @@
 *Created: March 4, 2026*
 
 **Type:** New Feature
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -53,32 +53,32 @@ After this change:
 
 In `src/shared/settings.js`:
 
-- [ ] Add two new boolean properties to the `Settings` class: `featureBulkEditor = true` and `featurefolderGrouping = true` (default `true` so existing users see no change).
-- [ ] Add both keys to the `KNOWN_SETTINGS_KEYS` array so they are loaded from saved settings on startup.
-- [ ] Add both keys to the `toJSON()` method return value so they are persisted when `save()` is called.
+- [x] Add two new boolean properties to the `Settings` class: `featureBulkEditor = true` and `featureFolderGrouping = true` (default `true` so existing users see no change).
+- [x] Add both keys to the `KNOWN_SETTINGS_KEYS` array so they are loaded from saved settings on startup.
+- [x] Add both keys to the `toJSON()` method return value so they are persisted when `save()` is called.
 
 ### Step 2 — Create the settings HTML template
 
 Create `settings.html` in the extension root. Use SillyTavern's standard extension panel markup (`inline-drawer`, `inline-drawer-toggle`, `inline-drawer-content`, `flex-container`, `menu_button`, `sysHR`). The file must be pure HTML — no script tags.
 
-- [ ] Create `settings.html` with the collapsible panel structure wrapping a "Features" section.
-- [ ] Add one `<input type="checkbox">` + `<label>` pair for each feature:
+- [x] Create `settings.html` with the collapsible panel structure wrapping a "Features" section.
+- [x] Add one `<input type="checkbox">` + `<label>` pair for each feature:
   - id `stwid-feature-bulk-editor`, label "Bulk Editor"
   - id `stwid-feature-folder-grouping`, label "Folder Grouping"
-- [ ] Add a `<hr class="sysHR" />` at the bottom of the content section.
+- [x] Add a `<hr class="sysHR" />` at the bottom of the content section.
 
 ### Step 3 — Inject the settings panel and wire checkboxes
 
 In `index.js`, after the existing initialization calls:
 
-- [ ] Call `SillyTavern.getContext().renderExtensionTemplateAsync` with the extension folder name and `'settings'` to load `settings.html` asynchronously.
-- [ ] Append the returned HTML into `#extensions_settings` (the ST Extensions drawer container).
-- [ ] Wire a `change` event listener on `#stwid-feature-bulk-editor` that:
+- [x] Call `SillyTavern.getContext().renderExtensionTemplateAsync` with the extension folder name and `'settings'` to load `settings.html` asynchronously.
+- [x] Append the returned HTML into `#extensions_settings` (the ST Extensions drawer container).
+- [x] Wire a `change` event listener on `#stwid-feature-bulk-editor` that:
   - Updates `Settings.instance.featureBulkEditor` with the checkbox's checked state.
   - Calls `Settings.instance.save()`.
   - Calls `applyFeatureVisibility()` (see Step 4).
-- [ ] Wire the same pattern for `#stwid-feature-folder-grouping` → `Settings.instance.featurefolderGrouping`.
-- [ ] On startup, after wiring, set each checkbox's initial checked state from `Settings.instance` and call `applyFeatureVisibility()`.
+- [x] Wire the same pattern for `#stwid-feature-folder-grouping` → `Settings.instance.featureFolderGrouping`.
+- [x] On startup, after wiring, set each checkbox's initial checked state from `Settings.instance` and call `applyFeatureVisibility()`.
 
 ### Step 4 — Implement the feature visibility registry
 
@@ -93,7 +93,7 @@ const FEATURE_REGISTRY = [
         applyFn: (enabled) => applyBulkEditorVisibility(enabled),
     },
     {
-        settingKey: 'featurefolderGrouping',
+        settingKey: 'featureFolderGrouping',
         applyFn: (enabled) => applyFolderGroupingVisibility(enabled),
     },
 ];
@@ -105,11 +105,11 @@ function applyFeatureVisibility() {
 }
 ```
 
-- [ ] Implement `applyBulkEditorVisibility(enabled)`:
+- [x] Implement `applyBulkEditorVisibility(enabled)`:
   - When `false`: hide the Entry Manager toggle button in the Visibility tab row (the button that opens the bulk editor). Use `element.hidden = true` or `element.style.display = 'none'`.
   - When `true`: restore it to visible.
   - Also ensure the Entry Manager panel itself is closed if it is currently open and the feature is being disabled.
-- [ ] Implement `applyFolderGroupingVisibility(enabled)`:
+- [x] Implement `applyFolderGroupingVisibility(enabled)`:
   - When `false`: hide all folder rows in the book list (elements with class `stwid--folder` or equivalent), and hide the folder-related buttons in the top control row (new folder, import folder, collapse/expand all folders).
   - When `true`: restore all those elements to visible.
 
@@ -119,20 +119,72 @@ function applyFeatureVisibility() {
 
 In `src/entry-manager/entry-manager.js` (or wherever `openEntryManager` / its equivalent is called):
 
-- [ ] At the top of the function that opens the Entry Manager, check `Settings.instance.featureBulkEditor`. If `false`, return early without opening.
+- [x] At the top of the function that opens the Entry Manager, check `Settings.instance.featureBulkEditor`. If `false`, return early without opening.
 
 ### Step 6 — Update documentation
 
-- [ ] In `FEATURE_MAP.md`, add an entry under a new "Settings panel" section (or "Integration with SillyTavern") noting:
+- [x] In `FEATURE_MAP.md`, add an entry under a new "Settings panel" section (or "Integration with SillyTavern") noting:
   - Extension settings panel injection → `index.js`
   - Feature toggle on/off state → `src/shared/settings.js`
   - Feature visibility registry → `index.js` (or `src/shared/feature-visibility.js`)
-- [ ] If a new `src/shared/feature-visibility.js` file is created, add it to the module table in `ARCHITECTURE.md`.
+- [x] If a new `src/shared/feature-visibility.js` file is created, add it to the module table in `ARCHITECTURE.md`.
 
 ---
 
 ## Implementation Notes
 
-- **COMPAT-03:** When adding `featureBulkEditor` and `featurefolderGrouping` to `KNOWN_SETTINGS_KEYS`, ensure existing users who have no saved value for these keys get `true` (the default) on next load. The existing loop in `Settings` constructor already handles this — new keys not present in saved data are simply skipped, leaving the class property default (`true`) in place.
+- **COMPAT-03:** When adding `featureBulkEditor` and `featureFolderGrouping` to `KNOWN_SETTINGS_KEYS`, ensure existing users who have no saved value for these keys get `true` (the default) on next load. The existing loop in `Settings` constructor already handles this — new keys not present in saved data are simply skipped, leaving the class property default (`true`) in place.
 - **Scalability contract:** To add a future feature toggle, the implementer only needs to: (1) add the default property to `Settings`, (2) add the key to `KNOWN_SETTINGS_KEYS` and `toJSON()`, (3) add a checkbox to `settings.html`, (4) add one entry to `FEATURE_REGISTRY` with its `applyFn`. No other code changes are needed.
 - **DOM readiness:** `applyFeatureVisibility()` must only be called after the drawer DOM is fully initialized. Call it after `initDrawer()` completes and the list is first loaded.
+
+### Plan correction applied before implementation
+
+The setting name `featurefolderGrouping` in the original checklist was corrected to `featureFolderGrouping` to keep key names consistent and avoid save/load key mismatches.
+
+---
+
+## After Implementation
+*Implemented: March 5, 2026*
+
+### What changed
+
+- `src/shared/settings.js`
+  - Added two new saved settings: Bulk Editor toggle and Folder Grouping toggle.
+  - Included both new settings in load/save behavior.
+- `settings.html`
+  - Added a new "WorldInfo Drawer" settings panel for the ST Extensions drawer.
+  - Added two checkboxes under Features: Bulk Editor and Folder Grouping.
+- `index.js`
+  - Injects the new settings panel into `#extensions_settings` on startup.
+  - Wires checkbox change events to saved settings.
+  - Added a feature registry and apply loop so each feature toggle is handled in one place.
+  - Applies visibility on startup and again after first list refresh.
+- `src/book-browser/browser-tabs/browser-tabs.filter-bar.js`
+  - Added hide/show support for the Entry Manager toggle button in the Visibility tab.
+- `src/book-browser/book-browser.js`
+  - Exposed list API hooks for Entry Manager toggle visibility and folder grouping visibility.
+- `src/book-browser/book-list/book-folders/book-folders.folders-view.js`
+  - Added folder-grouping visibility state and applied it when rendering/updating folder rows.
+- `src/drawer.js`
+  - Added folder-control references and a helper to hide/show folder controls in the top row.
+- `src/entry-manager/entry-manager.js`
+  - Added an early return guard so Entry Manager cannot open when Bulk Editor is disabled.
+- `FEATURE_MAP.md`
+  - Added a new Settings panel feature section and mapped all new ownership points.
+- `ARCHITECTURE.md`
+  - Updated module responsibility rows to include settings injection and feature-toggle visibility ownership.
+
+### Risks / What might break
+
+- This touches startup initialization, so settings could fail to appear if the settings drawer container changes in SillyTavern.
+- This touches Entry Manager opening/visibility, so there could be edge cases where the button state and panel state get out of sync during fast toggling.
+- This touches folder visibility and controls, so folder rows or folder buttons could stay hidden after reload if a future module bypasses the new visibility hooks.
+
+### Manual checks
+
+- Open SillyTavern Extensions settings and confirm a new "WorldInfo Drawer" collapsible panel appears with two checkboxes.
+- Uncheck "Bulk Editor" and confirm the Entry Manager button disappears and the Entry Manager panel closes if open.
+- Check "Bulk Editor" again and confirm the Entry Manager button comes back and can open normally.
+- Uncheck "Folder Grouping" and confirm folder rows in the book list disappear and folder controls (new/import/collapse folders) disappear.
+- Check "Folder Grouping" again and confirm folder rows and folder controls reappear.
+- Reload the page and confirm both checkboxes keep their last values and the UI loads in the same visible/hidden state.

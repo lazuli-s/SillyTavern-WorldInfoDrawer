@@ -85,6 +85,8 @@ const updateCollapseAllToggle = ()=>{
 const hasExpandedFolders = ()=>foldersViewSlice?.hasExpandedFolders() ?? false;
 const updateCollapseAllFoldersToggle = ()=>foldersViewSlice?.updateCollapseAllFoldersToggle();
 const setAllFoldersCollapsed = (isCollapsed)=>foldersViewSlice?.setAllFoldersCollapsed(isCollapsed);
+const setFolderGroupingVisibility = (enabled)=>foldersViewSlice?.setFolderGroupingVisibility(enabled);
+const setOrderHelperToggleVisibility = (enabled)=>filterBarSlice?.setOrderHelperToggleVisibility(enabled);
 
 const applyCollapseState = (name)=>{
     const isCollapsed = listPanelState.getCollapseState(name);
@@ -591,6 +593,8 @@ const getListPanelApi = ()=>({
     setCacheMetadata,
     setCollapseState,
     setAllFoldersCollapsed,
+    setFolderGroupingVisibility,
+    setOrderHelperToggleVisibility,
     setBookSortPreference,
     sortEntriesIfNeeded,
     updateAllBookSourceLinks,

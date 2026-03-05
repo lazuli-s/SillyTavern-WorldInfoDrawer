@@ -7,6 +7,7 @@ const createFoldersViewSlice = ({
     selectionDnDSlice,
 })=>{
     let bulkFolderCollapsedIntent = null;
+    let folderGroupingVisible = true;
 
     const hasExpandedFolders = ()=>listPanelState.getFolderDomValues().some((folderDom)=>{
         const books = folderDom?.books;
@@ -95,6 +96,7 @@ const createFoldersViewSlice = ({
             ?? listPanelState.getFolderCollapseState(folderName)
             ?? true;
         setFolderCollapsed(folderDom, initialCollapsed);
+        folderDom.root.hidden = !folderGroupingVisible;
         updateCollapseAllFoldersToggle();
         return folderDom;
     };
@@ -108,6 +110,12 @@ const createFoldersViewSlice = ({
     };
 
     const updateFolderVisibility = ({ isBookDomFilteredOut })=>{
+        if (!folderGroupingVisible) {
+            for (const folderDom of listPanelState.getFolderDomValues()) {
+                folderDom.root.hidden = true;
+            }
+            return;
+        }
         for (const folderDom of listPanelState.getFolderDomValues()) {
             const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
                 if (!(child instanceof HTMLElement)) return false;
@@ -116,6 +124,14 @@ const createFoldersViewSlice = ({
             });
             folderDom.root.hidden = !hasVisibleBooks;
         }
+    };
+
+    const setFolderGroupingVisibility = (enabled)=>{
+        folderGroupingVisible = Boolean(enabled);
+        updateFolderVisibility({
+            isBookDomFilteredOut: (bookRoot)=>bookRoot.classList.contains('stwid--filter-query')
+                || bookRoot.classList.contains('stwid--filter-visibility'),
+        });
     };
 
     const getVisibleFolderBooks = ({ isBookDomFilteredOut })=>{
@@ -145,6 +161,7 @@ const createFoldersViewSlice = ({
         hasExpandedFolders,
         resetFolderDoms,
         setAllFoldersCollapsed,
+        setFolderGroupingVisibility,
         updateCollapseAllFoldersToggle,
         updateFolderActiveToggles,
         updateFolderVisibility,
