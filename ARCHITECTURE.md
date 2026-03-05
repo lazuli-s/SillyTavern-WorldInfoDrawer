@@ -8,6 +8,7 @@
 |-- manifest.json                # SillyTavern extension manifest
 |-- src/
 |   |-- drawer.js                # Drawer UI bootstrap + DOM map + control wiring
+|   |-- drawer.splitter.js       # Desktop/mobile splitter DOM + drag/resize + size persistence + layout restore
 |   |-- book-browser/
 |   |   |-- book-browser.js                    # Book Browser composition + orchestration
 |   |   |-- book-browser.state.js              # Book Browser state container
@@ -81,7 +82,8 @@
 | Module | Design Intent |
 | --- | --- |
 | `index.js` | Extension entry point; composes module initialization and exposes `jumpToEntry` public API |
-| `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, desktop/mobile splitter behavior, and global interaction wiring |
+| `drawer.js` | Owns drawer DOM map, bootstrap flow, top/settings control rows, and global interaction wiring |
+| `src/drawer.splitter.js` | Desktop/mobile splitter DOM creation, drag-resize handlers, size persistence, and layout-restore logic |
 | `src/book-browser/book-list/book-list.book-source-links.js` | Derives and tracks lorebook source links (character/chat/persona); refreshes icons and filters |
 | `src/shared/wi-update-handler.js` | Owns WORLDINFO event handling, incremental cache sync, update-wait primitives, and duplicate-refresh queue |
 | `src/book-browser/book-browser.js` | Composes Book Browser slices and shared orchestration; exposes consolidated Book Browser API |

@@ -15,7 +15,7 @@ Where each feature or behavior is implemented in the codebase.
 - Source-link icon rendering on book rows, including attribution tooltips/aria labels for character/persona links → src/book-browser/book-browser.js
 - Jump-to-entry API (open book, scroll, focus editor) → index.js
 - Drawer keyboard handling for selected-entry delete → src/drawer.js
-- List/editor splitter drag resize (desktop width + mobile top/bottom height) and saved splitter state (`stwid--splitter-size`, `stwid--splitter-size-mobile`, with legacy `stwid--list-width`/`stwid--list-height` compatibility) → src/drawer.js
+- List/editor splitter drag resize (desktop width + mobile top/bottom height) and saved splitter state (`stwid--splitter-size`, `stwid--splitter-size-mobile`, with legacy `stwid--list-width`/`stwid--list-height` compatibility) → src/drawer.splitter.js
 
 ## Book-level behavior
 
@@ -90,7 +90,7 @@ Where each feature or behavior is implemented in the codebase.
 - Folder collapse state storage → src/book-browser/book-browser.state.js
 - Entry Manager persisted state keys (`sort`, `hide-keys`, `columns`) → src/entry-manager/logic/logic.state.js
 - Entry Manager local state keys (`start`, `step`, `direction`, `filter`) → src/entry-manager/bulk-editor/bulk-editor.js
-- List panel width persistence (`stwid--splitter-size`) and mobile list height persistence (`stwid--splitter-size-mobile`) with legacy key mirroring (`stwid--list-width`, `stwid--list-height`) → src/drawer.js
+- List panel width persistence (`stwid--splitter-size`) and mobile list height persistence (`stwid--splitter-size-mobile`) with legacy key mirroring (`stwid--list-width`, `stwid--list-height`) → src/drawer.splitter.js
 
 ## Integration with SillyTavern
 
