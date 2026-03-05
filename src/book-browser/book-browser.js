@@ -24,9 +24,9 @@ import {
     setSelectedBookInCoreUi as setSelectedBookInCoreUiBridge,
 } from './book-browser.core-bridge.js';
 import {
-    BOOK_VISIBILITY_MODES,
     createFilterBarSlice,
 } from './browser-tabs/browser-tabs.filter-bar.js';
+import { BOOK_VISIBILITY_MODES } from './browser-tabs/browser-tabs.visibility-tab.js';
 import { createSelectionDnDSlice } from './book-list/book-list.selection-dnd.js';
 import { createBookMenuSlice } from './book-list/book-list.book-menu.js';
 import { createFoldersViewSlice } from './book-list/book-folders/book-folders.folders-view.js';

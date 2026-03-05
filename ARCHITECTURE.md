@@ -98,12 +98,12 @@
 | `src/book-browser/book-list/book-list.books-view.js` | Book row render and full list load pipeline; wires per-book interactions |
 | `src/book-browser/book-list/book-folders/book-folders.folders-view.js` | Folder view wiring: DOM creation, collapse state sync, visibility/active-toggle refresh, and folder-grouping visibility state |
 | `src/book-browser/book-list/book-list.book-menu.js` | Per-book dropdown menu: triggers, ARIA, keyboard support, actions, and import dialog helpers |
-| `src/book-browser/browser-tabs/browser-tabs.filter-bar.js` | Icon-tab strip (Lorebooks/Folders/Settings/Visibility/Sorting/Search); owns book visibility menu, active-filter chip rendering, and tab content mounting |
+| `src/book-browser/browser-tabs/browser-tabs.filter-bar.js` | Thin orchestrator for icon-tab strip and shared multiselect dropdown helpers; wires tab content mounting and delegates search/visibility builders to tab modules |
 | `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js` | Builds the Lorebooks tab content (Lorebooks thinContainer) |
 | `src/book-browser/browser-tabs/browser-tabs.settings-tab.js` | Builds the Settings tab content (Activation, Refresh, Entry Manager toggle) |
-| `src/book-browser/browser-tabs/browser-tabs.visibility-tab.js` | Owns mounting for Visibility tab content |
+| `src/book-browser/browser-tabs/browser-tabs.visibility-tab.js` | Owns `BOOK_VISIBILITY_MODES`, `createVisibilitySlice`, `buildVisibilityDropdownSection`, and Visibility tab mount helper |
 | `src/book-browser/browser-tabs/browser-tabs.sorting-tab.js` | Owns mounting for Sorting tab content |
-| `src/book-browser/browser-tabs/browser-tabs.search-tab.js` | Owns mounting for Search tab content |
+| `src/book-browser/browser-tabs/browser-tabs.search-tab.js` | Owns `buildSearchRow` builder and Search tab mount helper |
 | `src/book-browser/browser-tabs/browser-tabs.folders-tab.js` | Builds the Folders tab content: Folders thinContainer (New Folder, Import Folder, Collapse All Folders) |
 | `src/book-browser/book-browser.state.js` | Module-local mutable state container + lifecycle helpers (reset/hydration) |
 | `src/book-browser/book-list/book-list.selection-dnd.js` | Entry selection UI helpers; entry/book drag-drop move-copy persistence |
