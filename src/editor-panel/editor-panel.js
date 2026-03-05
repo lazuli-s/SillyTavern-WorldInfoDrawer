@@ -183,6 +183,45 @@ export const initEditorPanel = ({
         focusContainer.append(btn);
     };
 
+    const wireAmsSection = (editDom, attempts = 0) => {
+        const amsHeader = editDom.querySelector('.userSettingsInnerExpandable');
+        const amsDrawer = amsHeader?.closest('.inline-drawer');
+        if (!amsHeader || !amsDrawer) {
+            if (attempts < 30) {
+                requestAnimationFrame(() => wireAmsSection(editDom, attempts + 1));
+            }
+            return;
+        }
+
+        if (amsDrawer.dataset.stwidAmsWired === '1') return;
+        amsDrawer.dataset.stwidAmsWired = '1';
+
+        amsDrawer.classList.add('stwid--ams');
+        amsDrawer.classList.remove('stwid--ams-open');
+        amsDrawer.classList.remove('openDrawer');
+        if (document.body.classList.contains('stwid--ams-disabled')) {
+            amsDrawer.style.setProperty('display', 'none', 'important');
+        } else {
+            amsDrawer.style.removeProperty('display');
+        }
+        const icon = amsDrawer.querySelector('.inline-drawer-icon');
+        if (icon) {
+            icon.classList.remove('up', 'fa-circle-chevron-up');
+            icon.classList.add('down', 'fa-circle-chevron-down');
+        }
+
+        amsHeader.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = amsDrawer.classList.toggle('stwid--ams-open');
+            if (icon) {
+                icon.classList.toggle('up', isOpen);
+                icon.classList.toggle('down', !isOpen);
+                icon.classList.toggle('fa-circle-chevron-up', isOpen);
+                icon.classList.toggle('fa-circle-chevron-down', !isOpen);
+            }
+        });
+    };
+
     const closeCompetingPanels = () => {
         if (dom.activationToggle.classList.contains(ACTIVE_STATE_CLASS)) {
             hideActivationSettings();
@@ -251,6 +290,7 @@ export const initEditorPanel = ({
         appendUnfocusButton();
         if (header) dom.editor.append(header);
         dom.editor.append(editDom);
+        wireAmsSection(editDom);
 
         
         

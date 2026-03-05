@@ -96,10 +96,51 @@ const applyFolderGroupingVisibility = (enabled)=>{
     });
 };
 
+const applyAdditionalMatchingSourcesVisibility = (enabled)=>{
+    const visible = Boolean(enabled);
+    document.body.classList.toggle('stwid--ams-disabled', !visible);
+
+    const amsDrawers = new Set();
+    for (const header of document.querySelectorAll('.stwid--editor .userSettingsInnerExpandable')) {
+        if (!(header instanceof HTMLElement)) continue;
+        const drawer = header.closest('.inline-drawer');
+        if (drawer instanceof HTMLElement) {
+            amsDrawers.add(drawer);
+        }
+    }
+    for (const drawer of document.querySelectorAll('.stwid--editor .inline-drawer.stwid--ams')) {
+        if (drawer instanceof HTMLElement) {
+            amsDrawers.add(drawer);
+        }
+    }
+
+    for (const drawer of amsDrawers) {
+        if (visible) drawer.style.removeProperty('display');
+        else drawer.style.setProperty('display', 'none', 'important');
+        if (!visible) {
+            drawer.classList.remove('stwid--ams-open');
+            drawer.classList.remove('openDrawer');
+        }
+    }
+
+    // Recovery: remove stale inline hide from non-AMS drawers.
+    for (const drawer of document.querySelectorAll('.stwid--editor .inline-drawer')) {
+        if (!(drawer instanceof HTMLElement)) continue;
+        if (amsDrawers.has(drawer)) continue;
+        if (drawer.style.getPropertyValue('display') === 'none') {
+            drawer.style.removeProperty('display');
+        }
+    }
+};
+
 const FEATURE_REGISTRY = Object.freeze([
     {
         settingKey: 'featureFolderGrouping',
         applyFn: (enabled)=>applyFolderGroupingVisibility(enabled),
+    },
+    {
+        settingKey: 'featureAdditionalMatchingSources',
+        applyFn: (enabled)=>applyAdditionalMatchingSourcesVisibility(enabled),
     },
 ]);
 
@@ -138,11 +179,21 @@ const initSettingsPanel = async()=>{
     featureSettingsRoot = wrapper;
 
     const folderGroupingCheckbox = wrapper.querySelector('#stwid-feature-folder-grouping');
+    const amsCheckbox = wrapper.querySelector('#stwid-feature-additional-matching-sources');
 
     if (folderGroupingCheckbox instanceof HTMLInputElement) {
         folderGroupingCheckbox.checked = Boolean(Settings.instance.featureFolderGrouping);
         folderGroupingCheckbox.addEventListener('change', ()=>{
             Settings.instance.featureFolderGrouping = folderGroupingCheckbox.checked;
+            Settings.instance.save();
+            applyFeatureVisibility();
+        });
+    }
+
+    if (amsCheckbox instanceof HTMLInputElement) {
+        amsCheckbox.checked = Boolean(Settings.instance.featureAdditionalMatchingSources);
+        amsCheckbox.addEventListener('change', ()=>{
+            Settings.instance.featureAdditionalMatchingSources = amsCheckbox.checked;
             Settings.instance.save();
             applyFeatureVisibility();
         });

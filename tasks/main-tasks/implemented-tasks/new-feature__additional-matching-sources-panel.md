@@ -2,7 +2,7 @@
 *Created: March 4, 2026*
 
 **Type:** New Feature
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -75,14 +75,14 @@ Files affected:
 
 ### Step 1 — Update `style.css`
 
-- [ ] **Remove** the rule at lines 1056–1059 that hides the AMS inline-drawer entirely:
+- [x] **Remove** the rule at lines 1056–1059 that hides the AMS inline-drawer entirely:
   ```css
   .stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer:has(> .userSettingsInnerExpandable) {
     display: none;
   }
   ```
 
-- [ ] **Add** the following new rules directly after the block ending at line 1059 (or at end of the editor section). Each rule needs a matching comment:
+- [x] **Add** the following new rules directly after the block ending at line 1059 (or at end of the editor section). Each rule needs a matching comment:
 
   ```css
   /* AMS: show the header/toggle button (overrides the blanket inline-drawer-toggle hide) */
@@ -111,9 +111,9 @@ Files affected:
 
 ### Step 2 — Update `src/editor-panel/editor-panel.js`
 
-- [ ] In `openEntryEditor`, after `dom.editor.append(editDom)` (and AFTER `appendUnfocusButton()`, `header`, `editDom` appends), add a call to a new helper `wireAmsSection(editDom)`.
+- [x] In `openEntryEditor`, after `dom.editor.append(editDom)` (and AFTER `appendUnfocusButton()`, `header`, `editDom` appends), add a call to a new helper `wireAmsSection(editDom)`.
 
-- [ ] Implement the `wireAmsSection(editDom)` helper (as a `const` inside `initEditorPanel`'s closure):
+- [x] Implement the `wireAmsSection(editDom)` helper (as a `const` inside `initEditorPanel`'s closure):
 
   ```js
   const wireAmsSection = (editDom) => {
@@ -144,17 +144,17 @@ Files affected:
 
 ### Step 3 — Update `src/shared/settings.js`
 
-- [ ] Add `'featureAdditionalMatchingSources'` to the `KNOWN_SETTINGS_KEYS` array.
-- [ ] Add `featureAdditionalMatchingSources = true;` as a class property default (default `true` = visible by default).
-- [ ] In the constructor, after existing `parseBooleanSetting` calls, add:
+- [x] Add `'featureAdditionalMatchingSources'` to the `KNOWN_SETTINGS_KEYS` array.
+- [x] Add `featureAdditionalMatchingSources = true;` as a class property default (default `true` = visible by default).
+- [x] In the constructor, after existing `parseBooleanSetting` calls, add:
   ```js
   this.featureAdditionalMatchingSources = parseBooleanSetting(this.featureAdditionalMatchingSources, true);
   ```
-- [ ] In `toJSON()`, add `featureAdditionalMatchingSources: this.featureAdditionalMatchingSources`.
+- [x] In `toJSON()`, add `featureAdditionalMatchingSources: this.featureAdditionalMatchingSources`.
 
 ### Step 4 — Update `settings.html`
 
-- [ ] Add a new checkbox row for the feature inside the Features section, following the same pattern as the Folder Grouping checkbox:
+- [x] Add a new checkbox row for the feature inside the Features section, following the same pattern as the Folder Grouping checkbox:
   ```html
   <div class="flex-container">
       <label class="menu_button" for="stwid-feature-additional-matching-sources">
@@ -166,7 +166,7 @@ Files affected:
 
 ### Step 5 — Update `index.js`
 
-- [ ] Add an entry to `FEATURE_REGISTRY`:
+- [x] Add an entry to `FEATURE_REGISTRY`:
   ```js
   {
       settingKey: 'featureAdditionalMatchingSources',
@@ -174,7 +174,7 @@ Files affected:
   },
   ```
 
-- [ ] In `initSettingsPanel`, after the folderGroupingCheckbox block, add wiring for the new checkbox:
+- [x] In `initSettingsPanel`, after the folderGroupingCheckbox block, add wiring for the new checkbox:
   ```js
   const amsCheckbox = wrapper.querySelector('#stwid-feature-additional-matching-sources');
   if (amsCheckbox instanceof HTMLInputElement) {
@@ -189,11 +189,52 @@ Files affected:
 
 ### Step 6 — Update `FEATURE_MAP.md`
 
-- [ ] Add to the **Editor behavior** section:
+- [x] Add to the **Editor behavior** section:
   ```
   - Additional Matching Sources section in editor panel (show/wire collapsible AMS inline-drawer per entry) → src/editor-panel/editor-panel.js
   ```
-- [ ] Add to the **Settings panel** section:
+- [x] Add to the **Settings panel** section:
   ```
   - Additional Matching Sources feature toggle (featureAdditionalMatchingSources) → src/shared/settings.js, settings.html, index.js
   ```
+
+---
+
+## After Implementation
+*Implemented: March 4, 2026*
+
+### What changed
+
+- `style.css`
+  - Removed the old rule that fully hid the Additional Matching Sources section.
+  - Added AMS-only styles so the header is visible, content starts collapsed, and opens only when toggled.
+  - Added a body-class hide rule so the new feature toggle can disable the section.
+- `src/editor-panel/editor-panel.js`
+  - Added `wireAmsSection(editDom)` to find the AMS drawer on each editor open and mark it with `stwid--ams`.
+  - Added click wiring to expand/collapse AMS and keep the chevron icon in sync.
+  - Called `wireAmsSection(editDom)` after the editor DOM is mounted.
+- `src/shared/settings.js`
+  - Added a new persisted setting key: `featureAdditionalMatchingSources`.
+  - Added default value `true`, constructor parsing, and JSON serialization support.
+- `settings.html`
+  - Added a new Features checkbox labeled `Additional Matching Sources`.
+- `index.js`
+  - Added AMS visibility handling to `FEATURE_REGISTRY` by toggling `body.stwid--ams-disabled`.
+  - Wired the new settings checkbox to save and re-apply feature visibility instantly.
+- `FEATURE_MAP.md`
+  - Documented AMS editor behavior ownership in `src/editor-panel/editor-panel.js`.
+  - Documented the AMS feature toggle ownership across settings and bootstrap files.
+
+### Risks / What might break
+
+- This touches editor drawer toggle behavior, so it might affect other nested inline-drawers if their markup changes upstream.
+- This adds one more body-level feature class toggle, so future CSS using similar class names could conflict if not scoped.
+- This depends on the `.userSettingsInnerExpandable` selector from ST templates, so an upstream rename could hide the AMS section again.
+
+### Manual checks
+
+- Open any lorebook entry in the drawer editor and confirm `Additional Matching Sources` appears collapsed at the bottom of the form.
+- Click the AMS header and confirm it expands/collapses and the chevron flips up/down each time.
+- Toggle each AMS checkbox, close the entry, reopen it, and confirm the checkbox states are preserved.
+- Open `Settings > WorldInfo Drawer`, turn off `Additional Matching Sources`, reopen an entry, and confirm the AMS section is completely hidden.
+- Turn the setting back on and confirm the AMS section appears again without needing a full restart.

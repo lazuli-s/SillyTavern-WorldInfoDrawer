@@ -1066,6 +1066,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   min-height: initial;
   flex: 0 0 auto;
   display: block;
+  padding-top: 0.5em;
 }
 
 /* AMS: collapsed by default - overrides the flex !important on .inline-drawer-content */
