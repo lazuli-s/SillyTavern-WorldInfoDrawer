@@ -15,7 +15,7 @@
 |   |   |-- book-browser.core-bridge.js        # Core WI DOM delegation helpers
 |   |   |-- browser-tabs/
 |   |   |   |-- browser-tabs.js                # Browser tabs + filters/search/visibility
-|   |   |   |-- browser-tabs.lorebooks-tab.js  # Lorebooks+Settings+Helper tab content
+|   |   |   |-- browser-tabs.lorebooks-tab.js  # Lorebooks tab content
 |   |   |   |-- browser-tabs.settings-tab.js   # Settings tab content
 |   |   |   |-- browser-tabs.visibility-tab.js # Visibility tab mount helper
 |   |   |   |-- browser-tabs.sorting-tab.js    # Sorting tab mount helper
