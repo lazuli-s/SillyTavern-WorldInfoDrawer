@@ -20,7 +20,7 @@ Where each feature or behavior is implemented in the codebase.
 ## Book-level behavior
 
 - Book list rendering and insertion order → src/book-browser/book-list/book-list.books-view.js
-- Top control row (new book, new folder, import book, import folder, collapse/expand all books, collapse/expand all folders, activation settings, refresh), including thin-container groups: Lorebooks (new/import/collapse-all-books), Folders (new/import/collapse-all-folders), and Settings (activation + refresh). On mobile (<= 1000 px), `stwid--controlsRow` is moved into the `Controls` icon tab and its original wrapper is hidden. → src/drawer.js, src/book-browser/book-browser.js, src/book-browser/browser-tabs/browser-tabs.filter-bar.js
+- Top control row groups moved into permanent browser tabs: Settings (activation + refresh + Entry Manager toggle) -> Settings tab (tab 1, default); Lorebooks (new book, import, collapse-all-books) -> Lorebooks tab (tab 2); Folders (new folder, import, collapse-all-folders) -> Folders tab (tab 3). All tabs are always visible on all screen sizes. Tab content factories owned by `src/book-browser/browser-tabs/browser-tabs.settings-tab.js`, `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js`, and `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`; tab registration owned by `src/book-browser/browser-tabs/browser-tabs.filter-bar.js`. → src/drawer.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js, src/book-browser/browser-tabs/browser-tabs.folders-tab.js, src/book-browser/browser-tabs/browser-tabs.filter-bar.js
 - Book active toggle (global active status) → src/book-browser/book-list/book-list.books-view.js
 - Book collapse/expand and collapse-all behavior → src/book-browser/book-list/book-list.books-view.js, src/book-browser/book-browser.js, src/drawer.js
 - Book drag/drop between folders and root, including Ctrl-copy duplicate flow → src/book-browser/book-list/book-list.books-view.js, src/book-browser/book-list/book-list.selection-dnd.js, src/book-browser/book-browser.js
@@ -58,6 +58,7 @@ Where each feature or behavior is implemented in the codebase.
 - Editor reset/clear and active-row highlight control → src/editor-panel/editor-panel.js
 - Focus/unfocus editor UI toggles → src/editor-panel/editor-panel.js
 - Global activation settings panel embedding/toggling (`#wiActivationSettings`) → src/editor-panel/editor-panel.js
+- Additional Matching Sources section in editor panel (show/wire collapsible AMS inline-drawer per entry) → src/editor-panel/editor-panel.js
 - Duplicate-entry button refresh queue/reopen behavior → src/shared/wi-update-handler.js, src/drawer.js
 
 ## Selection & interaction
@@ -68,10 +69,10 @@ Where each feature or behavior is implemented in the codebase.
 - Selection visual state add/remove/clear helpers → src/book-browser/book-list/book-list.selection-dnd.js
 - Delete selected entries (Del key) with save/update propagation → src/drawer.js, src/shared/wi-update-handler.js
 - Search books by name and optional entry text search (title/keys) → src/book-browser/browser-tabs/browser-tabs.filter-bar.js
-- List-panel icon tabs (`Visibility`, `Sorting`, `Search`) with active-state switching and real control rows mounted per tab. On mobile (<= 1000 px), a `Controls` tab is prepended as the first/default tab and contains `stwid--controlsRow`. → src/book-browser/browser-tabs/browser-tabs.filter-bar.js, style.css
+- List-panel icon tabs now ordered as Settings (1st/default), Lorebooks (2nd), Folders (3rd), Visibility (4th), Sorting (5th), Search (6th), with active-state switching and real control rows mounted per tab. Mounting for Visibility/Sorting/Search tabs is split into `src/book-browser/browser-tabs/browser-tabs.visibility-tab.js`, `src/book-browser/browser-tabs/browser-tabs.sorting-tab.js`, and `src/book-browser/browser-tabs/browser-tabs.search-tab.js`. → src/book-browser/browser-tabs/browser-tabs.filter-bar.js, src/book-browser/browser-tabs/browser-tabs.visibility-tab.js, src/book-browser/browser-tabs/browser-tabs.sorting-tab.js, src/book-browser/browser-tabs/browser-tabs.search-tab.js, style.css
 - Book visibility filter (`All Books` default exclusive preset, `All Active` exclusive preset, and multi-select `Global`/`Chat`/`Persona`/`Character`) as the single source of list visibility, with icon-only trigger button, list/order-helper scope tooltip, per-option explanatory tooltips/checkbox indicators, and active-filter chips → src/book-browser/browser-tabs/browser-tabs.filter-bar.js
 - Book visibility control/chip layout (chips wrap inline beside the trigger button; no separate help icon in the row) → style.css
-- Visibility tab row (`stwid--visibilityRow`) groups Entry Manager toggle + Book Visibility trigger + chips; activation/refresh actions live in the top `stwid--controlsRow` Settings group (owned by `src/drawer.js`) → src/book-browser/browser-tabs/browser-tabs.filter-bar.js, src/drawer.js, style.css
+- Visibility tab row (`stwid--visibilityRow`) contains Book Visibility trigger + chips only; Entry Manager toggle and activation/refresh actions are in the Settings tab. → src/book-browser/browser-tabs/browser-tabs.filter-bar.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, style.css
 
 ## Sorting & ordering
 
@@ -101,6 +102,7 @@ Where each feature or behavior is implemented in the codebase.
 - Entry Manager open guard when feature is disabled → src/entry-manager/entry-manager.js
 - Folder rows hide/show behavior for feature toggling → src/book-browser/book-list/book-folders/book-folders.folders-view.js
 - Folder control buttons hide/show behavior (New Folder, Import Folder, Collapse/Expand Folders) → src/drawer.js
+- Additional Matching Sources feature toggle (`featureAdditionalMatchingSources`) → src/shared/settings.js, settings.html, index.js
 
 ## Integration with SillyTavern
 

@@ -1,4 +1,8 @@
-﻿const BOOK_VISIBILITY_MODES = Object.freeze({
+import { mountVisibilityTabContent } from './browser-tabs.visibility-tab.js';
+import { mountSortingTabContent } from './browser-tabs.sorting-tab.js';
+import { mountSearchTabContent } from './browser-tabs.search-tab.js';
+
+const BOOK_VISIBILITY_MODES = Object.freeze({
     ALL_BOOKS: 'allBooks',
     ALL_ACTIVE: 'allActive',
     CUSTOM: 'custom',
@@ -109,10 +113,6 @@ const createFilterBarSlice = ({
 
     let docClickHandler = null;
     const setupFilter = (list)=>{
-        const controlsRowEl = runtime?.dom?.controlsRow instanceof HTMLElement
-            ? runtime.dom.controlsRow
-            : null;
-        const isMobile = window.innerWidth <= 1000;
         const filter = document.createElement('div'); {
             const searchRow = document.createElement('div');
             searchRow.classList.add('stwid--searchRow');
@@ -238,13 +238,13 @@ const createFilterBarSlice = ({
                 iconTabBar.setAttribute('role', 'tablist');
                 iconTabBar.setAttribute('aria-label', 'List panel tabs');
                 const panelTabs = [
+                    { id:'settings', icon:'fa-cog', label:'Settings' },
+                    { id:'lorebooks', icon:'fa-book', label:'Lorebooks' },
+                    { id:'folders', icon:'fa-folder', label:'Folders' },
                     { id:'visibility', icon:'fa-eye', label:'Visibility' },
                     { id:'sorting', icon:'fa-arrow-down-wide-short', label:'Sorting' },
                     { id:'search', icon:'fa-magnifying-glass', label:'Search' },
                 ];
-                if (isMobile && controlsRowEl) {
-                    panelTabs.unshift({ id:'controls', icon:'fa-sliders', label:'Controls' });
-                }
                 const tabButtons = [];
                 const tabContents = [];
                 const tabContentsById = new Map();
@@ -286,30 +286,23 @@ const createFilterBarSlice = ({
 
                     button.addEventListener('click', ()=>setActivePlaceholderTab(tab.id));
                 }
-                if (isMobile && controlsRowEl) {
-                    const controlsTabContent = tabContentsById.get('controls');
-                    if (controlsTabContent) {
-                        const originalParent = controlsRowEl.parentElement;
-                        controlsTabContent.append(controlsRowEl);
-                        if (originalParent) {
-                            originalParent.style.display = 'none';
-                        }
-                    }
+                const lorebooksTabContent = tabContentsById.get('lorebooks');
+                if (lorebooksTabContent && runtime?.dom?.lorebooksTabContent instanceof HTMLElement) {
+                    lorebooksTabContent.append(runtime.dom.lorebooksTabContent);
                 }
-                const visibilityTabContent = tabContentsById.get('visibility');
-                if (visibilityTabContent) {
-                    visibilityTabContent.append(visibilityRow);
+                const foldersTabContent = tabContentsById.get('folders');
+                if (foldersTabContent && runtime?.dom?.foldersTabContent instanceof HTMLElement) {
+                    foldersTabContent.append(runtime.dom.foldersTabContent);
                 }
-                const sortingTabContent = tabContentsById.get('sorting');
-                if (sortingTabContent) {
-                    sortingTabContent.append(sortingRow);
+                const settingsTabContent = tabContentsById.get('settings');
+                if (settingsTabContent && runtime?.dom?.settingsTabContent instanceof HTMLElement) {
+                    settingsTabContent.append(runtime.dom.settingsTabContent);
                 }
-                const searchTabContent = tabContentsById.get('search');
-                if (searchTabContent) {
-                    searchTabContent.append(searchRow);
-                }
+                mountVisibilityTabContent({ tabContentsById, visibilityRow });
+                mountSortingTabContent({ tabContentsById, sortingRow });
+                mountSearchTabContent({ tabContentsById, searchRow });
                 iconTab.prepend(iconTabBar);
-                const defaultTabId = (isMobile && controlsRowEl) ? 'controls' : (panelTabs[0]?.id ?? 'visibility');
+                const defaultTabId = panelTabs[0]?.id ?? 'settings';
                 setActivePlaceholderTab(defaultTabId);
             }
             const getBookVisibilityOption = (mode)=>
@@ -435,17 +428,6 @@ const createFilterBarSlice = ({
             };
             setApplyActiveFilter(applyActiveFilter);
             {
-                const helperContainer = document.createElement('div');
-                helperContainer.classList.add('stwid--thinContainer', 'stwid--visibilityHelper');
-                const helperContainerLabel = document.createElement('span');
-                helperContainerLabel.classList.add('stwid--thinContainerLabel');
-                helperContainerLabel.textContent = 'Helper';
-                const helperContainerHint = document.createElement('i');
-                helperContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-                helperContainerHint.title = 'Open Entry Manager for the books currently shown by Visibility filters.';
-                helperContainerLabel.append(helperContainerHint);
-                helperContainer.append(helperContainerLabel);
-
                 const visibilityContainer = document.createElement('div');
                 visibilityContainer.classList.add('stwid--thinContainer', 'stwid--visibilityFilters');
                 const visibilityContainerLabel = document.createElement('span');
@@ -529,13 +511,9 @@ const createFilterBarSlice = ({
                 const chips = document.createElement('div');
                 chips.classList.add('stwid--visibilityChips');
                 listPanelState.bookVisibilityChips = chips;
-                const orderHelperToggle = runtime?.dom?.order?.toggle;
-                if (orderHelperToggle instanceof HTMLElement) {
-                    helperContainer.append(orderHelperToggle);
-                }
                 applyOrderHelperToggleVisibility();
                 visibilityContainer.append(menuWrap, chips);
-                visibilityRow.append(helperContainer, visibilityContainer);
+                visibilityRow.append(visibilityContainer);
 
                 const onDocClickCloseMenu = (evt)=>{
                     if (!menu.classList.contains('stwid--state-active')) return;
@@ -572,3 +550,4 @@ export {
     BOOK_VISIBILITY_MODES,
     createFilterBarSlice,
 };
+

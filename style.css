@@ -345,6 +345,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--iconTabBar {
   display: flex;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--SmartThemeBorderColor);
   margin-bottom: 0.6em;
 }
@@ -1053,9 +1054,42 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   min-height: 0;
 }
 
-/* override: hide the nested "User Settings" inline-drawer that appears inside the WI entry - not needed in the drawer UI */
-.stwid--editor .inline-drawer-content > .world_entry_edit .inline-drawer:has(> .userSettingsInnerExpandable) {
-  display: none;
+/* AMS: show the header/toggle button (overrides the blanket inline-drawer-toggle hide) */
+.stwid--editor .stwid--ams > .inline-drawer-header.inline-drawer-toggle {
+  display: flex;
+  cursor: pointer;
+}
+
+/* AMS: opt out of main editor full-height drawer sizing rules */
+.stwid--editor .inline-drawer.stwid--ams {
+  height: auto;
+  min-height: initial;
+  flex: 0 0 auto;
+  display: block;
+}
+
+/* AMS: collapsed by default - overrides the flex !important on .inline-drawer-content */
+.stwid--editor .stwid--ams > .inline-drawer-content {
+  display: none !important;
+  flex: 0 0 auto;
+  flex: initial;
+  flex-direction: initial;
+  min-height: initial;
+}
+
+/* AMS: expanded state - toggled by JS adding stwid--ams-open */
+.stwid--editor .stwid--ams.stwid--ams-open > .inline-drawer-content {
+  display: flex !important;
+}
+
+/* AMS: feature disabled - hides the section entirely */
+body.stwid--ams-disabled .stwid--ams {
+  display: none !important;
+}
+
+/* AMS: fallback hide path when class wiring is not yet attached */
+body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerExpandable) {
+  display: none !important;
 }
 
 /* override: vanilla ST sets a conflicting flex value on [name='contentAndCharFilterBlock'];

@@ -2,7 +2,7 @@
 *Created: March 4, 2026*
 
 **Type:** Rework
-**Status:** DOCUMENTED
+**Status:** IMPLEMENTED
 
 ---
 
@@ -69,7 +69,7 @@ on all screen sizes.
 
 ## Implementation Plan
 
-### Step 1 — Create `browser-tabs.lorebooks-tab.js`
+### [x] Step 1 — Create `browser-tabs.lorebooks-tab.js`
 
 Create `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js`.
 
@@ -142,7 +142,7 @@ Return the wrapper element.
 
 ---
 
-### Step 2 — Create `browser-tabs.folders-tab.js`
+### [x] Step 2 — Create `browser-tabs.folders-tab.js`
 
 Create `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`.
 
@@ -181,7 +181,7 @@ Return the wrapper element.
 
 ---
 
-### Step 3 — Update `drawer.js`
+### [x] Step 3 — Update `drawer.js`
 
 **3a. Add imports** at the top of the file:
 
@@ -247,7 +247,7 @@ controls.append(controlsSecondary);
 
 ---
 
-### Step 4 — Update `browser-tabs.filter-bar.js`
+### [x] Step 4 — Update `browser-tabs.filter-bar.js`
 
 **4a. Remove mobile Controls tab logic.**
 
@@ -337,7 +337,7 @@ visibilityRow.append(visibilityContainer);
 
 ---
 
-### Step 5 — Update `ARCHITECTURE.md`
+### [x] Step 5 — Update `ARCHITECTURE.md`
 
 **5a. Add the two new files to the file tree** under `browser-tabs/`:
 
@@ -357,7 +357,7 @@ visibilityRow.append(visibilityContainer);
 
 ---
 
-### Step 6 — Update `FEATURE_MAP.md`
+### [x] Step 6 — Update `FEATURE_MAP.md`
 
 In the **Book-level behavior** section, update the "Top control row" entry:
 
@@ -370,3 +370,53 @@ groups, and the mobile Controls tab behavior) with:
 In the **Selection & interaction** section, update the icon-tab strip entry:
 
 Remove the sentence about the mobile Controls tab (`On mobile (<= 1000 px), a Controls tab is prepended...`) and replace with a note that the tab order is now: Lorebooks (1st/default), Folders (2nd), Visibility (3rd), Sorting (4th), Search (5th).
+
+---
+
+## After Implementation
+*Implemented: March 5, 2026*
+
+### What changed
+
+- `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js`
+  - Added a new tab-content factory for the Lorebooks tab.
+  - Moved Helper, Lorebooks, and Settings controls into this new module.
+  - Reused the same button behavior for creating/importing/collapsing books, opening settings, refreshing, and opening Entry Manager.
+- `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`
+  - Added a new tab-content factory for the Folders tab.
+  - Moved New Folder, Import Folder, and Collapse All Folders controls into this module.
+- `src/drawer.js`
+  - Imported and called the two new tab-content factories.
+  - Removed old controls-row construction from `drawer.js`.
+  - Kept Sorting controls wiring in place and left only the sorting row under `.stwid--controls`.
+- `src/book-browser/browser-tabs/browser-tabs.filter-bar.js`
+  - Added Lorebooks and Folders tabs before existing tabs.
+  - Removed mobile-only Controls tab logic.
+  - Mounted `dom.lorebooksTabContent` and `dom.foldersTabContent` into their new tabs.
+  - Removed Helper container from the Visibility row.
+- `ARCHITECTURE.md`
+  - Added the two new browser-tab files to the project tree.
+  - Added module responsibility rows for both new files and updated filter-bar description.
+- `FEATURE_MAP.md`
+  - Updated control ownership mapping to the new Lorebooks/Folders tab model.
+  - Updated icon-tab order mapping and removed old mobile Controls-tab behavior notes.
+  - Updated Visibility-row ownership notes after moving Entry Manager toggle out of Visibility.
+
+### Risks / What might break
+
+- This touches where the Entry Manager toggle is mounted, so it might affect feature-toggle visibility behavior for that button.
+- This changes tab mounting order, so it might affect which tab opens first and where controls appear after reload.
+- This moves control DOM creation into new files, so it might affect existing button references if any code expected old locations.
+
+### Manual checks
+
+- Open the drawer on desktop and mobile widths and confirm the tab order is: Lorebooks, Folders, Visibility, Sorting, Search.
+  Success looks like Lorebooks opens by default and no Controls tab appears.
+- In Lorebooks tab, click New Book/Import/Collapse All/Activation/Refresh and verify each action still works like before.
+  Success looks like each button performing the same action as pre-rework.
+- In Folders tab, click New Folder/Import Folder/Collapse All Folders and verify behavior still works.
+  Success looks like folder actions updating the list immediately.
+- Open Visibility tab and confirm only visibility filters/chips appear there (no Entry Manager toggle).
+  Success looks like Entry Manager toggle only appearing in Lorebooks -> Helper.
+- Toggle the Entry Manager feature setting (if available in settings panel).
+  Success looks like the Entry Manager toggle showing/hiding correctly in its new location.
