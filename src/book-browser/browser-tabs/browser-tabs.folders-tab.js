@@ -5,6 +5,7 @@ export const createFoldersTabContent = ({
     getListPanelApi,
 })=>{
     const root = document.createElement('div');
+    root.classList.add('stwid--foldersRow');
     const foldersGroup = document.createElement('div');
     foldersGroup.classList.add('stwid--thinContainer', 'stwid--foldersGroup');
     dom.folderControls.group = foldersGroup;
