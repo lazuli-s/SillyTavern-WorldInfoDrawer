@@ -33,7 +33,9 @@
 |   |   └-- bulk-editor/
 |   |       |-- bulk-editor.js                 # Bulk editor orchestrator
 |   |       |-- bulk-editor.utils.js           # Shared bulk editor utilities
-|   |       |-- bulk-editor.action-bar.js      # Bulk editor action bar controls
+|   |       |-- bulk-editor.action-bar.helpers.js       # Shared action bar row helpers
+|   |       |-- bulk-editor.action-bar.visibility-row.js # Visibility row controls
+|   |       |-- bulk-editor.action-bar.bulk-edit-row.js # Bulk edit row controls
 |   |       |-- bulk-editor.filter-panel.js    # Script filter panel + preview wiring
 |   |       |-- bulk-editor.table-header.js    # Bulk editor table header
 |   |       └-- bulk-editor.table-body.js      # Bulk editor table body
@@ -98,7 +100,9 @@
 | `src/entry-manager/logic/logic.filters.js` | Filter logic for Entry Manager rows (strategy/position/recursion/outlet/group/script) |
 | `src/entry-manager/bulk-editor/bulk-editor.js` | Orchestrator: init, section assembly, and public bulk editor rendering API |
 | `src/entry-manager/bulk-editor/bulk-editor.utils.js` | Shared DOM/utility helpers for bulk editor slices, including multiselect dropdown wiring and collapsible row animation |
-| `src/entry-manager/bulk-editor/bulk-editor.action-bar.js` | Action bar: select-all, hide-keys, column visibility, sort, and apply-order controls |
+| `src/entry-manager/bulk-editor/bulk-editor.action-bar.helpers.js` | Shared DOM builder helpers used by both action-bar row modules |
+| `src/entry-manager/bulk-editor/bulk-editor.action-bar.visibility-row.js` | Visibility row: select-all, key toggle, column visibility, sort, filter chips, and entry count controls |
+| `src/entry-manager/bulk-editor/bulk-editor.action-bar.bulk-edit-row.js` | Bulk edit row: per-field bulk edit containers (state, strategy, position, depth, outlet, order, recursion, budget, probability, sticky, cooldown, delay) and Apply All Changes |
 | `src/entry-manager/bulk-editor/bulk-editor.filter-panel.js` | Script-based filter panel with SlashCommandParser, highlight.js, and live preview |
 | `src/entry-manager/bulk-editor/bulk-editor.table-header.js` | `<thead>` with multiselect column filter menus; returns refresh-indicator callbacks |
 | `src/entry-manager/bulk-editor/bulk-editor.table-body.js` | `<tbody>` entry row loop with all cell types, drag sorting, and inline edits |

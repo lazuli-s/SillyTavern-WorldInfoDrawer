@@ -1,4 +1,5 @@
-import { buildVisibilityRow, buildBulkEditRow } from './bulk-editor.action-bar.js';
+import { buildVisibilityRow } from './bulk-editor.action-bar.visibility-row.js';
+import { buildBulkEditRow } from './bulk-editor.action-bar.bulk-edit-row.js';
 import { buildFilterPanel }  from './bulk-editor.filter-panel.js';
 import { buildTableHeader }  from './bulk-editor.table-header.js';
 import { buildTableBody }    from './bulk-editor.table-body.js';
