@@ -2,7 +2,7 @@
 *Created: March 4, 2026*
 
 **Type:** New Feature
-**Status:** PLANNED
+**Status:** IMPLEMENTED
 **Part of:** `NewFeature_EntryManagerTabs.md`
 **Depends on:** Nothing — can be implemented against the current codebase
 
@@ -94,20 +94,20 @@ and sets `aria-selected` on buttons. Define it locally inside the tab block
 
 ### File: `src/entry-manager/bulk-editor/bulk-editor.js`
 
-**Step 1 — Remove `initialActionRowCollapsed`**
+- [x] **Step 1 — Remove `initialActionRowCollapsed`**
 
 Delete the line:
 ```js
 const initialActionRowCollapsed = window.innerWidth <= 1000;
 ```
 
-**Step 2 — Change `initialCollapsed` on both row builders**
+- [x] **Step 2 — Change `initialCollapsed` on both row builders**
 
 Pass `initialCollapsed: false` to both `buildVisibilityRow` and `buildBulkEditRow`
 (remove the `initialActionRowCollapsed` reference). Both rows must start
 uncollapsed; tab activation handles their visibility from now on.
 
-**Step 3 — Build the tab widget**
+- [x] **Step 3 — Build the tab widget**
 
 After both row elements are built, add a tab widget block (inline, ~50 lines):
 
@@ -177,7 +177,7 @@ const entryManagerTabs = (() => {
 })();
 ```
 
-**Step 4 — Update `body.append()`**
+- [x] **Step 4 — Update `body.append()`**
 
 Replace:
 ```js
@@ -208,3 +208,30 @@ body.append(entryManagerTabs, filterEl, wrap);
 | Per-container toggle overrides | Phase 2 |
 | Tab 3 (Presets) | Future phase |
 | Removing the internal collapse toggle from inside the rows | Optional cleanup post-Phase 1 |
+
+---
+
+## After Implementation
+*Implemented: March 5, 2026*
+
+### What changed
+
+`src/entry-manager/bulk-editor/bulk-editor.js`
+- Removed the old "collapse on small screens" default for the two action rows.
+- Set both row builders to start expanded (`initialCollapsed: false`).
+- Wrapped the two rows inside an `stwid--iconTab` tab widget with `Display` and `Bulk Editor` tabs.
+- Switched the body layout to append the new tab wrapper above the filter panel and table.
+
+### Risks / What might break
+
+- This changes which container controls visibility of the two rows, so tab switching might hide the wrong row if a tab id is mistyped.
+- The original collapse controls still exist inside each row, so users can still collapse content inside each tab and may read that as "tab is empty."
+- If existing CSS for `stwid--iconTab` changes upstream, this new tab bar could look different than expected in Entry Manager.
+
+### Manual checks
+
+- Open Entry Manager and confirm the tab bar appears above the filter panel, with `Display` selected by default.
+- Click `Bulk Editor` and confirm the bulk-edit row appears while the display row is hidden; click `Display` and confirm the reverse.
+- On a narrow window (1000px or less), open Entry Manager and confirm the rows are still reachable through tabs without auto-collapsing on load.
+
+

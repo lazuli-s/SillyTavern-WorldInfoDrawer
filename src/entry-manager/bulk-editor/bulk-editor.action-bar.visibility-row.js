@@ -5,7 +5,7 @@ import {
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
 } from './bulk-editor.utils.js';
-import { createCollapsibleRowTitle, wrapRowContent } from './bulk-editor.action-bar.helpers.js';
+import { wrapRowContent } from './bulk-editor.action-bar.helpers.js';
 import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 function createActionThinContainer(labelText, hintText) {
@@ -293,9 +293,6 @@ export function buildVisibilityRow({
     const row = document.createElement('div');
     row.classList.add('stwid--order-action-bar');
 
-    const { rowTitle, collapseChevron } = createCollapsibleRowTitle('Visibility');
-    row.append(rowTitle);
-
     
     const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
     const keyToggle = document.createElement('div'); {
@@ -462,7 +459,7 @@ export function buildVisibilityRow({
     visibilityInfo.append(filterChipDisplay.activeFiltersEl);
     refresh = filterChipDisplay.refresh;
 
-    wrapRowContent(row, rowTitle, collapseChevron, initialCollapsed);
+    wrapRowContent(row);
 
     return { element: row, refresh };
 }

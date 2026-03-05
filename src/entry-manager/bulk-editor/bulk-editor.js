@@ -122,8 +122,6 @@ const createOrderHelperRenderer = ({
 
         const filterIndicatorRefs = {};
 
-        const initialActionRowCollapsed = window.innerWidth <= 1000;
-
         const { element: visibilityRowEl, refresh: refreshVisibilityRow } = buildVisibilityRow({
             body,
             orderHelperState,
@@ -160,7 +158,7 @@ const createOrderHelperRenderer = ({
             getAutomationIdValues,
             getGroupValues,
             filterIndicatorRefs,
-            initialCollapsed: initialActionRowCollapsed,
+            initialCollapsed: false,
         });
 
         const { element: bulkEditRowEl, refreshSelectionCount, cleanup } = buildBulkEditRow({
@@ -183,9 +181,74 @@ const createOrderHelperRenderer = ({
             syncOrderHelperOutletFilters,
             filterIndicatorRefs,
             applyOrderHelperRecursionFilterToRow,
-            initialCollapsed: initialActionRowCollapsed,
+            initialCollapsed: false,
         });
         cleanupBulkEditRow = cleanup;
+
+        const entryManagerTabs = (() => {
+            const panelTabs = [
+                { id:'display', icon:'fa-eye', label:'Display' },
+                { id:'bulk-editor', icon:'fa-table-list', label:'Bulk Editor' },
+            ];
+
+            const iconTab = document.createElement('div');
+            iconTab.classList.add('stwid--iconTab');
+
+            const iconTabBar = document.createElement('div');
+            iconTabBar.classList.add('stwid--iconTabBar');
+            iconTabBar.setAttribute('role', 'tablist');
+            iconTabBar.setAttribute('aria-label', 'Entry Manager tabs');
+
+            const tabButtons = [];
+            const tabContents = [];
+            const tabContentsById = new Map();
+
+            const setActiveTab = (tabId)=>{
+                for (const button of tabButtons) {
+                    const isActive = button.dataset.tabId === tabId;
+                    button.classList.toggle('active', isActive);
+                    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                }
+                for (const content of tabContents) {
+                    content.classList.toggle('active', content.dataset.tabId === tabId);
+                }
+            };
+
+            for (const tab of panelTabs) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.classList.add('stwid--iconTabButton');
+                button.dataset.tabId = tab.id;
+                button.setAttribute('role', 'tab');
+                button.setAttribute('aria-selected', 'false');
+                button.title = `${tab.label} tab`;
+                const icon = document.createElement('i');
+                icon.classList.add('fa-solid', 'fa-fw', tab.icon);
+                button.append(icon);
+                const text = document.createElement('span');
+                text.textContent = tab.label;
+                button.append(text);
+                tabButtons.push(button);
+                iconTabBar.append(button);
+
+                const content = document.createElement('div');
+                content.classList.add('stwid--iconTabContent');
+                content.dataset.tabId = tab.id;
+                content.setAttribute('role', 'tabpanel');
+                tabContents.push(content);
+                tabContentsById.set(tab.id, content);
+                iconTab.append(content);
+
+                button.addEventListener('click', ()=>setActiveTab(tab.id));
+            }
+
+            tabContentsById.get('display')?.append(visibilityRowEl);
+            tabContentsById.get('bulk-editor')?.append(bulkEditRowEl);
+
+            iconTab.prepend(iconTabBar);
+            setActiveTab('display');
+            return iconTab;
+        })();
 
         const filterEl = buildFilterPanel({
             dom,
@@ -292,7 +355,7 @@ const createOrderHelperRenderer = ({
         refreshVisibilityRow();
         refreshSelectionCount();
 
-        body.append(visibilityRowEl, bulkEditRowEl, filterEl, wrap);
+        body.append(entryManagerTabs, filterEl, wrap);
 
         
         dom.editor.append(body);

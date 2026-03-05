@@ -343,6 +343,10 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   margin-bottom: 1.2em;
 }
 
+.stwid--orderHelper .stwid--iconTab {
+  background-color: var(--SmartThemeBlurTintColor);
+}
+
 .stwid--iconTabBar {
   display: flex;
   flex-wrap: wrap;
@@ -1481,47 +1485,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   padding: 0.4em 0.5em;
 }
 
-.stwid--RowTitle {
-  flex: 0 0 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  font-size: 1em;
-  color: var(--SmartThemeEmColor);
-  opacity: 1;
-  margin-bottom: 0.5em;
-}
-
-.stwid--collapsed .stwid--RowTitle {
-  margin-bottom: 0;
-}
-
-.stwid--collapsibleTitle {
-  cursor: pointer;
-  user-select: none;
-}
-
-.stwid--collapseChevron {
-  transition: transform 250ms ease;
-  font-size: 0.8em;
-}
-
-.stwid--collapsed .stwid--collapseChevron {
-  transform: rotate(-90deg);
-}
-
 .stwid--rowContentWrap {
   flex: 0 0 100%;
   display: flex;
   flex-wrap: wrap;
   gap: inherit;
-}
-
-.stwid--RowTitle::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background-color: var(--SmartThemeBorderColor);
 }
 
 .stwid--orderHelper .stwid--thinContainer {

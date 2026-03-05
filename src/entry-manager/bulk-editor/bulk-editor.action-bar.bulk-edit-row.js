@@ -3,7 +3,7 @@ import {
     closeOpenMultiselectDropdownMenus,
     setTooltip,
 } from './bulk-editor.utils.js';
-import { createCollapsibleRowTitle, wrapRowContent } from './bulk-editor.action-bar.helpers.js';
+import { wrapRowContent } from './bulk-editor.action-bar.helpers.js';
 import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 const BULK_APPLY_BATCH_SIZE = 200;
@@ -156,9 +156,6 @@ export function buildBulkEditRow({
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
-
-    const { rowTitle, collapseChevron } = createCollapsibleRowTitle('Bulk Editor');
-    row.append(rowTitle);
 
     
     const selectContainer = createLabeledBulkContainer('select', 'Select', 'Toggle selection of entries. Selected entries are targeted by bulk operations in this row.');
@@ -944,7 +941,7 @@ export function buildBulkEditRow({
 
     row.append(applyAllContainer);
 
-    wrapRowContent(row, rowTitle, collapseChevron, initialCollapsed);
+    wrapRowContent(row);
 
     return { element: row, refreshSelectionCount, cleanup };
 }
