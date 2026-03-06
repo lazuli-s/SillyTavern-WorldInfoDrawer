@@ -1,4 +1,6 @@
 
+const UNSAVED_EDITS_WARNING_PREFIX = 'Unsaved edits detected. Save or discard changes before';
+
 const createBookMenuSlice = ({
     listPanelState,
     runtime: state,
@@ -13,6 +15,54 @@ const createBookMenuSlice = ({
     setBookSortPreference,
     applyBookFolderChange,
 })=>{
+    const addMenuItemKeyboardSupport = (item)=>{
+        item.tabIndex = 0;
+        item.addEventListener('keydown', (evt)=>{
+            if (evt.key === 'Enter' || evt.key === ' ') {
+                evt.preventDefault();
+                item.click();
+            }
+        });
+    };
+
+    const createBookMenuActionItem = ({
+        itemClass,
+        iconClass,
+        labelText,
+        onClick,
+        enableKeyboard = true,
+        attributes = {},
+    })=>{
+        const item = document.createElement('div');
+        item.classList.add('stwid--listDropdownItem', 'stwid--menuItem', itemClass);
+        for (const [key, value] of Object.entries(attributes)) {
+            if (value !== undefined && value !== null) {
+                item.setAttribute(key, value);
+            }
+        }
+        if (enableKeyboard) {
+            addMenuItemKeyboardSupport(item);
+        }
+        item.addEventListener('click', onClick);
+
+        const itemIcon = document.createElement('i');
+        itemIcon.classList.add('stwid--icon', 'fa-solid', 'fa-fw', iconClass);
+        item.append(itemIcon);
+
+        const menuLabel = document.createElement('span');
+        menuLabel.classList.add('stwid--label');
+        menuLabel.textContent = labelText;
+        item.append(menuLabel);
+
+        return item;
+    };
+
+    const abortIfUnsavedChanges = (actionLabel)=>{
+        if (!state.isDirtyCheck?.()) return false;
+        toastr.warning(`${UNSAVED_EDITS_WARNING_PREFIX} ${actionLabel}.`);
+        return true;
+    };
+
     const openImportDialog = ()=>{
         const input = (document.querySelector(coreUiSelectors.importFileInput));
         if (!input) return null;
@@ -65,68 +115,69 @@ const createBookMenuSlice = ({
         return filePromise;
     };
 
-    const importFolderFile = async(file)=>{
-        
-        
-        
-        
-        if (!file) return false;
+    const parseFolderImportPayload = async(file)=>{
+        if (!file) return null;
         let payload;
         try {
             payload = JSON.parse(await file.text());
         } catch (error) {
             console.warn('[STWID] Failed to parse folder import file', error);
             toastr.error('Folder import failed: invalid JSON.');
-            return false;
+            return null;
         }
         const books = payload?.books;
         if (!books || typeof books !== 'object' || Array.isArray(books)) {
             toastr.error('Folder import failed: missing "books" object.');
-            return false;
+            return null;
         }
-        const currentNames = new Set(state.getWorldNames ? state.getWorldNames() : state.world_names);
-        const createdNames = [];
-        const failedBooks = [];
-        for (const [rawName, bookData] of Object.entries(books)) {
-            if (!bookData || typeof bookData !== 'object') continue;
-            const entries = bookData.entries;
-            if (!entries || typeof entries !== 'object') continue;
-            const metadata = typeof bookData.metadata === 'object' && bookData.metadata ? bookData.metadata : {};
-            let name = rawName;
-            if (currentNames.has(name)) {
-                let index = 1;
-                while (currentNames.has(name)) {
-                    const suffix = index === 1 ? ' (imported)' : ` (imported ${index})`;
-                    name = `${rawName}${suffix}`;
-                    index += 1;
+        return books;
+    };
+
+    const buildImportedBookName = (rawName, currentNames)=>{
+        let importedName = rawName;
+        let index = 1;
+        while (currentNames.has(importedName)) {
+            const suffix = index === 1 ? ' (imported)' : ` (imported ${index})`;
+            importedName = `${rawName}${suffix}`;
+            index += 1;
+        }
+        return importedName;
+    };
+
+    const importSingleBook = async(rawName, bookData, currentNames)=>{
+        if (!bookData || typeof bookData !== 'object') return null;
+        const entries = bookData.entries;
+        if (!entries || typeof entries !== 'object') return null;
+        const metadata = typeof bookData.metadata === 'object' && bookData.metadata ? bookData.metadata : {};
+        const importedName = buildImportedBookName(rawName, currentNames);
+        let bookCreated = false;
+        try {
+            const created = await state.createNewWorldInfo(importedName, { interactive: false });
+            if (!created) return null;
+            const nextPayload = {
+                entries: structuredClone(entries),
+                metadata: structuredClone(metadata),
+            };
+            folderDeps.sanitizeFolderMetadata(nextPayload.metadata);
+            await state.saveWorldInfo(importedName, nextPayload, true);
+            bookCreated = true;
+            currentNames.add(importedName);
+            return { createdName: importedName };
+        } catch (error) {
+            console.warn('[STWID] Failed to import book:', importedName, error);
+            if (bookCreated) {
+                try {
+                    await state.deleteWorldInfo?.(importedName);
+                } catch (rollbackError) {
+                    console.warn('[STWID] Rollback failed for book:', importedName, rollbackError);
+                    toastr.warning(`Import cleanup failed for "${importedName}". Delete this book manually if it appears in the lorebook list.`);
                 }
             }
-            let bookCreated = false;
-            try {
-                const created = await state.createNewWorldInfo(name, { interactive: false });
-                if (!created) continue;
-                const nextPayload = {
-                    entries: structuredClone(entries),
-                    metadata: structuredClone(metadata),
-                };
-                folderDeps.sanitizeFolderMetadata(nextPayload.metadata);
-                await state.saveWorldInfo(name, nextPayload, true);
-                bookCreated = true;
-                currentNames.add(name);
-                createdNames.push(name);
-            } catch (error) {
-                console.warn('[STWID] Failed to import book:', name, error);
-                failedBooks.push(rawName);
-                if (bookCreated) {
-                    try {
-                        await state.deleteWorldInfo?.(name);
-                    } catch (rollbackError) {
-                        console.warn('[STWID] Rollback failed for book:', name, rollbackError);
-                        toastr.warning(`Import cleanup failed for "${name}". Delete this book manually if it appears in the lorebook list.`);
-                    }
-                }
-            }
+            return { failedName: rawName };
         }
+    };
+
+    const showFolderImportResult = async(createdNames, failedBooks)=>{
         if (!createdNames.length && !failedBooks.length) {
             toastr.warning('Folder import finished with no new books.');
             return false;
@@ -141,6 +192,24 @@ const createBookMenuSlice = ({
             toastr.success(`Imported ${createdNames.length} book${createdNames.length === 1 ? '' : 's'}.`);
         }
         return createdNames.length > 0;
+    };
+
+    const importFolderFile = async(file)=>{
+        const books = await parseFolderImportPayload(file);
+        if (!books) return false;
+        const currentNames = new Set(state.getWorldNames ? state.getWorldNames() : state.world_names);
+        const createdNames = [];
+        const failedBooks = [];
+        for (const [rawName, bookData] of Object.entries(books)) {
+            const result = await importSingleBook(rawName, bookData, currentNames);
+            if (result?.createdName) {
+                createdNames.push(result.createdName);
+            }
+            if (result?.failedName) {
+                failedBooks.push(result.failedName);
+            }
+        }
+        return showFolderImportResult(createdNames, failedBooks);
     };
 
     const openFolderImportDialog = ()=>{
@@ -228,360 +297,268 @@ const createBookMenuSlice = ({
         await clickCoreUiAction(coreUiActionSelectors.deleteBook);
     };
 
+    const getSortedFolderNamesForMoveDialog = ()=>Array.from(new Set([
+        ...folderDeps.getFolderRegistry(),
+        ...listPanelState.getFolderDomNames(),
+    ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+
+    const createMoveBookDialogShell = (cleanName)=>{
+        const modal = document.createElement('dialog');
+        modal.classList.add('popup');
+        modal.addEventListener('click', (evt)=>{
+            if (evt.target === modal) {
+                modal.close();
+            }
+        });
+        modal.addEventListener('close', ()=>{
+            modal.remove();
+        });
+
+        const popupBody = document.createElement('div');
+        popupBody.classList.add('popup-body');
+
+        const popupContent = document.createElement('div');
+        popupContent.classList.add('popup-content', 'stwid--moveBookContent');
+
+        const title = document.createElement('h3');
+        title.textContent = `Move "${cleanName}" to folder`;
+        popupContent.append(title);
+
+        popupBody.append(popupContent);
+        modal.append(popupBody);
+
+        return { modal, popupContent };
+    };
+
+    const handleCreateFolderAndMoveBook = async({ name, modal })=>{
+        const nextName = await state.Popup?.show.input('Create folder', 'Enter a new folder name:', 'New Folder');
+        if (!nextName) return;
+        const folderRegistrationResult = folderDeps.registerFolderName(nextName);
+        if (!folderRegistrationResult.ok) {
+            if (folderRegistrationResult.reason === 'empty') {
+                toastr.warning('Folder name cannot be empty.');
+            } else {
+                toastr.error('Folder names cannot include "/".');
+            }
+            return;
+        }
+        if (abortIfUnsavedChanges('moving a book')) return;
+        await applyBookFolderChange(name, folderRegistrationResult.folder, { centerAfterRefresh: true });
+        modal.close();
+    };
+
+    const handleMoveBookToSelectedFolder = async({ selectedFolder, currentFolder, name, modal })=>{
+        if (!selectedFolder) return;
+        if (selectedFolder === currentFolder) {
+            toastr.info('Book is already in that folder.');
+            return;
+        }
+        if (abortIfUnsavedChanges('moving a book')) return;
+        await applyBookFolderChange(name, selectedFolder, { centerAfterRefresh: true });
+        modal.close();
+    };
+
+    const buildMoveBookSelectionRow = ({ folderNames, currentFolder, name, modal })=>{
+        const row = document.createElement('div');
+        row.classList.add('stwid--listDropdownItem', 'stwid--menuItem', 'stwid--moveBookRow');
+
+        const select = document.createElement('select');
+        select.classList.add('text_pole');
+        select.disabled = folderNames.length === 0;
+        if (folderNames.length === 0) {
+            const emptyOption = document.createElement('option');
+            emptyOption.textContent = '(no folders yet)';
+            emptyOption.value = '';
+            emptyOption.selected = true;
+            select.append(emptyOption);
+        } else {
+            for (const folderName of folderNames) {
+                const option = document.createElement('option');
+                option.value = folderName;
+                option.textContent = folderName;
+                if (folderName === currentFolder) option.selected = true;
+                select.append(option);
+            }
+        }
+        row.append(select);
+
+        const buttonRow = document.createElement('div');
+        buttonRow.classList.add('stwid--moveBookQuickActions');
+
+        const createFolderButton = document.createElement('button');
+        createFolderButton.classList.add('menu_button', 'interactable');
+        createFolderButton.title = 'New Folder';
+        createFolderButton.setAttribute('aria-label', 'New Folder');
+        const createFolderIcon = document.createElement('i');
+        createFolderIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
+        createFolderButton.append(createFolderIcon);
+        createFolderButton.addEventListener('click', async(evt)=>{
+            evt.preventDefault();
+            evt.stopPropagation();
+            await handleCreateFolderAndMoveBook({ name, modal });
+        });
+        buttonRow.append(createFolderButton);
+
+        const noFolderButton = document.createElement('button');
+        noFolderButton.classList.add('menu_button', 'interactable');
+        noFolderButton.title = 'No Folder';
+        noFolderButton.setAttribute('aria-label', 'No Folder');
+        const noFolderIcon = document.createElement('i');
+        noFolderIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-minus');
+        noFolderButton.append(noFolderIcon);
+        noFolderButton.addEventListener('click', async(evt)=>{
+            evt.preventDefault();
+            evt.stopPropagation();
+            if (!currentFolder) {
+                toastr.info('Book is already not in a folder.');
+                return;
+            }
+            if (abortIfUnsavedChanges('moving a book')) return;
+            await applyBookFolderChange(name, null, { centerAfterRefresh: true });
+            modal.close();
+        });
+        buttonRow.append(noFolderButton);
+
+        row.append(buttonRow);
+        return { row, select };
+    };
+
+    const buildMoveBookPrimaryButtons = ({ folderNames, currentFolder, select, name, modal })=>{
+        const buttonRow = document.createElement('div');
+        buttonRow.classList.add('stwid--moveBookButtons', 'stwid--moveBookButtons--primary', 'popup-controls');
+
+        const saveButton = document.createElement('button');
+        saveButton.classList.add('menu_button', 'popup-button-ok');
+        saveButton.textContent = 'Save';
+        saveButton.disabled = folderNames.length === 0;
+        saveButton.addEventListener('click', async(evt)=>{
+            evt.preventDefault();
+            evt.stopPropagation();
+            const selectedFolder = select.disabled ? null : select.value;
+            await handleMoveBookToSelectedFolder({ selectedFolder, currentFolder, name, modal });
+        });
+        buttonRow.append(saveButton);
+
+        const cancelButton = document.createElement('button');
+        cancelButton.classList.add('menu_button', 'popup-button-cancel');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.addEventListener('click', (evt)=>{
+            evt.preventDefault();
+            evt.stopPropagation();
+            modal.close();
+        });
+        buttonRow.append(cancelButton);
+
+        return buttonRow;
+    };
+
     const buildMoveBookMenuItem = (name, closeMenu)=>{
         if (typeof name !== 'string') return null;
         const { DOMPurify } = SillyTavern.libs;
         const cleanName = DOMPurify.sanitize(name);
-        const item = document.createElement('div'); {
-            item.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-            item.classList.add('stwid--moveToFolder');
-            item.addEventListener('click', async(evt)=>{
+        return createBookMenuActionItem({
+            itemClass: 'stwid--moveToFolder',
+            iconClass: 'fa-folder-tree',
+            labelText: 'Move Book to Folder',
+            onClick: async(evt)=>{
                 evt.stopPropagation();
                 closeMenu?.();
 
                 const currentFolder = folderDeps.getFolderFromMetadata(state.cache[name]?.metadata);
-                const registry = folderDeps.getFolderRegistry();
-                const folderNames = Array.from(new Set([
-                    ...registry,
-                    ...listPanelState.getFolderDomNames(),
-                ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
-
-                const modal = document.createElement('dialog');
-                modal.classList.add('popup');
-                modal.addEventListener('click', (e)=>{
-                    if (e.target === modal) {
-                        modal.close();
-                    }
-                });
-                modal.addEventListener('close', ()=>{
-                    modal.remove();
-                });
-
-                const popupBody = document.createElement('div');
-                popupBody.classList.add('popup-body');
-
-                const popupContent = document.createElement('div');
-                popupContent.classList.add('popup-content');
-                popupContent.classList.add('stwid--moveBookContent');
-
-                const title = document.createElement('h3');
-                title.textContent = `Move "${cleanName}" to folder`;
-                popupContent.append(title);
-
-                const row = document.createElement('div');
-                row.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                row.classList.add('stwid--moveBookRow');
-                const select = document.createElement('select');
-                select.classList.add('text_pole');
-                select.disabled = folderNames.length === 0;
-                if (folderNames.length === 0) {
-                    const opt = document.createElement('option');
-                    opt.textContent = '(no folders yet)';
-                    opt.value = '';
-                    opt.selected = true;
-                    select.append(opt);
-                } else {
-                    for (const folderName of folderNames) {
-                        const opt = document.createElement('option');
-                        opt.value = folderName;
-                        opt.textContent = folderName;
-                        if (folderName === currentFolder) opt.selected = true;
-                        select.append(opt);
-                    }
-                }
-                row.append(select);
-
-                const buttonRowA = document.createElement('div');
-                buttonRowA.classList.add('stwid--moveBookQuickActions');
-
-                const createBtn = document.createElement('button');
-                createBtn.classList.add('menu_button', 'interactable');
-                createBtn.title = 'New Folder';
-                createBtn.setAttribute('aria-label', 'New Folder');
-                const createIcon = document.createElement('i');
-                createIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-plus');
-                createBtn.append(createIcon);
-                createBtn.addEventListener('click', async(e)=>{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const nextName = await state.Popup?.show.input('Create folder', 'Enter a new folder name:', 'New Folder');
-                    if (!nextName) return;
-                    const reg = folderDeps.registerFolderName(nextName);
-                    if (!reg.ok) {
-                        if (reg.reason === 'empty') {
-                            toastr.warning('Folder name cannot be empty.');
-                        } else {
-                            toastr.error('Folder names cannot include "/".');
-                        }
-                        return;
-                    }
-
-                    
-                    if (state.isDirtyCheck?.()) {
-                        toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
-                        return;
-                    }
-                    
-                    await applyBookFolderChange(name, reg.folder, { centerAfterRefresh: true });
-                    modal.close();
-                });
-                buttonRowA.append(createBtn);
-
-                const noFolderBtn = document.createElement('button');
-                noFolderBtn.classList.add('menu_button', 'interactable');
-                noFolderBtn.title = 'No Folder';
-                noFolderBtn.setAttribute('aria-label', 'No Folder');
-                const noFolderIcon = document.createElement('i');
-                noFolderIcon.classList.add('fa-solid', 'fa-fw', 'fa-folder-minus');
-                noFolderBtn.append(noFolderIcon);
-                noFolderBtn.addEventListener('click', async(e)=>{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!currentFolder) {
-                        toastr.info('Book is already not in a folder.');
-                        return;
-                    }
-                    
-                    if (state.isDirtyCheck?.()) {
-                        toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
-                        return;
-                    }
-                    await applyBookFolderChange(name, null, { centerAfterRefresh: true });
-                    modal.close();
-                });
-                buttonRowA.append(noFolderBtn);
-                row.append(buttonRowA);
+                const folderNames = getSortedFolderNamesForMoveDialog();
+                const { modal, popupContent } = createMoveBookDialogShell(cleanName);
+                const { row, select } = buildMoveBookSelectionRow({ folderNames, currentFolder, name, modal });
                 popupContent.append(row);
-
-                const buttonRowB = document.createElement('div');
-                buttonRowB.classList.add('stwid--moveBookButtons');
-                buttonRowB.classList.add('stwid--moveBookButtons--primary');
-                buttonRowB.classList.add('popup-controls');
-
-                const moveBtn = document.createElement('button');
-                moveBtn.classList.add('menu_button');
-                moveBtn.classList.add('popup-button-ok');
-                moveBtn.textContent = 'Save';
-                moveBtn.disabled = folderNames.length === 0;
-                moveBtn.addEventListener('click', async(e)=>{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const selectedFolder = select.disabled ? null : select.value;
-                    if (!selectedFolder) return;
-
-                    if (selectedFolder === currentFolder) {
-                        toastr.info('Book is already in that folder.');
-                        return;
-                    }
-
-                    
-                    if (state.isDirtyCheck?.()) {
-                        toastr.warning('Unsaved edits detected. Save or discard changes before moving a book.');
-                        return;
-                    }
-                    await applyBookFolderChange(name, selectedFolder, { centerAfterRefresh: true });
-                    modal.close();
-                });
-                buttonRowB.append(moveBtn);
-
-                const cancelBtn = document.createElement('button');
-                cancelBtn.classList.add('menu_button');
-                cancelBtn.classList.add('popup-button-cancel');
-                cancelBtn.textContent = 'Cancel';
-                cancelBtn.addEventListener('click', (e)=>{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    modal.close();
-                });
-                buttonRowB.append(cancelBtn);
-
-                popupContent.append(buttonRowB);
-
-                popupBody.append(popupContent);
-                modal.append(popupBody);
+                popupContent.append(buildMoveBookPrimaryButtons({ folderNames, currentFolder, select, name, modal }));
                 document.body.append(modal);
                 modal.showModal();
-            });
-            const i = document.createElement('i'); {
-                i.classList.add('stwid--icon');
-                i.classList.add('fa-solid', 'fa-fw', 'fa-folder-tree');
-                item.append(i);
-            }
-            const txt = document.createElement('span'); {
-                txt.classList.add('stwid--label');
-                txt.textContent = 'Move Book to Folder';
-                item.append(txt);
-            }
-        }
-        return item;
+            },
+        });
     };
 
-    const buildBookMenuTrigger = (name)=>{
-        const addMenuItemKeyboardSupport = (item)=>{
-            item.tabIndex = 0;
-            item.addEventListener('keydown', (evt)=>{
-                if (evt.key === 'Enter' || evt.key === ' ') {
-                    evt.preventDefault();
-                    item.click();
-                }
+    const createBookMenuTriggerButton = ()=>{
+        const menuTrigger = document.createElement('div');
+        menuTrigger.classList.add('stwid--action', 'stwid--listDropdownTrigger', 'fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+        menuTrigger.title = 'Book menu';
+        menuTrigger.setAttribute('aria-label', 'Book menu');
+        menuTrigger.setAttribute('aria-expanded', 'false');
+        menuTrigger.setAttribute('aria-haspopup', 'true');
+        menuTrigger.tabIndex = 0;
+        menuTrigger.addEventListener('keydown', (evt)=>{
+            if (evt.key === 'Enter' || evt.key === ' ') {
+                evt.preventDefault();
+                menuTrigger.click();
+            }
+        });
+        return menuTrigger;
+    };
+
+    const createBookMenuOverlay = (menuTrigger)=>{
+        menuTrigger.style.anchorName = '--stwid--ctxAnchor';
+        const blocker = document.createElement('div');
+        blocker.classList.add('stwid--blocker');
+        for (const eventName of ['mousedown', 'pointerdown', 'touchstart']) {
+            blocker.addEventListener(eventName, (evt)=>{
+                evt.stopPropagation();
             });
-        };
-        const menuTrigger = document.createElement('div'); {
-            menuTrigger.classList.add('stwid--action');
-            menuTrigger.classList.add('stwid--listDropdownTrigger');
-            menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
-            menuTrigger.title = 'Book menu';
-            menuTrigger.setAttribute('aria-label', 'Book menu');
+        }
+        const closeMenu = ()=>{
+            blocker.remove();
+            menuTrigger.style.anchorName = '';
             menuTrigger.setAttribute('aria-expanded', 'false');
-            menuTrigger.setAttribute('aria-haspopup', 'true');
-            menuTrigger.tabIndex = 0;
-            menuTrigger.addEventListener('keydown', (evt)=>{
-                if (evt.key === 'Enter' || evt.key === ' ') {
-                    evt.preventDefault();
-                    menuTrigger.click();
-                }
-            });
-            menuTrigger.addEventListener('click', ()=>{
-                menuTrigger.style.anchorName = '--stwid--ctxAnchor';
-                const blocker = document.createElement('div'); {
-                    blocker.classList.add('stwid--blocker');
-                    blocker.addEventListener('mousedown', (evt)=>{
-                        evt.stopPropagation();
-                    });
-                    blocker.addEventListener('pointerdown', (evt)=>{
-                        evt.stopPropagation();
-                    });
-                    blocker.addEventListener('touchstart', (evt)=>{
-                        evt.stopPropagation();
-                    });
-                    blocker.addEventListener('click', (evt)=>{
-                        evt.stopPropagation();
-                        blocker.remove();
-                        menuTrigger.style.anchorName = '';
-                        menuTrigger.setAttribute('aria-expanded', 'false');
-                    });
-                    const menu = document.createElement('div'); {
-                        menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
-                        menu.setAttribute('role', 'menu');
-                        const closeMenu = ()=>{
-                            blocker.remove();
-                            menuTrigger.style.anchorName = '';
-                            menuTrigger.setAttribute('aria-expanded', 'false');
-                            menuTrigger.focus();
-                        };
-                        menuTrigger.setAttribute('aria-expanded', 'true');
-                        const rename = document.createElement('div'); {
-                            rename.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            rename.classList.add('stwid--rename');
-                            rename.addEventListener('click', async()=>{
-                                closeMenu?.();
-                                const selected = await setSelectedBookInCoreUi(name);
-                                if (!selected) return;
-                                await clickCoreUiAction(coreUiActionSelectors.renameBook);
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-pencil');
-                                rename.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Rename Book';
-                                rename.append(txt);
-                            }
-                            menu.append(rename);
-                        }
-                        const moveBook = buildMoveBookMenuItem(name, closeMenu);
-                        if (moveBook) menu.append(moveBook);
-                        if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
-                            const bulk = document.createElement('div'); {
-                                bulk.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                                bulk.classList.add('stwid--bulkEdit');
-                                addMenuItemKeyboardSupport(bulk);
-                                bulk.addEventListener('click', async()=>{
-                                    const selected = await setSelectedBookInCoreUi(name);
-                                    if (!selected) return;
-                                    await clickCoreUiAction([
-                                        '.stwibe--trigger',
-                                    ]);
-                                    closeMenu?.();
-                                });
-                                const i = document.createElement('i'); {
-                                    i.classList.add('stwid--icon');
-                                    i.classList.add('fa-solid', 'fa-fw', 'fa-list-check');
-                                    bulk.append(i);
-                                }
-                                const txt = document.createElement('span'); {
-                                    txt.classList.add('stwid--label');
-                                    txt.textContent = 'Bulk Edit';
-                                    bulk.append(txt);
-                                }
-                                menu.append(bulk);
-                            }
-                        }
-                        if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoExternalEditor')) {
-                            const editor = document.createElement('div'); {
-                                editor.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                                editor.classList.add('stwid--externalEditor');
-                                addMenuItemKeyboardSupport(editor);
-                                editor.addEventListener('click', async()=>{
-                                    try {
-                                        const response = await fetch('/api/plugins/wiee/editor', {
-                                            method: 'POST',
-                                            headers: state.getRequestHeaders(),
-                                            body: JSON.stringify({
-                                                book: name,
-                                                command: 'code',
-                                                commandArguments: ['.'],
-                                            }),
-                                        });
-                                        if (!response.ok) {
-                                            toastr.error(`External Editor request failed (${response.status}).`);
-                                        }
-                                    } catch (error) {
-                                        console.warn('[STWID] External Editor request failed.', error);
-                                        toastr.error('External Editor request failed. Check the browser console for details.');
-                                    }
-                                    closeMenu?.();
-                                });
-                                const i = document.createElement('i'); {
-                                    i.classList.add('stwid--icon');
-                                    i.classList.add('fa-solid', 'fa-fw', 'fa-laptop-code');
-                                    editor.append(i);
-                                }
-                                const txt = document.createElement('span'); {
-                                    txt.classList.add('stwid--label');
-                                    txt.textContent = 'External Editor';
-                                    editor.append(txt);
-                                }
-                                menu.append(editor);
-                            }
-                        }
-                        const fillTitles = document.createElement('div'); {
-                            fillTitles.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            fillTitles.classList.add('stwid--fillTitles');
-                            addMenuItemKeyboardSupport(fillTitles);
-                            fillTitles.addEventListener('click', async()=>{
-                                if (state.isDirtyCheck?.()) {
-                                    toastr.warning('Unsaved edits detected. Save or discard changes before filling titles.');
-                                    return;
-                                }
-                                await state.fillEmptyTitlesWithKeywords(name);
-                                closeMenu?.();
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-wand-magic-sparkles');
-                                fillTitles.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Fill Empty Titles';
-                                fillTitles.append(txt);
-                            }
-                            menu.append(fillTitles);
-                        }
-                        const bookSort = document.createElement('div'); {
+            menuTrigger.focus();
+        };
+        blocker.addEventListener('click', (evt)=>{
+            evt.stopPropagation();
+            closeMenu();
+        });
+        const menu = document.createElement('div');
+        menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
+        menu.setAttribute('role', 'menu');
+        menuTrigger.setAttribute('aria-expanded', 'true');
+        return { blocker, menu, closeMenu };
+    };
+
+    const createBulkEditMenuItem = (name, closeMenu)=>createBookMenuActionItem({
+        itemClass: 'stwid--bulkEdit',
+        iconClass: 'fa-list-check',
+        labelText: 'Bulk Edit',
+        onClick: async()=>{
+            const selected = await setSelectedBookInCoreUi(name);
+            if (!selected) return;
+            await clickCoreUiAction(['.stwibe--trigger']);
+            closeMenu?.();
+        },
+    });
+
+    const appendCoreBookMenuItems = (menu, name, closeMenu)=>{
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--rename',
+            iconClass: 'fa-pencil',
+            labelText: 'Rename Book',
+            onClick: async()=>{
+                closeMenu?.();
+                const selected = await setSelectedBookInCoreUi(name);
+                if (!selected) return;
+                await clickCoreUiAction(coreUiActionSelectors.renameBook);
+            },
+        }));
+
+        const moveBook = buildMoveBookMenuItem(name, closeMenu);
+        if (moveBook) menu.append(moveBook);
+
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--fillTitles',
+            iconClass: 'fa-wand-magic-sparkles',
+            labelText: 'Fill Empty Titles',
+            onClick: async()=>{
+                if (abortIfUnsavedChanges('filling titles')) return;
+                await state.fillEmptyTitlesWithKeywords(name);
+                closeMenu?.();
+            },
+        }));
+
+        const bookSort = document.createElement('div'); {
                             bookSort.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
                             bookSort.classList.add('stwid--bookSort');
                             bookSort.addEventListener('click', (evt)=>evt.stopPropagation());
@@ -621,131 +598,115 @@ const createBookMenuSlice = ({
                             bookSort.append(sortSelect);
                             menu.append(bookSort);
                         }
-                        const entryManager = document.createElement('div'); {
-                            entryManager.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            entryManager.classList.add('stwid--entryManager');
-                            entryManager.addEventListener('click', ()=>{
-                                state.openEntryManager(name);
-                                closeMenu?.();
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
-                                entryManager.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Entry Manager';
-                                entryManager.append(txt);
-                            }
-                            menu.append(entryManager);
-                        }
-                        const stloButton = document.createElement('div'); {
-                            stloButton.id = 'lorebook_ordering_button';
-                            stloButton.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            stloButton.classList.add('stwid--stlo');
-                            stloButton.dataset.i18n = '[title]stlo.button.configure; [aria-label]stlo.button.configure';
-                            stloButton.title = 'Configure STLO Priority & Budget';
-                            stloButton.setAttribute('aria-label', 'Configure STLO Priority & Budget');
-                            stloButton.tabIndex = 0;
-                            stloButton.setAttribute('role', 'button');
-                            stloButton.addEventListener('click', async(evt)=>{
-                                evt.stopPropagation();
-                                const escapedName = name.replaceAll('"', '\\"');
-                                const didExecute = await state.executeSlashCommand(`/stlo "${escapedName}"`);
-                                if (!didExecute) {
-                                    toastr.error('STLO command failed. Check the browser console for details.');
-                                    return;
-                                }
-                                closeMenu();
-                            });
-                            stloButton.addEventListener('keydown', (evt)=>{
-                                if (evt.key === 'Enter' || evt.key === ' ') {
-                                    evt.preventDefault();
-                                    stloButton.click();
-                                }
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-bars-staggered');
-                                stloButton.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Configure STLO';
-                                stloButton.append(txt);
-                            }
-                            menu.append(stloButton);
-                        }
-                        const exp = document.createElement('div'); {
-                            exp.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            exp.classList.add('stwid--export');
-                            addMenuItemKeyboardSupport(exp);
-                            exp.addEventListener('click', async()=>{
-                                state.download(JSON.stringify({
-                                    entries: structuredClone(state.cache[name].entries),
-                                    metadata: structuredClone(state.cache[name].metadata ?? {}),
-                                }), name, 'application/json');
-                                closeMenu?.();
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-file-export');
-                                exp.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Export Book';
-                                exp.append(txt);
-                            }
-                            menu.append(exp);
-                        }
-                        const dup = document.createElement('div'); {
-                            dup.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            dup.classList.add('stwid--duplicate');
-                            addMenuItemKeyboardSupport(dup);
-                            dup.addEventListener('click', async()=>{
-                                await duplicateBook(name);
-                                closeMenu?.();
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-paste');
-                                dup.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Duplicate Book';
-                                dup.append(txt);
-                            }
-                            menu.append(dup);
-                        }
-                        const del = document.createElement('div'); {
-                            del.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            del.classList.add('stwid--delete');
-                            addMenuItemKeyboardSupport(del);
-                            del.addEventListener('click', async()=>{
-                                await deleteBook(name);
-                                closeMenu?.();
-                            });
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-trash-can');
-                                del.append(i);
-                            }
-                            const txt = document.createElement('span'); {
-                                txt.classList.add('stwid--label');
-                                txt.textContent = 'Delete Book';
-                                del.append(txt);
-                            }
-                            menu.append(del);
-                        }
-                        blocker.append(menu);
-                    }
-                    document.body.append(blocker);
-                }
-            });
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--entryManager',
+            iconClass: 'fa-arrow-down-wide-short',
+            labelText: 'Entry Manager',
+            onClick: ()=>{
+                state.openEntryManager(name);
+                closeMenu?.();
+            },
+            enableKeyboard: false,
+        }));
+
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--export',
+            iconClass: 'fa-file-export',
+            labelText: 'Export Book',
+            onClick: async()=>{
+                state.download(JSON.stringify({
+                    entries: structuredClone(state.cache[name].entries),
+                    metadata: structuredClone(state.cache[name].metadata ?? {}),
+                }), name, 'application/json');
+                closeMenu?.();
+            },
+        }));
+
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--duplicate',
+            iconClass: 'fa-paste',
+            labelText: 'Duplicate Book',
+            onClick: async()=>{
+                await duplicateBook(name);
+                closeMenu?.();
+            },
+        }));
+
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--delete',
+            iconClass: 'fa-trash-can',
+            labelText: 'Delete Book',
+            onClick: async()=>{
+                await deleteBook(name);
+                closeMenu?.();
+            },
+        }));
+    };
+
+    const appendIntegrationMenuItems = (menu, name, closeMenu)=>{
+        if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
+            menu.append(createBulkEditMenuItem(name, closeMenu));
         }
+        if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoExternalEditor')) {
+            menu.append(createBookMenuActionItem({
+                itemClass: 'stwid--externalEditor',
+                iconClass: 'fa-laptop-code',
+                labelText: 'External Editor',
+                onClick: async()=>{
+                    try {
+                        const response = await fetch('/api/plugins/wiee/editor', {
+                            method: 'POST',
+                            headers: state.getRequestHeaders(),
+                            body: JSON.stringify({
+                                book: name,
+                                command: 'code',
+                                commandArguments: ['.'],
+                            }),
+                        });
+                        if (!response.ok) {
+                            toastr.error(`External Editor request failed (${response.status}).`);
+                        }
+                    } catch (error) {
+                        console.warn('[STWID] External Editor request failed.', error);
+                        toastr.error('External Editor request failed. Check the browser console for details.');
+                    }
+                    closeMenu?.();
+                },
+            }));
+        }
+        menu.append(createBookMenuActionItem({
+            itemClass: 'stwid--stlo',
+            iconClass: 'fa-bars-staggered',
+            labelText: 'Configure STLO',
+            onClick: async(evt)=>{
+                evt.stopPropagation();
+                const escapedName = name.replaceAll('"', '\\"');
+                const didExecute = await state.executeSlashCommand(`/stlo "${escapedName}"`);
+                if (!didExecute) {
+                    toastr.error('STLO command failed. Check the browser console for details.');
+                    return;
+                }
+                closeMenu();
+            },
+            attributes: {
+                id: 'lorebook_ordering_button',
+                'data-i18n': '[title]stlo.button.configure; [aria-label]stlo.button.configure',
+                title: 'Configure STLO Priority & Budget',
+                'aria-label': 'Configure STLO Priority & Budget',
+                role: 'button',
+            },
+        }));
+    };
+
+    const buildBookMenuTrigger = (name)=>{
+        const menuTrigger = createBookMenuTriggerButton();
+        menuTrigger.addEventListener('click', ()=>{
+            const { blocker, menu, closeMenu } = createBookMenuOverlay(menuTrigger);
+            appendCoreBookMenuItems(menu, name, closeMenu);
+            appendIntegrationMenuItems(menu, name, closeMenu);
+            blocker.append(menu);
+            document.body.append(blocker);
+        });
         return menuTrigger;
     };
 
