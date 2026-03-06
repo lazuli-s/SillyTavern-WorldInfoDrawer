@@ -1,4 +1,4 @@
-import { buildSearchRow, mountSearchTabContent } from './browser-tabs.search-tab.js';
+import { createSearchRow, mountSearchTabContent } from './browser-tabs.search-tab.js';
 import {
     BOOK_VISIBILITY_MODES,
     createVisibilitySlice,
@@ -132,8 +132,7 @@ const createFilterBarSlice = ({
     let docClickHandler = null;
     const setupFilter = (bookListContainer)=>{
         const filter = document.createElement('div'); {
-            const searchRow = document.createElement('div');
-            searchRow.classList.add('stwid--searchRow');
+            const { searchRow } = createSearchRow(listPanelState, runtime, updateFolderActiveToggles);
             const visibilityRow = document.createElement('div');
             visibilityRow.classList.add('stwid--visibilityRow');
             const sortingRow = runtime?.dom?.sortingRow instanceof HTMLElement
@@ -143,7 +142,6 @@ const createFilterBarSlice = ({
                 sortingRow.classList.add('stwid--sortingRow');
             }
             filter.classList.add('stwid--filter');
-            buildSearchRow(searchRow, listPanelState, runtime, updateFolderActiveToggles);
             const iconTab = buildIconTabBar(runtime, visibilityRow, sortingRow, searchRow);
             const onDocClickCloseMenu = visibilitySlice.setupVisibilitySection(visibilityRow);
             docClickHandler = onDocClickCloseMenu;

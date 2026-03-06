@@ -1,4 +1,4 @@
-export const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveToggles)=>{
+const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveToggles)=>{
     const setQueryFiltered = (element, isFiltered)=>{
         if (!element) return;
         if (isFiltered) {
@@ -109,6 +109,18 @@ export const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderA
     searchRow.append(searchEntriesLabel);
 
     return { search, searchEntriesCheckbox };
+};
+
+export const createSearchRow = (listPanelState, runtime, updateFolderActiveToggles)=>{
+    const searchRow = document.createElement('div');
+    searchRow.classList.add('stwid--searchRow');
+    const { search, searchEntriesCheckbox } = buildSearchRow(
+        searchRow,
+        listPanelState,
+        runtime,
+        updateFolderActiveToggles,
+    );
+    return { searchRow, search, searchEntriesCheckbox };
 };
 
 export const mountSearchTabContent = ({
