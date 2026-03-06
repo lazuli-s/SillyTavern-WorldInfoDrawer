@@ -593,7 +593,7 @@ const createBookMenuSlice = ({
             iconClass: 'fa-arrow-down-wide-short',
             labelText: 'Entry Manager',
             onClick: ()=>{
-                state.openEntryManager(name);
+                state.openEntryManager(name, [name]);
                 closeMenu?.();
             },
             enableKeyboard: false,
