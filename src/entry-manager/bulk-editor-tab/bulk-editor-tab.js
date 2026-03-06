@@ -1,8 +1,8 @@
-import { buildVisibilityRow } from './bulk-editor.action-bar.visibility-row.js';
-import { buildBulkEditRow } from './bulk-editor.action-bar.bulk-edit-row.js';
-import { buildFilterPanel }  from './bulk-editor.filter-panel.js';
-import { buildTableHeader }  from './bulk-editor.table-header.js';
-import { buildTableBody }    from './bulk-editor.table-body.js';
+import { buildVisibilityRow } from '../display-tab/visibility-row.js';
+import { buildBulkEditRow } from './bulk-edit-row.js';
+import { buildFilterPanel }  from '../table/filter-panel.js';
+import { buildTableHeader }  from '../table/table-header.js';
+import { buildTableBody }    from '../table/table-body.js';
 
 const createOrderHelperRenderer = ({
     dom,

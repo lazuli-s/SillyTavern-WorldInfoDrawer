@@ -1,4 +1,4 @@
-import { setTooltip, formatCharacterFilter } from './bulk-editor.utils.js';
+import { setTooltip, formatCharacterFilter } from '../utils.js';
 import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 

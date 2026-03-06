@@ -39,20 +39,21 @@
 |   |   |-- logic/
 |   |   |   |-- logic.state.js                 # Entry Manager persisted/default UI state
 |   |   |   └-- logic.filters.js               # Entry Manager filter logic
-|   |   |-- bulk-editor.action-bar.helpers.js  # Shared action bar row helpers (used by both tabs)
+|   |   |-- action-bar.helpers.js              # Shared action bar row helpers (used by both tabs)
+|   |   |-- utils.js                           # Shared Entry Manager utilities
 |   |   |-- display-tab/
-|   |   |   └-- bulk-editor.action-bar.visibility-row.js # Visibility row controls
-|   |   └-- bulk-editor-tab/
-|   |       |-- bulk-editor.js                 # Bulk editor orchestrator
-|   |       |-- bulk-editor.utils.js           # Shared bulk editor utilities
-|   |       |-- bulk-editor.action-bar.bulk-edit-row.js # Bulk edit row assembly
-|   |       |-- bulk-editor.action-bar.bulk-edit-row.helpers.js # Bulk edit row shared primitives
-|   |       |-- bulk-editor.action-bar.bulk-edit-row.sections.js # Bulk edit row section builders
-|   |       |-- bulk-editor.action-bar.bulk-edit-row.position.js # Position/depth/outlet section builder
-|   |       |-- bulk-editor.action-bar.bulk-edit-row.order.js # Order section builder
-|   |       |-- bulk-editor.filter-panel.js    # Script filter panel + preview wiring
-|   |       |-- bulk-editor.table-header.js    # Bulk editor table header
-|   |       └-- bulk-editor.table-body.js      # Bulk editor table body
+|   |   |   └-- visibility-row.js              # Visibility row controls
+|   |   |-- bulk-editor-tab/
+|   |   |   |-- bulk-editor-tab.js            # Bulk editor orchestrator
+|   |   |   |-- bulk-edit-row.js              # Bulk edit row assembly
+|   |   |   |-- bulk-edit-row.helpers.js      # Bulk edit row shared primitives
+|   |   |   |-- bulk-edit-row.sections.js     # Bulk edit row section builders
+|   |   |   |-- bulk-edit-row.position.js     # Position/depth/outlet section builder
+|   |   |   └-- bulk-edit-row.order.js        # Order section builder
+|   |   └-- table/
+|   |       |-- filter-panel.js               # Script filter panel + preview wiring
+|   |       |-- table-header.js               # Bulk editor table header
+|   |       └-- table-body.js                 # Bulk editor table body
 |   └-- shared/
 |       |-- settings.js                        # Persistent extension settings singleton
 |       |-- constants.js                       # Sort enums/constants
@@ -121,18 +122,18 @@
 | `src/entry-manager/entry-manager.js` | Entry Manager orchestration: state creation, scope gathering, derived filter options, and feature-toggle open guard |
 | `src/entry-manager/logic/logic.state.js` | Entry Manager persisted state (sort/hide-keys/columns) via localStorage |
 | `src/entry-manager/logic/logic.filters.js` | Filter logic for Entry Manager rows (strategy/position/recursion/outlet/group/script) |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.js` | Orchestrator: init, section assembly, and public bulk editor rendering API |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.utils.js` | Shared DOM/utility helpers for bulk editor slices, including multiselect dropdown wiring and collapsible row animation |
-| `src/entry-manager/bulk-editor.action-bar.helpers.js` | Shared DOM builder helper (`wrapRowContent`) used by both action-bar row modules |
-| `src/entry-manager/display-tab/bulk-editor.action-bar.visibility-row.js` | Visibility row: select-all, key toggle, column visibility, sort, filter chips, and entry count controls |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.js` | Bulk edit row assembly that composes all section builders and shared apply registry |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.helpers.js` | Shared bulk-edit constants and primitive helper functions |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js` | Bulk-edit section builders (select, state, strategy, recursion, budget, probability, sticky, cooldown, delay, apply-all) |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.position.js` | Position/depth/outlet bulk section builder |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.order.js` | Order bulk section builder (start/spacing/direction) |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.filter-panel.js` | Script-based filter panel with SlashCommandParser, highlight.js, and live preview |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.table-header.js` | `<thead>` with multiselect column filter menus; returns refresh-indicator callbacks |
-| `src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js` | `<tbody>` entry row loop with all cell types, drag sorting, and inline edits |
+| `src/entry-manager/bulk-editor-tab/bulk-editor-tab.js` | Orchestrator: init, section assembly, and public bulk editor rendering API |
+| `src/entry-manager/utils.js` | Shared DOM/utility helpers for Entry Manager slices, including multiselect dropdown wiring and collapsible row animation |
+| `src/entry-manager/action-bar.helpers.js` | Shared DOM builder helper (`wrapRowContent`) used by both action-bar row modules |
+| `src/entry-manager/display-tab/visibility-row.js` | Visibility row: select-all, key toggle, column visibility, sort, filter chips, and entry count controls |
+| `src/entry-manager/bulk-editor-tab/bulk-edit-row.js` | Bulk edit row assembly that composes all section builders and shared apply registry |
+| `src/entry-manager/bulk-editor-tab/bulk-edit-row.helpers.js` | Shared bulk-edit constants and primitive helper functions |
+| `src/entry-manager/bulk-editor-tab/bulk-edit-row.sections.js` | Bulk-edit section builders (select, state, strategy, recursion, budget, probability, sticky, cooldown, delay, apply-all) |
+| `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js` | Position/depth/outlet bulk section builder |
+| `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js` | Order bulk section builder (start/spacing/direction) |
+| `src/entry-manager/table/filter-panel.js` | Script-based filter panel with SlashCommandParser, highlight.js, and live preview |
+| `src/entry-manager/table/table-header.js` | `<thead>` with multiselect column filter menus; returns refresh-indicator callbacks |
+| `src/entry-manager/table/table-body.js` | `<tbody>` entry row loop with all cell types, drag sorting, and inline edits |
 | `src/shared/sort-helpers.js` | Sorting implementations and per-book sort preference read/write |
 | `src/shared/utils.js` | Shared UI/utility helpers and sort option labels |
 | `src/shared/constants.js` | Sort enums, direction constants, and Entry Manager column/option schema |
@@ -283,7 +284,7 @@ Code Quality Tools: ESLint (`eslint.config.js`), Stylelint (`.stylelintrc.json`)
 - Improve Entry Manager filter UX (from README to-do).
 - Add lorebook tag system (classification/filtering/enable-disable by tag).
 - Resolve remaining CSS alignment issues.
-- Increase test coverage for high-coupling modules (`src/drawer.js`, `src/book-browser/book-browser.js`, `src/entry-manager/bulk-editor-tab/bulk-editor.js`) that currently rely heavily on host DOM and runtime APIs.
+- Increase test coverage for high-coupling modules (`src/drawer.js`, `src/book-browser/book-browser.js`, `src/entry-manager/bulk-editor-tab/bulk-editor-tab.js`) that currently rely heavily on host DOM and runtime APIs.
 - Track SillyTavern upstream template/API changes to avoid selector drift and integration regressions.
 
 ## 9. Project Identification

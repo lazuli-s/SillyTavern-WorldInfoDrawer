@@ -4,8 +4,8 @@ import {
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
-} from './bulk-editor.utils.js';
-import { wrapRowContent } from './bulk-editor.action-bar.helpers.js';
+} from '../utils.js';
+import { wrapRowContent } from '../action-bar.helpers.js';
 import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 function createActionThinContainer(labelText, hintText) {
@@ -293,7 +293,7 @@ export function buildVisibilityRow({
     const row = document.createElement('div');
     row.classList.add('stwid--order-action-bar');
 
-    
+
     const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
     const keyToggle = document.createElement('div'); {
         keyToggle.classList.add('menu_button');
@@ -306,7 +306,7 @@ export function buildVisibilityRow({
         };
         applyKeyToggleStyle();
         keyToggle.addEventListener('click', ()=>{
-            
+
             orderHelperState.hideKeys = !orderHelperState.hideKeys;
             localStorage.setItem(ORDER_HELPER_HIDE_KEYS_STORAGE_KEY, orderHelperState.hideKeys);
             body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
@@ -345,7 +345,7 @@ export function buildVisibilityRow({
     row.append(tableSortContainer);
     addDivider();
 
-    
+
     const filterToggle = document.createElement('div'); {
         filterToggle.classList.add('menu_button');
         filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
@@ -361,18 +361,18 @@ export function buildVisibilityRow({
         row.append(filterToggle);
     }
 
-    
+
     const visibilityInfo = document.createElement('div');
     visibilityInfo.classList.add('stwid--visibilityInfo');
 
     row.append(visibilityInfo);
 
-    
+
     const FILTER_KEY_LABELS = Object.fromEntries(
         ORDER_HELPER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
     );
 
-    
+
     const getFilterValueLabels = (filterKey, selectedValues)=>{
         let options;
         switch (filterKey) {
@@ -388,12 +388,12 @@ export function buildVisibilityRow({
         return selectedValues.map((selectedValue)=>labelMap[selectedValue] ?? String(selectedValue));
     };
 
-    
-    
-    
+
+
+
     let refresh = ()=>{};
 
-    
+
     const clearFilterHandlers = {
         strategy: makeClearFilterHandler(
             'strategy',

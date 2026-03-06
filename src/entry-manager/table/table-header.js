@@ -1,7 +1,7 @@
 import {
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
-} from './bulk-editor.utils.js';
+} from '../utils.js';
 import {
     ORDER_HELPER_TABLE_COLUMNS,
     ORDER_HELPER_NUMBER_COLUMN_KEYS,

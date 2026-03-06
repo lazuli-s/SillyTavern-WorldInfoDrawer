@@ -91,7 +91,7 @@ Where each feature or behavior is implemented in the codebase.
 - Folder registry storage and normalization → src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
 - Folder collapse state storage → src/book-browser/book-browser.state.js
 - Entry Manager persisted state keys (`sort`, `hide-keys`, `columns`) → src/entry-manager/logic/logic.state.js
-- Entry Manager local state keys (`start`, `step`, `direction`, `filter`) → src/entry-manager/bulk-editor/bulk-editor.js
+- Entry Manager local state keys (`start`, `step`, `direction`, `filter`) → src/entry-manager/bulk-editor-tab/bulk-editor-tab.js
 - List panel width persistence (`stwid--splitter-size`) and mobile list height persistence (`stwid--splitter-size-mobile`) with legacy key mirroring (`stwid--list-width`, `stwid--list-height`) → src/drawer.splitter.js
 
 ## Settings panel
@@ -106,7 +106,7 @@ Where each feature or behavior is implemented in the codebase.
 
 ## Integration with SillyTavern
 
-- Core World Info API usage (load/save/create/delete book/entry) → src/drawer.js, src/shared/wi-update-handler.js, src/book-browser/book-browser.js, src/entry-manager/bulk-editor/bulk-editor.js
+- Core World Info API usage (load/save/create/delete book/entry) → src/drawer.js, src/shared/wi-update-handler.js, src/book-browser/book-browser.js, src/entry-manager/bulk-editor-tab/bulk-editor-tab.js
 - Event bus subscriptions (`WORLDINFO_UPDATED`, `WORLDINFO_SETTINGS_UPDATED`, context events) → src/shared/wi-update-handler.js, src/book-browser/book-list/book-list.book-source-links.js
 - Core template usage (`renderTemplateAsync`, `getWorldEntry`) → src/editor-panel/editor-panel.js, src/drawer.js
 - Delegation to core World Info UI buttons for rename/delete/duplicate actions → src/book-browser/book-list/book-list.book-menu.js, src/book-browser/book-browser.core-bridge.js
@@ -118,21 +118,21 @@ Where each feature or behavior is implemented in the codebase.
 - Entry Manager open/close orchestration and scope selection (Book Visibility scope, single book override, folder-within-visibility scope) → src/drawer.js, src/entry-manager/entry-manager.js, src/book-browser/book-browser.js, src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
 - Entry Manager state creation (defaults + restored localStorage state) → src/entry-manager/logic/logic.state.js
 - Derived filter-option sets (strategy/position/outlet/automation ID/group) → src/entry-manager/entry-manager.js
-- Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/entry-manager/display-tab/bulk-editor.action-bar.visibility-row.js, src/entry-manager/bulk-editor-tab/bulk-editor.js
-- Bulk edit row structure (field containers: Select, State, Strategy, Position, Depth, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay, Apply All Changes) → src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.position.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.order.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.helpers.js, src/entry-manager/bulk-editor.action-bar.helpers.js
-- Entry Manager tab bar (Display and Bulk Editor tabs wrapping the two action rows; Display default active tab) → src/entry-manager/bulk-editor-tab/bulk-editor.js
-- Dirty indicator on bulk edit Apply buttons (amber highlight when inputs changed, clears on successful apply) → src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.helpers.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.position.js, src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.order.js, style.css
-- Apply All Changes container (runs all dirty containers in sequence, skips clean ones) → src/entry-manager/bulk-editor-tab/bulk-editor.action-bar.bulk-edit-row.sections.js
-- Row drag sorting and custom order persistence (`extensions.display_index`) → src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js, src/entry-manager/entry-manager.js
-- Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js
-- Recursion flags and budget-ignore controls → src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js
-- Column visibility controls and hide-keys toggle → src/entry-manager/display-tab/bulk-editor.action-bar.visibility-row.js, src/entry-manager/logic/logic.state.js
-- Structured row filters (strategy, position, recursion, outlet, automation ID, group) → src/entry-manager/logic/logic.filters.js, src/entry-manager/bulk-editor-tab/bulk-editor.table-header.js, src/entry-manager/bulk-editor-tab/bulk-editor.table-body.js
-- Script-based filtering with SlashCommandParser + syntax-highlighted input → src/entry-manager/bulk-editor-tab/bulk-editor.filter-panel.js
-- Live preview panel for script filter context data → src/entry-manager/entry-manager.js, src/entry-manager/bulk-editor-tab/bulk-editor.filter-panel.js
-- Character filter column display (read-only) → src/entry-manager/bulk-editor/bulk-editor.table-body.js
-- Focus entry in main list/editor from Entry Manager row link → src/entry-manager/entry-manager.js, src/entry-manager/bulk-editor/bulk-editor.table-body.js
-- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox); `closeOpenMultiselectDropdownMenus` closes both multiselect and list dropdown menus and returns focus to trigger; `wireCollapseRow` wires collapse/expand animation shared by Visibility and Bulk Editor rows → src/entry-manager/bulk-editor/bulk-editor.utils.js
+- Visibility row (select-all, key toggle, column visibility, sort, script filter toggle, entry count, active filter chips with X clear) → src/entry-manager/display-tab/visibility-row.js, src/entry-manager/bulk-editor-tab/bulk-editor-tab.js
+- Bulk edit row structure (field containers: Select, State, Strategy, Position, Depth, Order, Recursion, Budget, Probability, Sticky, Cooldown, Delay, Apply All Changes) → src/entry-manager/bulk-editor-tab/bulk-edit-row.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.sections.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.helpers.js, src/entry-manager/action-bar.helpers.js
+- Entry Manager tab bar (Display and Bulk Editor tabs wrapping the two action rows; Display default active tab) → src/entry-manager/bulk-editor-tab/bulk-editor-tab.js
+- Dirty indicator on bulk edit Apply buttons (amber highlight when inputs changed, clears on successful apply) → src/entry-manager/bulk-editor-tab/bulk-edit-row.helpers.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.sections.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js, src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js, style.css
+- Apply All Changes container (runs all dirty containers in sequence, skips clean ones) → src/entry-manager/bulk-editor-tab/bulk-edit-row.sections.js
+- Row drag sorting and custom order persistence (`extensions.display_index`) → src/entry-manager/table/table-body.js, src/entry-manager/entry-manager.js
+- Row-level inline edits (enabled, strategy, position, depth, outlet, group, prioritize, order, sticky, cooldown, delay, automation ID, trigger) → src/entry-manager/table/table-body.js
+- Recursion flags and budget-ignore controls → src/entry-manager/table/table-body.js
+- Column visibility controls and hide-keys toggle → src/entry-manager/display-tab/visibility-row.js, src/entry-manager/logic/logic.state.js
+- Structured row filters (strategy, position, recursion, outlet, automation ID, group) → src/entry-manager/logic/logic.filters.js, src/entry-manager/table/table-header.js, src/entry-manager/table/table-body.js
+- Script-based filtering with SlashCommandParser + syntax-highlighted input → src/entry-manager/table/filter-panel.js
+- Live preview panel for script filter context data → src/entry-manager/entry-manager.js, src/entry-manager/table/filter-panel.js
+- Character filter column display (read-only) → src/entry-manager/table/table-body.js
+- Focus entry in main list/editor from Entry Manager row link → src/entry-manager/entry-manager.js, src/entry-manager/table/table-body.js
+- Shared multiselect dropdown DOM helpers (open/close/outside-click/checkbox); `closeOpenMultiselectDropdownMenus` closes both multiselect and list dropdown menus and returns focus to trigger; `wireCollapseRow` wires collapse/expand animation shared by Visibility and Bulk Editor rows → src/entry-manager/utils.js
 - Entry Manager table column/option schema constants → src/shared/constants.js
 
 
