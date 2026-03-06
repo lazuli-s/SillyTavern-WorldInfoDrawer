@@ -10,6 +10,16 @@ const KNOWN_SETTINGS_KEYS =  ([
     'useBookSorts',
     'featureFolderGrouping',
     'featureAdditionalMatchingSources',
+    'hiddenTabs',
+]);
+
+const VALID_HIDDEN_TAB_IDS = Object.freeze([
+    'settings',
+    'lorebooks',
+    'folders',
+    'visibility',
+    'sorting',
+    'search',
 ]);
 
 function getSettingsContext() {
@@ -35,6 +45,7 @@ export class Settings {
 
     featureFolderGrouping = true;
     featureAdditionalMatchingSources = true;
+    hiddenTabs = [];
 
     constructor() {
         const { extensionSettings } = getSettingsContext();
@@ -67,6 +78,10 @@ export class Settings {
         this.useBookSorts = parseBooleanSetting(this.useBookSorts, true);
         this.featureFolderGrouping = parseBooleanSetting(this.featureFolderGrouping, true);
         this.featureAdditionalMatchingSources = parseBooleanSetting(this.featureAdditionalMatchingSources, true);
+        if (!Array.isArray(this.hiddenTabs)) {
+            this.hiddenTabs = [];
+        }
+        this.hiddenTabs = this.hiddenTabs.filter((tabId)=>VALID_HIDDEN_TAB_IDS.includes(tabId));
     }
 
     toJSON() {
@@ -76,6 +91,7 @@ export class Settings {
             useBookSorts: this.useBookSorts,
             featureFolderGrouping: this.featureFolderGrouping,
             featureAdditionalMatchingSources: this.featureAdditionalMatchingSources,
+            hiddenTabs: this.hiddenTabs,
         };
     }
 

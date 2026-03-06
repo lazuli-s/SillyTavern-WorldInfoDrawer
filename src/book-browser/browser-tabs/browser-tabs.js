@@ -5,11 +5,13 @@ import {
     mountVisibilityTabContent,
 } from './browser-tabs.visibility-tab.js';
 import { mountSortingTabContent } from './browser-tabs.sorting-tab.js';
+import { Settings } from '../../shared/settings.js';
 
 const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 const CSS_STATE_ACTIVE = 'stwid--state-active';
 const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselectDropdownButton';
 const CSS_VISIBILITY_CHIP = 'stwid--visibilityChip';
+const KNOWN_TAB_IDS = Object.freeze(['settings', 'lorebooks', 'folders', 'visibility', 'sorting', 'search']);
 
 const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked)=>{
     if (!checkbox) return;
@@ -52,7 +54,7 @@ const createFilterBarSlice = ({
         visibilityChipClass: CSS_VISIBILITY_CHIP,
     });
 
-    const buildIconTabBar = (runtime, visibilityRow, sortingRow, searchRow)=>{
+    const buildIconTabBar = (runtimeState, visibilityRow, sortingRow, searchRow)=>{
         const iconTab = document.createElement('div');
         iconTab.classList.add('stwid--iconTab');
         const iconTabBar = document.createElement('div');
@@ -68,6 +70,7 @@ const createFilterBarSlice = ({
             { id:'search', icon:'fa-magnifying-glass', label:'Search' },
         ];
         const tabButtons = [];
+        const tabButtonsById = new Map();
         const tabContents = [];
         const tabContentsById = new Map();
         const setActivePlaceholderTab = (tabId)=>{
@@ -96,6 +99,7 @@ const createFilterBarSlice = ({
             text.textContent = tab.label;
             button.append(text);
             tabButtons.push(button);
+            tabButtonsById.set(tab.id, button);
             iconTabBar.append(button);
 
             const content = document.createElement('div');
@@ -108,17 +112,33 @@ const createFilterBarSlice = ({
 
             button.addEventListener('click', ()=>setActivePlaceholderTab(tab.id));
         }
+        const applyTabHidden = (tabId, hidden)=>{
+            const button = tabButtonsById.get(tabId);
+            const content = tabContentsById.get(tabId);
+            if (button) {
+                button.hidden = hidden;
+            }
+            if (content) {
+                content.hidden = hidden;
+            }
+            if (hidden && button?.classList.contains('active')) {
+                const firstVisibleButton = tabButtons.find((tabButton)=>!tabButton.hidden);
+                if (firstVisibleButton) {
+                    setActivePlaceholderTab(firstVisibleButton.dataset.tabId);
+                }
+            }
+        };
         const lorebooksTabContent = tabContentsById.get('lorebooks');
-        if (lorebooksTabContent && runtime?.dom?.lorebooksTabContent instanceof HTMLElement) {
-            lorebooksTabContent.append(runtime.dom.lorebooksTabContent);
+        if (lorebooksTabContent && runtimeState?.dom?.lorebooksTabContent instanceof HTMLElement) {
+            lorebooksTabContent.append(runtimeState.dom.lorebooksTabContent);
         }
         const foldersTabContent = tabContentsById.get('folders');
-        if (foldersTabContent && runtime?.dom?.foldersTabContent instanceof HTMLElement) {
-            foldersTabContent.append(runtime.dom.foldersTabContent);
+        if (foldersTabContent && runtimeState?.dom?.foldersTabContent instanceof HTMLElement) {
+            foldersTabContent.append(runtimeState.dom.foldersTabContent);
         }
         const settingsTabContent = tabContentsById.get('settings');
-        if (settingsTabContent && runtime?.dom?.settingsTabContent instanceof HTMLElement) {
-            settingsTabContent.append(runtime.dom.settingsTabContent);
+        if (settingsTabContent && runtimeState?.dom?.settingsTabContent instanceof HTMLElement) {
+            settingsTabContent.append(runtimeState.dom.settingsTabContent);
         }
         mountVisibilityTabContent({ tabContentsById, visibilityRow });
         mountSortingTabContent({ tabContentsById, sortingRow });
@@ -126,10 +146,14 @@ const createFilterBarSlice = ({
         iconTab.prepend(iconTabBar);
         const defaultTabId = panelTabs[0]?.id ?? 'settings';
         setActivePlaceholderTab(defaultTabId);
-        return iconTab;
+        for (const tabId of Settings.instance.hiddenTabs) {
+            applyTabHidden(tabId, true);
+        }
+        return { iconTab, applyTabHidden };
     };
 
     let docClickHandler = null;
+    let applyTabHidden = null;
     const setupFilter = (bookListContainer)=>{
         const filter = document.createElement('div'); {
             const { searchRow } = createSearchRow(listPanelState, runtime, updateFolderActiveToggles);
@@ -142,13 +166,21 @@ const createFilterBarSlice = ({
                 sortingRow.classList.add('stwid--sortingRow');
             }
             filter.classList.add('stwid--filter');
-            const iconTab = buildIconTabBar(runtime, visibilityRow, sortingRow, searchRow);
+            const builtTabBar = buildIconTabBar(runtime, visibilityRow, sortingRow, searchRow);
+            applyTabHidden = builtTabBar.applyTabHidden;
             const onDocClickCloseMenu = visibilitySlice.setupVisibilitySection(visibilityRow);
             docClickHandler = onDocClickCloseMenu;
             document.addEventListener('click', onDocClickCloseMenu);
-            filter.append(iconTab);
+            filter.append(builtTabBar.iconTab);
             runtime.applyActiveFilter?.();
             bookListContainer.append(filter);
+        }
+    };
+
+    const applyHiddenTabs = (hiddenTabIds = [])=>{
+        const hiddenTabs = Array.isArray(hiddenTabIds) ? hiddenTabIds : [];
+        for (const tabId of KNOWN_TAB_IDS) {
+            applyTabHidden?.(tabId, hiddenTabs.includes(tabId));
         }
     };
 
@@ -158,7 +190,9 @@ const createFilterBarSlice = ({
                 document.removeEventListener('click', docClickHandler);
                 docClickHandler = null;
             }
+            applyTabHidden = null;
         },
+        applyHiddenTabs,
         getBookVisibilityScope: (...args)=>visibilitySlice.getBookVisibilityScope(...args),
         setEntryManagerToggleVisibility: (enabled)=>{
             runtime?.dom?.setOrderToggleVisible?.(Boolean(enabled));

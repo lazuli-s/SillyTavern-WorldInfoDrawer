@@ -6,7 +6,7 @@ export const createSettingsTabContent = ({
     getCurrentEditor,
 })=>{
     const root = document.createElement('div');
-    root.classList.add('stwid--controlsRow');
+    root.classList.add('stwid--browserRow');
 
     const settingsGroup = document.createElement('div');
     settingsGroup.classList.add('stwid--thinContainer');

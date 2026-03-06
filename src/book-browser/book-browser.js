@@ -89,6 +89,7 @@ const updateCollapseAllFoldersToggle = ()=>foldersViewSlice?.updateCollapseAllFo
 const setAllFoldersCollapsed = (isCollapsed)=>foldersViewSlice?.setAllFoldersCollapsed(isCollapsed);
 const setFolderGroupingVisibility = (enabled)=>foldersViewSlice?.setFolderGroupingVisibility(enabled);
 const setEntryManagerToggleVisibility = (enabled)=>filterBarSlice?.setEntryManagerToggleVisibility(enabled);
+const applyHiddenTabs = (hiddenTabIds)=>filterBarSlice?.applyHiddenTabs(hiddenTabIds);
 
 const applyCollapseState = (name)=>{
     const isCollapsed = listPanelState.getCollapseState(name);
@@ -578,6 +579,7 @@ const wireSlices = ()=>{
 
 const getListPanelApi = ()=>({
     applyActiveFilter: state.applyActiveFilter,
+    applyHiddenTabs,
     clearBookSortPreferences,
     destroyListPanel: teardownListPanel,
     getBookVisibilityScope,

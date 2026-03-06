@@ -143,7 +143,7 @@ const buildVisibilityDropdownSection = ({
     const onDocClickCloseMenu = (evt)=>{
         if (!menu.classList.contains(CSS_STATE_ACTIVE)) return;
         const target = evt.target instanceof HTMLElement ? evt.target : null;
-        if (target?.closest('.stwid--visibilityRow')) return;
+        if (target?.closest('.stwid--browserRow')) return;
         closeBookVisibilityMenu();
     };
 

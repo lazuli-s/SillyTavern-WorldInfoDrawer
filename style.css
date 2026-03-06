@@ -204,17 +204,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   align-items: stretch;
 }
 
-.stwid--controls .stwid--controlsRow,
-.stwid--controls .stwid--visibilityAndSettingsRow {
-  --stwid-control-height: 2.35em;
-
-  display: flex;
-  gap: 0.7em;
-  margin-top: 1.1em;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .stwid--thinContainer {
     display: flex;
     align-items: center;
@@ -266,7 +255,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     pointer-events: none;
 }
 
-.stwid--sortingRow, .stwid--searchRow, .stwid--foldersRow {
+.stwid--browserRow {
   --stwid-control-height: 2.35em;
 
   display: flex;
@@ -277,8 +266,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   justify-content: space-evenly;
 }
 
-.stwid--sortingRow .stwid--thinContainer,
-.stwid--visibilityRow .stwid--thinContainer {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
+.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
   gap: 1.1em;
   flex-wrap: nowrap;
   row-gap: 0.55em;
@@ -289,36 +278,36 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   justify-content: space-around;
 }
 
-.stwid--sortingRow .stwid--globalSorting,
-.stwid--sortingRow .stwid--individualSorting {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting,
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
   display: flex;
   align-items: flex-start;
   gap: 0.5em;
 }
 
-.stwid--sortingRow .stwid--globalSorting {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting {
   align-items: center;
   flex-direction: column;
   gap: 0;
 }
 
-.stwid--sortingRow .stwid--individualSorting {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
   flex-flow: column wrap;
   align-items: center;
   gap: 0;
 }
 
-.stwid--sortingRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
   flex: 0 0 100%;
 }
 
-.stwid--sortingRow .stwid--perBookSortButtons {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
   display: flex;
   gap: 0.5em;
 }
 
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
-.stwid--sortingRow .text_pole {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .text_pole {
   height: var(--stwid-control-height);
   padding: 0.35em;
   display: inline-flex;
@@ -331,12 +320,12 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   font-size: 0.9em;
 }
 
-.stwid--sortingRow .stwid--smallSelectTextPole {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--smallSelectTextPole {
   width: 9em;
 }
 
-.stwid--sortingRow .stwid--bookSortToggle,
-.stwid--sortingRow .stwid--clearBookSorts {
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -357,8 +346,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   align-items: stretch;
 }
 
-.stwid--list .stwid--searchRow,
-.stwid--list .stwid--visibilityRow {
+.stwid--list .stwid--browserRow {
   display: flex;
   gap: 1.5em;
   justify-content: center;
@@ -366,11 +354,11 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   flex-wrap: wrap;
 }
 
-.stwid--list .stwid--visibilityRow {
+.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
   padding-top: 0.1em;
 }
 
-.stwid--list .stwid--searchRow .stwid--search {
+.stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
   flex: 1 1 12em;
   min-width: 10em;
 }
@@ -425,6 +413,33 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   border-bottom-color: var(--SmartThemeBodyColor);
 }
 
+.stwid--iconTabButton[hidden],
+.stwid--iconTabContent[hidden] {
+  display: none !important; /* override: tab button/content classes set display explicitly; hidden state must win */
+}
+
+#stwid-settings-panel .stwid--settingsCheckboxGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4em 0.6em;
+  width: 100%;
+}
+
+#stwid-settings-panel .stwid--settingsCheckboxCell {
+  min-width: 0;
+}
+
+#stwid-settings-panel .stwid--settingsCheckboxCell .menu_button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media screen and (max-width: 1000px) {
+  #stwid-settings-panel .stwid--settingsCheckboxGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .stwid--iconTabContent {
   display: none;
 }
@@ -433,7 +448,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: block;
 }
 
-.stwid--visibilityRow {
+.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -914,21 +929,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
   }
 
-  .stwid--controls .stwid--controlsRow,
-  .stwid--controls .stwid--visibilityAndSettingsRow,
-  .stwid--sortingRow,
-  .stwid--list .stwid--searchRow,
-  .stwid--list .stwid--visibilityRow,
-  .stwid--visibilityRow {
+  .stwid--browserRow,
+  .stwid--list .stwid--browserRow,
+  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
     flex-wrap: wrap;
   }
 
-  .stwid--sortingRow {
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow {
     justify-content: flex-start;
   }
 
-  .stwid--sortingRow .stwid--thinContainer,
-  .stwid--visibilityRow .stwid--thinContainer {
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
+  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
     min-width: 100%;
   }
 
@@ -939,16 +951,16 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 @media screen and (max-width: 768px) {
-  .stwid--sortingRow .stwid--perBookSortButtons {
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
     width: 100%;
   }
 
-  .stwid--sortingRow .stwid--bookSortToggle,
-  .stwid--sortingRow .stwid--clearBookSorts {
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
     flex: 1 1 auto;
   }
 
-  .stwid--list .stwid--searchRow .stwid--search {
+  .stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
     flex-basis: 100%;
     min-width: 0;
   }

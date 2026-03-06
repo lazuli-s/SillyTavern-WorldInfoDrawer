@@ -113,7 +113,7 @@ const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveTo
 
 export const createSearchRow = (listPanelState, runtime, updateFolderActiveToggles)=>{
     const searchRow = document.createElement('div');
-    searchRow.classList.add('stwid--searchRow');
+    searchRow.classList.add('stwid--browserRow');
     const { search, searchEntriesCheckbox } = buildSearchRow(
         searchRow,
         listPanelState,

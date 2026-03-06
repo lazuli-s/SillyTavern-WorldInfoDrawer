@@ -6,7 +6,7 @@ export const createSortingTabContent = ({
     getListPanelApi,
 })=>{
     const sortingRow = document.createElement('div');
-    sortingRow.classList.add('stwid--sortingRow');
+    sortingRow.classList.add('stwid--browserRow');
 
     const globalSortingWrapper = document.createElement('div');
     globalSortingWrapper.classList.add('stwid--thinContainer');

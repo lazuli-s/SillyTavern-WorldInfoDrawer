@@ -8,7 +8,7 @@ export const createLorebooksTabContent = ({
     getListPanelApi,
 })=>{
     const root = document.createElement('div');
-    root.classList.add('stwid--controlsRow');
+    root.classList.add('stwid--browserRow');
 
     const lorebooksGroup = document.createElement('div');
     lorebooksGroup.classList.add('stwid--thinContainer');

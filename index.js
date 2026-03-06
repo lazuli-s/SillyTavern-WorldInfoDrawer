@@ -7,6 +7,14 @@ import { Settings } from './src/shared/settings.js';
 
 
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
+const HIDDEN_TAB_SETTINGS = Object.freeze([
+    { id: 'settings', selector: '#stwid-hidden-tab-settings' },
+    { id: 'lorebooks', selector: '#stwid-hidden-tab-lorebooks' },
+    { id: 'folders', selector: '#stwid-hidden-tab-folders' },
+    { id: 'visibility', selector: '#stwid-hidden-tab-visibility' },
+    { id: 'sorting', selector: '#stwid-hidden-tab-sorting' },
+    { id: 'search', selector: '#stwid-hidden-tab-search' },
+]);
 
 let cleanupCssWatch = null;
 
@@ -133,6 +141,10 @@ const applyAdditionalMatchingSourcesVisibility = (enabled)=>{
     }
 };
 
+const applyHiddenTabsVisibility = ()=>{
+    listPanelApi?.applyHiddenTabs?.(Settings.instance.hiddenTabs);
+};
+
 const FEATURE_REGISTRY = Object.freeze([
     {
         settingKey: 'featureFolderGrouping',
@@ -142,11 +154,15 @@ const FEATURE_REGISTRY = Object.freeze([
         settingKey: 'featureAdditionalMatchingSources',
         applyFn: (enabled)=>applyAdditionalMatchingSourcesVisibility(enabled),
     },
+    {
+        settingKey: 'hiddenTabs',
+        applyFn: ()=>applyHiddenTabsVisibility(),
+    },
 ]);
 
 const applyFeatureVisibility = ()=>{
     for (const { settingKey, applyFn } of FEATURE_REGISTRY) {
-        applyFn(Boolean(Settings.instance[settingKey]));
+        applyFn(Settings.instance[settingKey]);
     }
 };
 
@@ -196,6 +212,22 @@ const initSettingsPanel = async()=>{
             Settings.instance.featureAdditionalMatchingSources = amsCheckbox.checked;
             Settings.instance.save();
             applyFeatureVisibility();
+        });
+    }
+
+    for (const { id: tabId, selector } of HIDDEN_TAB_SETTINGS) {
+        const checkbox = wrapper.querySelector(selector);
+        if (!(checkbox instanceof HTMLInputElement)) {
+            continue;
+        }
+        checkbox.checked = Settings.instance.hiddenTabs.includes(tabId);
+        checkbox.addEventListener('change', ()=>{
+            const nextHiddenTabs = checkbox.checked
+                ? [...Settings.instance.hiddenTabs, tabId]
+                : Settings.instance.hiddenTabs.filter((hiddenTabId)=>hiddenTabId !== tabId);
+            Settings.instance.hiddenTabs = [...new Set(nextHiddenTabs)];
+            Settings.instance.save();
+            applyHiddenTabsVisibility();
         });
     }
 
