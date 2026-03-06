@@ -1,4 +1,4 @@
-import { buildVisibilityRow } from '../display-tab/display-tab.visibility-row.js';
+import { buildDisplayToolbar } from '../display-tab/display-tab.display-toolbar.js';
 import { buildBulkEditRow } from './bulk-edit-row.js';
 import { buildFilterPanel }  from '../table/table.filter-panel.js';
 import { buildTableHeader }  from '../table/table.header.js';
@@ -122,7 +122,7 @@ const createEntryManagerRenderer = ({
 
         const filterIndicatorRefs = {};
 
-        const { element: visibilityRowEl, refresh: refreshVisibilityRow } = buildVisibilityRow({
+        const { element: displayToolbarEl, refresh: refreshDisplayToolbar } = buildDisplayToolbar({
             body,
             entryManagerState,
             dom,
@@ -241,7 +241,7 @@ const createEntryManagerRenderer = ({
                 button.addEventListener('click', ()=>setActiveTab(tab.id));
             }
 
-            tabContentsById.get('display')?.append(visibilityRowEl);
+            tabContentsById.get('display')?.append(displayToolbarEl);
             tabContentsById.get('bulk-editor')?.append(bulkEditRowEl);
 
             iconTab.prepend(iconTabBar);
@@ -291,7 +291,7 @@ const createEntryManagerRenderer = ({
             getAutomationIdValues,
             getGroupOptions,
             getGroupValues,
-            onFilterChange: ()=>{ refreshVisibilityRow(); refreshSelectionCount(); },
+            onFilterChange: ()=>{ refreshDisplayToolbar(); refreshSelectionCount(); },
         });
 
         
@@ -351,7 +351,7 @@ const createEntryManagerRenderer = ({
         wrap.append(tbl);
 
         
-        refreshVisibilityRow();
+        refreshDisplayToolbar();
         refreshSelectionCount();
 
         body.append(entryManagerTabs, filterEl, wrap);

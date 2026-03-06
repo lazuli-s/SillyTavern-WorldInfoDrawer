@@ -42,7 +42,7 @@
 |   |   |-- action-bar.helpers.js              # Shared action bar row helpers (used by both tabs)
 |   |   |-- entry-manager.utils.js            # Shared Entry Manager utilities
 |   |   |-- display-tab/
-|   |   |   └-- display-tab.visibility-row.js # Visibility row controls
+|   |   |   └-- display-tab.display-toolbar.js # Display toolbar controls
 |   |   |-- bulk-editor-tab/
 |   |   |   |-- bulk-editor-tab.js            # Bulk editor orchestrator
 |   |   |   |-- bulk-edit-row.js              # Bulk edit row assembly
@@ -125,7 +125,7 @@
 | `src/entry-manager/bulk-editor-tab/bulk-editor-tab.js` | Orchestrator: init, section assembly, and public bulk editor rendering API |
 | `src/entry-manager/entry-manager.utils.js` | Shared DOM/utility helpers for Entry Manager slices, including multiselect dropdown wiring and collapsible row animation |
 | `src/entry-manager/action-bar.helpers.js` | Shared DOM builder helper (`wrapRowContent`) used by both action-bar row modules |
-| `src/entry-manager/display-tab/display-tab.visibility-row.js` | Visibility row: select-all, key toggle, column visibility, sort, filter chips, and entry count controls |
+| `src/entry-manager/display-tab/display-tab.display-toolbar.js` | Display toolbar: select-all, key toggle, column visibility, sort, filter chips, and entry count controls |
 | `src/entry-manager/bulk-editor-tab/bulk-edit-row.js` | Bulk edit row assembly that composes all section builders and shared apply registry |
 | `src/entry-manager/bulk-editor-tab/bulk-edit-row.helpers.js` | Shared bulk-edit constants and primitive helper functions |
 | `src/entry-manager/bulk-editor-tab/bulk-edit-row.sections.js` | Bulk-edit section builders (select, state, strategy, recursion, budget, probability, sticky, cooldown, delay, apply-all) |

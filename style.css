@@ -1429,8 +1429,8 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   position: relative;
 }
 
-/* Visibility row - right side */
-.stwid--visibilityInfo {
+/* Display toolbar - right side */
+.stwid--displayToolbarInfo {
   display: flex;
   align-items: center;
   gap: 0.75em;

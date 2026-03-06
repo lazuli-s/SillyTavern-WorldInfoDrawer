@@ -253,7 +253,7 @@ function buildFilterChipDisplay({
 }
 
 
-export function buildVisibilityRow({
+export function buildDisplayToolbar({
     body,
     entryManagerState,
     dom,
@@ -362,10 +362,10 @@ export function buildVisibilityRow({
     }
 
 
-    const visibilityInfo = document.createElement('div');
-    visibilityInfo.classList.add('stwid--visibilityInfo');
+    const displayToolbarInfo = document.createElement('div');
+    displayToolbarInfo.classList.add('stwid--displayToolbarInfo');
 
-    row.append(visibilityInfo);
+    row.append(displayToolbarInfo);
 
 
     const FILTER_KEY_LABELS = Object.fromEntries(
@@ -456,7 +456,7 @@ export function buildVisibilityRow({
         FILTER_KEY_LABELS,
         getFilterValueLabels,
     });
-    visibilityInfo.append(filterChipDisplay.activeFiltersEl);
+    displayToolbarInfo.append(filterChipDisplay.activeFiltersEl);
     refresh = filterChipDisplay.refresh;
 
     wrapRowContent(row);
