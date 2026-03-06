@@ -1,8 +1,6 @@
 /*
   SillyTavern World Info Drawer (STWID)
-
-  Phase 1 CSS refactor: organization + safe micro-dedup only.
-  Intent: preserve behavior; this file should read top-to-bottom as a UI tour.
+  Styles follow the same top-to-bottom order as the module tree in ARCHITECTURE.md.
 */
 
 /* -------------------------------------------------------------------------- */
@@ -18,7 +16,7 @@ body #WorldInfo > .stwid--body {
 
 /* Drawer root sizing + layout */
 body.stwid-- #WorldInfo {
-  /* Phase 2: extension-scoped tokens (keep visuals unchanged) */
+  /* Spacing and radius tokens */
   --stwid-gap-xs: 0.25em;
   --stwid-gap-s: 0.35em;
   --stwid-gap-m: 0.5em;
@@ -30,14 +28,14 @@ body.stwid-- #WorldInfo {
   --stwid-splitter-width: 6px;
   --stwid-splitter-margin-x: 10px;
 
-  /* Phase 4: component primitives (menus, buttons, control hit targets) */
+  /* Hit-target and focus-ring tokens */
   --stwid-hit-padding-y: 0.15em;
   --stwid-hit-padding-x: 0.25em;
   --stwid-focus-ring-color: var(--SmartThemeQuoteColor);
   --stwid-focus-ring: 2px solid var(--stwid-focus-ring-color);
   --stwid-focus-ring-offset: 2px;
 
-  /* Phase 5: state styling primitives (consistent selection/target/focus) */
+  /* State tokens (hover, selected, target, disabled) */
   --stwid-state-target-bg: color-mix(in srgb, var(--SmartThemeQuoteColor) 15%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
   --stwid-state-target-outline: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 55%, transparent);
   --stwid-state-selected-bg: rgb(from var(--SmartThemeQuoteColor) r g b / 0.125);
@@ -48,7 +46,7 @@ body.stwid-- #WorldInfo {
   /* Semantic tokens */
   --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
 
-  /* Phase 3: layout stability (inner content scrolls) */
+  /* Layout */
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
   max-height: unset;
@@ -135,7 +133,55 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 /* -------------------------------------------------------------------------- */
 
-/* 2) Book Browser                                                           */
+/* 2) Splitter                                                                */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--splitter {
+  flex: 0 0 auto;
+  width: var(--stwid-splitter-width);
+  margin: 0 var(--stwid-splitter-margin-x);
+  cursor: col-resize;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.stwid--splitter:hover,
+.stwid--splitter:active {
+  opacity: 1;
+}
+
+.stwid--splitter-h {
+  display: none;
+  flex: 0 0 auto;
+  height: var(--stwid-splitter-width);
+  margin: var(--stwid-splitter-margin-x) 0;
+  cursor: row-resize;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.stwid--splitter-h:hover,
+.stwid--splitter-h:active {
+  opacity: 1;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--splitter {
+    display: none;
+  }
+
+  .stwid--splitter-h {
+    display: block;
+    width: 100%;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 3) Book Browser                                                           */
 
 /* -------------------------------------------------------------------------- */
 
@@ -912,54 +958,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 /* -------------------------------------------------------------------------- */
 
-/* 3) Splitter                                                                */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--splitter {
-  flex: 0 0 auto;
-  width: var(--stwid-splitter-width);
-  margin: 0 var(--stwid-splitter-margin-x);
-  cursor: col-resize;
-  background: var(--SmartThemeBorderColor);
-  opacity: 0.6;
-  transition: opacity 0.15s ease-in-out;
-}
-
-.stwid--splitter:hover,
-.stwid--splitter:active {
-  opacity: 1;
-}
-
-.stwid--splitter-h {
-  display: none;
-  flex: 0 0 auto;
-  height: var(--stwid-splitter-width);
-  margin: var(--stwid-splitter-margin-x) 0;
-  cursor: row-resize;
-  background: var(--SmartThemeBorderColor);
-  opacity: 0.6;
-  transition: opacity 0.15s ease-in-out;
-}
-
-.stwid--splitter-h:hover,
-.stwid--splitter-h:active {
-  opacity: 1;
-}
-
-@media screen and (max-width: 1000px) {
-  .stwid--splitter {
-    display: none;
-  }
-
-  .stwid--splitter-h {
-    display: block;
-    width: 100%;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
 /* 4) Editor Panel                                                            */
 
 /* -------------------------------------------------------------------------- */
@@ -1129,203 +1127,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 /* -------------------------------------------------------------------------- */
 
-/* 5) Shared UI Patterns (drawer-internal)                                   */
-
-/* Shared menu/item patterns (Phase 4)
-   Keep selectors local to this extension and avoid changing layout/positioning.
-*/
-:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton) {
-  border-radius: var(--stwid-radius-m);
-}
-
-:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton):focus-visible,
-.stwid--multiselectDropdownOption:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: var(--stwid-focus-ring-offset);
-}
-
-} 
-
-/* -------------------------------------------------------------------------- */
-
-/* 5.5) Context Menu + Modals                                                 */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--blocker {
-  position: fixed;
-  inset: 0;
-  z-index: 30000;
-}
-
-.stwid--blocker .stwid--listDropdownItem:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: var(--stwid-focus-ring-offset);
-}
-
-/* Move Book to Folder dialog layout */
-.stwid--moveBookContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.stwid--moveBookContent h3 {
-  align-self: stretch;
-  text-align: left;
-}
-
-.stwid--moveBookContent .stwid--moveBookRow {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside the drawer root */
-.stwid--moveBookContent .stwid--moveBookRow .text_pole {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.stwid--moveBookContent .stwid--moveBookQuickActions {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.35em;
-}
-
-/* override: vanilla menu_button uses block flex; inline-flex keeps buttons inline in the Move Book row */
-.stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
-  min-width: 2.35em; /* override: ensures icon-only buttons have a minimum click target */
-  display: inline-flex; /* override: vanilla is display:flex (block-level); inline here for compact row */
-}
-
-/* Context menu container */
-.stwid--blocker .stwid--listDropdownMenu {
-  --stwid-menu-item-height: 2.05em;
-
-  position: fixed;
-  position-anchor: --stwid--ctxAnchor;
-  position-area: bottom right;
-  position-try-fallbacks: flip-block, flip-inline;
-  margin-top: -1lh;
-  filter: drop-shadow(1px 1px 2px var(--black50a));
-  z-index: 30000;
-  overflow: clip auto;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: var(--stwid-radius-m);
-  display: flex;
-  flex-direction: column;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
-  font-size: 0.9em;
-  padding: 0.5em;
-}
-
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
-  min-height: var(--stwid-menu-item-height);
-  height: var(--stwid-menu-item-height);
-  opacity: 1;
-  color: var(--SmartThemeBodyColor);
-  background-color: rgba(255, 255, 255, 0);
-  cursor: pointer;
-  transition: background-color 200ms, color 200ms, opacity 200ms;
-  flex-direction: row;
-  box-sizing: border-box;
-  padding: 3px;
-  border-radius: var(--stwid-radius-m);
-
-  &:hover {
-    background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
-  }
-
-  & #lorebook_ordering_button {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.35em;
-  }
-
-  &.stwid--bookSort {
-    opacity: 1;
-    cursor: default;
-  }
-
-  &.stwid--bookSort select {
-    width: fit-content;
-    color: inherit;
-    background-color: rgba(255, 255, 255, 0.05);
-    min-height: var(--stwid-menu-item-height);
-    height: 100%;
-    margin:  0;
-    font-size: 1em;
-  }
-}
-
-.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
-  flex: 0 0 auto;
-  width: 1.05em;
-  text-align: center;
-}
-
-.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
-  flex: 1 1 auto;
-  min-width: fit-content;
-}
-
-@media screen and (max-width: 1000px) {
-  .stwid--moveBookContent {
-    width: min(100%, 38rem);
-  }
-
-  .stwid--moveBookContent .stwid--moveBookRow {
-    flex-wrap: wrap;
-  }
-
-  .stwid--moveBookContent .stwid--moveBookQuickActions {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .stwid--blocker .stwid--listDropdownMenu {
-    max-width: calc(100vw - 2rem);
-  }
-
-  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
-    min-width: 2em;
-  }
-}
-
-/* Flex-column fill shell - grows to fill parent, scrolls internally */
-.stwid--entryManager {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
-.stwid--orderTableWrap {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 6) Entry Manager (actions, filter, table)                                  */
+/* 5) Entry Manager (actions, filter, table)                                  */
 
 /* -------------------------------------------------------------------------- */
 
@@ -2068,6 +1870,202 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     gap: 0.6em;
     padding-inline: 0.35em;
   }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 6) Shared UI Patterns (drawer-internal)                                   */
+
+/* Shared menu/item patterns
+   Keep selectors local to this extension and avoid changing layout/positioning.
+*/
+:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton) {
+  border-radius: var(--stwid-radius-m);
+}
+
+:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton):focus-visible,
+.stwid--multiselectDropdownOption:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+} 
+
+/* -------------------------------------------------------------------------- */
+
+/* 5.5) Context Menu + Modals                                                 */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+}
+
+.stwid--blocker .stwid--listDropdownItem:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+/* Move Book to Folder dialog layout */
+.stwid--moveBookContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stwid--moveBookContent h3 {
+  align-self: stretch;
+  text-align: left;
+}
+
+.stwid--moveBookContent .stwid--moveBookRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside the drawer root */
+.stwid--moveBookContent .stwid--moveBookRow .text_pole {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.stwid--moveBookContent .stwid--moveBookQuickActions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35em;
+}
+
+/* override: vanilla menu_button uses block flex; inline-flex keeps buttons inline in the Move Book row */
+.stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+  min-width: 2.35em; /* override: ensures icon-only buttons have a minimum click target */
+  display: inline-flex; /* override: vanilla is display:flex (block-level); inline here for compact row */
+}
+
+/* Context menu container */
+.stwid--blocker .stwid--listDropdownMenu {
+  --stwid-menu-item-height: 2.05em;
+
+  position: fixed;
+  position-anchor: --stwid--ctxAnchor;
+  position-area: bottom right;
+  position-try-fallbacks: flip-block, flip-inline;
+  margin-top: -1lh;
+  filter: drop-shadow(1px 1px 2px var(--black50a));
+  z-index: 30000;
+  overflow: clip auto;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-m);
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
+  font-size: 0.9em;
+  padding: 0.5em;
+}
+
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
+  min-height: var(--stwid-menu-item-height);
+  height: var(--stwid-menu-item-height);
+  opacity: 1;
+  color: var(--SmartThemeBodyColor);
+  background-color: rgba(255, 255, 255, 0);
+  cursor: pointer;
+  transition: background-color 200ms, color 200ms, opacity 200ms;
+  flex-direction: row;
+  box-sizing: border-box;
+  padding: 3px;
+  border-radius: var(--stwid-radius-m);
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
+  }
+
+  & #lorebook_ordering_button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35em;
+  }
+
+  &.stwid--bookSort {
+    opacity: 1;
+    cursor: default;
+  }
+
+  &.stwid--bookSort select {
+    width: fit-content;
+    color: inherit;
+    background-color: rgba(255, 255, 255, 0.05);
+    min-height: var(--stwid-menu-item-height);
+    height: 100%;
+    margin:  0;
+    font-size: 1em;
+  }
+}
+
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
+  flex: 0 0 auto;
+  width: 1.05em;
+  text-align: center;
+}
+
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+  flex: 1 1 auto;
+  min-width: fit-content;
+}
+
+@media screen and (max-width: 1000px) {
+  .stwid--moveBookContent {
+    width: min(100%, 38rem);
+  }
+
+  .stwid--moveBookContent .stwid--moveBookRow {
+    flex-wrap: wrap;
+  }
+
+  .stwid--moveBookContent .stwid--moveBookQuickActions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .stwid--blocker .stwid--listDropdownMenu {
+    max-width: calc(100vw - 2rem);
+  }
+
+  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+    min-width: 2em;
+  }
+}
+
+/* Flex-column fill shell - grows to fill parent, scrolls internally */
+.stwid--entryManager {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--orderTableWrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 /* -------------------------------------------------------------------------- */
