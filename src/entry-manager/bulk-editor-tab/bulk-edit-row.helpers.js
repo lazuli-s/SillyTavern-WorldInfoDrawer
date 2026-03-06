@@ -1,4 +1,4 @@
-import { setTooltip } from '../utils.js';
+import { setTooltip } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 export const BULK_APPLY_BATCH_SIZE = 200;

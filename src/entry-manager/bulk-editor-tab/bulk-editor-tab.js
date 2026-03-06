@@ -1,8 +1,8 @@
-import { buildVisibilityRow } from '../display-tab/visibility-row.js';
+import { buildVisibilityRow } from '../display-tab/display-tab.visibility-row.js';
 import { buildBulkEditRow } from './bulk-edit-row.js';
-import { buildFilterPanel }  from '../table/filter-panel.js';
-import { buildTableHeader }  from '../table/table-header.js';
-import { buildTableBody }    from '../table/table-body.js';
+import { buildFilterPanel }  from '../table/table.filter-panel.js';
+import { buildTableHeader }  from '../table/table.header.js';
+import { buildTableBody }    from '../table/table.body.js';
 
 const createEntryManagerRenderer = ({
     dom,

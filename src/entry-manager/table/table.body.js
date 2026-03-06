@@ -1,4 +1,4 @@
-import { setTooltip, formatCharacterFilter } from '../utils.js';
+import { setTooltip, formatCharacterFilter } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 

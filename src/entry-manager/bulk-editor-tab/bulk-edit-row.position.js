@@ -2,7 +2,7 @@ import {
     MULTISELECT_DROPDOWN_CLOSE_HANDLER,
     closeOpenMultiselectDropdownMenus,
     setTooltip,
-} from '../utils.js';
+} from '../entry-manager.utils.js';
 import {
     APPLY_DIRTY_CLASS,
     createLabeledBulkContainer,

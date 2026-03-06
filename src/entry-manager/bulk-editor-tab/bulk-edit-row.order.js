@@ -1,4 +1,4 @@
-import { setTooltip } from '../utils.js';
+import { setTooltip } from '../entry-manager.utils.js';
 import {
     BULK_APPLY_BATCH_SIZE,
     APPLY_DIRTY_CLASS,

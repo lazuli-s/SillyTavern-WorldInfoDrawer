@@ -1,4 +1,4 @@
-import { wrapRowContent } from '../utils.js';
+import { wrapRowContent } from '../entry-manager.utils.js';
 import {
     buildBulkSelectSection,
     buildApplyAllSection,

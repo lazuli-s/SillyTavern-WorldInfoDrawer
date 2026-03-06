@@ -1,7 +1,7 @@
 import {
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
-} from '../utils.js';
+} from '../entry-manager.utils.js';
 import {
     ENTRY_MANAGER_TABLE_COLUMNS,
     ENTRY_MANAGER_NUMBER_COLUMN_KEYS,

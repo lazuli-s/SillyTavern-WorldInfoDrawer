@@ -5,7 +5,7 @@ import {
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
     wrapRowContent,
-} from '../utils.js';
+} from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_TOGGLE_COLUMNS, ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 function createActionThinContainer(labelText, hintText) {
