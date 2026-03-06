@@ -1,4 +1,6 @@
 
+import { createExtensionIntegrationsSlice } from './book-list.extension-integrations.js';
+
 const UNSAVED_EDITS_WARNING_PREFIX = 'Unsaved edits detected. Save or discard changes before';
 
 const createBookMenuSlice = ({
@@ -519,18 +521,6 @@ const createBookMenuSlice = ({
         return { blocker, menu, closeMenu };
     };
 
-    const createBulkEditMenuItem = (name, closeMenu)=>createBookMenuActionItem({
-        itemClass: 'stwid--bulkEdit',
-        iconClass: 'fa-list-check',
-        labelText: 'Bulk Edit',
-        onClick: async()=>{
-            const selected = await setSelectedBookInCoreUi(name);
-            if (!selected) return;
-            await clickCoreUiAction(['.stwibe--trigger']);
-            closeMenu?.();
-        },
-    });
-
     const appendCoreBookMenuItems = (menu, name, closeMenu)=>{
         menu.append(createBookMenuActionItem({
             itemClass: 'stwid--rename',
@@ -643,60 +633,14 @@ const createBookMenuSlice = ({
         }));
     };
 
-    const appendIntegrationMenuItems = (menu, name, closeMenu)=>{
-        if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoBulkEdit')) {
-            menu.append(createBulkEditMenuItem(name, closeMenu));
-        }
-        if (state.extensionNames.includes('third-party/SillyTavern-WorldInfoExternalEditor')) {
-            menu.append(createBookMenuActionItem({
-                itemClass: 'stwid--externalEditor',
-                iconClass: 'fa-laptop-code',
-                labelText: 'External Editor',
-                onClick: async()=>{
-                    try {
-                        const response = await fetch('/api/plugins/wiee/editor', {
-                            method: 'POST',
-                            headers: state.getRequestHeaders(),
-                            body: JSON.stringify({
-                                book: name,
-                                command: 'code',
-                                commandArguments: ['.'],
-                            }),
-                        });
-                        if (!response.ok) {
-                            toastr.error(`External Editor request failed (${response.status}).`);
-                        }
-                    } catch (error) {
-                        console.warn('[STWID] External Editor request failed.', error);
-                        toastr.error('External Editor request failed. Check the browser console for details.');
-                    }
-                    closeMenu?.();
-                },
-            }));
-        }
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--stlo',
-            iconClass: 'fa-bars-staggered',
-            labelText: 'Configure STLO',
-            onClick: async(evt)=>{
-                evt.stopPropagation();
-                const escapedName = name.replaceAll('"', '\\"');
-                const didExecute = await state.executeSlashCommand(`/stlo "${escapedName}"`);
-                if (!didExecute) {
-                    toastr.error('STLO command failed. Check the browser console for details.');
-                    return;
-                }
-                closeMenu();
-            },
-            attributes: {
-                id: 'lorebook_ordering_button',
-                'data-i18n': '[title]stlo.button.configure; [aria-label]stlo.button.configure',
-                title: 'Configure STLO Priority & Budget',
-                'aria-label': 'Configure STLO Priority & Budget',
-                role: 'button',
-            },
-        }));
-    };
+    const { appendIntegrationMenuItems } = createExtensionIntegrationsSlice({
+        extensionNames: state.extensionNames,
+        getRequestHeaders: state.getRequestHeaders,
+        executeSlashCommand: state.executeSlashCommand,
+        setSelectedBookInCoreUi,
+        clickCoreUiAction,
+        createBookMenuActionItem,
+    });
 
     const buildBookMenuTrigger = (name)=>{
         const menuTrigger = createBookMenuTriggerButton();

@@ -24,6 +24,7 @@
 |   |   └-- book-list/
 |   |       |-- book-list.books-view.js        # Book list render/load + row wiring
 |   |       |-- book-list.book-menu.js         # Per-book dropdown menu actions
+|   |       |-- book-list.extension-integrations.js # Third-party integration menu items
 |   |       |-- book-list.selection-dnd.js     # Entry selection + drag/drop handlers
 |   |       |-- book-list.world-entry.js       # Entry row renderer + row interactions
 |   |       |-- book-list.book-source-links.js # Character/chat/persona source-link tracking
@@ -104,6 +105,7 @@
 | `src/book-browser/book-list/book-list.books-view.js` | Book row render and full list load pipeline; wires per-book interactions |
 | `src/book-browser/book-list/book-folders/book-folders.folders-view.js` | Folder view wiring: DOM creation, collapse state sync, visibility/active-toggle refresh, and folder-grouping visibility state |
 | `src/book-browser/book-list/book-list.book-menu.js` | Per-book dropdown menu: triggers, ARIA, keyboard support, actions, and import dialog helpers |
+| `src/book-browser/book-list/book-list.extension-integrations.js` | Third-party extension integration menu items (Bulk Edit, External Editor, STLO): presence checks and menu item builders |
 | `src/book-browser/browser-tabs/browser-tabs.js` | Thin orchestrator for icon-tab strip and shared multiselect dropdown helpers; wires tab content mounting and delegates search/visibility builders to tab modules |
 | `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js` | Builds the Lorebooks tab content (Lorebooks thinContainer) |
 | `src/book-browser/browser-tabs/browser-tabs.settings-tab.js` | Builds the Settings tab content (Activation, Refresh, Entry Manager toggle) |

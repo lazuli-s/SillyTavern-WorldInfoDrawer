@@ -149,7 +149,8 @@ For module design intent, see the Module Responsibilities table in `ARCHITECTURE
 - Core template usage (`renderTemplateAsync`, `getWorldEntry`) → src/editor-panel/editor-panel.js, src/drawer.js
 - Delegation to core World Info UI buttons → src/book-browser/book-list/book-list.book-menu.js, src/book-browser/book-browser.core-bridge.js
 - Core WI DOM delegation helpers and selector map → src/book-browser/book-browser.core-bridge.js
-- Optional plugin and extension integrations (Bulk Edit, External Editor, STLO) → src/book-browser/book-list/book-list.book-menu.js, src/drawer.js
+- Optional plugin and extension integrations (Bulk Edit, External Editor, STLO) → src/book-browser/book-list/book-list.extension-integrations.js
+- Integration menu items wired into book menu → src/book-browser/book-list/book-list.book-menu.js
 - Entry Manager table column and option schema constants → src/shared/constants.js
 
 
