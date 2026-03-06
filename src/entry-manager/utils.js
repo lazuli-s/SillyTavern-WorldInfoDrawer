@@ -147,6 +147,18 @@ export const wireCollapseRow = (rowTitle, row, contentWrap, chevron, { initialCo
     }
 };
 
+export function wrapRowContent(row) {
+    const contentWrap = document.createElement('div');
+    contentWrap.classList.add('stwid--rowContentWrap');
+    while (row.firstChild) {
+        contentWrap.append(row.firstChild);
+    }
+    row.append(contentWrap);
+    row.dataset.collapsed = 'false';
+    row.classList.remove('stwid--collapsed');
+    return contentWrap;
+}
+
 export const formatCharacterFilter = (entry)=>{
     const filter = entry?.characterFilter;
     if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];

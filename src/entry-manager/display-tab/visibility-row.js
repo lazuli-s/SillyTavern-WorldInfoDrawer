@@ -4,8 +4,8 @@ import {
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
+    wrapRowContent,
 } from '../utils.js';
-import { wrapRowContent } from '../action-bar.helpers.js';
 import { ENTRY_MANAGER_TOGGLE_COLUMNS, ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 function createActionThinContainer(labelText, hintText) {

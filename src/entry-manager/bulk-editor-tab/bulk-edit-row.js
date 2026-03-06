@@ -1,4 +1,4 @@
-import { wrapRowContent } from '../action-bar.helpers.js';
+import { wrapRowContent } from '../utils.js';
 import {
     buildBulkSelectSection,
     buildApplyAllSection,
