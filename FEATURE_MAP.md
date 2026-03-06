@@ -80,7 +80,7 @@ Where each feature or behavior is implemented in the codebase.
 - Global sort settings and persistence bridge (`extension_settings.worldInfoDrawer`) → src/shared/settings.js
 - Entry sort implementations (title, trigger, prompt, position, depth, order, uid, length, custom) → src/shared/sort-helpers.js
 - Sort option labels/options for dropdowns → src/shared/utils.js
-- Sorting controls row (`stwid--sortingRow`) split into two labeled thin containers: `Global Sorting` (sort select + `stwid--smallSelectTextPole`) and `Per-book Sorting` (enable/disable toggle + clear preferences); mounted in icon tab 2 (`Sorting`) → src/drawer.js, src/book-browser/browser-tabs/browser-tabs.js, style.css
+- Sorting controls row (`stwid--sortingRow`) split into two labeled thin containers: `Global Sorting` (sort select + `stwid--smallSelectTextPole`) and `Per-book Sorting` (enable/disable toggle + clear preferences); mounted in icon tab 2 (`Sorting`) → src/book-browser/browser-tabs/browser-tabs.sorting-tab.js, src/book-browser/browser-tabs/browser-tabs.js, style.css
 - Book-level sort choice resolution and DOM reorder application → src/book-browser/book-browser.js, src/book-browser/book-list/book-list.books-view.js
 - Per-book metadata sort read/write (`stwid.sort`) → src/shared/sort-helpers.js, src/book-browser/book-browser.js
 

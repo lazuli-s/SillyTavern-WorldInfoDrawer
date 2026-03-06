@@ -108,7 +108,7 @@
 | `src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js` | Builds the Lorebooks tab content (Lorebooks thinContainer) |
 | `src/book-browser/browser-tabs/browser-tabs.settings-tab.js` | Builds the Settings tab content (Activation, Refresh, Entry Manager toggle) |
 | `src/book-browser/browser-tabs/browser-tabs.visibility-tab.js` | Owns `BOOK_VISIBILITY_MODES`, `createVisibilitySlice`, `buildVisibilityDropdownSection`, and Visibility tab mount helper |
-| `src/book-browser/browser-tabs/browser-tabs.sorting-tab.js` | Owns mounting for Sorting tab content |
+| `src/book-browser/browser-tabs/browser-tabs.sorting-tab.js` | Builds the Sorting tab content (Global Sorting dropdown, Per-book Sorting toggle and clear) and mounts it into the tab container |
 | `src/book-browser/browser-tabs/browser-tabs.search-tab.js` | Owns `buildSearchRow` builder and Search tab mount helper |
 | `src/book-browser/browser-tabs/browser-tabs.folders-tab.js` | Builds the Folders tab content: Folders thinContainer (New Folder, Import Folder, Collapse All Folders) |
 | `src/book-browser/book-browser.state.js` | Module-local mutable state container + lifecycle helpers (reset/hydration) |
