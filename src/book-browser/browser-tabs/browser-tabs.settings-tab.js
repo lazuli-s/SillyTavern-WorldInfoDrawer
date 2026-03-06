@@ -1,6 +1,6 @@
 export const createSettingsTabContent = ({
     dom,
-    openOrderHelper,
+    openEntryManager,
     getListPanelApi,
     getEditorPanelApi,
     getCurrentEditor,
@@ -73,7 +73,7 @@ export const createSettingsTabContent = ({
             return;
         }
         const visibilityScope = getListPanelApi()?.getBookVisibilityScope?.();
-        openOrderHelper(null, visibilityScope);
+        openEntryManager(null, visibilityScope);
     });
     settingsGroup.append(order);
 

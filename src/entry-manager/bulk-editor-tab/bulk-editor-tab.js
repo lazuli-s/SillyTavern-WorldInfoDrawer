@@ -4,45 +4,45 @@ import { buildFilterPanel }  from '../table/filter-panel.js';
 import { buildTableHeader }  from '../table/table-header.js';
 import { buildTableBody }    from '../table/table-body.js';
 
-const createOrderHelperRenderer = ({
+const createEntryManagerRenderer = ({
     dom,
     cache,
-    orderHelperState,
-    ORDER_HELPER_COLUMNS_STORAGE_KEY,
-    ORDER_HELPER_DEFAULT_COLUMNS,
-    ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
+    entryManagerState,
+    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+    ENTRY_MANAGER_DEFAULT_COLUMNS,
+    ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
     SORT,
     SORT_DIRECTION,
     appendSortOptions,
     ensureCustomDisplayIndex,
     saveWorldInfo,
     buildSavePayload,
-    getOrderHelperEntries,
-    applyOrderHelperSortToDom,
-    updateOrderHelperPreview,
-    clearOrderHelperScriptFilters,
-    applyOrderHelperColumnVisibility,
-    setOrderHelperSort,
-    isOrderHelperRowSelected,
-    setOrderHelperRowSelected,
-    setAllOrderHelperRowSelected,
-    updateOrderHelperSelectAllButton,
-    applyOrderHelperStrategyFilters,
-    applyOrderHelperStrategyFilterToRow,
-    applyOrderHelperPositionFilterToRow,
-    applyOrderHelperPositionFilters,
-    applyOrderHelperRecursionFilterToRow,
-    applyOrderHelperRecursionFilters,
-    applyOrderHelperOutletFilters,
-    applyOrderHelperOutletFilterToRow,
-    applyOrderHelperAutomationIdFilters,
-    applyOrderHelperGroupFilters,
-    setOrderHelperRowFilterState,
-    syncOrderHelperStrategyFilters,
-    syncOrderHelperPositionFilters,
-    syncOrderHelperOutletFilters,
-    syncOrderHelperAutomationIdFilters,
-    syncOrderHelperGroupFilters,
+    getEntryManagerEntries,
+    applyEntryManagerSortToDom,
+    updateEntryManagerPreview,
+    clearEntryManagerScriptFilters,
+    applyEntryManagerColumnVisibility,
+    setEntryManagerSort,
+    isEntryManagerRowSelected,
+    setEntryManagerRowSelected,
+    setAllEntryManagerRowSelected,
+    updateEntryManagerSelectAllButton,
+    applyEntryManagerStrategyFilters,
+    applyEntryManagerStrategyFilterToRow,
+    applyEntryManagerPositionFilterToRow,
+    applyEntryManagerPositionFilters,
+    applyEntryManagerRecursionFilterToRow,
+    applyEntryManagerRecursionFilters,
+    applyEntryManagerOutletFilters,
+    applyEntryManagerOutletFilterToRow,
+    applyEntryManagerAutomationIdFilters,
+    applyEntryManagerGroupFilters,
+    setEntryManagerRowFilterState,
+    syncEntryManagerStrategyFilters,
+    syncEntryManagerPositionFilters,
+    syncEntryManagerOutletFilters,
+    syncEntryManagerAutomationIdFilters,
+    syncEntryManagerGroupFilters,
     focusWorldEntry,
     entryState,
     isOutletPosition,
@@ -61,7 +61,7 @@ const createOrderHelperRenderer = ({
     normalizeOutletFilters,
     normalizeAutomationIdFilters,
     normalizeGroupFilters,
-    getOrderHelperRows,
+    getEntryManagerRows,
     SlashCommandParser,
     debounce,
     hljs,
@@ -73,22 +73,22 @@ const createOrderHelperRenderer = ({
     
     let cleanupBulkEditRow = null;
 
-    const renderOrderHelper = async (book = null)=>{
+    const renderEntryManager = async (book = null)=>{
         if (typeof cleanupBulkEditRow === 'function') {
             cleanupBulkEditRow();
             cleanupBulkEditRow = null;
         }
 
         
-        orderHelperState.book = book;
+        entryManagerState.book = book;
 
         
         
-        syncOrderHelperStrategyFilters();
-        syncOrderHelperPositionFilters();
-        syncOrderHelperOutletFilters();
-        syncOrderHelperAutomationIdFilters();
-        syncOrderHelperGroupFilters();
+        syncEntryManagerStrategyFilters();
+        syncEntryManagerPositionFilters();
+        syncEntryManagerOutletFilters();
+        syncEntryManagerAutomationIdFilters();
+        syncEntryManagerGroupFilters();
 
         const editorPanelApi = getEditorPanelApi();
         editorPanelApi.resetEditorState();
@@ -99,7 +99,7 @@ const createOrderHelperRenderer = ({
         dom.order.filter.preview = undefined;
         dom.order.tbody = undefined;
 
-        if (orderHelperState.sort === SORT.CUSTOM) {
+        if (entryManagerState.sort === SORT.CUSTOM) {
             const updatedBooks = ensureCustomDisplayIndex(book);
             try {
                 for (const bookName of updatedBooks) {
@@ -110,13 +110,13 @@ const createOrderHelperRenderer = ({
                 toastr.error('Failed to save custom sort order. Check console for details.');
             }
         }
-        const entries = getOrderHelperEntries(book);
+        const entries = getEntryManagerEntries(book);
 
         
         const body = document.createElement('div');
-        body.classList.add('stwid--orderHelper');
-        body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
-        applyOrderHelperColumnVisibility(body);
+        body.classList.add('stwid--entryManager');
+        body.classList.toggle('stwid--hideKeys', entryManagerState.hideKeys);
+        applyEntryManagerColumnVisibility(body);
 
         
 
@@ -124,29 +124,29 @@ const createOrderHelperRenderer = ({
 
         const { element: visibilityRowEl, refresh: refreshVisibilityRow } = buildVisibilityRow({
             body,
-            orderHelperState,
+            entryManagerState,
             dom,
-            ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
-            ORDER_HELPER_COLUMNS_STORAGE_KEY,
-            ORDER_HELPER_DEFAULT_COLUMNS,
-            applyOrderHelperColumnVisibility,
-            clearOrderHelperScriptFilters,
-            setOrderHelperSort,
-            applyOrderHelperSortToDom,
+            ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
+            ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+            ENTRY_MANAGER_DEFAULT_COLUMNS,
+            applyEntryManagerColumnVisibility,
+            clearEntryManagerScriptFilters,
+            setEntryManagerSort,
+            applyEntryManagerSortToDom,
             ensureCustomDisplayIndex,
             saveWorldInfo,
             buildSavePayload,
             appendSortOptions,
-            getOrderHelperEntries,
-            updateOrderHelperPreview,
+            getEntryManagerEntries,
+            updateEntryManagerPreview,
             SORT,
             SORT_DIRECTION,
-            applyOrderHelperStrategyFilters,
-            applyOrderHelperPositionFilters,
-            applyOrderHelperRecursionFilters,
-            applyOrderHelperOutletFilters,
-            applyOrderHelperAutomationIdFilters,
-            applyOrderHelperGroupFilters,
+            applyEntryManagerStrategyFilters,
+            applyEntryManagerPositionFilters,
+            applyEntryManagerRecursionFilters,
+            applyEntryManagerOutletFilters,
+            applyEntryManagerAutomationIdFilters,
+            applyEntryManagerGroupFilters,
             getStrategyOptions,
             getPositionOptions,
             getOutletOptions,
@@ -163,24 +163,24 @@ const createOrderHelperRenderer = ({
 
         const { element: bulkEditRowEl, refreshSelectionCount, cleanup } = buildBulkEditRow({
             dom,
-            orderHelperState,
+            entryManagerState,
             cache,
             saveWorldInfo,
             buildSavePayload,
-            isOrderHelperRowSelected,
-            setAllOrderHelperRowSelected,
-            updateOrderHelperSelectAllButton,
-            getOrderHelperRows,
+            isEntryManagerRowSelected,
+            setAllEntryManagerRowSelected,
+            updateEntryManagerSelectAllButton,
+            getEntryManagerRows,
             getStrategyOptions,
-            applyOrderHelperStrategyFilterToRow,
+            applyEntryManagerStrategyFilterToRow,
             getPositionOptions,
-            applyOrderHelperPositionFilterToRow,
+            applyEntryManagerPositionFilterToRow,
             isOutletPosition,
             getOutletOptions,
-            applyOrderHelperOutletFilterToRow,
-            syncOrderHelperOutletFilters,
+            applyEntryManagerOutletFilterToRow,
+            syncEntryManagerOutletFilters,
             filterIndicatorRefs,
-            applyOrderHelperRecursionFilterToRow,
+            applyEntryManagerRecursionFilterToRow,
         });
         cleanupBulkEditRow = cleanup;
 
@@ -251,9 +251,9 @@ const createOrderHelperRenderer = ({
 
         const filterEl = buildFilterPanel({
             dom,
-            orderHelperState,
-            getOrderHelperEntries,
-            setOrderHelperRowFilterState,
+            entryManagerState,
+            getEntryManagerEntries,
+            setEntryManagerRowFilterState,
             SlashCommandParser,
             debounce,
             hljs,
@@ -269,13 +269,13 @@ const createOrderHelperRenderer = ({
             refreshAutomationIdFilterIndicator,
             refreshGroupFilterIndicator,
         } = buildTableHeader({
-            orderHelperState,
-            applyOrderHelperStrategyFilters,
-            applyOrderHelperPositionFilters,
-            applyOrderHelperRecursionFilters,
-            applyOrderHelperOutletFilters,
-            applyOrderHelperAutomationIdFilters,
-            applyOrderHelperGroupFilters,
+            entryManagerState,
+            applyEntryManagerStrategyFilters,
+            applyEntryManagerPositionFilters,
+            applyEntryManagerRecursionFilters,
+            applyEntryManagerOutletFilters,
+            applyEntryManagerAutomationIdFilters,
+            applyEntryManagerGroupFilters,
             normalizeStrategyFilters,
             normalizePositionFilters,
             normalizeOutletFilters,
@@ -305,7 +305,7 @@ const createOrderHelperRenderer = ({
 
         const tbody = buildTableBody({
             entries,
-            orderHelperState,
+            entryManagerState,
             dom,
             cache,
             refreshOutletFilterIndicator,
@@ -315,26 +315,26 @@ const createOrderHelperRenderer = ({
             saveWorldInfo,
             buildSavePayload,
             focusWorldEntry,
-            isOrderHelperRowSelected,
-            setOrderHelperRowSelected,
-            updateOrderHelperSelectAllButton,
+            isEntryManagerRowSelected,
+            setEntryManagerRowSelected,
+            updateEntryManagerSelectAllButton,
             refreshSelectionCount,
-            setOrderHelperRowFilterState,
-            applyOrderHelperStrategyFilterToRow,
-            applyOrderHelperPositionFilterToRow,
-            applyOrderHelperRecursionFilterToRow,
-            applyOrderHelperStrategyFilters,
-            applyOrderHelperRecursionFilters,
-            applyOrderHelperOutletFilters,
-            applyOrderHelperAutomationIdFilters,
-            applyOrderHelperGroupFilters,
-            syncOrderHelperOutletFilters,
-            syncOrderHelperAutomationIdFilters,
-            syncOrderHelperGroupFilters,
+            setEntryManagerRowFilterState,
+            applyEntryManagerStrategyFilterToRow,
+            applyEntryManagerPositionFilterToRow,
+            applyEntryManagerRecursionFilterToRow,
+            applyEntryManagerStrategyFilters,
+            applyEntryManagerRecursionFilters,
+            applyEntryManagerOutletFilters,
+            applyEntryManagerAutomationIdFilters,
+            applyEntryManagerGroupFilters,
+            syncEntryManagerOutletFilters,
+            syncEntryManagerAutomationIdFilters,
+            syncEntryManagerGroupFilters,
             getEditorPanelApi,
             entryState,
-            getOrderHelperRows,
-            setOrderHelperSort,
+            getEntryManagerRows,
+            setEntryManagerSort,
             SORT,
             SORT_DIRECTION,
             getSortableDelay,
@@ -360,7 +360,7 @@ const createOrderHelperRenderer = ({
         dom.editor.append(body);
     };
 
-    return { renderOrderHelper };
+    return { renderEntryManager };
 };
 
-export { createOrderHelperRenderer };
+export { createEntryManagerRenderer };

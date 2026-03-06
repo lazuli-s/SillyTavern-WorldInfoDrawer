@@ -88,7 +88,7 @@ const hasExpandedFolders = ()=>foldersViewSlice?.hasExpandedFolders() ?? false;
 const updateCollapseAllFoldersToggle = ()=>foldersViewSlice?.updateCollapseAllFoldersToggle();
 const setAllFoldersCollapsed = (isCollapsed)=>foldersViewSlice?.setAllFoldersCollapsed(isCollapsed);
 const setFolderGroupingVisibility = (enabled)=>foldersViewSlice?.setFolderGroupingVisibility(enabled);
-const setOrderHelperToggleVisibility = (enabled)=>filterBarSlice?.setOrderHelperToggleVisibility(enabled);
+const setEntryManagerToggleVisibility = (enabled)=>filterBarSlice?.setEntryManagerToggleVisibility(enabled);
 
 const applyCollapseState = (name)=>{
     const isCollapsed = listPanelState.getCollapseState(name);
@@ -596,7 +596,7 @@ const getListPanelApi = ()=>({
     setCollapseState,
     setAllFoldersCollapsed,
     setFolderGroupingVisibility,
-    setOrderHelperToggleVisibility,
+    setEntryManagerToggleVisibility,
     setBookSortPreference,
     sortEntriesIfNeeded,
     updateAllBookSourceLinks,
@@ -642,7 +642,7 @@ const initBookBrowser = (options)=>{
         setFolderImporting: (value)=>{
             folderImportInProgress = Boolean(value);
         },
-        openOrderHelper: state.openOrderHelper,
+        openEntryManager: state.openEntryManager,
         openImportDialog: ()=>bookMenuSlice?.openImportDialog(),
         refreshList,
         setBookFolder,

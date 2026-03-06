@@ -38,7 +38,7 @@ export const SORT_DIRECTION = {
 
 
 
-export const ORDER_HELPER_TOGGLE_COLUMNS = [
+export const ENTRY_MANAGER_TOGGLE_COLUMNS = [
     { key: 'strategy',        label: 'Strategy' },
     { key: 'position',        label: 'Position' },
     { key: 'depth',           label: 'Depth' },
@@ -56,16 +56,16 @@ export const ORDER_HELPER_TOGGLE_COLUMNS = [
 ];
 
 
-export const ORDER_HELPER_TABLE_COLUMNS = [
+export const ENTRY_MANAGER_TABLE_COLUMNS = [
     { key: 'select',  label: '' },
     { key: 'drag',    label: '' },
     { key: 'enabled', label: '' },
     { key: 'entry',   label: 'Entry' },
-    ...ORDER_HELPER_TOGGLE_COLUMNS,
+    ...ENTRY_MANAGER_TOGGLE_COLUMNS,
 ];
 
 
-export const ORDER_HELPER_NUMBER_COLUMN_KEYS = new Set([
+export const ENTRY_MANAGER_NUMBER_COLUMN_KEYS = new Set([
     'depth',
     'order',
     'sticky',
@@ -76,7 +76,7 @@ export const ORDER_HELPER_NUMBER_COLUMN_KEYS = new Set([
 ]);
 
 
-export const ORDER_HELPER_RECURSION_OPTIONS = [
+export const ENTRY_MANAGER_RECURSION_OPTIONS = [
     { value: 'excludeRecursion',    label: 'Non-recursable' },
     { value: 'preventRecursion',    label: 'Prevent further recursion' },
     { value: 'delayUntilRecursion', label: 'Delay until recursion' },

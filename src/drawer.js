@@ -13,7 +13,7 @@ import { registerFolderName } from './book-browser/book-list/book-folders/book-f
 import { createLorebooksTabContent } from './book-browser/browser-tabs/browser-tabs.lorebooks-tab.js';
 import { createFoldersTabContent } from './book-browser/browser-tabs/browser-tabs.folders-tab.js';
 import { createSettingsTabContent } from './book-browser/browser-tabs/browser-tabs.settings-tab.js';
-import { initOrderHelper } from './entry-manager/entry-manager.js';
+import { initEntryManager } from './entry-manager/entry-manager.js';
 import { METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries } from './shared/sort-helpers.js';
 import { entryState, renderEntry, setWorldEntryContext } from './book-browser/book-list/book-list.world-entry.js';
 import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition, safeToSorted } from './shared/utils.js';
@@ -121,7 +121,7 @@ export const initDrawer = ({
     };
 
     const addDrawer = ()=>{
-        const { openOrderHelper, refreshOrderHelperScope } = initOrderHelper({
+        const { openEntryManager, refreshEntryManagerScope } = initEntryManager({
             dom,
             cache,
             SORT,
@@ -250,7 +250,7 @@ export const initDrawer = ({
                     });
                     const { root: settingsTabRoot, setToggleVisible: setOrderToggleVisible } = createSettingsTabContent({
                         dom,
-                        openOrderHelper,
+                        openEntryManager,
                         getListPanelApi: ()=>listPanelApi,
                         getEditorPanelApi: ()=>editorPanelApi,
                         getCurrentEditor,
@@ -396,8 +396,8 @@ export const initDrawer = ({
                         list,
                         loadWorldInfo,
                         onWorldInfoChange,
-                        onBookVisibilityScopeChange: (scope)=>refreshOrderHelperScope(scope),
-                        openOrderHelper,
+                        onBookVisibilityScopeChange: (scope)=>refreshEntryManagerScope(scope),
+                        openEntryManager,
                         Popup,
                         renderEntry,
                         resetEditor: ()=>{

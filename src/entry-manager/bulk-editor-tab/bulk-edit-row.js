@@ -19,30 +19,30 @@ export function buildBulkEditRow({
     cache,
     saveWorldInfo,
     buildSavePayload,
-    isOrderHelperRowSelected,
-    setAllOrderHelperRowSelected,
-    updateOrderHelperSelectAllButton,
-    getOrderHelperRows,
+    isEntryManagerRowSelected,
+    setAllEntryManagerRowSelected,
+    updateEntryManagerSelectAllButton,
+    getEntryManagerRows,
     getStrategyOptions,
-    applyOrderHelperStrategyFilterToRow,
+    applyEntryManagerStrategyFilterToRow,
     getPositionOptions,
-    applyOrderHelperPositionFilterToRow,
+    applyEntryManagerPositionFilterToRow,
     isOutletPosition,
     getOutletOptions,
-    applyOrderHelperOutletFilterToRow,
-    syncOrderHelperOutletFilters,
+    applyEntryManagerOutletFilterToRow,
+    syncEntryManagerOutletFilters,
     filterIndicatorRefs,
-    applyOrderHelperRecursionFilterToRow,
+    applyEntryManagerRecursionFilterToRow,
 }) {
     const row = document.createElement('div');
     row.classList.add('stwid--bulkEditRow');
 
     const { selectContainer, refreshSelectionCount } = buildBulkSelectSection({
         dom,
-        getOrderHelperRows,
-        isOrderHelperRowSelected,
-        setAllOrderHelperRowSelected,
-        updateOrderHelperSelectAllButton,
+        getEntryManagerRows,
+        isEntryManagerRowSelected,
+        setAllEntryManagerRowSelected,
+        updateEntryManagerSelectAllButton,
     });
     row.append(selectContainer);
 
@@ -51,7 +51,7 @@ export function buildBulkEditRow({
     row.append(buildBulkStateSection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,
@@ -59,11 +59,11 @@ export function buildBulkEditRow({
     row.append(buildBulkStrategySection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         getStrategyOptions,
-        applyOrderHelperStrategyFilterToRow,
+        applyEntryManagerStrategyFilterToRow,
         applyRegistry,
     }));
 
@@ -75,15 +75,15 @@ export function buildBulkEditRow({
     } = buildBulkPositionSection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         getPositionOptions,
-        applyOrderHelperPositionFilterToRow,
+        applyEntryManagerPositionFilterToRow,
         isOutletPosition,
         getOutletOptions,
-        applyOrderHelperOutletFilterToRow,
-        syncOrderHelperOutletFilters,
+        applyEntryManagerOutletFilterToRow,
+        syncEntryManagerOutletFilters,
         filterIndicatorRefs,
         applyRegistry,
     });
@@ -92,7 +92,7 @@ export function buildBulkEditRow({
     row.append(buildBulkOrderSection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,
@@ -101,16 +101,16 @@ export function buildBulkEditRow({
     row.append(buildBulkRecursionSection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
-        applyOrderHelperRecursionFilterToRow,
+        applyEntryManagerRecursionFilterToRow,
         applyRegistry,
     }));
     row.append(buildBulkBudgetSection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,
@@ -118,7 +118,7 @@ export function buildBulkEditRow({
     row.append(buildBulkProbabilitySection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,
@@ -126,7 +126,7 @@ export function buildBulkEditRow({
     row.append(buildBulkStickySection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,
@@ -134,7 +134,7 @@ export function buildBulkEditRow({
     row.append(buildBulkCooldownSection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,
@@ -142,7 +142,7 @@ export function buildBulkEditRow({
     row.append(buildBulkDelaySection({
         dom,
         cache,
-        isOrderHelperRowSelected,
+        isEntryManagerRowSelected,
         saveWorldInfo,
         buildSavePayload,
         applyRegistry,

@@ -160,7 +160,7 @@ const createFilterBarSlice = ({
             }
         },
         getBookVisibilityScope: (...args)=>visibilitySlice.getBookVisibilityScope(...args),
-        setOrderHelperToggleVisibility: (enabled)=>{
+        setEntryManagerToggleVisibility: (enabled)=>{
             runtime?.dom?.setOrderToggleVisible?.(Boolean(enabled));
         },
         setupFilter,

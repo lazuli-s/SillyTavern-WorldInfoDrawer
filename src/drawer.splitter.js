@@ -1,3 +1,5 @@
+// COMPAT-01 exception: SillyTavern.getContext() does not expose debounce, so this
+// module intentionally imports the host utility directly from the most specific path.
 import { debounce } from '../../../../utils.js';
 
 const DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--splitter-size';
@@ -101,6 +103,22 @@ export function initSplitter(body, list) {
             }
             const defaultWidth = applyDesktopWidthWithBounds(getDefaultDesktopWidth());
             saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, defaultWidth);
+        };
+        const reapplyBoundsForCurrentLayout = (mobileLayout)=>{
+            if (mobileLayout) {
+                const previousHeight = appliedListHeight;
+                const nextHeight = applyMobileHeightWithBounds(previousHeight);
+                if (nextHeight !== previousHeight) {
+                    saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, nextHeight);
+                }
+                return;
+            }
+
+            const previousWidth = appliedListWidth;
+            const nextWidth = applyDesktopWidthWithBounds(previousWidth);
+            if (nextWidth !== previousWidth) {
+                saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, nextWidth);
+            }
         };
 
         restoreSplitterForCurrentLayout = ()=>{
@@ -234,7 +252,10 @@ export function initSplitter(body, list) {
 
         const onLayoutResize = debounce(()=>{
             const isMobile = isMobileLayout();
-            if (isMobile === lastLayoutIsMobile) return;
+            if (isMobile === lastLayoutIsMobile) {
+                reapplyBoundsForCurrentLayout(isMobile);
+                return;
+            }
             lastLayoutIsMobile = isMobile;
             restoreSplitterForCurrentLayout();
         }, 120);

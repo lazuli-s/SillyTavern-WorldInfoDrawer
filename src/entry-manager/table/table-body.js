@@ -1,5 +1,5 @@
 import { setTooltip, formatCharacterFilter } from '../utils.js';
-import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 
 function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
@@ -14,7 +14,7 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
             try {
                 await saveWorldInfo(bookName, buildSavePayload(bookName), true);
             } catch (err) {
-                console.error('[WorldInfoDrawer] Order Helper save failed for book:', bookName, err);
+                console.error('[WorldInfoDrawer] Entry Manager save failed for book:', bookName, err);
             }
         } while (pendingByBook.has(bookName));
         inFlightByBook.delete(bookName);
@@ -66,24 +66,24 @@ export function buildTableBody({
     saveWorldInfo,
     buildSavePayload,
     focusWorldEntry,
-    isOrderHelperRowSelected,
-    setOrderHelperRowSelected,
-    updateOrderHelperSelectAllButton,
+    isEntryManagerRowSelected,
+    setEntryManagerRowSelected,
+    updateEntryManagerSelectAllButton,
     refreshSelectionCount,
-    applyOrderHelperStrategyFilterToRow,
-    applyOrderHelperPositionFilterToRow,
-    applyOrderHelperRecursionFilterToRow,
-    applyOrderHelperStrategyFilters,
-    applyOrderHelperRecursionFilters,
-    applyOrderHelperOutletFilters,
-    applyOrderHelperAutomationIdFilters,
-    applyOrderHelperGroupFilters,
-    syncOrderHelperOutletFilters,
-    syncOrderHelperAutomationIdFilters,
-    syncOrderHelperGroupFilters,
+    applyEntryManagerStrategyFilterToRow,
+    applyEntryManagerPositionFilterToRow,
+    applyEntryManagerRecursionFilterToRow,
+    applyEntryManagerStrategyFilters,
+    applyEntryManagerRecursionFilters,
+    applyEntryManagerOutletFilters,
+    applyEntryManagerAutomationIdFilters,
+    applyEntryManagerGroupFilters,
+    syncEntryManagerOutletFilters,
+    syncEntryManagerAutomationIdFilters,
+    syncEntryManagerGroupFilters,
     entryState,
-    getOrderHelperRows,
-    setOrderHelperSort,
+    getEntryManagerRows,
+    setEntryManagerSort,
     SORT,
     SORT_DIRECTION,
     getSortableDelay,
@@ -104,18 +104,18 @@ export function buildTableBody({
     const strategyTemplate = entryEditTemplate?.querySelector('[name="entryStateSelector"]');
     const positionTemplate = entryEditTemplate?.querySelector('[name="position"]');
     if (!enabledToggleTemplate || !strategyTemplate || !positionTemplate) {
-        throw new Error('[WorldInfoDrawer] Missing entry edit template controls for Order Helper render.');
+        throw new Error('[WorldInfoDrawer] Missing entry edit template controls for Entry Manager render.');
     }
 
-    const getVisibleOrderHelperRows = ()=>{
-        const rows = getOrderHelperRows();
+    const getVisibleEntryManagerRows = ()=>{
+        const rows = getEntryManagerRows();
         return rows.filter((row)=>!row.classList.contains('stwid--state-filtered'));
     };
 
     const updateCustomOrderFromDom = async()=>{
         
         if (!dom.order.tbody) return;
-        setOrderHelperSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
+        setEntryManagerSort(SORT.CUSTOM, SORT_DIRECTION.ASCENDING);
         const rows = [...dom.order.tbody.querySelectorAll('tr')];
         const booksUpdated = new Set();
         const nextIndexByBook = new Map();
@@ -184,8 +184,8 @@ export function buildTableBody({
                         btn.append(icon);
                     }
                     btn.addEventListener('click', ()=>{
-                        setOrderHelperRowSelected(tr, !isOrderHelperRowSelected(tr));
-                        updateOrderHelperSelectAllButton();
+                        setEntryManagerRowSelected(tr, !isEntryManagerRowSelected(tr));
+                        updateEntryManagerSelectAllButton();
                         refreshSelectionCount?.();
                     });
                     select.append(btn);
@@ -215,7 +215,7 @@ export function buildTableBody({
                                 window.clearTimeout(clickTimer);
                             }
                             clickTimer = window.setTimeout(()=>{
-                                const visibleRows = getVisibleOrderHelperRows();
+                                const visibleRows = getVisibleEntryManagerRows();
                                 if (!visibleRows.length || tr.classList.contains('stwid--state-filtered')) return;
                                 const index = visibleRows.indexOf(tr);
                                 if (index === -1) return;
@@ -238,7 +238,7 @@ export function buildTableBody({
                                 window.clearTimeout(clickTimer);
                                 clickTimer = null;
                             }
-                            const visibleRows = getVisibleOrderHelperRows();
+                            const visibleRows = getVisibleEntryManagerRows();
                             if (!visibleRows.length || tr.classList.contains('stwid--state-filtered')) return;
                             const targetRow = direction === 'up'
                                 ? visibleRows[0]
@@ -377,7 +377,7 @@ export function buildTableBody({
                                 break;
                             }
                         }
-                        applyOrderHelperStrategyFilterToRow(tr, cache[e.book].entries[e.data.uid]);
+                        applyEntryManagerStrategyFilterToRow(tr, cache[e.book].entries[e.data.uid]);
                         await enqueueSave(e.book);
                     });
                     strategy.append(strat);
@@ -402,7 +402,7 @@ export function buildTableBody({
                     cache[e.book].dom.entry[e.data.uid].position.value = value;
                     cache[e.book].entries[e.data.uid].position = value;
                     e.data.position = value;
-                    applyOrderHelperPositionFilterToRow(tr, cache[e.book].entries[e.data.uid]);
+                    applyEntryManagerPositionFilterToRow(tr, cache[e.book].entries[e.data.uid]);
                     updateOutlet?.();
                     await enqueueSave(e.book);
                 });
@@ -445,9 +445,9 @@ export function buildTableBody({
                             const value = input.value;
                             cache[e.book].entries[e.data.uid].outletName = value;
                             e.data.outletName = value;
-                            syncOrderHelperOutletFilters();
+                            syncEntryManagerOutletFilters();
                             refreshOutletFilterIndicator();
-                            applyOrderHelperOutletFilters();
+                            applyEntryManagerOutletFilters();
                             await enqueueSave(e.book);
                             updateOutlet();
                         });
@@ -480,9 +480,9 @@ export function buildTableBody({
                             const entryData = cache[e.book].entries[e.data.uid];
                             entryData.group = value;
                             e.data.group = value;
-                            syncOrderHelperGroupFilters();
+                            syncEntryManagerGroupFilters();
                             refreshGroupFilterIndicator();
-                            applyOrderHelperGroupFilters();
+                            applyEntryManagerGroupFilters();
                             await enqueueSave(e.book);
                         });
                         wrap.append(input);
@@ -557,9 +557,9 @@ export function buildTableBody({
                         const value = inp.value;
                         cache[e.book].entries[e.data.uid].automationId = value;
                         e.data.automationId = value;
-                        syncOrderHelperAutomationIdFilters();
+                        syncEntryManagerAutomationIdFilters();
                         refreshAutomationIdFilterIndicator();
-                        applyOrderHelperAutomationIdFilters();
+                        applyEntryManagerAutomationIdFilters();
                         await enqueueSave(e.book);
                     });
                     automationId.append(inp);
@@ -591,7 +591,7 @@ export function buildTableBody({
                                     const entryData = cache[e.book].entries[e.data.uid];
                                     entryData[key] = input.checked;
                                     e.data[key] = input.checked;
-                                    applyOrderHelperRecursionFilterToRow(tr, entryData);
+                                    applyEntryManagerRecursionFilterToRow(tr, entryData);
                                     await enqueueSave(e.book);
                                 });
                                 row.append(input);
@@ -600,7 +600,7 @@ export function buildTableBody({
                             wrap.append(row);
                         }
                     };
-                    for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
+                    for (const { value, label } of ENTRY_MANAGER_RECURSION_OPTIONS) {
                         addCheckbox(value, label);
                     }
                     recursion.append(wrap);
@@ -665,18 +665,18 @@ export function buildTableBody({
                 tr.append(characterFilter);
             }
 
-            setOrderHelperRowSelected(tr, true);
+            setEntryManagerRowSelected(tr, true);
             tbody.append(tr);
         }
     }
 
     
-    applyOrderHelperStrategyFilters();
-    applyOrderHelperRecursionFilters();
-    applyOrderHelperOutletFilters();
-    applyOrderHelperAutomationIdFilters();
-    applyOrderHelperGroupFilters();
-    updateOrderHelperSelectAllButton();
+    applyEntryManagerStrategyFilters();
+    applyEntryManagerRecursionFilters();
+    applyEntryManagerOutletFilters();
+    applyEntryManagerAutomationIdFilters();
+    applyEntryManagerGroupFilters();
+    updateEntryManagerSelectAllButton();
 
     return tbody;
 }

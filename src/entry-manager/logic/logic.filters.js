@@ -1,8 +1,8 @@
-﻿const createOrderHelperFilters = ({
+﻿const createEntryManagerFilters = ({
     dom,
-    orderHelperState,
+    entryManagerState,
     entryState,
-    getOrderHelperEntries,
+    getEntryManagerEntries,
     getStrategyValues,
     getPositionValues,
     getOutletValues,
@@ -46,7 +46,7 @@
         return [String(groupValues).trim()];
     };
 
-    const updateOrderHelperRowFilterClass = (row)=>{
+    const updateEntryManagerRowFilterClass = (row)=>{
         if (!row) return;
         const strategyFiltered = row.dataset.stwidFilterStrategy === 'true';
         const positionFiltered = row.dataset.stwidFilterPosition === 'true';
@@ -67,53 +67,53 @@
         );
     };
 
-    const setOrderHelperRowFilterState = (row, key, filtered)=>{
+    const setEntryManagerRowFilterState = (row, key, filtered)=>{
         if (!row) return;
         row.dataset[key] = filtered ? 'true' : 'false';
-        updateOrderHelperRowFilterClass(row);
+        updateEntryManagerRowFilterClass(row);
     };
 
-    const applyOrderHelperStrategyFilterToRow = (row, entryData, precomputed = null)=>{
+    const applyEntryManagerStrategyFilterToRow = (row, entryData, precomputed = null)=>{
         const strategyValues = precomputed?.values ?? (
-            orderHelperState.strategyValues.length
-                ? orderHelperState.strategyValues
+            entryManagerState.strategyValues.length
+                ? entryManagerState.strategyValues
                 : getStrategyValues()
         );
         if (!strategyValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterStrategy', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterStrategy', false);
             return;
         }
-        const allowed = precomputed?.allowed ?? new Set(orderHelperState.filters.strategy ?? []);
+        const allowed = precomputed?.allowed ?? new Set(entryManagerState.filters.strategy ?? []);
         const strategy = entryState(entryData);
-        setOrderHelperRowFilterState(row, 'stwidFilterStrategy', !allowed.has(strategy));
+        setEntryManagerRowFilterState(row, 'stwidFilterStrategy', !allowed.has(strategy));
     };
 
-    const applyOrderHelperPositionFilterToRow = (row, entryData, precomputed = null)=>{
+    const applyEntryManagerPositionFilterToRow = (row, entryData, precomputed = null)=>{
         const positionValues = precomputed?.values ?? (
-            orderHelperState.positionValues.length
-                ? orderHelperState.positionValues
+            entryManagerState.positionValues.length
+                ? entryManagerState.positionValues
                 : getPositionValues()
         );
         if (!positionValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterPosition', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterPosition', false);
             return;
         }
-        const positionFilters = orderHelperState.filters.position ?? [];
+        const positionFilters = entryManagerState.filters.position ?? [];
         const allowed = precomputed?.allowed ?? new Set(positionFilters.map((value)=>String(value)));
         const position = entryData.position ?? '';
-        setOrderHelperRowFilterState(row, 'stwidFilterPosition', !allowed.has(String(position)));
+        setEntryManagerRowFilterState(row, 'stwidFilterPosition', !allowed.has(String(position)));
     };
 
-    const applyOrderHelperRecursionFilterToRow = (row, entryData, precomputed = null)=>{
-        const recursionValues = precomputed?.values ?? (orderHelperState.recursionValues ?? []);
+    const applyEntryManagerRecursionFilterToRow = (row, entryData, precomputed = null)=>{
+        const recursionValues = precomputed?.values ?? (entryManagerState.recursionValues ?? []);
         if (!recursionValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterRecursion', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterRecursion', false);
             return;
         }
-        const selectedRecursionFilters = precomputed?.selectedFilters ?? orderHelperState.filters.recursion ?? [];
+        const selectedRecursionFilters = precomputed?.selectedFilters ?? entryManagerState.filters.recursion ?? [];
         const allowed = precomputed?.allowed ?? new Set(selectedRecursionFilters);
         if (selectedRecursionFilters.length === recursionValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterRecursion', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterRecursion', false);
             return;
         }
         const hasDelayUntilRecursion = Number(entryData?.delayUntilRecursion) > 0;
@@ -123,86 +123,86 @@
             hasDelayUntilRecursion ? 'delayUntilRecursion' : null,
         ].filter(Boolean);
         const matches = entryFlags.some((flag)=>allowed.has(flag));
-        setOrderHelperRowFilterState(row, 'stwidFilterRecursion', !matches);
+        setEntryManagerRowFilterState(row, 'stwidFilterRecursion', !matches);
     };
 
-    const applyOrderHelperOutletFilterToRow = (row, entryData, precomputed = null)=>{
+    const applyEntryManagerOutletFilterToRow = (row, entryData, precomputed = null)=>{
         const outletValues = precomputed?.values ?? (
-            orderHelperState.outletValues.length
-                ? orderHelperState.outletValues
+            entryManagerState.outletValues.length
+                ? entryManagerState.outletValues
                 : getOutletValues()
         );
         if (!outletValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterOutlet', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterOutlet', false);
             return;
         }
-        const allowed = precomputed?.allowed ?? new Set(orderHelperState.filters.outlet ?? []);
+        const allowed = precomputed?.allowed ?? new Set(entryManagerState.filters.outlet ?? []);
         const outletValue = getOutletValue(entryData);
-        setOrderHelperRowFilterState(row, 'stwidFilterOutlet', !allowed.has(outletValue));
+        setEntryManagerRowFilterState(row, 'stwidFilterOutlet', !allowed.has(outletValue));
     };
 
-    const applyOrderHelperAutomationIdFilterToRow = (row, entryData, precomputed = null)=>{
+    const applyEntryManagerAutomationIdFilterToRow = (row, entryData, precomputed = null)=>{
         const automationIdValues = precomputed?.values ?? (
-            orderHelperState.automationIdValues.length
-                ? orderHelperState.automationIdValues
+            entryManagerState.automationIdValues.length
+                ? entryManagerState.automationIdValues
                 : getAutomationIdValues()
         );
         if (!automationIdValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterAutomationId', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterAutomationId', false);
             return;
         }
-        const allowed = precomputed?.allowed ?? new Set(orderHelperState.filters.automationId ?? []);
+        const allowed = precomputed?.allowed ?? new Set(entryManagerState.filters.automationId ?? []);
         const automationId = getAutomationIdValue(entryData);
-        setOrderHelperRowFilterState(row, 'stwidFilterAutomationId', !allowed.has(automationId));
+        setEntryManagerRowFilterState(row, 'stwidFilterAutomationId', !allowed.has(automationId));
     };
 
-    const applyOrderHelperGroupFilterToRow = (row, entryData, precomputed = null)=>{
+    const applyEntryManagerGroupFilterToRow = (row, entryData, precomputed = null)=>{
         const groupValues = precomputed?.values ?? (
-            orderHelperState.groupValues.length
-                ? orderHelperState.groupValues
+            entryManagerState.groupValues.length
+                ? entryManagerState.groupValues
                 : getGroupValues()
         );
         if (!groupValues.length) {
-            setOrderHelperRowFilterState(row, 'stwidFilterGroup', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterGroup', false);
             return;
         }
-        const allowed = precomputed?.allowed ?? new Set(orderHelperState.filters.group ?? []);
+        const allowed = precomputed?.allowed ?? new Set(entryManagerState.filters.group ?? []);
         const groupValuesForEntry = normalizeGroupValuesForFilter(getGroupValue(entryData));
         const matches = groupValuesForEntry.some((value)=>allowed.has(value));
-        setOrderHelperRowFilterState(row, 'stwidFilterGroup', !matches);
+        setEntryManagerRowFilterState(row, 'stwidFilterGroup', !matches);
     };
 
-    const applyOrderHelperStrategyFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
-        const strategyValues = orderHelperState.strategyValues.length
-            ? orderHelperState.strategyValues
+    const applyEntryManagerStrategyFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
+        const strategyValues = entryManagerState.strategyValues.length
+            ? entryManagerState.strategyValues
             : getStrategyValues();
-        const allowed = new Set(orderHelperState.filters.strategy ?? []);
+        const allowed = new Set(entryManagerState.filters.strategy ?? []);
         const precomputed = { values: strategyValues, allowed };
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            applyOrderHelperStrategyFilterToRow(row, entry.data, precomputed);
+            applyEntryManagerStrategyFilterToRow(row, entry.data, precomputed);
         }
     };
 
-    const applyOrderHelperPositionFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
-        const positionValues = orderHelperState.positionValues.length
-            ? orderHelperState.positionValues
+    const applyEntryManagerPositionFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
+        const positionValues = entryManagerState.positionValues.length
+            ? entryManagerState.positionValues
             : getPositionValues();
-        const positionFilters = orderHelperState.filters.position ?? [];
+        const positionFilters = entryManagerState.filters.position ?? [];
         const allowed = new Set(positionFilters.map((value)=>String(value)));
         const precomputed = { values: positionValues, allowed };
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            applyOrderHelperPositionFilterToRow(row, entry.data, precomputed);
+            applyEntryManagerPositionFilterToRow(row, entry.data, precomputed);
         }
     };
 
-    const applyOrderHelperRecursionFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
-        const recursionValues = orderHelperState.recursionValues ?? [];
-        const selectedFilters = orderHelperState.filters.recursion ?? [];
+    const applyEntryManagerRecursionFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
+        const recursionValues = entryManagerState.recursionValues ?? [];
+        const selectedFilters = entryManagerState.filters.recursion ?? [];
         const allowed = new Set(selectedFilters);
         const precomputed = {
             values: recursionValues,
@@ -211,158 +211,158 @@
         };
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            applyOrderHelperRecursionFilterToRow(row, entry.data, precomputed);
+            applyEntryManagerRecursionFilterToRow(row, entry.data, precomputed);
         }
     };
 
-    const applyOrderHelperOutletFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
-        const outletValues = orderHelperState.outletValues.length
-            ? orderHelperState.outletValues
+    const applyEntryManagerOutletFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
+        const outletValues = entryManagerState.outletValues.length
+            ? entryManagerState.outletValues
             : getOutletValues();
-        const allowed = new Set(orderHelperState.filters.outlet ?? []);
+        const allowed = new Set(entryManagerState.filters.outlet ?? []);
         const precomputed = { values: outletValues, allowed };
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            applyOrderHelperOutletFilterToRow(row, entry.data, precomputed);
+            applyEntryManagerOutletFilterToRow(row, entry.data, precomputed);
         }
     };
 
-    const applyOrderHelperAutomationIdFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
-        const automationIdValues = orderHelperState.automationIdValues.length
-            ? orderHelperState.automationIdValues
+    const applyEntryManagerAutomationIdFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
+        const automationIdValues = entryManagerState.automationIdValues.length
+            ? entryManagerState.automationIdValues
             : getAutomationIdValues();
-        const allowed = new Set(orderHelperState.filters.automationId ?? []);
+        const allowed = new Set(entryManagerState.filters.automationId ?? []);
         const precomputed = { values: automationIdValues, allowed };
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            applyOrderHelperAutomationIdFilterToRow(row, entry.data, precomputed);
+            applyEntryManagerAutomationIdFilterToRow(row, entry.data, precomputed);
         }
     };
 
-    const applyOrderHelperGroupFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
-        const groupValues = orderHelperState.groupValues.length
-            ? orderHelperState.groupValues
+    const applyEntryManagerGroupFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
+        const groupValues = entryManagerState.groupValues.length
+            ? entryManagerState.groupValues
             : getGroupValues();
-        const allowed = new Set(orderHelperState.filters.group ?? []);
+        const allowed = new Set(entryManagerState.filters.group ?? []);
         const precomputed = { values: groupValues, allowed };
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            applyOrderHelperGroupFilterToRow(row, entry.data, precomputed);
+            applyEntryManagerGroupFilterToRow(row, entry.data, precomputed);
         }
     };
 
-    const clearOrderHelperScriptFilters = ()=>{
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
+    const clearEntryManagerScriptFilters = ()=>{
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
-            setOrderHelperRowFilterState(row, 'stwidFilterScript', false);
+            setEntryManagerRowFilterState(row, 'stwidFilterScript', false);
         }
     };
 
-    const syncOrderHelperStrategyFilters = ()=>{
+    const syncEntryManagerStrategyFilters = ()=>{
         const nextValues = getStrategyValues();
-        const hadAllSelected = orderHelperState.filters.strategy.length === orderHelperState.strategyValues.length;
-        orderHelperState.strategyValues = nextValues;
+        const hadAllSelected = entryManagerState.filters.strategy.length === entryManagerState.strategyValues.length;
+        entryManagerState.strategyValues = nextValues;
         if (!nextValues.length) {
-            orderHelperState.filters.strategy = [];
+            entryManagerState.filters.strategy = [];
             return;
         }
-        if (hadAllSelected || !orderHelperState.filters.strategy.length) {
-            orderHelperState.filters.strategy = [...nextValues];
+        if (hadAllSelected || !entryManagerState.filters.strategy.length) {
+            entryManagerState.filters.strategy = [...nextValues];
         } else {
-            orderHelperState.filters.strategy = normalizeStrategyFilters(orderHelperState.filters.strategy);
+            entryManagerState.filters.strategy = normalizeStrategyFilters(entryManagerState.filters.strategy);
         }
     };
 
-    const syncOrderHelperPositionFilters = ()=>{
+    const syncEntryManagerPositionFilters = ()=>{
         const nextValues = getPositionValues();
-        const hadAllSelected = orderHelperState.filters.position.length === orderHelperState.positionValues.length;
-        orderHelperState.positionValues = nextValues;
+        const hadAllSelected = entryManagerState.filters.position.length === entryManagerState.positionValues.length;
+        entryManagerState.positionValues = nextValues;
         if (!nextValues.length) {
-            orderHelperState.filters.position = [];
+            entryManagerState.filters.position = [];
             return;
         }
-        if (hadAllSelected || !orderHelperState.filters.position.length) {
-            orderHelperState.filters.position = [...nextValues];
+        if (hadAllSelected || !entryManagerState.filters.position.length) {
+            entryManagerState.filters.position = [...nextValues];
         } else {
-            orderHelperState.filters.position = normalizePositionFilters(orderHelperState.filters.position);
+            entryManagerState.filters.position = normalizePositionFilters(entryManagerState.filters.position);
         }
     };
 
-    const syncOrderHelperOutletFilters = ()=>{
+    const syncEntryManagerOutletFilters = ()=>{
         const nextValues = getOutletValues();
-        const hadAllSelected = orderHelperState.filters.outlet.length === orderHelperState.outletValues.length;
-        orderHelperState.outletValues = nextValues;
+        const hadAllSelected = entryManagerState.filters.outlet.length === entryManagerState.outletValues.length;
+        entryManagerState.outletValues = nextValues;
         if (!nextValues.length) {
-            orderHelperState.filters.outlet = [];
+            entryManagerState.filters.outlet = [];
             return;
         }
-        if (hadAllSelected || !orderHelperState.filters.outlet.length) {
-            orderHelperState.filters.outlet = [...nextValues];
+        if (hadAllSelected || !entryManagerState.filters.outlet.length) {
+            entryManagerState.filters.outlet = [...nextValues];
         } else {
-            orderHelperState.filters.outlet = normalizeOutletFilters(orderHelperState.filters.outlet);
+            entryManagerState.filters.outlet = normalizeOutletFilters(entryManagerState.filters.outlet);
         }
     };
 
-    const syncOrderHelperAutomationIdFilters = ()=>{
+    const syncEntryManagerAutomationIdFilters = ()=>{
         const nextValues = getAutomationIdValues();
-        const hadAllSelected = orderHelperState.filters.automationId.length === orderHelperState.automationIdValues.length;
-        orderHelperState.automationIdValues = nextValues;
+        const hadAllSelected = entryManagerState.filters.automationId.length === entryManagerState.automationIdValues.length;
+        entryManagerState.automationIdValues = nextValues;
         if (!nextValues.length) {
-            orderHelperState.filters.automationId = [];
+            entryManagerState.filters.automationId = [];
             return;
         }
-        if (hadAllSelected || !orderHelperState.filters.automationId.length) {
-            orderHelperState.filters.automationId = [...nextValues];
+        if (hadAllSelected || !entryManagerState.filters.automationId.length) {
+            entryManagerState.filters.automationId = [...nextValues];
         } else {
-            orderHelperState.filters.automationId = normalizeAutomationIdFilters(orderHelperState.filters.automationId);
+            entryManagerState.filters.automationId = normalizeAutomationIdFilters(entryManagerState.filters.automationId);
         }
     };
 
-    const syncOrderHelperGroupFilters = ()=>{
+    const syncEntryManagerGroupFilters = ()=>{
         const nextValues = getGroupValues();
-        const hadAllSelected = orderHelperState.filters.group.length === orderHelperState.groupValues.length;
-        orderHelperState.groupValues = nextValues;
+        const hadAllSelected = entryManagerState.filters.group.length === entryManagerState.groupValues.length;
+        entryManagerState.groupValues = nextValues;
         if (!nextValues.length) {
-            orderHelperState.filters.group = [];
+            entryManagerState.filters.group = [];
             return;
         }
-        if (hadAllSelected || !orderHelperState.filters.group.length) {
-            orderHelperState.filters.group = [...nextValues];
+        if (hadAllSelected || !entryManagerState.filters.group.length) {
+            entryManagerState.filters.group = [...nextValues];
         } else {
-            orderHelperState.filters.group = normalizeGroupFilters(orderHelperState.filters.group);
+            entryManagerState.filters.group = normalizeGroupFilters(entryManagerState.filters.group);
         }
     };
 
     return {
-        applyOrderHelperRecursionFilterToRow,
-        applyOrderHelperRecursionFilters,
-        applyOrderHelperPositionFilterToRow,
-        applyOrderHelperPositionFilters,
-        applyOrderHelperOutletFilterToRow,
-        applyOrderHelperOutletFilters,
-        applyOrderHelperAutomationIdFilterToRow,
-        applyOrderHelperAutomationIdFilters,
-        applyOrderHelperGroupFilterToRow,
-        applyOrderHelperGroupFilters,
-        applyOrderHelperStrategyFilterToRow,
-        applyOrderHelperStrategyFilters,
-        clearOrderHelperScriptFilters,
+        applyEntryManagerRecursionFilterToRow,
+        applyEntryManagerRecursionFilters,
+        applyEntryManagerPositionFilterToRow,
+        applyEntryManagerPositionFilters,
+        applyEntryManagerOutletFilterToRow,
+        applyEntryManagerOutletFilters,
+        applyEntryManagerAutomationIdFilterToRow,
+        applyEntryManagerAutomationIdFilters,
+        applyEntryManagerGroupFilterToRow,
+        applyEntryManagerGroupFilters,
+        applyEntryManagerStrategyFilterToRow,
+        applyEntryManagerStrategyFilters,
+        clearEntryManagerScriptFilters,
         normalizeOutletFilters,
         normalizeAutomationIdFilters,
         normalizeGroupFilters,
         normalizePositionFilters,
         normalizeStrategyFilters,
-        setOrderHelperRowFilterState,
-        syncOrderHelperOutletFilters,
-        syncOrderHelperAutomationIdFilters,
-        syncOrderHelperGroupFilters,
-        syncOrderHelperPositionFilters,
-        syncOrderHelperStrategyFilters,
+        setEntryManagerRowFilterState,
+        syncEntryManagerOutletFilters,
+        syncEntryManagerAutomationIdFilters,
+        syncEntryManagerGroupFilters,
+        syncEntryManagerPositionFilters,
+        syncEntryManagerStrategyFilters,
     };
 };
 
-export { createOrderHelperFilters };
+export { createEntryManagerFilters };

@@ -621,24 +621,24 @@ const createBookMenuSlice = ({
                             bookSort.append(sortSelect);
                             menu.append(bookSort);
                         }
-                        const orderHelper = document.createElement('div'); {
-                            orderHelper.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            orderHelper.classList.add('stwid--orderHelper');
-                            orderHelper.addEventListener('click', ()=>{
-                                state.openOrderHelper(name);
+                        const entryManager = document.createElement('div'); {
+                            entryManager.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
+                            entryManager.classList.add('stwid--entryManager');
+                            entryManager.addEventListener('click', ()=>{
+                                state.openEntryManager(name);
                                 closeMenu?.();
                             });
                             const i = document.createElement('i'); {
                                 i.classList.add('stwid--icon');
                                 i.classList.add('fa-solid', 'fa-fw', 'fa-arrow-down-wide-short');
-                                orderHelper.append(i);
+                                entryManager.append(i);
                             }
                             const txt = document.createElement('span'); {
                                 txt.classList.add('stwid--label');
                                 txt.textContent = 'Entry Manager';
-                                orderHelper.append(txt);
+                                entryManager.append(txt);
                             }
-                            menu.append(orderHelper);
+                            menu.append(entryManager);
                         }
                         const stloButton = document.createElement('div'); {
                             stloButton.id = 'lorebook_ordering_button';

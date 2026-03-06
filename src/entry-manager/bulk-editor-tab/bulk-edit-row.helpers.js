@@ -1,5 +1,5 @@
 import { setTooltip } from '../utils.js';
-import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 export const BULK_APPLY_BATCH_SIZE = 200;
 export const APPLY_DIRTY_CLASS = 'stwid--applyDirty';
@@ -75,13 +75,13 @@ export function getSafeTbodyRows(dom) {
     return [...tbody.children].filter((child)=>child instanceof HTMLElement);
 }
 
-export function getBulkTargets(rows, cache, isOrderHelperRowSelected, { reverse = false } = {}) {
+export function getBulkTargets(rows, cache, isEntryManagerRowSelected, { reverse = false } = {}) {
     const orderedRows = reverse ? [...rows].reverse() : rows;
     const targets = [];
     let skippedInvalidRow = false;
     for (const tr of orderedRows) {
         if (tr.classList.contains('stwid--state-filtered')) continue;
-        if (!isOrderHelperRowSelected(tr)) continue;
+        if (!isEntryManagerRowSelected(tr)) continue;
         const bookName = tr.getAttribute('data-book');
         const uid = tr.getAttribute('data-uid');
         if (!bookName || uid === null) {
@@ -158,7 +158,7 @@ export async function runApplyNonNegativeIntegerField({
     invalidValueWarning,
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyButton,
@@ -178,7 +178,7 @@ export async function runApplyNonNegativeIntegerField({
     const rows = getSafeTbodyRows(dom);
     if (!rows) return;
 
-    const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
     const books = new Set();
     for (const { tr, bookName, entryData } of targets) {
         books.add(bookName);
@@ -192,7 +192,7 @@ export async function runApplyNonNegativeIntegerField({
 
 export function applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes) {
     let recursionInputIndex = 0;
-    for (const { value } of ORDER_HELPER_RECURSION_OPTIONS) {
+    for (const { value } of ENTRY_MANAGER_RECURSION_OPTIONS) {
         const checked = recursionCheckboxes.get(value).checked;
         entryData[value] = checked;
         if (domInputs[recursionInputIndex]) domInputs[recursionInputIndex].checked = checked;

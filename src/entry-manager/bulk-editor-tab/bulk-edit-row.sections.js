@@ -1,5 +1,5 @@
 import { setTooltip } from '../utils.js';
-import { ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 import {
     BULK_APPLY_BATCH_SIZE,
     APPLY_DIRTY_CLASS,
@@ -18,10 +18,10 @@ import {
 
 export function buildBulkSelectSection({
     dom,
-    getOrderHelperRows,
-    isOrderHelperRowSelected,
-    setAllOrderHelperRowSelected,
-    updateOrderHelperSelectAllButton,
+    getEntryManagerRows,
+    isEntryManagerRowSelected,
+    setAllEntryManagerRowSelected,
+    updateEntryManagerSelectAllButton,
 }) {
     const selectContainer = createLabeledBulkContainer(
         'select',
@@ -37,7 +37,7 @@ export function buildBulkSelectSection({
         const rows = dom.order.tbody ? [...dom.order.tbody.children] : [];
         const visible = rows.filter((tableRow)=>!tableRow.classList.contains('stwid--state-filtered'));
         const total = visible.length;
-        const selected = visible.filter((tableRow)=>isOrderHelperRowSelected(tableRow)).length;
+        const selected = visible.filter((tableRow)=>isEntryManagerRowSelected(tableRow)).length;
         selectionCountEl.textContent = `Selected ${selected} out of ${total} entries`;
     };
 
@@ -47,10 +47,10 @@ export function buildBulkSelectSection({
     selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--state-active');
     setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
     selectAll.addEventListener('click', ()=>{
-        const rows = getOrderHelperRows();
-        const shouldSelect = !rows.length || rows.some((tableRow)=>!isOrderHelperRowSelected(tableRow));
-        setAllOrderHelperRowSelected(shouldSelect);
-        updateOrderHelperSelectAllButton();
+        const rows = getEntryManagerRows();
+        const shouldSelect = !rows.length || rows.some((tableRow)=>!isEntryManagerRowSelected(tableRow));
+        setAllEntryManagerRowSelected(shouldSelect);
+        updateEntryManagerSelectAllButton();
         refreshSelectionCount();
     });
 
@@ -88,7 +88,7 @@ export function buildApplyAllSection(applyRegistry) {
 export function buildBulkProbabilitySection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -121,7 +121,7 @@ export function buildBulkProbabilitySection({
         }
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -146,7 +146,7 @@ export function buildBulkProbabilitySection({
 export function buildBulkStickySection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -174,7 +174,7 @@ export function buildBulkStickySection({
             invalidValueWarning: 'Sticky must be a non-negative whole number.',
             dom,
             cache,
-            isOrderHelperRowSelected,
+            isEntryManagerRowSelected,
             saveWorldInfo,
             buildSavePayload,
             applyButton: applySticky,
@@ -194,7 +194,7 @@ export function buildBulkStickySection({
 export function buildBulkCooldownSection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -222,7 +222,7 @@ export function buildBulkCooldownSection({
             invalidValueWarning: 'Cooldown must be a non-negative whole number.',
             dom,
             cache,
-            isOrderHelperRowSelected,
+            isEntryManagerRowSelected,
             saveWorldInfo,
             buildSavePayload,
             applyButton: applyCooldown,
@@ -242,7 +242,7 @@ export function buildBulkCooldownSection({
 export function buildBulkDelaySection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -270,7 +270,7 @@ export function buildBulkDelaySection({
             invalidValueWarning: 'Delay must be a non-negative whole number.',
             dom,
             cache,
-            isOrderHelperRowSelected,
+            isEntryManagerRowSelected,
             saveWorldInfo,
             buildSavePayload,
             applyButton: applyBulkDelay,
@@ -290,7 +290,7 @@ export function buildBulkDelaySection({
 export function buildBulkStateSection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -321,7 +321,7 @@ export function buildBulkStateSection({
             if (!rows) return;
 
             const willDisable = activeToggle.classList.contains('fa-toggle-off');
-            const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+            const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
             const books = new Set();
             for (let i = 0; i < targets.length; i++) {
                 const { tr, bookName, uid, entryData } = targets[i];
@@ -359,11 +359,11 @@ export function buildBulkStateSection({
 export function buildBulkStrategySection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     getStrategyOptions,
-    applyOrderHelperStrategyFilterToRow,
+    applyEntryManagerStrategyFilterToRow,
     applyRegistry,
 }) {
     const strategyContainer = createLabeledBulkContainer(
@@ -400,7 +400,7 @@ export function buildBulkStrategySection({
             const rows = getSafeTbodyRows(dom);
             if (!rows) return;
 
-            const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+            const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
             const books = new Set();
             for (let i = 0; i < targets.length; i++) {
                 const { tr, bookName, uid, entryData } = targets[i];
@@ -411,7 +411,7 @@ export function buildBulkStrategySection({
                 if (rowStrat) rowStrat.value = value;
                 const domStrat = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
                 if (domStrat) domStrat.value = value;
-                applyOrderHelperStrategyFilterToRow(tr, entryData);
+                applyEntryManagerStrategyFilterToRow(tr, entryData);
                 if ((i + 1) % BULK_APPLY_BATCH_SIZE === 0) {
                     await new Promise((resolve)=>setTimeout(resolve, 0));
                 }
@@ -434,10 +434,10 @@ export function buildBulkStrategySection({
 export function buildBulkRecursionSection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
-    applyOrderHelperRecursionFilterToRow,
+    applyEntryManagerRecursionFilterToRow,
     applyRegistry,
 }) {
     const recursionContainer = createLabeledBulkContainer(
@@ -449,7 +449,7 @@ export function buildBulkRecursionSection({
     const recursionCheckboxes = new Map();
     const recursionOptions = document.createElement('div');
     recursionOptions.classList.add('stwid--recursionOptions');
-    for (const { value, label } of ORDER_HELPER_RECURSION_OPTIONS) {
+    for (const { value, label } of ENTRY_MANAGER_RECURSION_OPTIONS) {
         recursionOptions.append(buildRecursionCheckboxRow(value, label, recursionCheckboxes));
     }
     recursionContainer.append(recursionOptions);
@@ -457,13 +457,13 @@ export function buildBulkRecursionSection({
     const runApplyRecursion = async () => {
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
             const domInputs = tr.querySelectorAll('[data-col="recursion"] .stwid--recursionOptions input[type="checkbox"]');
             applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes);
-            applyOrderHelperRecursionFilterToRow(tr, entryData);
+            applyEntryManagerRecursionFilterToRow(tr, entryData);
         }
         await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
         applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
@@ -484,7 +484,7 @@ export function buildBulkRecursionSection({
 export function buildBulkBudgetSection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -514,7 +514,7 @@ export function buildBulkBudgetSection({
         const checked = budgetIgnoreCheckbox.checked;
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);

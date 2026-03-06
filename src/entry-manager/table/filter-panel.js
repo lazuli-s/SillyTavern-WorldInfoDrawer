@@ -1,9 +1,9 @@
 
 export function buildFilterPanel({
     dom,
-    orderHelperState,
-    getOrderHelperEntries,
-    setOrderHelperRowFilterState,
+    entryManagerState,
+    getEntryManagerEntries,
+    setEntryManagerRowFilterState,
     SlashCommandParser,
     debounce,
     hljs,
@@ -17,8 +17,8 @@ export function buildFilterPanel({
         main.classList.add('stwid--main');
         const hint = document.createElement('div'); {
             hint.classList.add('stwid--hint');
-            const bookContextHint = orderHelperState.book
-                ? `<br>Book context: <code>${orderHelperState.book}</code> (entries are scoped to this book).`
+            const bookContextHint = entryManagerState.book
+                ? `<br>Book context: <code>${entryManagerState.book}</code> (entries are scoped to this book).`
                 : '';
             hint.innerHTML = DOMPurify.sanitize(`
                 Script will be called for each entry in all active books.
@@ -101,20 +101,20 @@ export function buildFilterPanel({
                     filterStack.push(closure);
 
                     const clone = inp.value;
-                    const script = `return async function orderHelperFilter(data) {${clone}}();`;
+                    const script = `return async function entryManagerFilter(data) {${clone}}();`;
 
                     try {
                         await closure.compile(script);
                         if (!isActive()) return;
 
-                        const entries = getOrderHelperEntries(orderHelperState.book, true);
+                        const entries = getEntryManagerEntries(entryManagerState.book, true);
 
                         
                         
                         for (const e of entries) {
                             const row = dom.order.entries?.[e.book]?.[e.data.uid];
                             if (!row) continue;
-                            setOrderHelperRowFilterState(row, 'stwidFilterScript', true);
+                            setEntryManagerRowFilterState(row, 'stwidFilterScript', true);
                         }
 
                         for (const e of entries) {
@@ -129,7 +129,7 @@ export function buildFilterPanel({
 
                             const row = dom.order.entries?.[e.book]?.[e.data.uid];
                             if (!row) continue;
-                            setOrderHelperRowFilterState(row, 'stwidFilterScript', !isTrueBoolean(result));
+                            setEntryManagerRowFilterState(row, 'stwidFilterScript', !isTrueBoolean(result));
                         }
 
                         showFilterError(null);

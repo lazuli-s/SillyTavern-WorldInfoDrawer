@@ -192,14 +192,14 @@ const exportFolderAction = ({ folderName, menuActions })=>{
     menuActions.download(JSON.stringify(payload), folderName, 'application/json');
 };
 
-const orderHelperFolderAction = ({ folderName, menuActions })=>{
+const entryManagerFolderAction = ({ folderName, menuActions })=>{
     const visibleScope = menuActions.getBookVisibilityScope?.()
         ?? menuActions.getSelectedWorldInfo?.()
         ?? [];
     const visibleLookup = new Set(visibleScope);
     const bookNames = getFolderBookNames(menuActions.cache, folderName)
         .filter((name)=>visibleLookup.has(name));
-    menuActions.openOrderHelper?.(null, bookNames);
+    menuActions.openEntryManager?.(null, bookNames);
 };
 
 const deleteFolderAction = async({ folderName, menuActions })=>{
@@ -253,6 +253,6 @@ export {
     renameFolderAction,
     importFolderAction,
     exportFolderAction,
-    orderHelperFolderAction,
+    entryManagerFolderAction,
     deleteFolderAction,
 };

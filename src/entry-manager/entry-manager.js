@@ -1,18 +1,18 @@
 ﻿import {
-    ORDER_HELPER_COLUMNS_STORAGE_KEY,
-    ORDER_HELPER_DEFAULT_COLUMNS,
-    ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
-    ORDER_HELPER_SORT_STORAGE_KEY,
-    createOrderHelperState,
+    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+    ENTRY_MANAGER_DEFAULT_COLUMNS,
+    ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
+    ENTRY_MANAGER_SORT_STORAGE_KEY,
+    createEntryManagerState,
     getPositionOptions,
     getPositionValues,
     getStrategyOptions,
     getStrategyValues,
 } from './logic/logic.state.js';
-import { createOrderHelperFilters } from './logic/logic.filters.js';
-import { createOrderHelperRenderer } from './bulk-editor-tab/bulk-editor-tab.js';
+import { createEntryManagerFilters } from './logic/logic.filters.js';
+import { createEntryManagerRenderer } from './bulk-editor-tab/bulk-editor-tab.js';
 
-export const initOrderHelper = ({
+export const initEntryManager = ({
     dom,
     cache,
     SORT,
@@ -34,7 +34,7 @@ export const initOrderHelper = ({
     hljs,
     $,
 }) => {
-    const orderHelperState = createOrderHelperState({ SORT, SORT_DIRECTION });
+    const entryManagerState = createEntryManagerState({ SORT, SORT_DIRECTION });
     const OUTLET_NONE_VALUE = '';
     const AUTOMATION_ID_NONE_VALUE = '';
     const GROUP_NONE_VALUE = '';
@@ -59,7 +59,7 @@ export const initOrderHelper = ({
         return String(a.uid).localeCompare(String(b.uid));
     };
 
-    const getOrderHelperSourceEntries = (book = orderHelperState.book)=>{
+    const getEntryManagerSourceEntries = (book = entryManagerState.book)=>{
         const scopeSet = new Set(scopedBookNames ?? getSelectedWorldInfo());
         if (book) {
             if (!scopeSet.has(book) || !cache[book]) return [];
@@ -71,8 +71,8 @@ export const initOrderHelper = ({
             .flat();
     };
 
-    const ensureCustomDisplayIndex = (book = orderHelperState.book)=>{
-        const source = getOrderHelperSourceEntries(book);
+    const ensureCustomDisplayIndex = (book = entryManagerState.book)=>{
+        const source = getEntryManagerSourceEntries(book);
         const entriesByBook = new Map();
         for (const entry of source) {
             if (!entriesByBook.has(entry.book)) {
@@ -103,7 +103,7 @@ export const initOrderHelper = ({
         return [...updatedBooks];
     };
 
-    const getOrderHelperEntries = (book = orderHelperState.book, includeDom = false)=>{
+    const getEntryManagerEntries = (book = entryManagerState.book, includeDom = false)=>{
         const source = includeDom && dom.order.entries && dom.order.tbody
             ? Object.entries(dom.order.entries)
             .map(([entryBook, entries])=>Object.values(entries).map(tr=>{
@@ -117,8 +117,8 @@ export const initOrderHelper = ({
                 }))
                 .flat()
                 .filter(Boolean)
-            : getOrderHelperSourceEntries(book);
-        return sortEntries(source, orderHelperState.sort, orderHelperState.direction)
+            : getEntryManagerSourceEntries(book);
+        return sortEntries(source, entryManagerState.sort, entryManagerState.direction)
             .filter((entry)=>!book || entry.book === book);
     };
 
@@ -150,10 +150,10 @@ export const initOrderHelper = ({
         ];
     }
 
-    const getOutletOptions = (book = orderHelperState.book)=>
-        buildDynamicOptions(getOrderHelperEntries(book), getOutletValueForEntry, OUTLET_NONE_VALUE);
+    const getOutletOptions = (book = entryManagerState.book)=>
+        buildDynamicOptions(getEntryManagerEntries(book), getOutletValueForEntry, OUTLET_NONE_VALUE);
 
-    const getOutletValues = (book = orderHelperState.book)=>getOutletOptions(book).map((option)=>option.value);
+    const getOutletValues = (book = entryManagerState.book)=>getOutletOptions(book).map((option)=>option.value);
 
     const getAutomationIdValueForEntry = (entry)=>{
         const automationId = entry?.automationId;
@@ -162,10 +162,10 @@ export const initOrderHelper = ({
         return normalized || AUTOMATION_ID_NONE_VALUE;
     };
 
-    const getAutomationIdOptions = (book = orderHelperState.book)=>
-        buildDynamicOptions(getOrderHelperEntries(book), getAutomationIdValueForEntry, AUTOMATION_ID_NONE_VALUE);
+    const getAutomationIdOptions = (book = entryManagerState.book)=>
+        buildDynamicOptions(getEntryManagerEntries(book), getAutomationIdValueForEntry, AUTOMATION_ID_NONE_VALUE);
 
-    const getAutomationIdValues = (book = orderHelperState.book)=>getAutomationIdOptions(book).map((option)=>option.value);
+    const getAutomationIdValues = (book = entryManagerState.book)=>getAutomationIdOptions(book).map((option)=>option.value);
 
     const splitGroupValues = (value)=>String(value ?? '').split(/,\s*/).filter(Boolean);
 
@@ -176,12 +176,12 @@ export const initOrderHelper = ({
         return groups.length ? groups : [GROUP_NONE_VALUE];
     };
 
-    const getGroupOptions = (book = orderHelperState.book)=>
-        buildDynamicOptions(getOrderHelperEntries(book), getGroupValueForEntry, GROUP_NONE_VALUE);
+    const getGroupOptions = (book = entryManagerState.book)=>
+        buildDynamicOptions(getEntryManagerEntries(book), getGroupValueForEntry, GROUP_NONE_VALUE);
 
-    const getGroupValues = (book = orderHelperState.book)=>getGroupOptions(book).map((option)=>option.value);
+    const getGroupValues = (book = entryManagerState.book)=>getGroupOptions(book).map((option)=>option.value);
 
-    const updateOrderHelperPreview = (entries)=>{
+    const updateEntryManagerPreview = (entries)=>{
         if (!dom.order.filter.preview) return;
         const previewEntry = entries[0];
         if (!previewEntry) {
@@ -191,11 +191,11 @@ export const initOrderHelper = ({
         dom.order.filter.preview.textContent = JSON.stringify(Object.assign({ book:previewEntry.book }, previewEntry.data), null, 2);
     };
 
-    const getOrderHelperRows = ()=>[...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
+    const getEntryManagerRows = ()=>[...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
 
-    const isOrderHelperRowSelected = (row)=>row?.classList.contains('stwid--applySelected');
+    const isEntryManagerRowSelected = (row)=>row?.classList.contains('stwid--applySelected');
 
-    const setOrderHelperRowSelected = (row, selected)=>{
+    const setEntryManagerRowSelected = (row, selected)=>{
         if (!row) return;
         row.classList.toggle('stwid--applySelected', selected);
         row.setAttribute('aria-selected', selected ? 'true' : 'false');
@@ -206,80 +206,80 @@ export const initOrderHelper = ({
         }
     };
 
-    const setAllOrderHelperRowSelected = (selected)=>{
-        for (const row of getOrderHelperRows()) {
-            setOrderHelperRowSelected(row, selected);
+    const setAllEntryManagerRowSelected = (selected)=>{
+        for (const row of getEntryManagerRows()) {
+            setEntryManagerRowSelected(row, selected);
         }
     };
 
-    const updateOrderHelperSelectAllButton = ()=>{
+    const updateEntryManagerSelectAllButton = ()=>{
         if (!dom.order.selectAll) return;
-        const rows = getOrderHelperRows();
-        const allSelected = rows.length > 0 && rows.every(isOrderHelperRowSelected);
+        const rows = getEntryManagerRows();
+        const allSelected = rows.length > 0 && rows.every(isEntryManagerRowSelected);
         dom.order.selectAll.classList.toggle('stwid--state-active', allSelected);
         dom.order.selectAll.classList.toggle('fa-square-check', allSelected);
         dom.order.selectAll.classList.toggle('fa-square', !allSelected);
     };
 
-    const applyOrderHelperSortToDom = ()=>{
+    const applyEntryManagerSortToDom = ()=>{
         if (!dom.order.tbody) return;
-        const entries = getOrderHelperEntries(orderHelperState.book, true);
+        const entries = getEntryManagerEntries(entryManagerState.book, true);
         for (const entry of entries) {
             const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
             if (row) {
                 dom.order.tbody.append(row);
             }
         }
-        updateOrderHelperPreview(entries);
+        updateEntryManagerPreview(entries);
     };
 
-    const setOrderHelperSort = (sort, direction)=>{
-        orderHelperState.sort = sort;
-        orderHelperState.direction = direction;
+    const setEntryManagerSort = (sort, direction)=>{
+        entryManagerState.sort = sort;
+        entryManagerState.direction = direction;
         const value = JSON.stringify({ sort, direction });
-        localStorage.setItem(ORDER_HELPER_SORT_STORAGE_KEY, value);
+        localStorage.setItem(ENTRY_MANAGER_SORT_STORAGE_KEY, value);
         if (dom.order.sortSelect) {
             dom.order.sortSelect.value = value;
         }
     };
 
-    const applyOrderHelperColumnVisibility = (root)=>{
+    const applyEntryManagerColumnVisibility = (root)=>{
         if (!root) return;
-        for (const [key, visible] of Object.entries(orderHelperState.columns)) {
+        for (const [key, visible] of Object.entries(entryManagerState.columns)) {
             root.classList.toggle(`stwid--hide-col-${key}`, !visible);
         }
     };
 
     const {
-        applyOrderHelperRecursionFilterToRow,
-        applyOrderHelperRecursionFilters,
-        applyOrderHelperPositionFilterToRow,
-        applyOrderHelperPositionFilters,
-        applyOrderHelperStrategyFilterToRow,
-        applyOrderHelperStrategyFilters,
-        applyOrderHelperOutletFilterToRow,
-        applyOrderHelperOutletFilters,
-        applyOrderHelperAutomationIdFilterToRow,
-        applyOrderHelperAutomationIdFilters,
-        applyOrderHelperGroupFilterToRow,
-        applyOrderHelperGroupFilters,
-        clearOrderHelperScriptFilters,
+        applyEntryManagerRecursionFilterToRow,
+        applyEntryManagerRecursionFilters,
+        applyEntryManagerPositionFilterToRow,
+        applyEntryManagerPositionFilters,
+        applyEntryManagerStrategyFilterToRow,
+        applyEntryManagerStrategyFilters,
+        applyEntryManagerOutletFilterToRow,
+        applyEntryManagerOutletFilters,
+        applyEntryManagerAutomationIdFilterToRow,
+        applyEntryManagerAutomationIdFilters,
+        applyEntryManagerGroupFilterToRow,
+        applyEntryManagerGroupFilters,
+        clearEntryManagerScriptFilters,
         normalizePositionFilters,
         normalizeStrategyFilters,
         normalizeOutletFilters,
         normalizeAutomationIdFilters,
         normalizeGroupFilters,
-        setOrderHelperRowFilterState,
-        syncOrderHelperOutletFilters,
-        syncOrderHelperAutomationIdFilters,
-        syncOrderHelperGroupFilters,
-        syncOrderHelperPositionFilters,
-        syncOrderHelperStrategyFilters,
-    } = createOrderHelperFilters({
+        setEntryManagerRowFilterState,
+        syncEntryManagerOutletFilters,
+        syncEntryManagerAutomationIdFilters,
+        syncEntryManagerGroupFilters,
+        syncEntryManagerPositionFilters,
+        syncEntryManagerStrategyFilters,
+    } = createEntryManagerFilters({
         dom,
-        orderHelperState,
+        entryManagerState,
         entryState,
-        getOrderHelperEntries,
+        getEntryManagerEntries,
         getStrategyValues,
         getPositionValues,
         getOutletValues,
@@ -299,47 +299,47 @@ export const initOrderHelper = ({
         entryDom.click();
     };
 
-    const { renderOrderHelper } = createOrderHelperRenderer({
+    const { renderEntryManager } = createEntryManagerRenderer({
         dom,
         cache,
-        orderHelperState,
-        ORDER_HELPER_COLUMNS_STORAGE_KEY,
-        ORDER_HELPER_DEFAULT_COLUMNS,
-        ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
+        entryManagerState,
+        ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+        ENTRY_MANAGER_DEFAULT_COLUMNS,
+        ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
         SORT,
         SORT_DIRECTION,
         appendSortOptions,
         ensureCustomDisplayIndex,
         saveWorldInfo,
         buildSavePayload,
-        getOrderHelperEntries,
-        applyOrderHelperSortToDom,
-        updateOrderHelperPreview,
-        clearOrderHelperScriptFilters,
-        applyOrderHelperColumnVisibility,
-        setOrderHelperSort,
-        isOrderHelperRowSelected,
-        setOrderHelperRowSelected,
-        setAllOrderHelperRowSelected,
-        updateOrderHelperSelectAllButton,
-        applyOrderHelperStrategyFilters,
-        applyOrderHelperStrategyFilterToRow,
-        applyOrderHelperPositionFilterToRow,
-        applyOrderHelperPositionFilters,
-        applyOrderHelperRecursionFilterToRow,
-        applyOrderHelperRecursionFilters,
-        applyOrderHelperOutletFilterToRow,
-        applyOrderHelperOutletFilters,
-        applyOrderHelperAutomationIdFilterToRow,
-        applyOrderHelperAutomationIdFilters,
-        applyOrderHelperGroupFilterToRow,
-        applyOrderHelperGroupFilters,
-        setOrderHelperRowFilterState,
-        syncOrderHelperStrategyFilters,
-        syncOrderHelperPositionFilters,
-        syncOrderHelperOutletFilters,
-        syncOrderHelperAutomationIdFilters,
-        syncOrderHelperGroupFilters,
+        getEntryManagerEntries,
+        applyEntryManagerSortToDom,
+        updateEntryManagerPreview,
+        clearEntryManagerScriptFilters,
+        applyEntryManagerColumnVisibility,
+        setEntryManagerSort,
+        isEntryManagerRowSelected,
+        setEntryManagerRowSelected,
+        setAllEntryManagerRowSelected,
+        updateEntryManagerSelectAllButton,
+        applyEntryManagerStrategyFilters,
+        applyEntryManagerStrategyFilterToRow,
+        applyEntryManagerPositionFilterToRow,
+        applyEntryManagerPositionFilters,
+        applyEntryManagerRecursionFilterToRow,
+        applyEntryManagerRecursionFilters,
+        applyEntryManagerOutletFilterToRow,
+        applyEntryManagerOutletFilters,
+        applyEntryManagerAutomationIdFilterToRow,
+        applyEntryManagerAutomationIdFilters,
+        applyEntryManagerGroupFilterToRow,
+        applyEntryManagerGroupFilters,
+        setEntryManagerRowFilterState,
+        syncEntryManagerStrategyFilters,
+        syncEntryManagerPositionFilters,
+        syncEntryManagerOutletFilters,
+        syncEntryManagerAutomationIdFilters,
+        syncEntryManagerGroupFilters,
         focusWorldEntry,
         entryState,
         isOutletPosition,
@@ -358,7 +358,7 @@ export const initOrderHelper = ({
         normalizeOutletFilters,
         normalizeAutomationIdFilters,
         normalizeGroupFilters,
-        getOrderHelperRows,
+        getEntryManagerRows,
         SlashCommandParser,
         debounce,
         hljs,
@@ -368,7 +368,7 @@ export const initOrderHelper = ({
         getEditorPanelApi,
     });
 
-    const openOrderHelper = (book = null, scope = null)=>{
+    const openEntryManager = (book = null, scope = null)=>{
         if (!dom.order.toggle) return;
 
         
@@ -384,22 +384,22 @@ export const initOrderHelper = ({
         
         
         
-        syncOrderHelperStrategyFilters();
-        syncOrderHelperPositionFilters();
+        syncEntryManagerStrategyFilters();
+        syncEntryManagerPositionFilters();
 
         scopedBookNames = normalizeScope(scope);
         dom.order.toggle.classList.add('stwid--state-active');
-        renderOrderHelper(book);
+        renderEntryManager(book);
     };
 
-    const refreshOrderHelperScope = (scope = null)=>{
+    const refreshEntryManagerScope = (scope = null)=>{
         if (!dom.order.toggle?.classList.contains('stwid--state-active')) return;
-        if (orderHelperState.book) return;
+        if (entryManagerState.book) return;
         const nextScope = normalizeScope(scope);
         if (isSameScope(scopedBookNames, nextScope)) return;
         scopedBookNames = nextScope;
-        renderOrderHelper(null);
+        renderEntryManager(null);
     };
 
-    return { openOrderHelper, refreshOrderHelperScope };
+    return { openEntryManager, refreshEntryManagerScope };
 };

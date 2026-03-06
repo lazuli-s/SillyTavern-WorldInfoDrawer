@@ -15,15 +15,15 @@ import {
 export function buildBulkPositionSection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     getPositionOptions,
-    applyOrderHelperPositionFilterToRow,
+    applyEntryManagerPositionFilterToRow,
     isOutletPosition,
     getOutletOptions,
-    applyOrderHelperOutletFilterToRow,
-    syncOrderHelperOutletFilters,
+    applyEntryManagerOutletFilterToRow,
+    syncEntryManagerOutletFilters,
     filterIndicatorRefs,
     applyRegistry,
 }) {
@@ -59,14 +59,14 @@ export function buildBulkPositionSection({
         }
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
         const books = new Set();
         for (const { tr, bookName, uid, entryData } of targets) {
             books.add(bookName);
             entryData.position = value;
             const domPos = cache?.[bookName]?.dom?.entry?.[uid]?.position;
             if (domPos) domPos.value = value;
-            applyOrderHelperPositionFilterToRow(tr, entryData);
+            applyEntryManagerPositionFilterToRow(tr, entryData);
         }
         await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
         applyPosition.classList.remove(APPLY_DIRTY_CLASS);
@@ -108,7 +108,7 @@ export function buildBulkPositionSection({
         }
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
         const books = new Set();
         for (const { tr, bookName, entryData } of targets) {
             books.add(bookName);
@@ -223,7 +223,7 @@ export function buildBulkPositionSection({
         const value = outletInput.value.trim();
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
-        const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected);
+        const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
         const books = new Set();
 
         for (const { tr, bookName, entryData } of targets) {
@@ -233,10 +233,10 @@ export function buildBulkPositionSection({
             if (rowOutlet) rowOutlet.value = value;
         }
 
-        syncOrderHelperOutletFilters();
+        syncEntryManagerOutletFilters();
 
         for (const { tr, entryData } of targets) {
-            applyOrderHelperOutletFilterToRow(tr, entryData);
+            applyEntryManagerOutletFilterToRow(tr, entryData);
         }
         filterIndicatorRefs.outlet?.();
         await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);

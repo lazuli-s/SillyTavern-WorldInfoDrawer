@@ -1,13 +1,13 @@
 import {
-    ORDER_HELPER_RECURSION_OPTIONS,
-    ORDER_HELPER_TOGGLE_COLUMNS,
+    ENTRY_MANAGER_RECURSION_OPTIONS,
+    ENTRY_MANAGER_TOGGLE_COLUMNS,
 } from '../../shared/constants.js';
 
-const ORDER_HELPER_SORT_STORAGE_KEY = 'stwid--order-helper-sort';
-const ORDER_HELPER_HIDE_KEYS_STORAGE_KEY = 'stwid--order-helper-hide-keys';
-const ORDER_HELPER_COLUMNS_STORAGE_KEY = 'stwid--order-helper-columns';
+const ENTRY_MANAGER_SORT_STORAGE_KEY = 'stwid--entry-manager-sort';
+const ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY = 'stwid--entry-manager-hide-keys';
+const ENTRY_MANAGER_COLUMNS_STORAGE_KEY = 'stwid--entry-manager-columns';
 
-const ORDER_HELPER_DEFAULT_COLUMNS = {
+const ENTRY_MANAGER_DEFAULT_COLUMNS = {
     strategy: true,
     position: true,
     depth: true,
@@ -50,17 +50,17 @@ const getPositionOptions = ()=>{
 
 const getPositionValues = ()=>getPositionOptions().map((option)=>option.value);
 
-const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
-    const recursionValues = ORDER_HELPER_RECURSION_OPTIONS.map(({ value })=>value);
-    const schemaKeys = ORDER_HELPER_TOGGLE_COLUMNS.map(({ key })=>key);
+const createEntryManagerState = ({ SORT, SORT_DIRECTION })=>{
+    const recursionValues = ENTRY_MANAGER_RECURSION_OPTIONS.map(({ value })=>value);
+    const schemaKeys = ENTRY_MANAGER_TOGGLE_COLUMNS.map(({ key })=>key);
     const schemaKeySet = new Set(schemaKeys);
-    const defaultKeys = Object.keys(ORDER_HELPER_DEFAULT_COLUMNS);
-    const missingInDefaults = schemaKeys.filter((key)=>!Object.hasOwn(ORDER_HELPER_DEFAULT_COLUMNS, key));
+    const defaultKeys = Object.keys(ENTRY_MANAGER_DEFAULT_COLUMNS);
+    const missingInDefaults = schemaKeys.filter((key)=>!Object.hasOwn(ENTRY_MANAGER_DEFAULT_COLUMNS, key));
     const extraInDefaults = defaultKeys.filter((key)=>!schemaKeySet.has(key));
     if (missingInDefaults.length > 0 || extraInDefaults.length > 0) {
-        console.warn('[STWID orderHelperState] Column schema mismatch detected.', { missingInDefaults, extraInDefaults });
+        console.warn('[STWID entryManagerState] Column schema mismatch detected.', { missingInDefaults, extraInDefaults });
     }
-    const canonicalDefaultColumns = { ...ORDER_HELPER_DEFAULT_COLUMNS };
+    const canonicalDefaultColumns = { ...ENTRY_MANAGER_DEFAULT_COLUMNS };
     for (const key of schemaKeys) {
         if (typeof canonicalDefaultColumns[key] !== 'boolean') {
             canonicalDefaultColumns[key] = false;
@@ -88,17 +88,17 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
         groupValues: [],
     };
     try {
-        const stored = JSON.parse(localStorage.getItem(ORDER_HELPER_SORT_STORAGE_KEY));
+        const stored = JSON.parse(localStorage.getItem(ENTRY_MANAGER_SORT_STORAGE_KEY));
         if (Object.values(SORT).includes(stored?.sort) && Object.values(SORT_DIRECTION).includes(stored?.direction)) {
             state.sort = stored.sort;
             state.direction = stored.direction;
         }
     } catch {  }
     try {
-        state.hideKeys = localStorage.getItem(ORDER_HELPER_HIDE_KEYS_STORAGE_KEY) === 'true';
+        state.hideKeys = localStorage.getItem(ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY) === 'true';
     } catch {  }
     try {
-        const storedColumns = JSON.parse(localStorage.getItem(ORDER_HELPER_COLUMNS_STORAGE_KEY));
+        const storedColumns = JSON.parse(localStorage.getItem(ENTRY_MANAGER_COLUMNS_STORAGE_KEY));
         if (storedColumns && typeof storedColumns === 'object') {
             for (const key of schemaKeys) {
                 const value = canonicalDefaultColumns[key];
@@ -114,11 +114,11 @@ const createOrderHelperState = ({ SORT, SORT_DIRECTION })=>{
 };
 
 export {
-    ORDER_HELPER_COLUMNS_STORAGE_KEY,
-    ORDER_HELPER_DEFAULT_COLUMNS,
-    ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
-    ORDER_HELPER_SORT_STORAGE_KEY,
-    createOrderHelperState,
+    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+    ENTRY_MANAGER_DEFAULT_COLUMNS,
+    ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
+    ENTRY_MANAGER_SORT_STORAGE_KEY,
+    createEntryManagerState,
     getPositionOptions,
     getPositionValues,
     getStrategyOptions,

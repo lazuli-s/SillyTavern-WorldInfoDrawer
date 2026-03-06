@@ -16,7 +16,7 @@ const MAX_ORDER_INPUT = '10000';
 export function buildBulkOrderSection({
     dom,
     cache,
-    isOrderHelperRowSelected,
+    isEntryManagerRowSelected,
     saveWorldInfo,
     buildSavePayload,
     applyRegistry,
@@ -43,7 +43,7 @@ export function buildBulkOrderSection({
             if (!rows) return;
 
             const up = dom.order.direction.up.checked;
-            const targets = getBulkTargets(rows, cache, isOrderHelperRowSelected, { reverse: up });
+            const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected, { reverse: up });
             let order = start;
             const books = new Set();
             for (let i = 0; i < targets.length; i++) {

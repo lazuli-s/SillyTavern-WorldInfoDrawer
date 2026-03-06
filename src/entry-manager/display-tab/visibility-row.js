@@ -6,7 +6,7 @@ import {
     wireMultiselectDropdown,
 } from '../utils.js';
 import { wrapRowContent } from '../action-bar.helpers.js';
-import { ORDER_HELPER_TOGGLE_COLUMNS, ORDER_HELPER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { ENTRY_MANAGER_TOGGLE_COLUMNS, ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 
 function createActionThinContainer(labelText, hintText) {
     const container = document.createElement('div');
@@ -48,11 +48,11 @@ function buildColumnDropdownButton(hint) {
 }
 
 
-function buildColumnCheckboxOptions(menu, columns, orderHelperState, columnInputs, onColumnChange) {
+function buildColumnCheckboxOptions(menu, columns, entryManagerState, columnInputs, onColumnChange) {
     for (const column of columns) {
         const option = document.createElement('label');
         option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-        const inputControl = createMultiselectDropdownCheckbox(Boolean(orderHelperState.columns[column.key]));
+        const inputControl = createMultiselectDropdownCheckbox(Boolean(entryManagerState.columns[column.key]));
         columnInputs.set(column.key, inputControl);
         inputControl.input.addEventListener('change', ()=>onColumnChange(column, inputControl));
         option.append(inputControl.input);
@@ -66,10 +66,10 @@ function buildColumnCheckboxOptions(menu, columns, orderHelperState, columnInput
 
 function buildColumnVisibilityDropdown({
     body,
-    orderHelperState,
-    ORDER_HELPER_COLUMNS_STORAGE_KEY,
-    ORDER_HELPER_DEFAULT_COLUMNS,
-    applyOrderHelperColumnVisibility,
+    entryManagerState,
+    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+    ENTRY_MANAGER_DEFAULT_COLUMNS,
+    applyEntryManagerColumnVisibility,
 }) {
     const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
     const columnVisibilityWrap = document.createElement('div');
@@ -84,21 +84,21 @@ function buildColumnVisibilityDropdown({
     menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
     const columnInputs = new Map();
     const mainColumnDefaults = Object.fromEntries(
-        Object.entries(ORDER_HELPER_DEFAULT_COLUMNS)
+        Object.entries(ENTRY_MANAGER_DEFAULT_COLUMNS)
             .map(([key, value])=>[key, Boolean(value)]),
     );
     const setColumnVisibility = (overrides)=>{
-        for (const column of ORDER_HELPER_TOGGLE_COLUMNS) {
+        for (const column of ENTRY_MANAGER_TOGGLE_COLUMNS) {
             const nextValue = Boolean(overrides[column.key]);
-            orderHelperState.columns[column.key] = nextValue;
+            entryManagerState.columns[column.key] = nextValue;
             const inputControl = columnInputs.get(column.key);
             if (inputControl) inputControl.setChecked(nextValue);
         }
         localStorage.setItem(
-            ORDER_HELPER_COLUMNS_STORAGE_KEY,
-            JSON.stringify(orderHelperState.columns),
+            ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+            JSON.stringify(entryManagerState.columns),
         );
-        applyOrderHelperColumnVisibility(body);
+        applyEntryManagerColumnVisibility(body);
 
         const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
         if (typeof closeMenu === 'function') closeMenu();
@@ -121,7 +121,7 @@ function buildColumnVisibilityDropdown({
         label: 'SELECT ALL',
         icon: 'fa-check-double',
         onClick: ()=>setColumnVisibility(
-            Object.fromEntries(ORDER_HELPER_TOGGLE_COLUMNS.map((column)=>[column.key, true])),
+            Object.fromEntries(ENTRY_MANAGER_TOGGLE_COLUMNS.map((column)=>[column.key, true])),
         ),
     });
     addColumnAction({
@@ -131,16 +131,16 @@ function buildColumnVisibilityDropdown({
     });
     buildColumnCheckboxOptions(
         menu,
-        ORDER_HELPER_TOGGLE_COLUMNS,
-        orderHelperState,
+        ENTRY_MANAGER_TOGGLE_COLUMNS,
+        entryManagerState,
         columnInputs,
         (column, inputControl)=>{
-            orderHelperState.columns[column.key] = inputControl.input.checked;
+            entryManagerState.columns[column.key] = inputControl.input.checked;
             localStorage.setItem(
-                ORDER_HELPER_COLUMNS_STORAGE_KEY,
-                JSON.stringify(orderHelperState.columns),
+                ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+                JSON.stringify(entryManagerState.columns),
             );
-            applyOrderHelperColumnVisibility(body);
+            applyEntryManagerColumnVisibility(body);
         },
     );
     wireMultiselectDropdown(menu, menuButton, menuWrap);
@@ -153,14 +153,14 @@ function buildColumnVisibilityDropdown({
 
 function buildSortSelector({
     dom,
-    orderHelperState,
+    entryManagerState,
     appendSortOptions,
-    setOrderHelperSort,
+    setEntryManagerSort,
     SORT,
     ensureCustomDisplayIndex,
     saveWorldInfo,
     buildSavePayload,
-    applyOrderHelperSortToDom,
+    applyEntryManagerSortToDom,
 }) {
     const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
     const sortWrap = document.createElement('label');
@@ -170,17 +170,17 @@ function buildSortSelector({
     sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
     setTooltip(sortSel, 'Sort rows in the table');
     dom.order.sortSelect = sortSel;
-    appendSortOptions(sortSel, orderHelperState.sort, orderHelperState.direction);
+    appendSortOptions(sortSel, entryManagerState.sort, entryManagerState.direction);
     sortSel.addEventListener('change', async()=>{
         const value = JSON.parse(sortSel.value);
-        setOrderHelperSort(value.sort, value.direction);
+        setEntryManagerSort(value.sort, value.direction);
         if (value.sort === SORT.CUSTOM) {
-            const updatedBooks = ensureCustomDisplayIndex(orderHelperState.book);
+            const updatedBooks = ensureCustomDisplayIndex(entryManagerState.book);
             for (const bookName of updatedBooks) {
                 await saveWorldInfo(bookName, buildSavePayload(bookName), true);
             }
         }
-        applyOrderHelperSortToDom();
+        applyEntryManagerSortToDom();
     });
     sortWrap.append(sortSel);
     tableSortContainer.append(sortWrap);
@@ -189,7 +189,7 @@ function buildSortSelector({
 
 
 function buildFilterChipDisplay({
-    orderHelperState,
+    entryManagerState,
     getStrategyValues,
     getPositionValues,
     getOutletValues,
@@ -211,14 +211,14 @@ function buildFilterChipDisplay({
 
     const refresh = ()=>{
         chipContainer.innerHTML = '';
-        const filters = orderHelperState.filters;
+        const filters = entryManagerState.filters;
         const filterConfigs = [
-            { key: 'strategy', allValues: orderHelperState.strategyValues.length ? orderHelperState.strategyValues : getStrategyValues() },
-            { key: 'position', allValues: orderHelperState.positionValues.length ? orderHelperState.positionValues : getPositionValues() },
-            { key: 'recursion', allValues: orderHelperState.recursionValues ?? [] },
-            { key: 'outlet', allValues: orderHelperState.outletValues.length ? orderHelperState.outletValues : getOutletValues() },
-            { key: 'automationId', allValues: orderHelperState.automationIdValues.length ? orderHelperState.automationIdValues : getAutomationIdValues() },
-            { key: 'group', allValues: orderHelperState.groupValues.length ? orderHelperState.groupValues : getGroupValues() },
+            { key: 'strategy', allValues: entryManagerState.strategyValues.length ? entryManagerState.strategyValues : getStrategyValues() },
+            { key: 'position', allValues: entryManagerState.positionValues.length ? entryManagerState.positionValues : getPositionValues() },
+            { key: 'recursion', allValues: entryManagerState.recursionValues ?? [] },
+            { key: 'outlet', allValues: entryManagerState.outletValues.length ? entryManagerState.outletValues : getOutletValues() },
+            { key: 'automationId', allValues: entryManagerState.automationIdValues.length ? entryManagerState.automationIdValues : getAutomationIdValues() },
+            { key: 'group', allValues: entryManagerState.groupValues.length ? entryManagerState.groupValues : getGroupValues() },
         ];
 
         let hasActiveFilter = false;
@@ -255,28 +255,28 @@ function buildFilterChipDisplay({
 
 export function buildVisibilityRow({
     body,
-    orderHelperState,
+    entryManagerState,
     dom,
-    ORDER_HELPER_HIDE_KEYS_STORAGE_KEY,
-    ORDER_HELPER_COLUMNS_STORAGE_KEY,
-    ORDER_HELPER_DEFAULT_COLUMNS,
-    applyOrderHelperColumnVisibility,
-    clearOrderHelperScriptFilters,
-    setOrderHelperSort,
-    applyOrderHelperSortToDom,
+    ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
+    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+    ENTRY_MANAGER_DEFAULT_COLUMNS,
+    applyEntryManagerColumnVisibility,
+    clearEntryManagerScriptFilters,
+    setEntryManagerSort,
+    applyEntryManagerSortToDom,
     ensureCustomDisplayIndex,
     saveWorldInfo,
     buildSavePayload,
     appendSortOptions,
-    getOrderHelperEntries,
-    updateOrderHelperPreview,
+    getEntryManagerEntries,
+    updateEntryManagerPreview,
     SORT,
-    applyOrderHelperStrategyFilters,
-    applyOrderHelperPositionFilters,
-    applyOrderHelperRecursionFilters,
-    applyOrderHelperOutletFilters,
-    applyOrderHelperAutomationIdFilters,
-    applyOrderHelperGroupFilters,
+    applyEntryManagerStrategyFilters,
+    applyEntryManagerPositionFilters,
+    applyEntryManagerRecursionFilters,
+    applyEntryManagerOutletFilters,
+    applyEntryManagerAutomationIdFilters,
+    applyEntryManagerGroupFilters,
     getStrategyOptions,
     getPositionOptions,
     getOutletOptions,
@@ -300,16 +300,16 @@ export function buildVisibilityRow({
         keyToggle.classList.add('fa-solid', 'fa-fw');
         setTooltip(keyToggle, 'Show/hide keyword column text');
         const applyKeyToggleStyle = ()=>{
-            keyToggle.classList.toggle('fa-eye', !orderHelperState.hideKeys);
-            keyToggle.classList.toggle('fa-eye-slash', orderHelperState.hideKeys);
-            keyToggle.classList.toggle('stwid--state-active', orderHelperState.hideKeys);
+            keyToggle.classList.toggle('fa-eye', !entryManagerState.hideKeys);
+            keyToggle.classList.toggle('fa-eye-slash', entryManagerState.hideKeys);
+            keyToggle.classList.toggle('stwid--state-active', entryManagerState.hideKeys);
         };
         applyKeyToggleStyle();
         keyToggle.addEventListener('click', ()=>{
 
-            orderHelperState.hideKeys = !orderHelperState.hideKeys;
-            localStorage.setItem(ORDER_HELPER_HIDE_KEYS_STORAGE_KEY, orderHelperState.hideKeys);
-            body.classList.toggle('stwid--hideKeys', orderHelperState.hideKeys);
+            entryManagerState.hideKeys = !entryManagerState.hideKeys;
+            localStorage.setItem(ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY, entryManagerState.hideKeys);
+            body.classList.toggle('stwid--hideKeys', entryManagerState.hideKeys);
             applyKeyToggleStyle();
         });
         keyToggleContainer.append(keyToggle);
@@ -318,10 +318,10 @@ export function buildVisibilityRow({
 
     const columnVisibilityContainer = buildColumnVisibilityDropdown({
         body,
-        orderHelperState,
-        ORDER_HELPER_COLUMNS_STORAGE_KEY,
-        ORDER_HELPER_DEFAULT_COLUMNS,
-        applyOrderHelperColumnVisibility,
+        entryManagerState,
+        ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+        ENTRY_MANAGER_DEFAULT_COLUMNS,
+        applyEntryManagerColumnVisibility,
     });
     row.append(columnVisibilityContainer);
 
@@ -333,14 +333,14 @@ export function buildVisibilityRow({
 
     const { tableSortContainer } = buildSortSelector({
         dom,
-        orderHelperState,
+        entryManagerState,
         appendSortOptions,
-        setOrderHelperSort,
+        setEntryManagerSort,
         SORT,
         ensureCustomDisplayIndex,
         saveWorldInfo,
         buildSavePayload,
-        applyOrderHelperSortToDom,
+        applyEntryManagerSortToDom,
     });
     row.append(tableSortContainer);
     addDivider();
@@ -353,9 +353,9 @@ export function buildVisibilityRow({
         filterToggle.addEventListener('click', ()=>{
             const is = dom.order.filter.root.classList.toggle('stwid--state-active');
             if (is) {
-                updateOrderHelperPreview(getOrderHelperEntries(orderHelperState.book, true));
+                updateEntryManagerPreview(getEntryManagerEntries(entryManagerState.book, true));
             } else {
-                clearOrderHelperScriptFilters();
+                clearEntryManagerScriptFilters();
             }
         });
         row.append(filterToggle);
@@ -369,7 +369,7 @@ export function buildVisibilityRow({
 
 
     const FILTER_KEY_LABELS = Object.fromEntries(
-        ORDER_HELPER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
+        ENTRY_MANAGER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
     );
 
 
@@ -381,7 +381,7 @@ export function buildVisibilityRow({
             case 'outlet':       options = getOutletOptions();       break;
             case 'automationId': options = getAutomationIdOptions(); break;
             case 'group':        options = getGroupOptions();        break;
-            case 'recursion':    options = ORDER_HELPER_RECURSION_OPTIONS; break;
+            case 'recursion':    options = ENTRY_MANAGER_RECURSION_OPTIONS; break;
             default: return selectedValues.map(String);
         }
         const labelMap = Object.fromEntries(options.map((opt)=>[opt.value, opt.label]));
@@ -397,56 +397,56 @@ export function buildVisibilityRow({
     const clearFilterHandlers = {
         strategy: makeClearFilterHandler(
             'strategy',
-            ()=>orderHelperState.strategyValues.length ? orderHelperState.strategyValues : getStrategyValues(),
-            applyOrderHelperStrategyFilters,
-            orderHelperState,
+            ()=>entryManagerState.strategyValues.length ? entryManagerState.strategyValues : getStrategyValues(),
+            applyEntryManagerStrategyFilters,
+            entryManagerState,
             filterIndicatorRefs.strategy,
             ()=>refresh(),
         ),
         position: makeClearFilterHandler(
             'position',
-            ()=>orderHelperState.positionValues.length ? orderHelperState.positionValues : getPositionValues(),
-            applyOrderHelperPositionFilters,
-            orderHelperState,
+            ()=>entryManagerState.positionValues.length ? entryManagerState.positionValues : getPositionValues(),
+            applyEntryManagerPositionFilters,
+            entryManagerState,
             filterIndicatorRefs.position,
             ()=>refresh(),
         ),
         recursion: makeClearFilterHandler(
             'recursion',
-            ()=>orderHelperState.recursionValues ?? [],
-            applyOrderHelperRecursionFilters,
-            orderHelperState,
+            ()=>entryManagerState.recursionValues ?? [],
+            applyEntryManagerRecursionFilters,
+            entryManagerState,
             filterIndicatorRefs.recursion,
             ()=>refresh(),
         ),
         outlet: makeClearFilterHandler(
             'outlet',
-            ()=>orderHelperState.outletValues.length ? orderHelperState.outletValues : getOutletValues(),
-            applyOrderHelperOutletFilters,
-            orderHelperState,
+            ()=>entryManagerState.outletValues.length ? entryManagerState.outletValues : getOutletValues(),
+            applyEntryManagerOutletFilters,
+            entryManagerState,
             filterIndicatorRefs.outlet,
             ()=>refresh(),
         ),
         automationId: makeClearFilterHandler(
             'automationId',
-            ()=>orderHelperState.automationIdValues.length ? orderHelperState.automationIdValues : getAutomationIdValues(),
-            applyOrderHelperAutomationIdFilters,
-            orderHelperState,
+            ()=>entryManagerState.automationIdValues.length ? entryManagerState.automationIdValues : getAutomationIdValues(),
+            applyEntryManagerAutomationIdFilters,
+            entryManagerState,
             filterIndicatorRefs.automationId,
             ()=>refresh(),
         ),
         group: makeClearFilterHandler(
             'group',
-            ()=>orderHelperState.groupValues.length ? orderHelperState.groupValues : getGroupValues(),
-            applyOrderHelperGroupFilters,
-            orderHelperState,
+            ()=>entryManagerState.groupValues.length ? entryManagerState.groupValues : getGroupValues(),
+            applyEntryManagerGroupFilters,
+            entryManagerState,
             filterIndicatorRefs.group,
             ()=>refresh(),
         ),
     };
 
     const filterChipDisplay = buildFilterChipDisplay({
-        orderHelperState,
+        entryManagerState,
         getStrategyValues,
         getPositionValues,
         getOutletValues,
