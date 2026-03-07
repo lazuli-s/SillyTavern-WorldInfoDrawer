@@ -7,10 +7,10 @@ Use this structure exactly when writing the output file. Replace all `<placehold
 ## Output filename
 
 ```
-tasks/main-tasks/documented/refactoring__<js-filename>.md
+tasks/js-refactoring/ready-for-implementation/Refactoring__<js-filename>.md
 ```
 
-Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
+Example: `tasks/js-refactoring/ready-for-implementation/Refactoring__action-bar.js.md`
 
 ---
 
@@ -52,10 +52,10 @@ Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
 - `<file path>`, lines <X>–<Y> — <brief description of this copy>
 
 **Steps to fix:**
-1. Extract the shared pattern into a new function named `<suggestedName>(<params>)` near the top of the file.
-2. Replace the first copy (lines <X>–<Y>) with a call to `<suggestedName>(...)`.
-3. Replace the second copy (lines <X>–<Y>) with a call to `<suggestedName>(...)`.
-4. <Add more steps if there are more copies.>
+- [ ] Extract the shared pattern into a new function named `<suggestedName>(<params>)` near the top of the file.
+- [ ] Replace the first copy (lines <X>–<Y>) with a call to `<suggestedName>(...)`.
+- [ ] Replace the second copy (lines <X>–<Y>) with a call to `<suggestedName>(...)`.
+- [ ] <Add more steps if there are more copies.>
 
 ---
 
@@ -69,8 +69,8 @@ Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
 - <...>
 
 **Steps to fix:**
-1. At the top of the file (after imports), add: `const <SUGGESTED_NAME> = <value>;`
-2. Replace each occurrence of the raw literal with `<SUGGESTED_NAME>`.
+- [ ] At the top of the file (after imports), add: `const <SUGGESTED_NAME> = <value>;`
+- [ ] Replace each occurrence of the raw literal with `<SUGGESTED_NAME>`.
 
 ---
 
@@ -81,8 +81,8 @@ Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
 **Where:** `<file path>`, line <X>
 
 **Steps to fix:**
-1. Rename `<oldName>` to `<suggestedName>` everywhere it appears in this file.
-2. <If it is exported or referenced in other files, search for it project-wide before renaming.>
+- [ ] Rename `<oldName>` to `<suggestedName>` everywhere it appears in this file.
+- [ ] <If it is exported or referenced in other files, search for it project-wide before renaming.>
 
 ---
 
@@ -93,10 +93,10 @@ Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
 **Where:** `<file path>`, lines <X>–<Y>
 
 **Steps to fix:**
-1. Extract `<sub-task 1>` (lines <X>–<Y>) into a new function named `<suggestedName1>()`. <One sentence on what it does.>
-2. Extract `<sub-task 2>` (lines <X>–<Y>) into a new function named `<suggestedName2>()`. <One sentence on what it does.>
-3. Replace the extracted blocks in `<functionName>` with calls to the new functions.
-4. <Repeat for each extracted block.>
+- [ ] Extract `<sub-task 1>` (lines <X>–<Y>) into a new function named `<suggestedName1>()`. <One sentence on what it does.>
+- [ ] Extract `<sub-task 2>` (lines <X>–<Y>) into a new function named `<suggestedName2>()`. <One sentence on what it does.>
+- [ ] Replace the extracted blocks in `<functionName>` with calls to the new functions.
+- [ ] <Repeat for each extracted block.>
 
 ---
 
@@ -107,9 +107,9 @@ Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
 **Where:** `<file path>`, lines <X>–<Y> (deepest point: line <Z>)
 
 **Steps to fix:**
-1. Extract the inner block (lines <X>–<Y>) into a new function named `<suggestedName>(<params>)`. <One sentence on what it does.>
-2. Replace the inner block with a call to `<suggestedName>(...)`.
-3. <Repeat if there are multiple deep nesting sites in the same function.>
+- [ ] Extract the inner block (lines <X>–<Y>) into a new function named `<suggestedName>(<params>)`. <One sentence on what it does.>
+- [ ] Replace the inner block with a call to `<suggestedName>(...)`.
+- [ ] <Repeat if there are multiple deep nesting sites in the same function.>
 
 ---
 
@@ -120,9 +120,9 @@ Example: `tasks/main-tasks/documented/refactoring__action-bar.js.md`
 **Where:** `<file path>`, line <X>
 
 **Steps to fix:**
-1. <If it is a variable:> Delete the declaration on line <X>.
-2. <If it is a function:> Delete the function body (lines <X>–<Y>). Verify first that `<name>` is not called dynamically (e.g. via `obj[functionName]` or a string-based lookup).
-3. <If it is an import:> Remove the import statement on line <X>.
+- [ ] <If it is a variable:> Delete the declaration on line <X>.
+- [ ] <If it is a function:> Delete the function body (lines <X>–<Y>). Verify first that `<name>` is not called dynamically (e.g. via `obj[functionName]` or a string-based lookup).
+- [ ] <If it is an import:> Remove the import statement on line <X>.
 
 ---
 

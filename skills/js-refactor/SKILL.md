@@ -1,9 +1,9 @@
 ---
-name: js-refactor
-description: JS refactoring reviewer for the SillyTavern WorldInfoDrawer extension. Reads a target JS file, identifies refactoring opportunities across six check families (DRY, naming, large functions, deep nesting, dead code, magic values), and writes a structured refactoring task file to tasks/main-tasks/documented/. Makes no code changes. Use when the user invokes /js-refactor, names a JS file and asks for refactoring review, or says things like "review this file for refactoring", "find refactoring opportunities in", or "check this JS for cleanup".
+name: js-refactoring
+description: JS refactoring reviewer for the SillyTavern WorldInfoDrawer extension. Reads a target JS file, identifies refactoring opportunities across six check families (DRY, naming, large functions, deep nesting, dead code, magic values), and writes a structured refactoring task file to tasks/js-refactoring/ready-for-implementation/. Makes no code changes. Use when the user invokes /js-refactoring, names a JS file and asks for refactoring review, or says things like "review this file for refactoring", "find refactoring opportunities in", or "check this JS for cleanup".
 ---
 
-# JS Refactor
+# JS Refactoring
 
 ## Workflow
 
@@ -12,19 +12,19 @@ description: JS refactoring reviewer for the SillyTavern WorldInfoDrawer extensi
 3. **Load report template** — Read `references/report-template.md`. Use it as the exact structure for the output file.
 4. **Read the target file in full** — Do not truncate. Every finding must reference real line numbers.
 5. **Apply each check in order** — Work through every check ID in `references/checks.md`. Record all violations found, not just the first.
-6. **Write the report** — Create `tasks/main-tasks/documented/refactoring__<filename>.md` using the structure from `references/report-template.md`.
+6. **Write the report** — Create `tasks/js-refactoring/ready-for-implementation/Refactoring__<filename>.md` using the structure from `references/report-template.md`.
 
 ## Output filename
 
 Follow the file-naming convention for refactoring tasks:
 
 ```
-tasks/main-tasks/documented/refactoring__<js-filename>.md
+tasks/js-refactoring/ready-for-implementation/Refactoring__<js-filename>.md
 ```
 
-Example: reviewing `action-bar.js` → `tasks/main-tasks/documented/refactoring__action-bar.js.md`
+Example: reviewing `action-bar.js` → `tasks/js-refactoring/ready-for-implementation/Refactoring__action-bar.js.md`
 
-**Check first:** Before creating, look inside `tasks/main-tasks/documented/`. If a refactoring file for this JS file already exists, update it instead of creating a duplicate.
+**Check first:** Before creating, look inside `tasks/js-refactoring/ready-for-implementation/`. If a refactoring file for this JS file already exists, update it instead of creating a duplicate.
 
 ## What this skill does NOT do
 

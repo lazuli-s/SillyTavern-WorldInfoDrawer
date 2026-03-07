@@ -22,15 +22,15 @@ When naming a new task file, use the following format:
 
 | Task type | Filename format | Example |
 |---|---|---|
-| Bug or issue | `issue__<name-only-low-case>.md` | `issue__filter-bar-crash-on-empty.md` |
-| New feature | `new-feature__<name-only-low-case>.md` | `new-feature__list-panel-tabs.md` |
-| Rework of existing feature | `rework__<name-only-low-case>.md` | `rework__visibility-chips-layout.md` |
-| Refactoring (code only, no behavior change) | `refactoring__<name-only-low-case>.md` | `refactoring__style.css.md` |
-| Documentation task | `docs__<name-only-low-case>.md` | `docs__architecture-update.md` |
-| Skill | `skill__<name-only-low-case>.md` | `skill__create-analyze-request.md` |
-| Code review | `code-review___<file-name-only-low-case>.md` | `code-review___browser-tabs.filter-bar.js.md` |
-| Plan | `plan__<name-only-low-case>.md` | `plan__new-filter-system.md` |
-| Workflow / automation | `workflow__<name-only-low-case>.md` | `workflow__session-start-hook.md` |
+| Bug or issue | `Issue__<kebab-case-name>.md` | `Issue__filter-bar-crash-on-empty.md` |
+| New feature | `NewFeature__<kebab-case-name>.md` | `NewFeature__list-panel-tabs.md` |
+| Rework of existing feature | `Rework__<kebab-case-name>.md` | `Rework__visibility-chips-layout.md` |
+| Refactoring (code only, no behavior change) | `Refactoring__<kebab-case-name>.md` | `Refactoring__style.css.md` |
+| Documentation task | `Docs__<kebab-case-name>.md` | `Docs__architecture-update.md` |
+| Skill | `Skill__<kebab-case-name>.md` | `Skill__create-analyze-request.md` |
+| Code review | `CodeReview__<kebab-case-name>.md` | `CodeReview__browser-tabs.filter-bar.js.md` |
+| Plan | `Plan__<kebab-case-name>.md` | `Plan__new-filter-system.md` |
+| Workflow / automation | `Workflow__<kebab-case-name>.md` | `Workflow__session-start-hook.md` |
 
 ---
 
@@ -46,13 +46,13 @@ When naming a new task file, use the following format:
 
 **Docs** — Use only when documentation is the main deliverable (e.g. a standalone update to ARCHITECTURE.md or FEATURE_MAP.md). Doc updates that are a side effect of another task belong inside that task's file, not a separate docs task.
 
-**Skill** — Use for any work that touches a skill file, whether creating a new skill or updating an existing one. Skills are infrastructure, not product features — always use this type, never `new-feature__`.
+**Skill** — Use for any work that touches a skill file, whether creating a new skill or updating an existing one. Skills are infrastructure, not product features — always use this type, never `NewFeature__`.
 
 **Code Review** — Use for a scheduled, structured review of a specific source file. Findings discovered during the review are fixed inside the same review task file — not spun off as separate tasks.
 
 **Plan** — Use when the output of the task is a plan or design document, not code. Use this before you know exactly what to build or how — when you need to make architectural decisions or lay out an approach first.
 
-**Workflow / Automation** — Use for non-skill automation: Claude hook changes (session start, pre-tool, etc.), scripts, file watchers, or any automated process that is not a Claude skill. Workflows are infrastructure — never use `new-feature__` for these.
+**Workflow / Automation** — Use for non-skill automation: Claude hook changes (session start, pre-tool, etc.), scripts, file watchers, or any automated process that is not a Claude skill. Workflows are infrastructure — never use `NewFeature__` for these.
 
 ---
 

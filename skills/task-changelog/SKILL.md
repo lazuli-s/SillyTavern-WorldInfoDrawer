@@ -27,17 +27,17 @@ Read `TARGET_TASK_FILE` fully. Extract the fields below.
 
 ### 2a. Task type and changelog file
 
-Detect the task type from the filename (basename only). Match the prefix — both old-style (`PascalCase_`) and new-style (`kebab-case__`) are supported:
+Detect the task type from the filename (basename only). Match the prefix — old-style (`PascalCase_`), legacy double-underscore (`kebab-case__`), and current double-underscore (`PascalCase__`) are supported:
 
 | Filename starts with | Task type label | Changelog file |
 |---|---|---|
-| `Issue_` or `issue__` | Issue | `changelog__issue.md` |
-| `NewFeature_` or `new-feature__` | New Feature | `changelog__new-feature.md` |
-| `Rework_` or `rework__` | Rework | `changelog__rework.md` |
-| `Refactoring_` or `refactoring__` | Refactoring | `changelog__refactoring.md` |
-| `Docs_` or `docs__` | Docs | `changelog__docs.md` |
-| `Skill_` or `skill__` | Skill | `changelog__skill.md` |
-| `CodeReview_` or `code-review___` | Code Review | `changelog__code-review.md` |
+| `Issue_` or `issue__` or `Issue__` | Issue | `changelog__issue.md` |
+| `NewFeature_` or `new-feature__` or `NewFeature__` | New Feature | `changelog__new-feature.md` |
+| `Rework_` or `rework__` or `Rework__` | Rework | `changelog__rework.md` |
+| `Refactoring_` or `refactoring__` or `Refactoring__` | Refactoring | `changelog__refactoring.md` |
+| `Docs_` or `docs__` or `Docs__` | Docs | `changelog__docs.md` |
+| `Skill_` or `skill__` or `Skill__` | Skill | `changelog__skill.md` |
+| `CodeReview_` or `code-review___` or `CodeReview__` | Code Review | `changelog__code-review.md` |
 
 If no prefix matches, use "Task" as the label and `changelog__task.md` as the file.
 
