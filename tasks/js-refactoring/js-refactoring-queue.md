@@ -1,4 +1,46 @@
 # Queue: JS Refactoring
 
 ## Files Pending Review
--
+- index.js
+- src/book-browser/book-browser.core-bridge.js
+- src/book-browser/book-browser.js
+- src/book-browser/book-browser.state.js
+- src/book-browser/book-list/book-folders/book-folders.folder-actions.js
+- src/book-browser/book-list/book-folders/book-folders.folder-dom.js
+- src/book-browser/book-list/book-folders/book-folders.folders-view.js
+- src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js
+- src/book-browser/book-list/book-list.book-menu.js
+- src/book-browser/book-list/book-list.book-source-links.js
+- src/book-browser/book-list/book-list.books-view.js
+- src/book-browser/book-list/book-list.extension-integrations.js
+- src/book-browser/book-list/book-list.selection-dnd.js
+- src/book-browser/book-list/book-list.world-entry.js
+- src/book-browser/browser-tabs/browser-tabs.folders-tab.js
+- src/book-browser/browser-tabs/browser-tabs.js
+- src/book-browser/browser-tabs/browser-tabs.lorebooks-tab.js
+- src/book-browser/browser-tabs/browser-tabs.search-tab.js
+- src/book-browser/browser-tabs/browser-tabs.settings-tab.js
+- src/book-browser/browser-tabs/browser-tabs.sorting-tab.js
+- src/book-browser/browser-tabs/browser-tabs.visibility-tab.js
+- src/drawer.js
+- src/drawer.splitter.js
+- src/editor-panel/editor-panel.js
+- src/entry-manager/bulk-editor-tab/bulk-edit-row.helpers.js
+- src/entry-manager/bulk-editor-tab/bulk-edit-row.js
+- src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js
+- src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js
+- src/entry-manager/bulk-editor-tab/bulk-edit-row.sections.js
+- src/entry-manager/bulk-editor-tab/bulk-editor-tab.js
+- src/entry-manager/display-tab/display-tab.display-toolbar.js
+- src/entry-manager/entry-manager.js
+- src/entry-manager/entry-manager.utils.js
+- src/entry-manager/logic/logic.filters.js
+- src/entry-manager/logic/logic.state.js
+- src/entry-manager/table/table.body.js
+- src/entry-manager/table/table.filter-panel.js
+- src/entry-manager/table/table.header.js
+- src/shared/constants.js
+- src/shared/settings.js
+- src/shared/sort-helpers.js
+- src/shared/utils.js
+- src/shared/wi-update-handler.js
