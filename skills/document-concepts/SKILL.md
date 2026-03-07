@@ -1,6 +1,6 @@
 ---
 name: document-concepts
-description: Captures programming concepts from the current conversation into draft learning files in docs/user/learning-vault/drafts/. Use when the user invokes /document-concepts. Scans the conversation for concepts that were explicitly explained or introduced (not just mentioned), presents them as a multiselect for the user to pick from, then writes or updates structured draft files. Each file gets: a plain-language definition, a "why it matters" section, a diagram/table showing where it fits, and a real code example from the project when possible.
+description: Captures programming concepts from the current conversation into draft learning files in docs/user/learning-vault/drafts/. Use when the user invokes /document-concepts. Scans the conversation for concepts that were explicitly explained or introduced (not just mentioned), presents them as a multiselect for the user to pick from, then writes or updates structured draft files. Each file gets a plain-language definition, a "why it matters" section, a diagram/table showing where it fits, and a real code example from the project when possible.
 ---
 
 # document-concepts
