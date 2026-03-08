@@ -12,8 +12,9 @@ const CORE_UI_ACTION_SELECTORS = Object.freeze({
     ]),
 });
 
+const DEFAULT_DOM_WAIT_TIMEOUT_MS = 5000;
 
-const waitForDom = (condition, { timeoutMs = 5000, root = document } = {})=>new Promise((resolve)=>{
+const waitForDom = (condition, { timeoutMs = DEFAULT_DOM_WAIT_TIMEOUT_MS, root = document } = {})=>new Promise((resolve)=>{
     if (condition()) {
         resolve(true);
         return;
@@ -49,21 +50,21 @@ const setSelectedBookInCoreUi = async(bookName, {
     delay,
     worldEditorSelectSelector = '#world_editor_select',
 })=>{
-    const select = (document.querySelector(worldEditorSelectSelector));
-    if (!select) return false;
-    const option = ([...select.children]).find((item)=>item.textContent == bookName);
-    if (!option) return false;
+    const worldEditorSelect = (document.querySelector(worldEditorSelectSelector));
+    if (!worldEditorSelect) return false;
+    const matchedBookOption = ([...worldEditorSelect.children]).find((item)=>item.textContent == bookName);
+    if (!matchedBookOption) return false;
 
-    const previousValue = select.value;
-    select.value = option.value;
-    if (select.value !== option.value) return false;
+    const previousValue = worldEditorSelect.value;
+    worldEditorSelect.value = matchedBookOption.value;
+    if (worldEditorSelect.value !== matchedBookOption.value) return false;
     
-    if (previousValue === option.value) return true;
+    if (previousValue === matchedBookOption.value) return true;
 
-    select.dispatchEvent(new Event('change', { bubbles:true }));
+    worldEditorSelect.dispatchEvent(new Event('change', { bubbles:true }));
     
     await delay(50);
-    if (select.value !== option.value) return false;
+    if (worldEditorSelect.value !== matchedBookOption.value) return false;
 
     
     
@@ -80,7 +81,7 @@ const setSelectedBookInCoreUi = async(bookName, {
 };
 
 
-const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
+const clickCoreUiAction = async(possibleSelectors, { timeoutMs = DEFAULT_DOM_WAIT_TIMEOUT_MS } = {})=>{
     const selectors = Array.isArray(possibleSelectors) ? possibleSelectors : [possibleSelectors];
     const findButton = ()=>selectors
         .map((sel)=>document.querySelector(sel))
@@ -88,8 +89,8 @@ const clickCoreUiAction = async(possibleSelectors, { timeoutMs = 5000 } = {})=>{
 
     const ok = await waitForDom(()=>Boolean(findButton()), { timeoutMs });
     if (!ok) return false;
-    const btn = (findButton());
-    btn.click();
+    const actionButton = (findButton());
+    actionButton.click();
     return true;
 };
 
