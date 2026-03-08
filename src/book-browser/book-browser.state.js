@@ -1,6 +1,8 @@
 import { setFolderCollapsed } from './book-list/book-folders/book-folders.folder-dom.js';
 
+const DEFAULT_BOOK_VISIBILITY_MODE = 'allBooks';
 const FOLDER_COLLAPSE_STORAGE_KEY = 'stwid--folder-collapse-states';
+const FOLDER_COLLAPSE_SAVE_WARNING = 'Folder collapse state could not be saved. Browser storage may be full.';
 const MAX_ENTRY_CACHE_SIZE = 10000;
 const createSafeStateMap = ()=>Object.create(null);
 const normalizeStateKey = (value)=>{
@@ -11,11 +13,35 @@ const normalizeEntryCacheKey = (value)=>{
     if (value === null || value === undefined) return null;
     return String(value);
 };
+const defineNullableStateAccessors = (target, stateStore, propertyNames)=>{
+    for (const propertyName of propertyNames) {
+        Object.defineProperty(target, propertyName, {
+            get() {
+                return stateStore[propertyName];
+            },
+            set(value) {
+                stateStore[propertyName] = value ?? null;
+            },
+            enumerable: true,
+            configurable: true,
+        });
+    }
+};
+const readNormalizedBooleanState = (stateMap, name)=>{
+    const key = normalizeStateKey(name);
+    if (!key) return undefined;
+    return stateMap[key];
+};
+const writeNormalizedBooleanState = (stateMap, name, isCollapsed)=>{
+    const key = normalizeStateKey(name);
+    if (!key) return;
+    stateMap[key] = Boolean(isCollapsed);
+};
 
-const state = {
+const bookBrowserStateStore = {
     searchInput: null,
     searchEntriesInput: null,
-    bookVisibilityMode: 'allBooks',
+    bookVisibilityMode: DEFAULT_BOOK_VISIBILITY_MODE,
     bookVisibilitySelections: new Set(),
     bookVisibilityMenu: null,
     bookVisibilityChips: null,
@@ -35,181 +61,95 @@ const state = {
 };
 
 export const listPanelState = {
-    get searchInput() {
-        return state.searchInput;
-    },
-    set searchInput(value) {
-        state.searchInput = value ?? null;
-    },
-    get searchEntriesInput() {
-        return state.searchEntriesInput;
-    },
-    set searchEntriesInput(value) {
-        state.searchEntriesInput = value ?? null;
-    },
     get bookVisibilityMode() {
-        return state.bookVisibilityMode;
+        return bookBrowserStateStore.bookVisibilityMode;
     },
     set bookVisibilityMode(value) {
-        state.bookVisibilityMode = value ?? 'allBooks';
+        bookBrowserStateStore.bookVisibilityMode = value ?? DEFAULT_BOOK_VISIBILITY_MODE;
     },
     get bookVisibilitySelections() {
-        return state.bookVisibilitySelections;
+        return bookBrowserStateStore.bookVisibilitySelections;
     },
     set bookVisibilitySelections(value) {
-        state.bookVisibilitySelections = value instanceof Set ? value : new Set();
-    },
-    get bookVisibilityMenu() {
-        return state.bookVisibilityMenu;
-    },
-    set bookVisibilityMenu(value) {
-        state.bookVisibilityMenu = value ?? null;
-    },
-    get bookVisibilityChips() {
-        return state.bookVisibilityChips;
-    },
-    set bookVisibilityChips(value) {
-        state.bookVisibilityChips = value ?? null;
-    },
-    get loadListDebounced() {
-        return state.loadListDebounced;
-    },
-    set loadListDebounced(value) {
-        state.loadListDebounced = value ?? null;
-    },
-    get folderImportInput() {
-        return state.folderImportInput;
-    },
-    set folderImportInput(value) {
-        state.folderImportInput = value ?? null;
+        bookBrowserStateStore.bookVisibilitySelections = value instanceof Set ? value : new Set();
     },
     get entrySearchCache() {
-        return state.entrySearchCache;
+        return bookBrowserStateStore.entrySearchCache;
     },
     get collapseStates() {
-        return state.collapseStates;
+        return bookBrowserStateStore.collapseStates;
     },
     getCollapseState(name) {
-        const key = normalizeStateKey(name);
-        if (!key) return undefined;
-        return state.collapseStates[key];
+        return readNormalizedBooleanState(bookBrowserStateStore.collapseStates, name);
     },
     setCollapseState(name, isCollapsed) {
-        const key = normalizeStateKey(name);
-        if (!key) return;
-        state.collapseStates[key] = Boolean(isCollapsed);
+        writeNormalizedBooleanState(bookBrowserStateStore.collapseStates, name, isCollapsed);
     },
     get folderCollapseStates() {
-        return state.folderCollapseStates;
+        return bookBrowserStateStore.folderCollapseStates;
     },
     getFolderCollapseState(name) {
-        const key = normalizeStateKey(name);
-        if (!key) return undefined;
-        return state.folderCollapseStates[key];
+        return readNormalizedBooleanState(bookBrowserStateStore.folderCollapseStates, name);
     },
     setFolderCollapseState(name, isCollapsed) {
-        const key = normalizeStateKey(name);
-        if (!key) return;
-        state.folderCollapseStates[key] = Boolean(isCollapsed);
+        writeNormalizedBooleanState(bookBrowserStateStore.folderCollapseStates, name, isCollapsed);
     },
     get folderDoms() {
-        return state.folderDoms;
+        return bookBrowserStateStore.folderDoms;
     },
     getFolderDom(name) {
         const key = normalizeStateKey(name);
         if (!key) return null;
-        return state.folderDoms[key] ?? null;
+        return bookBrowserStateStore.folderDoms[key] ?? null;
     },
     setFolderDom(name, value) {
         const key = normalizeStateKey(name);
         if (!key) return;
-        state.folderDoms[key] = value;
+        bookBrowserStateStore.folderDoms[key] = value;
     },
     deleteFolderDom(name) {
         const key = normalizeStateKey(name);
         if (!key) return;
-        delete state.folderDoms[key];
+        delete bookBrowserStateStore.folderDoms[key];
     },
     clearFolderDoms() {
-        clearObjectKeys(state.folderDoms);
+        clearObjectKeys(bookBrowserStateStore.folderDoms);
     },
     getFolderDomNames() {
-        return Object.keys(state.folderDoms);
+        return Object.keys(bookBrowserStateStore.folderDoms);
     },
     getFolderDomValues() {
-        return Object.values(state.folderDoms);
+        return Object.values(bookBrowserStateStore.folderDoms);
     },
     ensureEntrySearchCacheBook(bookName) {
         const bookKey = normalizeStateKey(bookName);
         if (!bookKey) return null;
-        state.entrySearchCache[bookKey] ??= createSafeStateMap();
-        return state.entrySearchCache[bookKey];
+        bookBrowserStateStore.entrySearchCache[bookKey] ??= createSafeStateMap();
+        return bookBrowserStateStore.entrySearchCache[bookKey];
     },
     getEntrySearchCacheValue(bookName, uid) {
         const bookKey = normalizeStateKey(bookName);
         const entryKey = normalizeEntryCacheKey(uid);
         if (!bookKey || !entryKey) return undefined;
-        return state.entrySearchCache[bookKey]?.[entryKey];
+        return bookBrowserStateStore.entrySearchCache[bookKey]?.[entryKey];
     },
     setEntrySearchCacheValue(bookName, uid, value) {
         const bookKey = normalizeStateKey(bookName);
         const entryKey = normalizeEntryCacheKey(uid);
         if (!bookKey || !entryKey) return;
-        state.entrySearchCache[bookKey] ??= createSafeStateMap();
-        state.entrySearchCache[bookKey][entryKey] = value;
+        bookBrowserStateStore.entrySearchCache[bookKey] ??= createSafeStateMap();
+        bookBrowserStateStore.entrySearchCache[bookKey][entryKey] = value;
         if (getEntrySearchCacheEntryCount() > MAX_ENTRY_CACHE_SIZE) {
             clearEntrySearchCache();
         }
     },
     pruneEntrySearchCacheStaleBooks(activeBookNames) {
         const activeSet = new Set(activeBookNames);
-        for (const bookKey of Object.keys(state.entrySearchCache)) {
+        for (const bookKey of Object.keys(bookBrowserStateStore.entrySearchCache)) {
             if (!activeSet.has(bookKey)) {
-                delete state.entrySearchCache[bookKey];
+                delete bookBrowserStateStore.entrySearchCache[bookKey];
             }
         }
-    },
-    get selectLast() {
-        return state.selectLast;
-    },
-    set selectLast(value) {
-        state.selectLast = value ?? null;
-    },
-    get selectFrom() {
-        return state.selectFrom;
-    },
-    set selectFrom(value) {
-        state.selectFrom = value ?? null;
-    },
-    get selectMode() {
-        return state.selectMode;
-    },
-    set selectMode(value) {
-        state.selectMode = value ?? null;
-    },
-    get selectList() {
-        return state.selectList;
-    },
-    set selectList(value) {
-        state.selectList = value ?? null;
-    },
-    get selectToast() {
-        return state.selectToast;
-    },
-    set selectToast(value) {
-        state.selectToast = value ?? null;
-    },
-    get dragBookName() {
-        return state.dragBookName;
-    },
-    set dragBookName(value) {
-        state.dragBookName = value ?? null;
-    },
-    get folderMenuActions() {
-        return state.folderMenuActions;
-    },
-    set folderMenuActions(value) {
-        state.folderMenuActions = value ?? null;
     },
 };
 
@@ -221,7 +161,7 @@ const clearObjectKeys = (target)=>{
 
 const getEntrySearchCacheEntryCount = ()=>{
     let total = 0;
-    for (const bookCache of Object.values(state.entrySearchCache)) {
+    for (const bookCache of Object.values(bookBrowserStateStore.entrySearchCache)) {
         total += Object.keys(bookCache ?? {}).length;
     }
     return total;
@@ -259,6 +199,12 @@ const saveFolderCollapseStates = ()=>{
         return false;
     }
 };
+const saveFolderCollapseStatesWithWarning = ()=>{
+    const saved = saveFolderCollapseStates();
+    if (!saved) {
+        toastr.warning(FOLDER_COLLAPSE_SAVE_WARNING);
+    }
+};
 
 export const setFolderCollapsedAndPersist = (
     folderName,
@@ -276,20 +222,14 @@ export const setFolderCollapsedAndPersist = (
 
     
     if (!transientExpand && persist) {
-        const saved = saveFolderCollapseStates();
-        if (!saved) {
-            toastr.warning('Folder collapse state could not be saved. Browser storage may be full.');
-        }
+        saveFolderCollapseStatesWithWarning();
     }
 
     setFolderCollapsed(folderDom, Boolean(isCollapsed));
 };
 
 export const persistFolderCollapseStates = ()=>{
-    const saved = saveFolderCollapseStates();
-    if (!saved) {
-        toastr.warning('Folder collapse state could not be saved. Browser storage may be full.');
-    }
+    saveFolderCollapseStatesWithWarning();
 };
 
 export const resetBookVisibilityState = (bookVisibilityModes)=>{
@@ -332,4 +272,20 @@ export const clearCacheBooks = (cache, clearToast)=>{
     }
     resetSelectionMemory(clearToast);
 };
+
+defineNullableStateAccessors(listPanelState, bookBrowserStateStore, [
+    'searchInput',
+    'searchEntriesInput',
+    'bookVisibilityMenu',
+    'bookVisibilityChips',
+    'loadListDebounced',
+    'folderImportInput',
+    'selectLast',
+    'selectFrom',
+    'selectMode',
+    'selectList',
+    'selectToast',
+    'dragBookName',
+    'folderMenuActions',
+]);
 

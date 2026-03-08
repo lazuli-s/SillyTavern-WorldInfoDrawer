@@ -6,6 +6,7 @@ import {
 const ENTRY_MANAGER_SORT_STORAGE_KEY = 'stwid--entry-manager-sort';
 const ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY = 'stwid--entry-manager-hide-keys';
 const ENTRY_MANAGER_COLUMNS_STORAGE_KEY = 'stwid--entry-manager-columns';
+const SELECT_OPTION_SELECTOR = 'option';
 
 const ENTRY_MANAGER_DEFAULT_COLUMNS = {
     strategy: true,
@@ -24,10 +25,10 @@ const ENTRY_MANAGER_DEFAULT_COLUMNS = {
     characterFilter: false,
 };
 
-const getStrategyOptions = ()=>{
-    const select = document.querySelector('#entry_edit_template [name="entryStateSelector"]');
+const getSelectOptions = (selectQuery, optionSelector = SELECT_OPTION_SELECTOR)=>{
+    const select = document.querySelector(selectQuery);
     if (!select) return [];
-    return [...select.querySelectorAll('option')]
+    return [...select.querySelectorAll(optionSelector)]
         .map((option)=>({
             value: option.value,
             label: option.textContent?.trim() ?? option.value,
@@ -35,22 +36,37 @@ const getStrategyOptions = ()=>{
         .filter((option)=>option.value);
 };
 
-const getStrategyValues = ()=>getStrategyOptions().map((option)=>option.value);
+const getOptionValues = (options)=>options.map((option)=>option.value);
+
+const getStrategyOptions = ()=>{
+    return getSelectOptions('#entry_edit_template [name="entryStateSelector"]');
+};
+
+const getStrategyValues = ()=>getOptionValues(getStrategyOptions());
 
 const getPositionOptions = ()=>{
-    const select = document.querySelector('#entry_edit_template [name="position"]');
-    if (!select) return [];
-    return [...select.querySelectorAll('option')]
-        .map((option)=>({
-            value: option.value,
-            label: option.textContent?.trim() ?? option.value,
-        }))
-        .filter((option)=>option.value);
+    return getSelectOptions('#entry_edit_template [name="position"]');
 };
 
-const getPositionValues = ()=>getPositionOptions().map((option)=>option.value);
+const getPositionValues = ()=>getOptionValues(getPositionOptions());
 
-const createEntryManagerState = ({ SORT, SORT_DIRECTION })=>{
+const readLocalStorageJson = (key)=>{
+    try {
+        return JSON.parse(localStorage.getItem(key));
+    } catch {
+        return null;
+    }
+};
+
+const readLocalStorageString = (key)=>{
+    try {
+        return localStorage.getItem(key);
+    } catch {
+        return null;
+    }
+};
+
+const buildCanonicalDefaultColumns = ()=>{
     const recursionValues = ENTRY_MANAGER_RECURSION_OPTIONS.map(({ value })=>value);
     const schemaKeys = ENTRY_MANAGER_TOGGLE_COLUMNS.map(({ key })=>key);
     const schemaKeySet = new Set(schemaKeys);
@@ -60,56 +76,78 @@ const createEntryManagerState = ({ SORT, SORT_DIRECTION })=>{
     if (missingInDefaults.length > 0 || extraInDefaults.length > 0) {
         console.warn('[STWID entryManagerState] Column schema mismatch detected.', { missingInDefaults, extraInDefaults });
     }
+
     const canonicalDefaultColumns = { ...ENTRY_MANAGER_DEFAULT_COLUMNS };
     for (const key of schemaKeys) {
         if (typeof canonicalDefaultColumns[key] !== 'boolean') {
             canonicalDefaultColumns[key] = false;
         }
     }
-    const state = {
+
+    return {
+        canonicalDefaultColumns,
+        schemaKeys,
+        recursionValues,
+    };
+};
+
+const buildInitialEntryManagerState = ({ canonicalDefaultColumns, recursionValues, SORT, SORT_DIRECTION })=>{
+    const strategyValues = getStrategyValues();
+    const positionValues = getPositionValues();
+
+    return {
         sort: SORT.TITLE,
         direction: SORT_DIRECTION.ASCENDING,
         book: null,
         hideKeys: false,
         columns: { ...canonicalDefaultColumns },
         filters: {
-            strategy: getStrategyValues(),
-            position: getPositionValues(),
+            strategy: [...strategyValues],
+            position: [...positionValues],
             recursion: [...recursionValues],
             outlet: [],
             automationId: [],
             group: [],
         },
-        strategyValues: getStrategyValues(),
-        positionValues: getPositionValues(),
+        strategyValues,
+        positionValues,
         recursionValues,
         outletValues: [],
         automationIdValues: [],
         groupValues: [],
     };
-    try {
-        const stored = JSON.parse(localStorage.getItem(ENTRY_MANAGER_SORT_STORAGE_KEY));
-        if (Object.values(SORT).includes(stored?.sort) && Object.values(SORT_DIRECTION).includes(stored?.direction)) {
-            state.sort = stored.sort;
-            state.direction = stored.direction;
+};
+
+const applyStoredColumns = ({ state, storedColumns, schemaKeys, canonicalDefaultColumns })=>{
+    for (const key of schemaKeys) {
+        const value = canonicalDefaultColumns[key];
+        if (typeof storedColumns[key] === 'boolean') {
+            state.columns[key] = storedColumns[key];
+        } else {
+            state.columns[key] = value;
         }
-    } catch {  }
-    try {
-        state.hideKeys = localStorage.getItem(ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY) === 'true';
-    } catch {  }
-    try {
-        const storedColumns = JSON.parse(localStorage.getItem(ENTRY_MANAGER_COLUMNS_STORAGE_KEY));
-        if (storedColumns && typeof storedColumns === 'object') {
-            for (const key of schemaKeys) {
-                const value = canonicalDefaultColumns[key];
-                if (typeof storedColumns[key] === 'boolean') {
-                    state.columns[key] = storedColumns[key];
-                } else {
-                    state.columns[key] = value;
-                }
-            }
-        }
-    } catch {  }
+    }
+};
+
+const applyStoredEntryManagerState = ({ state, schemaKeys, canonicalDefaultColumns, SORT, SORT_DIRECTION })=>{
+    const storedSortSettings = readLocalStorageJson(ENTRY_MANAGER_SORT_STORAGE_KEY);
+    if (Object.values(SORT).includes(storedSortSettings?.sort) && Object.values(SORT_DIRECTION).includes(storedSortSettings?.direction)) {
+        state.sort = storedSortSettings.sort;
+        state.direction = storedSortSettings.direction;
+    }
+
+    state.hideKeys = readLocalStorageString(ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY) === 'true';
+
+    const storedColumns = readLocalStorageJson(ENTRY_MANAGER_COLUMNS_STORAGE_KEY);
+    if (storedColumns && typeof storedColumns === 'object') {
+        applyStoredColumns({ state, storedColumns, schemaKeys, canonicalDefaultColumns });
+    }
+};
+
+const createEntryManagerState = ({ SORT, SORT_DIRECTION })=>{
+    const { canonicalDefaultColumns, schemaKeys, recursionValues } = buildCanonicalDefaultColumns();
+    const state = buildInitialEntryManagerState({ canonicalDefaultColumns, recursionValues, SORT, SORT_DIRECTION });
+    applyStoredEntryManagerState({ state, schemaKeys, canonicalDefaultColumns, SORT, SORT_DIRECTION });
     return state;
 };
 

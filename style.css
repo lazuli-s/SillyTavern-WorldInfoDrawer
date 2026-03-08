@@ -190,8 +190,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  width: 20vw;
-  min-width: 220px;
+  min-width: 20vw;
   max-width: 100%;
   min-height: 0;
 }

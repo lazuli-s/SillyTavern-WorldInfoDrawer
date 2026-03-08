@@ -33,6 +33,9 @@ import { createFoldersViewSlice } from './book-list/book-folders/book-folders.fo
 import { createBooksViewSlice } from './book-list/book-list.books-view.js';
 
 
+const EXPANDED_CHEVRON_CLASS = 'fa-chevron-up';
+const COLLAPSED_CHEVRON_CLASS = 'fa-chevron-down';
+
 
 const CORE_UI_SELECTORS = Object.freeze({
     importFileInput: '#world_import_file',
@@ -73,15 +76,15 @@ const hasExpandedBooks = ()=>Object.values(state.cache).some((book)=>{
 
 const updateCollapseAllToggle = ()=>{
     const hasExpanded = hasExpandedBooks();
-    const btn = state.dom.collapseAllToggle;
-    if (!btn) return;
-    const icon = btn.querySelector('i');
+    const collapseAllButton = state.dom.collapseAllToggle;
+    if (!collapseAllButton) return;
+    const icon = collapseAllButton.querySelector('i');
     icon?.classList.toggle('fa-compress', hasExpanded);
     icon?.classList.toggle('fa-expand', !hasExpanded);
     const label = hasExpanded ? 'Collapse All Books' : 'Expand All Books';
-    btn.title = label;
-    btn.setAttribute('aria-label', label);
-    btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
+    collapseAllButton.title = label;
+    collapseAllButton.setAttribute('aria-label', label);
+    collapseAllButton.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
 };
 
 const hasExpandedFolders = ()=>foldersViewSlice?.hasExpandedFolders() ?? false;
@@ -101,11 +104,11 @@ const applyCollapseState = (name)=>{
         || !world.dom.collapseToggle.isConnected) return;
     world.dom.entryList.classList.toggle('stwid--state-collapsed', isCollapsed);
     if (isCollapsed) {
-        world.dom.collapseToggle.classList.remove('fa-chevron-up');
-        world.dom.collapseToggle.classList.add('fa-chevron-down');
+        world.dom.collapseToggle.classList.remove(EXPANDED_CHEVRON_CLASS);
+        world.dom.collapseToggle.classList.add(COLLAPSED_CHEVRON_CLASS);
     } else {
-        world.dom.collapseToggle.classList.add('fa-chevron-up');
-        world.dom.collapseToggle.classList.remove('fa-chevron-down');
+        world.dom.collapseToggle.classList.add(EXPANDED_CHEVRON_CLASS);
+        world.dom.collapseToggle.classList.remove(COLLAPSED_CHEVRON_CLASS);
     }
 };
 
@@ -254,6 +257,39 @@ const buildLatestBookSavePayload = (latest)=>({
         : {},
 });
 
+const saveBookMetadataUpdate = async(name, updateMetadata, messages)=>{
+    let latest;
+    try {
+        latest = await state.loadWorldInfo(name);
+    } catch (error) {
+        console.warn(messages.loadWarn, error);
+        toastr.error(messages.loadError);
+        return { ok: false, error: 'load_failed' };
+    }
+    if (!latest || typeof latest !== 'object') {
+        return { ok: false, error: 'book_missing' };
+    }
+
+    const nextPayload = buildLatestBookSavePayload(latest);
+    const updateResult = updateMetadata(nextPayload.metadata);
+    if (updateResult?.ok === false) {
+        return updateResult;
+    }
+
+    try {
+        await state.saveWorldInfo(name, nextPayload, true);
+    } catch (error) {
+        console.warn(messages.saveWarn, error);
+        toastr.error(messages.saveError);
+        return { ok: false, error: 'save_failed' };
+    }
+
+    if (state.cache[name]) {
+        setCacheMetadata(name, nextPayload.metadata);
+    }
+    return { ok: true, nextPayload, updateResult };
+};
+
 const hasSortableBookDom = (name)=>{
     const world = state.cache[name];
     if (!world
@@ -275,41 +311,34 @@ const hasSortableBookDom = (name)=>{
 
 const setBookSortPreference = async(name, sort = null, direction = null)=>{
     const hasSort = Boolean(sort && direction);
-    let latest;
-    try {
-        latest = await state.loadWorldInfo(name);
-    } catch (error) {
-        console.warn(`[STWID] Failed to load book "${name}" before saving sort preference.`, error);
-        toastr.error(`Could not load "${name}" before saving sort preference.`);
-        return { ok: false, error: 'load_failed' };
-    }
-    if (!latest || typeof latest !== 'object') {
-        return { ok: false, error: 'book_missing' };
-    }
-    const nextPayload = buildLatestBookSavePayload(latest);
-    nextPayload.metadata[state.METADATA_NAMESPACE] ??= {};
-    if (hasSort) {
-        nextPayload.metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY] = { sort, direction };
-    } else {
-        delete nextPayload.metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY];
-        if (Object.keys(nextPayload.metadata[state.METADATA_NAMESPACE]).length === 0) {
-            delete nextPayload.metadata[state.METADATA_NAMESPACE];
-        }
-        if (Object.keys(nextPayload.metadata).length === 0) {
-            nextPayload.metadata = {};
-        }
-    }
-    
     const refreshTokenBeforeSave = refreshRequestToken;
-    try {
-        await state.saveWorldInfo(name, nextPayload, true);
-    } catch (error) {
-        console.warn(`[STWID] Failed to save sort preference for "${name}".`, error);
-        toastr.error(`Could not save sort preference for "${name}".`);
-        return { ok: false, error: 'save_failed' };
-    }
-    if (state.cache[name]) {
-        setCacheMetadata(name, nextPayload.metadata);
+    const saveResult = await saveBookMetadataUpdate(
+        name,
+        (metadata)=>{
+            metadata[state.METADATA_NAMESPACE] ??= {};
+            if (hasSort) {
+                metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY] = { sort, direction };
+                return { ok: true };
+            }
+
+            delete metadata[state.METADATA_NAMESPACE][state.METADATA_SORT_KEY];
+            if (Object.keys(metadata[state.METADATA_NAMESPACE]).length === 0) {
+                delete metadata[state.METADATA_NAMESPACE];
+            }
+            if (Object.keys(metadata).length === 0) {
+                return { ok: true };
+            }
+            return { ok: true };
+        },
+        {
+            loadWarn: `[STWID] Failed to load book "${name}" before saving sort preference.`,
+            loadError: `Could not load "${name}" before saving sort preference.`,
+            saveWarn: `[STWID] Failed to save sort preference for "${name}".`,
+            saveError: `Could not save sort preference for "${name}".`,
+        },
+    );
+    if (!saveResult.ok) {
+        return saveResult;
     }
     if (refreshTokenBeforeSave !== refreshRequestToken) {
         console.warn('[STWID] Skipping stale post-save sort after refresh.', { name });
@@ -347,31 +376,27 @@ const clearBookSortPreferences = async()=>{
 
 
 const setBookFolder = async(name, folderName)=>{
-    let latest;
-    try {
-        latest = await state.loadWorldInfo(name);
-    } catch (error) {
-        console.warn(`[STWID] Failed to load book "${name}" before folder change.`, error);
-        toastr.error(`Could not load "${name}" before moving it.`);
-        return { ok: false, error: 'load_failed' };
-    }
-    if (!latest || typeof latest !== 'object') return { ok: false, error: 'book_missing' };
-
-    const nextPayload = buildLatestBookSavePayload(latest);
-    const result = setFolderInMetadata(nextPayload.metadata, folderName);
-    if (!result.ok) return { ok: false, error: 'invalid_folder' };
-    if (result.folder) {
-        registerFolderName(result.folder);
-    }
-    try {
-        await state.saveWorldInfo(name, nextPayload, true);
-    } catch (error) {
-        console.warn(`[STWID] Failed to save folder change for "${name}".`, error);
-        toastr.error(`Could not move "${name}" to the selected folder.`);
-        return { ok: false, error: 'save_failed' };
-    }
-    if (state.cache[name]) {
-        setCacheMetadata(name, nextPayload.metadata);
+    const saveResult = await saveBookMetadataUpdate(
+        name,
+        (metadata)=>{
+            const result = setFolderInMetadata(metadata, folderName);
+            if (!result.ok) {
+                return { ok: false, error: 'invalid_folder' };
+            }
+            if (result.folder) {
+                registerFolderName(result.folder);
+            }
+            return result;
+        },
+        {
+            loadWarn: `[STWID] Failed to load book "${name}" before folder change.`,
+            loadError: `Could not load "${name}" before moving it.`,
+            saveWarn: `[STWID] Failed to save folder change for "${name}".`,
+            saveError: `Could not move "${name}" to the selected folder.`,
+        },
+    );
+    if (!saveResult.ok) {
+        return saveResult;
     }
     return { ok: true };
 };
@@ -465,14 +490,14 @@ const updateFolderActiveToggles = ()=>foldersViewSlice?.updateFolderActiveToggle
 
 
 const setupBooks = (list)=>{
-    const books = document.createElement('div'); {
-        state.dom.books = books;
-        books.classList.add('stwid--books');
+    const booksContainer = document.createElement('div'); {
+        state.dom.books = booksContainer;
+        booksContainer.classList.add('stwid--books');
         booksRootDragOverHandler = (evt)=>selectionDnDSlice?.onRootDropTargetDragOver(evt);
         booksRootDropHandler = async(evt)=>selectionDnDSlice?.onRootDropTargetDrop(evt);
-        books.addEventListener('dragover', booksRootDragOverHandler);
-        books.addEventListener('drop', booksRootDropHandler);
-        list.append(books);
+        booksContainer.addEventListener('dragover', booksRootDragOverHandler);
+        booksContainer.addEventListener('drop', booksRootDropHandler);
+        list.append(booksContainer);
     }
 };
 
@@ -492,8 +517,8 @@ const teardownListPanel = ()=>{
     for (const filter of state.list?.querySelectorAll?.('.stwid--filter') ?? []) {
         filter.remove();
     }
-    for (const books of state.list?.querySelectorAll?.('.stwid--books') ?? []) {
-        books.remove();
+    for (const booksContainer of state.list?.querySelectorAll?.('.stwid--books') ?? []) {
+        booksContainer.remove();
     }
 
     listPanelState.searchInput = null;
@@ -520,61 +545,67 @@ const setupListPanel = (list)=>{
     setupBooks(list);
 };
 
+const createFilterBarSliceConfig = ()=>({
+    listPanelState,
+    runtime: state,
+    onBookVisibilityScopeChange: (visibleBookNames)=>state.onBookVisibilityScopeChange?.(visibleBookNames),
+    setApplyActiveFilter: (applyActiveFilter)=>{
+        state.applyActiveFilter = applyActiveFilter;
+    },
+    updateFolderActiveToggles,
+});
+
+const createBookMenuSliceConfig = ()=>({
+    listPanelState,
+    runtime: state,
+    coreUiSelectors: CORE_UI_SELECTORS,
+    coreUiActionSelectors: CORE_UI_ACTION_SELECTORS,
+    folderDeps: {
+        getFolderFromMetadata,
+        getFolderRegistry,
+        registerFolderName,
+        sanitizeFolderMetadata,
+    },
+    setSelectedBookInCoreUi,
+    clickCoreUiAction,
+    getBookSortChoice,
+    refreshList,
+    setBookFolder,
+    setBookSortPreference,
+    applyBookFolderChange,
+});
+
+const createBooksViewSliceConfig = ()=>({
+    listPanelState,
+    runtime: state,
+    coreUiSelectors: CORE_UI_SELECTORS,
+    foldersViewSlice,
+    selectionDnDSlice: ()=>selectionDnDSlice,
+    bookMenuSlice: ()=>bookMenuSlice,
+    getFolderFromMetadata,
+    getFolderRegistry,
+    registerFolderName,
+    getBookSortChoice,
+    setBookCollapsed,
+    setCacheMetadata,
+    updateBookSourceLinks,
+    updateCollapseAllToggle,
+});
+
 const wireSlices = ()=>{
-    filterBarSlice = createFilterBarSlice({
-        listPanelState,
-        runtime: state,
-        onBookVisibilityScopeChange: (visibleBookNames)=>state.onBookVisibilityScopeChange?.(visibleBookNames),
-        setApplyActiveFilter: (applyActiveFilter)=>{
-            state.applyActiveFilter = applyActiveFilter;
-        },
-        updateFolderActiveToggles,
-    });
+    filterBarSlice = createFilterBarSlice(createFilterBarSliceConfig());
     selectionDnDSlice = createSelectionDnDSlice({
         listPanelState,
         runtime: state,
         handleDraggedBookMoveOrCopy,
     });
-    bookMenuSlice = createBookMenuSlice({
-        listPanelState,
-        runtime: state,
-        coreUiSelectors: CORE_UI_SELECTORS,
-        coreUiActionSelectors: CORE_UI_ACTION_SELECTORS,
-        folderDeps: {
-            getFolderFromMetadata,
-            getFolderRegistry,
-            registerFolderName,
-            sanitizeFolderMetadata,
-        },
-        setSelectedBookInCoreUi,
-        clickCoreUiAction,
-        getBookSortChoice,
-        refreshList,
-        setBookFolder,
-        setBookSortPreference,
-        applyBookFolderChange,
-    });
+    bookMenuSlice = createBookMenuSlice(createBookMenuSliceConfig());
     foldersViewSlice = createFoldersViewSlice({
         listPanelState,
         runtime: state,
         selectionDnDSlice: ()=>selectionDnDSlice,
     });
-    booksViewSlice = createBooksViewSlice({
-        listPanelState,
-        runtime: state,
-        coreUiSelectors: CORE_UI_SELECTORS,
-        foldersViewSlice,
-        selectionDnDSlice: ()=>selectionDnDSlice,
-        bookMenuSlice: ()=>bookMenuSlice,
-        getFolderFromMetadata,
-        getFolderRegistry,
-        registerFolderName,
-        getBookSortChoice,
-        setBookCollapsed,
-        setCacheMetadata,
-        updateBookSourceLinks,
-        updateCollapseAllToggle,
-    });
+    booksViewSlice = createBooksViewSlice(createBooksViewSliceConfig());
 };
 
 const getListPanelApi = ()=>({

@@ -42,9 +42,9 @@
 - `src/book-browser/book-browser.state.js`, lines 208-213 - `folderMenuActions` getter/setter pair
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a helper such as `defineNullableStateAccessors(target, propertyNames)` near the top of the file.
-- [ ] Use that helper to define the repeated getter/setter pairs instead of writing each pair by hand.
-- [ ] Leave only the properties with special rules, such as `bookVisibilityMode` and `bookVisibilitySelections`, as custom accessors.
+- [x] Extract the shared pattern into a helper such as `defineNullableStateAccessors(target, propertyNames)` near the top of the file.
+- [x] Use that helper to define the repeated getter/setter pairs instead of writing each pair by hand.
+- [x] Leave only the properties with special rules, such as `bookVisibilityMode` and `bookVisibilitySelections`, as custom accessors.
 
 ---
 
@@ -57,10 +57,10 @@
 - `src/book-browser/book-browser.state.js`, lines 105-113 - `getFolderCollapseState` and `setFolderCollapseState`
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a helper named `readNormalizedBooleanState(stateMap, name)` for reads.
-- [ ] Extract the shared pattern into a helper named `writeNormalizedBooleanState(stateMap, name, isCollapsed)` for writes.
-- [ ] Replace the book collapse helpers with calls to the new helpers.
-- [ ] Replace the folder collapse helpers with calls to the new helpers.
+- [x] Extract the shared pattern into a helper named `readNormalizedBooleanState(stateMap, name)` for reads.
+- [x] Extract the shared pattern into a helper named `writeNormalizedBooleanState(stateMap, name, isCollapsed)` for writes.
+- [x] Replace the book collapse helpers with calls to the new helpers.
+- [x] Replace the folder collapse helpers with calls to the new helpers.
 
 ---
 
@@ -73,9 +73,9 @@
 - `src/book-browser/book-browser.state.js`, lines 288-292 - save and warn inside `persistFolderCollapseStates`
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a helper named `saveFolderCollapseStatesWithWarning()`.
-- [ ] Replace the block in `setFolderCollapsedAndPersist` with a call to `saveFolderCollapseStatesWithWarning()`.
-- [ ] Replace the block in `persistFolderCollapseStates` with a call to `saveFolderCollapseStatesWithWarning()`.
+- [x] Extract the shared pattern into a helper named `saveFolderCollapseStatesWithWarning()`.
+- [x] Replace the block in `setFolderCollapsedAndPersist` with a call to `saveFolderCollapseStatesWithWarning()`.
+- [x] Replace the block in `persistFolderCollapseStates` with a call to `saveFolderCollapseStatesWithWarning()`.
 
 ---
 
@@ -88,8 +88,8 @@
 - `src/book-browser/book-browser.state.js`, line 54
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const DEFAULT_BOOK_VISIBILITY_MODE = 'allBooks';`
-- [ ] Replace each occurrence of the raw literal with `DEFAULT_BOOK_VISIBILITY_MODE`.
+- [x] At the top of the file (after imports), add: `const DEFAULT_BOOK_VISIBILITY_MODE = 'allBooks';`
+- [x] Replace each occurrence of the raw literal with `DEFAULT_BOOK_VISIBILITY_MODE`.
 
 ---
 
@@ -102,8 +102,8 @@
 - `src/book-browser/book-browser.state.js`, line 291
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const FOLDER_COLLAPSE_SAVE_WARNING = 'Folder collapse state could not be saved. Browser storage may be full.';`
-- [ ] Replace each occurrence of the raw literal with `FOLDER_COLLAPSE_SAVE_WARNING`.
+- [x] At the top of the file (after imports), add: `const FOLDER_COLLAPSE_SAVE_WARNING = 'Folder collapse state could not be saved. Browser storage may be full.';`
+- [x] Replace each occurrence of the raw literal with `FOLDER_COLLAPSE_SAVE_WARNING`.
 
 ---
 
@@ -114,6 +114,30 @@
 **Where:** `src/book-browser/book-browser.state.js`, line 15
 
 **Steps to fix:**
-- [ ] Rename `state` to `bookBrowserStateStore` everywhere it appears in this file.
+- [x] Rename `state` to `bookBrowserStateStore` everywhere it appears in this file.
+
+---
+
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+`src/book-browser/book-browser.state.js`
+- Added shared helpers for nullable property accessors and normalized boolean map reads/writes so repeated state wrapper code is defined once.
+- Replaced repeated raw values with named constants for the default visibility mode and the folder-collapse save warning text.
+- Renamed the private state object to `bookBrowserStateStore` and consolidated repeated folder-collapse warning behavior into one helper.
+
+### Risks / What might break
+
+- The generated accessors now come from `Object.defineProperty`, so future edits that expect those properties to be written inline inside the object literal could miss that setup at the bottom of the file.
+- Any future code added to this file that still uses the old private variable name `state` will break until it is updated to `bookBrowserStateStore`.
+- If another change depends on the exact timing of when `listPanelState` properties are defined, moving the shared accessor setup could affect that.
+
+### Manual checks
+
+- Reload the extension UI and open the Book Browser. Success looks like the search fields, visibility chips, and folder import input still work normally.
+- Collapse and expand both books and folders, then reload the page. Success looks like the previous collapsed state being restored.
+- Trigger folder collapse persistence again with normal usage. Success looks like no behavior change except the same warning still appears if browser storage fails.
 
 ---
