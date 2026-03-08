@@ -1895,8 +1895,17 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 .stwid--blocker .stwid--listDropdownItem:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: var(--stwid-focus-ring-offset);
+  /* outline: var(--stwid-focus-ring); */
+  /* outline-offset: var(--stwid-focus-ring-offset); */
+  color: var(--SmartThemeBodyColor);
+  padding: 2px 4px;
+  text-decoration: none;
+  display: flex;
+  column-gap: 4px;
+  cursor: pointer;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity var(--animation-duration);
 }
 
 /* Move Book to Folder dialog layout */
@@ -1941,8 +1950,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 /* Context menu container */
 .stwid--blocker .stwid--listDropdownMenu {
-  --stwid-menu-item-height: 2.05em;
-
+  /* --stwid-menu-item-height: 2.05em; */
   position: fixed;
   position-anchor: --stwid--ctxAnchor;
   position-area: bottom right;
@@ -1950,31 +1958,168 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   margin-top: -1lh;
   filter: drop-shadow(1px 1px 2px var(--black50a));
   z-index: 30000;
-  overflow: clip auto;
+  overflow: hidden;
   border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: var(--stwid-radius-m);
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, black 10%);
+  background-color: rgb(32 33 36 / 21%);rgba(255, 255, 255, 0);
   font-size: 0.9em;
-  padding: 0.5em;
+  padding: 0.9em;
+  backdrop-filter: blur(var(--SmartThemeBlurStrength));
 }
 
 .stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
-  opacity: 1;
+  /* opacity: 1; */
   color: var(--SmartThemeBodyColor);
-  background-color: rgba(255, 255, 255, 0);
+  /* background-color: var(--SmartThemeBlurTintColor); */rgba(255, 255, 255, 0);
   cursor: pointer;
-  transition: background-color 200ms, color 200ms, opacity 200ms;
+  /* transition: background-color 200ms, color 200ms, opacity 200ms; */
   flex-direction: row;
   box-sizing: border-box;
-  padding: 3px;
-  border-radius: var(--stwid-radius-m);
+  padding: 0.4em;
+  /* border-radius: var(--stwid-radius-m); */
+  display: block;
+  overflow: hidden;
+  /* border: 1px solid var(--SmartThemeBorderColor); */
+  /* border-radius: 6px; */
+  /* background-color: var(--SmartThemeBlurTintColor); */
+  /* backdrop-filter: blur(var(--SmartThemeBlurStrength)); */
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   &:hover {
-    background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%);
+    /* background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%); */
+    /* -webkit-font-smoothing: auto; */
   }
 
   & #lorebook_ordering_button {
@@ -1985,18 +2130,21 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   &.stwid--bookSort {
-    opacity: 1;
+    /* opacity: 1; */
     cursor: default;
   }
 
   &.stwid--bookSort select {
-    width: fit-content;
+    width: 9em;
     color: inherit;
     background-color: rgba(255, 255, 255, 0.05);
     min-height: var(--stwid-menu-item-height);
     height: 100%;
-    margin:  0;
+    margin-left: 1em;
     font-size: 1em;
+    /* padding: 0em 0em 0em 0em; */
+    margin-bottom: 0;
+    margin-top: 0;
   }
 }
 
@@ -2004,6 +2152,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   flex: 0 0 auto;
   width: 1.05em;
   text-align: center;
+  padding: 0em 1.8em 0em 0em;
 }
 
 .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
