@@ -3,6 +3,9 @@ import { parseBooleanSetting } from './utils.js';
 
 export { SORT, SORT_DIRECTION } from './constants.js';
 
+const WORLD_INFO_DRAWER_SETTINGS_KEY = 'worldInfoDrawer';
+const DEFAULT_SORT_LOGIC = SORT.TITLE;
+const DEFAULT_SORT_DIRECTION = SORT_DIRECTION.ASCENDING;
 
 const KNOWN_SETTINGS_KEYS =  ([
     'sortLogic',
@@ -22,6 +25,28 @@ const VALID_HIDDEN_TAB_IDS = Object.freeze([
     'search',
 ]);
 
+function ensureEnumValue(value, enumObject, defaultValue) {
+    return Object.values(enumObject).includes(value) ? value : defaultValue;
+}
+
+function applySavedSettings(savedSettings) {
+    if (!savedSettings || typeof savedSettings !== 'object') {
+        return;
+    }
+
+    for (const settingsKey of KNOWN_SETTINGS_KEYS) {
+        if (Object.hasOwn(savedSettings, settingsKey)) {
+            this[settingsKey] = savedSettings[settingsKey];
+        }
+    }
+}
+
+function applyBooleanSettingDefaults() {
+    this.useBookSorts = parseBooleanSetting(this.useBookSorts, true);
+    this.featureFolderGrouping = parseBooleanSetting(this.featureFolderGrouping, true);
+    this.featureAdditionalMatchingSources = parseBooleanSetting(this.featureAdditionalMatchingSources, true);
+}
+
 function getSettingsContext() {
     const { saveSettingsDebounced, extensionSettings } = SillyTavern.getContext();
     return { saveSettingsDebounced, extensionSettings };
@@ -37,9 +62,9 @@ export class Settings {
         return this.#instance;
     }
     
-    sortLogic = SORT.TITLE;
+    sortLogic = DEFAULT_SORT_LOGIC;
     
-    sortDirection = SORT_DIRECTION.ASCENDING;
+    sortDirection = DEFAULT_SORT_DIRECTION;
     
     useBookSorts = true;
 
@@ -49,35 +74,16 @@ export class Settings {
 
     constructor() {
         const { extensionSettings } = getSettingsContext();
-        
-        
-        const saved = extensionSettings.worldInfoDrawer;
-        if (saved && typeof saved === 'object') {
-            for (const key of KNOWN_SETTINGS_KEYS) {
-                if (Object.hasOwn(saved, key)) {
-                    this[key] = saved[key];
-                }
-            }
-        }
+        const savedSettings = extensionSettings[WORLD_INFO_DRAWER_SETTINGS_KEY];
 
-        
-        
-        
-        extensionSettings.worldInfoDrawer = this;
+        applySavedSettings.call(this, savedSettings);
 
-        if (!Object.values(SORT).includes(this.sortLogic)) {
-            this.sortLogic = SORT.TITLE;
-        }
-        if (!Object.values(SORT_DIRECTION).includes(this.sortDirection)) {
-            this.sortDirection = SORT_DIRECTION.ASCENDING;
-        }
-        
-        
-        
-        
-        this.useBookSorts = parseBooleanSetting(this.useBookSorts, true);
-        this.featureFolderGrouping = parseBooleanSetting(this.featureFolderGrouping, true);
-        this.featureAdditionalMatchingSources = parseBooleanSetting(this.featureAdditionalMatchingSources, true);
+        extensionSettings[WORLD_INFO_DRAWER_SETTINGS_KEY] = this;
+
+        this.sortLogic = ensureEnumValue(this.sortLogic, SORT, DEFAULT_SORT_LOGIC);
+        this.sortDirection = ensureEnumValue(this.sortDirection, SORT_DIRECTION, DEFAULT_SORT_DIRECTION);
+
+        applyBooleanSettingDefaults.call(this);
         if (!Array.isArray(this.hiddenTabs)) {
             this.hiddenTabs = [];
         }

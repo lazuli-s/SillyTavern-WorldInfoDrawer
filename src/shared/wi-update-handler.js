@@ -6,7 +6,281 @@ import { cloneMetadata, getSortFromMetadata, sortEntries } from './sort-helpers.
 import { entryState, renderEntry } from '../book-browser/book-list/book-list.world-entry.js';
 import { createDeferred } from './utils.js';
 
+const LOG_PREFIX = '[STWID]';
+const EDITOR_ROOT_SELECTOR = '.stwid--editor';
 const EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS = 15000;
+
+const maybeTriggerEditorRefreshForField = ({ isCurrentEditor, selector, expectedValue, triggerEditorRefreshOnce }) => {
+    if (!isCurrentEditor) return;
+    const editorFieldInput = document.querySelector(selector);
+    if (!editorFieldInput || editorFieldInput.value != expectedValue) {
+        triggerEditorRefreshOnce();
+    }
+};
+
+const removeStaleCachedBooks = ({ cache, worldNames }) => {
+    for (const [worldName, cachedWorld] of Object.entries(cache)) {
+        if (worldNames.includes(worldName)) continue;
+        cachedWorld.dom.root.remove();
+        delete cache[worldName];
+    }
+};
+
+const renderMissingBooks = async ({ cache, worldNames, loadWorldInfo, listPanelApi }) => {
+    for (const worldName of worldNames) {
+        if (cache[worldName]) continue;
+        const before = Object.keys(cache).find((it) => it.toLowerCase().localeCompare(worldName.toLowerCase()) == 1);
+        const worldData = await loadWorldInfo(worldName);
+        await listPanelApi.renderBook(worldName, before ? cache[before].dom.root : null, worldData);
+    }
+};
+
+const applyEntryFieldDiff = ({ bookName, entryUid, oldEntry, updatedEntry, cache, editorPanelApi, isCurrentEditor, triggerEditorRefreshOnce, shouldRefreshEditor }) => {
+    let hasChange = false;
+    const currentEntryIsOpen = isCurrentEditor(bookName, entryUid);
+    for (const fieldName of new Set([...Object.keys(oldEntry), ...Object.keys(updatedEntry)])) {
+        const oldValue = oldEntry[fieldName];
+        const newValue = updatedEntry[fieldName];
+        if (oldValue == newValue) continue;
+        if (typeof oldValue == 'object' && JSON.stringify(oldValue) == JSON.stringify(newValue)) continue;
+
+        hasChange = true;
+        switch (fieldName) {
+            case 'content': {
+                maybeTriggerEditorRefreshForField({
+                    isCurrentEditor: currentEntryIsOpen,
+                    selector: `${EDITOR_ROOT_SELECTOR} [name="content"]`,
+                    expectedValue: updatedEntry.content,
+                    triggerEditorRefreshOnce,
+                });
+                break;
+            }
+            case 'comment': {
+                maybeTriggerEditorRefreshForField({
+                    isCurrentEditor: currentEntryIsOpen,
+                    selector: `${EDITOR_ROOT_SELECTOR} [name="comment"]`,
+                    expectedValue: updatedEntry.comment,
+                    triggerEditorRefreshOnce,
+                });
+                cache[bookName].dom.entry[entryUid].comment.textContent = updatedEntry.comment;
+                break;
+            }
+            case 'key': {
+                maybeTriggerEditorRefreshForField({
+                    isCurrentEditor: hasChange && currentEntryIsOpen,
+                    selector: `${EDITOR_ROOT_SELECTOR} textarea[name="${fieldName}"]`,
+                    expectedValue: updatedEntry[fieldName].join(', '),
+                    triggerEditorRefreshOnce,
+                });
+                cache[bookName].dom.entry[entryUid].key.textContent = updatedEntry.key.join(', ');
+                break;
+            }
+            case 'disable': {
+                if (hasChange && currentEntryIsOpen) {
+                    triggerEditorRefreshOnce();
+                }
+                cache[bookName].dom.entry[entryUid].isEnabled.classList[newValue ? 'remove' : 'add']('fa-toggle-on');
+                cache[bookName].dom.entry[entryUid].isEnabled.classList[newValue ? 'add' : 'remove']('fa-toggle-off');
+                break;
+            }
+            case 'constant':
+            case 'vectorized': {
+                if (hasChange && currentEntryIsOpen) {
+                    triggerEditorRefreshOnce();
+                }
+                cache[bookName].dom.entry[entryUid].strategy.value = entryState(updatedEntry);
+                break;
+            }
+            default: {
+                maybeTriggerEditorRefreshForField({
+                    isCurrentEditor: hasChange && currentEntryIsOpen,
+                    selector: `${EDITOR_ROOT_SELECTOR} [name="${fieldName}"]`,
+                    expectedValue: updatedEntry[fieldName],
+                    triggerEditorRefreshOnce,
+                });
+                break;
+            }
+        }
+    }
+
+    if (!currentEntryIsOpen) {
+        return hasChange;
+    }
+
+    if (shouldRefreshEditor()) {
+        cache[bookName].dom.entry[entryUid].root.click();
+    } else if (editorPanelApi) {
+        editorPanelApi.markClean(bookName, entryUid);
+    }
+
+    return hasChange;
+};
+
+const syncBookEntriesAndDom = async ({
+    bookName,
+    cache,
+    data,
+    listPanelApi,
+    editorPanelApi,
+    getCurrentEditor,
+    setCurrentEditor,
+    shouldAutoRefreshEditor,
+}) => {
+    const isCurrentEditor = (entryUid) => {
+        const currentEditor = getCurrentEditor();
+        return currentEditor?.name == bookName && currentEditor?.uid == entryUid;
+    };
+    const world = { entries: {}, metadata: cloneMetadata(data.metadata) };
+    const updatedSort = getSortFromMetadata(world.metadata) ?? cache[bookName].sort;
+    const sortChoice = {
+        sort: updatedSort?.sort ?? Settings.instance.sortLogic,
+        direction: updatedSort?.direction ?? Settings.instance.sortDirection,
+    };
+
+    for (const [entryUid, entryData] of Object.entries(data.entries)) {
+        world.entries[entryUid] = structuredClone(entryData);
+    }
+
+    for (const entryUid of Object.keys(cache[bookName].entries)) {
+        if (world.entries[entryUid]) continue;
+        cache[bookName].dom.entry[entryUid].root.remove();
+        delete cache[bookName].dom.entry[entryUid];
+        delete cache[bookName].entries[entryUid];
+        if (!isCurrentEditor(entryUid)) continue;
+        if (editorPanelApi) {
+            editorPanelApi.clearEditor();
+        } else {
+            setCurrentEditor(null);
+        }
+    }
+
+    const alreadyAdded = [];
+    for (const entryUid of Object.keys(world.entries)) {
+        if (cache[bookName].entries[entryUid]) continue;
+        const entryToInsert = world.entries[entryUid];
+        const sorted = sortEntries([...Object.values(cache[bookName].entries), ...alreadyAdded, entryToInsert], sortChoice.sort, sortChoice.direction);
+        const before = sorted.find((it, idx) => idx > sorted.indexOf(entryToInsert));
+        await renderEntry(entryToInsert, bookName, before ? cache[bookName].dom.entry[before.uid].root : null);
+        alreadyAdded.push(entryToInsert);
+    }
+
+    let hasUpdate = false;
+    for (const [entryUid, cachedEntry] of Object.entries(cache[bookName].entries)) {
+        const updatedEntry = world.entries[entryUid];
+        let needsEditorRefresh = false;
+        const triggerEditorRefreshOnce = () => {
+            if (needsEditorRefresh) return true;
+            if (!shouldAutoRefreshEditor(bookName, entryUid)) return false;
+            needsEditorRefresh = true;
+            return true;
+        };
+
+        const entryHasChange = applyEntryFieldDiff({
+            bookName,
+            entryUid,
+            oldEntry: cachedEntry,
+            updatedEntry,
+            cache,
+            editorPanelApi,
+            isCurrentEditor: (_, currentEntryUid) => isCurrentEditor(currentEntryUid),
+            triggerEditorRefreshOnce,
+            shouldRefreshEditor: () => needsEditorRefresh,
+        });
+
+        if (entryHasChange) {
+            hasUpdate = true;
+        }
+    }
+
+    cache[bookName].entries = world.entries;
+    const prevSort = cache[bookName].sort;
+    listPanelApi.setCacheMetadata(bookName, world.metadata);
+    const sortChanged = JSON.stringify(prevSort) !== JSON.stringify(cache[bookName].sort);
+    if (hasUpdate || sortChanged) {
+        listPanelApi.sortEntriesIfNeeded(bookName);
+    }
+};
+
+const createWorldInfoUpdateWaiter = ({ delay, getUpdateWIChangeToken, isUpdateInProgress, getUpdateStarted, getUpdateFinished }) => {
+    const waitForWorldInfoUpdate = async () => {
+        const tokenAtCall = getUpdateWIChangeToken();
+
+        while (getUpdateWIChangeToken() === tokenAtCall) {
+            if (isUpdateInProgress()) {
+                await getUpdateFinished()?.promise;
+                continue;
+            }
+            await getUpdateStarted().promise;
+        }
+
+        await getUpdateFinished()?.promise;
+        return true;
+    };
+
+    const waitForWorldInfoUpdateWithTimeout = async (waitPromise, timeoutMs = EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS) => {
+        const result = await Promise.race([
+            waitPromise.then(() => true),
+            delay(timeoutMs).then(() => false),
+        ]);
+        return result;
+    };
+
+    return {
+        waitForWorldInfoUpdate,
+        waitForWorldInfoUpdateWithTimeout,
+    };
+};
+
+const createEditorDuplicateRefreshWorker = ({
+    getCurrentEditor,
+    refreshList,
+    reopenEditorEntry,
+    waitForWorldInfoUpdate,
+    waitForWorldInfoUpdateWithTimeout,
+}) => {
+    const editorDuplicateRefreshQueue = [];
+    let isEditorDuplicateRefreshWorkerRunning = false;
+
+    const runEditorDuplicateRefreshWorker = async () => {
+        if (isEditorDuplicateRefreshWorkerRunning) return;
+        isEditorDuplicateRefreshWorkerRunning = true;
+        try {
+            while (editorDuplicateRefreshQueue.length > 0) {
+                const waitPromise = editorDuplicateRefreshQueue.shift();
+                const hasUpdate = await waitForWorldInfoUpdateWithTimeout(waitPromise);
+                if (!hasUpdate) continue;
+
+                const currentEditor = getCurrentEditor();
+                const reopenTarget = currentEditor ? { ...currentEditor } : null;
+                await refreshList();
+                reopenEditorEntry(reopenTarget);
+            }
+        } finally {
+            isEditorDuplicateRefreshWorkerRunning = false;
+        }
+    };
+
+    const queueEditorDuplicateRefresh = () => {
+        editorDuplicateRefreshQueue.push(waitForWorldInfoUpdate());
+        void runEditorDuplicateRefreshWorker();
+    };
+
+    return { queueEditorDuplicateRefresh };
+};
+
+const registerWorldInfoListeners = ({ eventBus, eventTypes, onWorldInfoUpdated, onWorldInfoSettingsUpdated }) => {
+    if (!eventBus || !eventTypes) {
+        return () => {};
+    }
+
+    eventBus.on(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
+    eventBus.on(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
+
+    return () => {
+        eventBus.removeListener(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
+        eventBus.removeListener(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
+    };
+};
 
 export const initWIUpdateHandler = ({
     cache,
@@ -29,8 +303,6 @@ export const initWIUpdateHandler = ({
     
     let updateWIChangeToken = 0;
     let isWIUpdateInProgress = false;
-    const editorDuplicateRefreshQueue = [];
-    let isEditorDuplicateRefreshWorkerRunning = false;
 
     const shouldAutoRefreshEditor = (name, uid) => {
         const editorPanelApi = getEditorPanelApi();
@@ -47,7 +319,7 @@ export const initWIUpdateHandler = ({
     });
 
     const updateSettingsChange = () => {
-        console.log('[STWID]', '[UPDATE-SETTINGS]');
+        console.log(LOG_PREFIX, '[UPDATE-SETTINGS]');
         const listPanelApi = getListPanelApi();
         for (const [name, world] of Object.entries(cache)) {
             const active = selected_world_info.includes(name);
@@ -61,7 +333,7 @@ export const initWIUpdateHandler = ({
     };
 
     const updateWIChange = async (name = null, data = null) => {
-        console.log('[STWID]', '[UPDATE-WI]', name, data);
+        console.log(LOG_PREFIX, '[UPDATE-WI]', name, data);
         const cycleFinished = createDeferred();
         updateWIChangeFinished = cycleFinished;
         updateWIChangeToken += 1;
@@ -71,10 +343,6 @@ export const initWIUpdateHandler = ({
         try {
             const listPanelApi = getListPanelApi();
             const editorPanelApi = getEditorPanelApi();
-            const isCurrentEditor = (bookName, entryUid) => {
-                const currentEditor = getCurrentEditor();
-                return currentEditor?.name == bookName && currentEditor?.uid == entryUid;
-            };
 
             
             
@@ -82,146 +350,19 @@ export const initWIUpdateHandler = ({
                 name = null;
             }
 
-            
-            for (const [n, w] of Object.entries(cache)) {
-                if (world_names.includes(n)) continue;
-                else {
-                    w.dom.root.remove();
-                    delete cache[n];
-                }
-            }
-            
-            for (const worldName of world_names) {
-                if (cache[worldName]) continue;
-                else {
-                    const before = Object.keys(cache).find((it) => it.toLowerCase().localeCompare(worldName.toLowerCase()) == 1);
-                    const worldData = await loadWorldInfo(worldName);
-                    await listPanelApi.renderBook(worldName, before ? cache[before].dom.root : null, worldData);
-                }
-            }
+            removeStaleCachedBooks({ cache, worldNames: world_names });
+            await renderMissingBooks({ cache, worldNames: world_names, loadWorldInfo, listPanelApi });
             if (name && cache[name]) {
-                const world = { entries: {}, metadata: cloneMetadata(data.metadata) };
-                const updatedSort = getSortFromMetadata(world.metadata) ?? cache[name].sort;
-                const sortChoice = {
-                    sort: updatedSort?.sort ?? Settings.instance.sortLogic,
-                    direction: updatedSort?.direction ?? Settings.instance.sortDirection,
-                };
-                for (const [k, v] of Object.entries(data.entries)) {
-                    world.entries[k] = structuredClone(v);
-                }
-                
-                for (const e of Object.keys(cache[name].entries)) {
-                    if (world.entries[e]) continue;
-                    cache[name].dom.entry[e].root.remove();
-                    delete cache[name].dom.entry[e];
-                    delete cache[name].entries[e];
-                    if (isCurrentEditor(name, e)) {
-                        if (editorPanelApi) {
-                            editorPanelApi.clearEditor();
-                        } else {
-                            setCurrentEditor(null);
-                        }
-                    }
-                }
-                
-                const alreadyAdded = [];
-                for (const e of Object.keys(world.entries)) {
-                    if (cache[name].entries[e]) continue;
-                    const a = world.entries[e];
-                    const sorted = sortEntries([...Object.values(cache[name].entries), ...alreadyAdded, a], sortChoice.sort, sortChoice.direction);
-                    const before = sorted.find((it, idx) => idx > sorted.indexOf(a));
-                    await renderEntry(a, name, before ? cache[name].dom.entry[before.uid].root : null);
-                    alreadyAdded.push(a);
-                }
-                
-                let hasUpdate = false;
-                for (const [e, o] of Object.entries(cache[name].entries)) {
-                    const n = world.entries[e];
-                    let hasChange = false;
-                    let needsEditorRefresh = false;
-                    const triggerEditorRefreshOnce = () => {
-                        if (shouldAutoRefreshEditor(name, e)) {
-                            needsEditorRefresh = true;
-                        }
-                    };
-                    for (const k of new Set([...Object.keys(o), ...Object.keys(n)])) {
-                        if (o[k] == n[k]) continue;
-                        if (typeof o[k] == 'object' && JSON.stringify(o[k]) == JSON.stringify(n[k])) continue;
-                        hasChange = true;
-                        hasUpdate = true;
-                        switch (k) {
-                            case 'content': {
-                                if (isCurrentEditor(name, e)) {
-                                    const inp = (document.querySelector('.stwid--editor [name="content"]'));
-                                    if (!inp || inp.value != n.content) {
-                                        triggerEditorRefreshOnce();
-                                    }
-                                }
-                                break;
-                            }
-                            case 'comment': {
-                                if (isCurrentEditor(name, e)) {
-                                    const inp = (document.querySelector('.stwid--editor [name="comment"]'));
-                                    if (!inp || inp.value != n.comment) {
-                                        triggerEditorRefreshOnce();
-                                    }
-                                }
-                                cache[name].dom.entry[e].comment.textContent = n.comment;
-                                break;
-                            }
-                            case 'key': {
-                                if (hasChange && isCurrentEditor(name, e)) {
-                                    const inp = (document.querySelector(`.stwid--editor textarea[name="${k}"]`));
-                                    if (!inp || inp.value != n[k].join(', ')) {
-                                        triggerEditorRefreshOnce();
-                                    }
-                                }
-                                cache[name].dom.entry[e].key.textContent = n.key.join(', ');
-                                break;
-                            }
-                            case 'disable': {
-                                if (hasChange && isCurrentEditor(name, e)) {
-                                    triggerEditorRefreshOnce();
-                                }
-                                cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'remove' : 'add']('fa-toggle-on');
-                                cache[name].dom.entry[e].isEnabled.classList[n[k] ? 'add' : 'remove']('fa-toggle-off');
-                                break;
-                            }
-                            case 'constant':
-                            case 'vectorized': {
-                                if (hasChange && isCurrentEditor(name, e)) {
-                                    triggerEditorRefreshOnce();
-                                }
-                                cache[name].dom.entry[e].strategy.value = entryState(n);
-                                break;
-                            }
-                            default: {
-                                if (hasChange && isCurrentEditor(name, e)) {
-                                    const inp = (document.querySelector(`.stwid--editor [name="${k}"]`));
-                                    if (!inp || inp.value != n[k]) {
-                                        triggerEditorRefreshOnce();
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    if (needsEditorRefresh) {
-                        cache[name].dom.entry[e].root.click();
-                    } else if (isCurrentEditor(name, e) && editorPanelApi) {
-                        
-                        
-                        
-                        editorPanelApi.markClean(name, e);
-                    }
-                }
-                cache[name].entries = world.entries;
-                const prevSort = cache[name].sort;
-                listPanelApi.setCacheMetadata(name, world.metadata);
-                const sortChanged = JSON.stringify(prevSort) !== JSON.stringify(cache[name].sort);
-                if (hasUpdate || sortChanged) {
-                    listPanelApi.sortEntriesIfNeeded(name);
-                }
+                await syncBookEntriesAndDom({
+                    bookName: name,
+                    cache,
+                    data,
+                    listPanelApi,
+                    editorPanelApi,
+                    getCurrentEditor,
+                    setCurrentEditor,
+                    shouldAutoRefreshEditor,
+                });
             }
             getRefreshBookSourceLinks()?.('worldinfo_updated');
         } finally {
@@ -233,36 +374,13 @@ export const initWIUpdateHandler = ({
 
     const updateWIChangeDebounced = debounce(updateWIChange);
 
-    
-    const waitForWorldInfoUpdate = async () => {
-        
-        const tokenAtCall = updateWIChangeToken;
-
-        
-        while (updateWIChangeToken === tokenAtCall) {
-            if (isWIUpdateInProgress) {
-                
-                
-                await updateWIChangeFinished?.promise;
-                continue;
-            }
-            await updateWIChangeStarted.promise;
-            
-            
-        }
-
-        
-        await updateWIChangeFinished?.promise;
-        return true;
-    };
-
-    const waitForWorldInfoUpdateWithTimeout = async (waitPromise, timeoutMs = EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS) => {
-        const result = await Promise.race([
-            waitPromise.then(() => true),
-            delay(timeoutMs).then(() => false),
-        ]);
-        return result;
-    };
+    const { waitForWorldInfoUpdate, waitForWorldInfoUpdateWithTimeout } = createWorldInfoUpdateWaiter({
+        delay,
+        getUpdateWIChangeToken: () => updateWIChangeToken,
+        isUpdateInProgress: () => isWIUpdateInProgress,
+        getUpdateStarted: () => updateWIChangeStarted,
+        getUpdateFinished: () => updateWIChangeFinished,
+    });
 
     const reopenEditorEntry = (editorState) => {
         if (!editorState?.name || !editorState?.uid) return;
@@ -272,31 +390,13 @@ export const initWIUpdateHandler = ({
         }
     };
 
-    const runEditorDuplicateRefreshWorker = async () => {
-        if (isEditorDuplicateRefreshWorkerRunning) return;
-        isEditorDuplicateRefreshWorkerRunning = true;
-        try {
-            while (editorDuplicateRefreshQueue.length > 0) {
-                const waitPromise = editorDuplicateRefreshQueue.shift();
-                const hasUpdate = await waitForWorldInfoUpdateWithTimeout(waitPromise);
-                if (!hasUpdate) continue;
-
-                const currentEditor = getCurrentEditor();
-                const reopenTarget = currentEditor ? { ...currentEditor } : null;
-                await refreshList();
-                reopenEditorEntry(reopenTarget);
-            }
-        } finally {
-            isEditorDuplicateRefreshWorkerRunning = false;
-        }
-    };
-
-    const queueEditorDuplicateRefresh = () => {
-        
-        
-        editorDuplicateRefreshQueue.push(waitForWorldInfoUpdate());
-        void runEditorDuplicateRefreshWorker();
-    };
+    const { queueEditorDuplicateRefresh } = createEditorDuplicateRefreshWorker({
+        getCurrentEditor,
+        refreshList,
+        reopenEditorEntry,
+        waitForWorldInfoUpdate,
+        waitForWorldInfoUpdateWithTimeout,
+    });
 
     const fillEmptyTitlesWithKeywords = async (name) => {
         const data = await loadWorldInfo(name);
@@ -318,16 +418,12 @@ export const initWIUpdateHandler = ({
 
     const onWorldInfoUpdated = (name, world) => updateWIChangeDebounced(name, world);
     const onWorldInfoSettingsUpdated = () => updateSettingsChange();
-    if (eventBus && eventTypes) {
-        eventBus.on(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
-        eventBus.on(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
-    }
-
-    const cleanup = () => {
-        if (!eventBus || !eventTypes) return;
-        eventBus.removeListener(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
-        eventBus.removeListener(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
-    };
+    const cleanup = registerWorldInfoListeners({
+        eventBus,
+        eventTypes,
+        onWorldInfoUpdated,
+        onWorldInfoSettingsUpdated,
+    });
 
     return {
         buildSavePayload,

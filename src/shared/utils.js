@@ -27,9 +27,9 @@ const createDeferred = () => {
     let resolve;
     
     let reject;
-    const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
+    const promise = new Promise((resolvePromise, rejectPromise) => {
+        resolve = resolvePromise;
+        reject = rejectPromise;
     });
     return { promise, resolve, reject };
 };
@@ -38,15 +38,15 @@ const safeToSorted = (array, comparator) => typeof array.toSorted === 'function'
     ? array.toSorted(comparator)
     : array.slice().sort(comparator);
 
-const getSortLabel = (sort, direction) => SORT_OPTIONS.find(([, s, d]) => s === sort && d === direction)?.[0];
+const getSortLabel = (sort, direction) => SORT_OPTIONS.find(([, optionSort, optionDirection]) => optionSort === sort && optionDirection === direction)?.[0];
 
 const appendSortOptions = (select, currentSort, currentDirection) => {
     for (const [label, sort, direction] of SORT_OPTIONS) {
-        const opt = document.createElement('option');
-        opt.value = JSON.stringify({ sort, direction });
-        opt.textContent = label;
-        opt.selected = sort == currentSort && direction == currentDirection;
-        select.append(opt);
+        const optionEl = document.createElement('option');
+        optionEl.value = JSON.stringify({ sort, direction });
+        optionEl.textContent = label;
+        optionEl.selected = sort == currentSort && direction == currentDirection;
+        select.append(optionEl);
     }
 };
 
@@ -85,13 +85,13 @@ const executeSlashCommand = async (command) => {
         }
 
         const parser = new SlashCommandParser();
-        const closure = parser.parse(command);
-        if (!closure || typeof closure.execute !== 'function') {
+        const commandClosure = parser.parse(command);
+        if (!commandClosure || typeof commandClosure.execute !== 'function') {
             console.error('Failed to execute slash command: parser returned an invalid command closure.');
             return false;
         }
 
-        await closure.execute();
+        await commandClosure.execute();
         return true;
     } catch (error) {
         console.error('Failed to execute slash command', error);

@@ -1,18 +1,31 @@
 
 
+const ENTRY_FIELD_KEYS = Object.freeze({
+    POSITION: 'position',
+    DEPTH: 'depth',
+    ORDER: 'order',
+    TRIGGER: 'trigger',
+    STICKY: 'sticky',
+    COOLDOWN: 'cooldown',
+    DELAY: 'delay',
+    AUTOMATION_ID: 'automationId',
+});
+
+const EMPTY_TABLE_HEADER_LABEL = '';
+
 export const SORT = {
     
     TITLE: 'title',
     
-    POSITION: 'position',
+    POSITION: ENTRY_FIELD_KEYS.POSITION,
     
-    DEPTH: 'depth',
+    DEPTH: ENTRY_FIELD_KEYS.DEPTH,
     
-    ORDER: 'order',
+    ORDER: ENTRY_FIELD_KEYS.ORDER,
     
     UID: 'uid',
     
-    TRIGGER: 'trigger',
+    TRIGGER: ENTRY_FIELD_KEYS.TRIGGER,
     
     LENGTH: 'length',
     
@@ -40,16 +53,16 @@ export const SORT_DIRECTION = {
 
 export const ENTRY_MANAGER_TOGGLE_COLUMNS = [
     { key: 'strategy',        label: 'Strategy' },
-    { key: 'position',        label: 'Position' },
-    { key: 'depth',           label: 'Depth' },
+    { key: ENTRY_FIELD_KEYS.POSITION, label: 'Position' },
+    { key: ENTRY_FIELD_KEYS.DEPTH,    label: 'Depth' },
     { key: 'outlet',          label: 'Outlet' },
     { key: 'group',           label: 'Inclusion Group' },
-    { key: 'order',           label: 'Order' },
-    { key: 'sticky',          label: 'Sticky' },
-    { key: 'cooldown',        label: 'Cooldown' },
-    { key: 'delay',           label: 'Delay' },
-    { key: 'automationId',    label: 'Automation ID' },
-    { key: 'trigger',         label: 'Trigger %' },
+    { key: ENTRY_FIELD_KEYS.ORDER,         label: 'Order' },
+    { key: ENTRY_FIELD_KEYS.STICKY,        label: 'Sticky' },
+    { key: ENTRY_FIELD_KEYS.COOLDOWN,      label: 'Cooldown' },
+    { key: ENTRY_FIELD_KEYS.DELAY,         label: 'Delay' },
+    { key: ENTRY_FIELD_KEYS.AUTOMATION_ID, label: 'Automation ID' },
+    { key: ENTRY_FIELD_KEYS.TRIGGER,       label: 'Trigger %' },
     { key: 'recursion',       label: 'Recursion' },
     { key: 'budget',          label: 'Budget' },
     { key: 'characterFilter', label: 'Character Filter' },
@@ -57,22 +70,22 @@ export const ENTRY_MANAGER_TOGGLE_COLUMNS = [
 
 
 export const ENTRY_MANAGER_TABLE_COLUMNS = [
-    { key: 'select',  label: '' },
-    { key: 'drag',    label: '' },
-    { key: 'enabled', label: '' },
+    { key: 'select',  label: EMPTY_TABLE_HEADER_LABEL },
+    { key: 'drag',    label: EMPTY_TABLE_HEADER_LABEL },
+    { key: 'enabled', label: EMPTY_TABLE_HEADER_LABEL },
     { key: 'entry',   label: 'Entry' },
     ...ENTRY_MANAGER_TOGGLE_COLUMNS,
 ];
 
 
 export const ENTRY_MANAGER_NUMBER_COLUMN_KEYS = new Set([
-    'depth',
-    'order',
-    'sticky',
-    'cooldown',
-    'delay',
-    'automationId',
-    'trigger',
+    ENTRY_FIELD_KEYS.DEPTH,
+    ENTRY_FIELD_KEYS.ORDER,
+    ENTRY_FIELD_KEYS.STICKY,
+    ENTRY_FIELD_KEYS.COOLDOWN,
+    ENTRY_FIELD_KEYS.DELAY,
+    ENTRY_FIELD_KEYS.AUTOMATION_ID,
+    ENTRY_FIELD_KEYS.TRIGGER,
 ]);
 
 

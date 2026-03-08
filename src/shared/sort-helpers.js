@@ -4,54 +4,113 @@ import { safeToSorted } from './utils.js';
 
 const METADATA_NAMESPACE = 'stwid';
 const METADATA_SORT_KEY = 'sort';
+const MISSING_NUMBER_SORT_VALUE = Number.MAX_SAFE_INTEGER;
+const ENTRY_KEY_JOIN_SEPARATOR = ', ';
 
-const sortEntries = (entries, sortLogic = null, sortDirection = null) => {
-    sortLogic ??= Settings.instance.sortLogic;
-    sortDirection ??= Settings.instance.sortDirection;
-    const x = (y) => y.data ?? y;
-    const normalizeString = (value) => {
-        if (value === undefined || value === null) return '';
-        return String(value).toLowerCase();
-    };
-    const defaultTitle = (entry) => entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(', ') : '');
-    const defaultCompare = (a, b) => normalizeString(defaultTitle(x(a))).localeCompare(normalizeString(defaultTitle(x(b))));
-    const stringSort = (getter) => safeToSorted(entries, (a, b) => {
-        const av = normalizeString(getter(x(a)));
-        const bv = normalizeString(getter(x(b)));
+const unwrapEntry = (entryOrWrapper) => entryOrWrapper.data ?? entryOrWrapper;
+
+const normalizeString = (value) => {
+    if (value === undefined || value === null) return '';
+    return String(value).toLowerCase();
+};
+
+const getDefaultTitle = (entry) => entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(ENTRY_KEY_JOIN_SEPARATOR) : '');
+
+const createDefaultCompare = () => (a, b) => {
+    return normalizeString(getDefaultTitle(unwrapEntry(a))).localeCompare(normalizeString(getDefaultTitle(unwrapEntry(b))));
+};
+
+const compareFiniteOrMissingNumbers = (aValue, bValue, { direction, onTie }) => {
+    const hasA = Number.isFinite(aValue);
+    const hasB = Number.isFinite(bValue);
+    if (hasA && hasB && aValue !== bValue) return direction * (aValue - bValue);
+    if (hasA && !hasB) return -1;
+    if (!hasA && hasB) return 1;
+    return onTie();
+};
+
+const createStringSorter = ({ entries, defaultCompare }) => (getter) => {
+    return safeToSorted(entries, (a, b) => {
+        const av = normalizeString(getter(unwrapEntry(a)));
+        const bv = normalizeString(getter(unwrapEntry(b)));
         const cmp = av.localeCompare(bv);
         if (cmp !== 0) return cmp;
         return defaultCompare(a, b);
     });
-    const numericSort = (getter) => {
-        const direction = sortDirection == SORT_DIRECTION.DESCENDING ? -1 : 1;
-        return safeToSorted(entries, (a, b) => {
-            const av = getter(x(a));
-            const bv = getter(x(b));
-            const hasA = Number.isFinite(av);
-            const hasB = Number.isFinite(bv);
-            if (hasA && hasB && av !== bv) return direction * (av - bv);
-            if (hasA && !hasB) return -1;
-            if (!hasA && hasB) return 1;
-            return defaultCompare(a, b);
+};
+
+const createNumericSorter = ({ entries, defaultCompare, sortDirection }) => (getter) => {
+    const direction = sortDirection == SORT_DIRECTION.DESCENDING ? -1 : 1;
+    return safeToSorted(entries, (a, b) => {
+        const av = getter(unwrapEntry(a));
+        const bv = getter(unwrapEntry(b));
+        return compareFiniteOrMissingNumbers(av, bv, {
+            direction,
+            onTie: () => defaultCompare(a, b),
         });
-    };
-    const getDisplayIndex = (entry) => {
-        const displayIndex = Number(entry?.extensions?.display_index);
-        return Number.isFinite(displayIndex) ? displayIndex : null;
-    };
-    const customSort = () => safeToSorted(entries, (a, b) => {
-        const av = getDisplayIndex(x(a));
-        const bv = getDisplayIndex(x(b));
-        const hasA = Number.isFinite(av);
-        const hasB = Number.isFinite(bv);
-        if (hasA && hasB && av !== bv) return av - bv;
-        if (hasA && !hasB) return -1;
-        if (!hasA && hasB) return 1;
-        const auid = Number(x(a).uid);
-        const buid = Number(x(b).uid);
-        if (Number.isFinite(auid) && Number.isFinite(buid) && auid !== buid) return auid - buid;
+    });
+};
+
+const getDisplayIndex = (entry) => {
+    const displayIndex = Number(entry?.extensions?.display_index);
+    return Number.isFinite(displayIndex) ? displayIndex : null;
+};
+
+const sortByTitle = (createStringSort) => {
+    return createStringSort((entry) => entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(ENTRY_KEY_JOIN_SEPARATOR) : ''));
+};
+
+const sortByTrigger = (createStringSort) => {
+    return createStringSort((entry) => Array.isArray(entry.key) ? entry.key.join(ENTRY_KEY_JOIN_SEPARATOR) : '');
+};
+
+const sortByPrompt = (entries, defaultCompare) => {
+    return safeToSorted(entries, (a, b) => {
+        const aEntry = unwrapEntry(a);
+        const bEntry = unwrapEntry(b);
+        if (aEntry.position > bEntry.position) return 1;
+        if (aEntry.position < bEntry.position) return -1;
+        if ((aEntry.depth ?? MISSING_NUMBER_SORT_VALUE) < (bEntry.depth ?? MISSING_NUMBER_SORT_VALUE)) return 1;
+        if ((aEntry.depth ?? MISSING_NUMBER_SORT_VALUE) > (bEntry.depth ?? MISSING_NUMBER_SORT_VALUE)) return -1;
+        if ((aEntry.order ?? MISSING_NUMBER_SORT_VALUE) > (bEntry.order ?? MISSING_NUMBER_SORT_VALUE)) return -1;
+        if ((aEntry.order ?? MISSING_NUMBER_SORT_VALUE) < (bEntry.order ?? MISSING_NUMBER_SORT_VALUE)) return 1;
         return defaultCompare(a, b);
     });
+};
+
+const sortByLength = (entries, createNumericSort) => {
+    const lengthCache = new Map(entries.map((item) => {
+        const entry = unwrapEntry(item);
+        if (typeof entry?.content !== 'string') return [entry, null];
+        return [entry, entry.content.split(/\s+/).filter(Boolean).length];
+    }));
+    return createNumericSort((entry) => {
+        return lengthCache.get(entry) ?? null;
+    });
+};
+
+const sortByCustom = (entries, defaultCompare) => {
+    return safeToSorted(entries, (a, b) => {
+        const av = getDisplayIndex(unwrapEntry(a));
+        const bv = getDisplayIndex(unwrapEntry(b));
+        return compareFiniteOrMissingNumbers(av, bv, {
+            direction: 1,
+            onTie: () => {
+                const auid = Number(unwrapEntry(a).uid);
+                const buid = Number(unwrapEntry(b).uid);
+                if (Number.isFinite(auid) && Number.isFinite(buid) && auid !== buid) return auid - buid;
+                return defaultCompare(a, b);
+            },
+        });
+    });
+};
+
+const sortEntries = (entries, sortLogic = null, sortDirection = null) => {
+    sortLogic ??= Settings.instance.sortLogic;
+    sortDirection ??= Settings.instance.sortDirection;
+    const defaultCompare = createDefaultCompare();
+    const stringSort = createStringSorter({ entries, defaultCompare });
+    const numericSort = createNumericSorter({ entries, defaultCompare, sortDirection });
 
     let result = [...entries];
     let shouldReverse = false;
@@ -59,25 +118,17 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null) => {
         case SORT.ALPHABETICAL:
         case SORT.TITLE: {
             shouldReverse = true;
-            result = stringSort((entry) => entry.comment ?? (Array.isArray(entry.key) ? entry.key.join(', ') : ''));
+            result = sortByTitle(stringSort);
             break;
         }
         case SORT.TRIGGER: {
             shouldReverse = true;
-            result = stringSort((entry) => Array.isArray(entry.key) ? entry.key.join(', ') : '');
+            result = sortByTrigger(stringSort);
             break;
         }
         case SORT.PROMPT: {
             shouldReverse = true;
-            result = safeToSorted(entries, (a, b) => {
-                if (x(a).position > x(b).position) return 1;
-                if (x(a).position < x(b).position) return -1;
-                if ((x(a).depth ?? Number.MAX_SAFE_INTEGER) < (x(b).depth ?? Number.MAX_SAFE_INTEGER)) return 1;
-                if ((x(a).depth ?? Number.MAX_SAFE_INTEGER) > (x(b).depth ?? Number.MAX_SAFE_INTEGER)) return -1;
-                if ((x(a).order ?? Number.MAX_SAFE_INTEGER) > (x(b).order ?? Number.MAX_SAFE_INTEGER)) return -1;
-                if ((x(a).order ?? Number.MAX_SAFE_INTEGER) < (x(b).order ?? Number.MAX_SAFE_INTEGER)) return 1;
-                return defaultCompare(a, b);
-            });
+            result = sortByPrompt(entries, defaultCompare);
             break;
         }
         case SORT.POSITION: {
@@ -97,23 +148,16 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null) => {
             break;
         }
         case SORT.LENGTH: {
-            const lengthCache = new Map(entries.map((item) => {
-                const entry = x(item);
-                if (typeof entry?.content !== 'string') return [entry, null];
-                return [entry, entry.content.split(/\s+/).filter(Boolean).length];
-            }));
-            result = numericSort((entry) => {
-                return lengthCache.get(entry) ?? null;
-            });
+            result = sortByLength(entries, numericSort);
             break;
         }
         case SORT.CUSTOM: {
-            result = customSort();
+            result = sortByCustom(entries, defaultCompare);
             break;
         }
         default: {
             shouldReverse = true;
-            result = stringSort((entry) => defaultTitle(entry));
+            result = stringSort((entry) => getDefaultTitle(entry));
             break;
         }
     }

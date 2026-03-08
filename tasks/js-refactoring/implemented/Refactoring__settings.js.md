@@ -31,9 +31,9 @@
 - `src/shared/settings.js`, lines 71-73 - validate `this.sortDirection` against `SORT_DIRECTION`, fallback to `SORT_DIRECTION.ASCENDING`
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new function named `ensureEnumValue(value, enumObject, defaultValue)` near the top of the file.
-- [ ] Replace the first copy (lines 68-70) with a call to `ensureEnumValue(...)`.
-- [ ] Replace the second copy (lines 71-73) with a call to `ensureEnumValue(...)`.
+- [x] Extract the shared pattern into a new function named `ensureEnumValue(value, enumObject, defaultValue)` near the top of the file.
+- [x] Replace the first copy (lines 68-70) with a call to `ensureEnumValue(...)`.
+- [x] Replace the second copy (lines 71-73) with a call to `ensureEnumValue(...)`.
 
 ---
 
@@ -47,9 +47,9 @@
 - `src/shared/settings.js`, line 80 - normalize `this.featureAdditionalMatchingSources`
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new function named `applyBooleanSettingDefaults()` near the top of the file.
-- [ ] Move the three normalization lines (78-80) into `applyBooleanSettingDefaults()`.
-- [ ] Replace lines 78-80 with a single call to `applyBooleanSettingDefaults()`.
+- [x] Extract the shared pattern into a new function named `applyBooleanSettingDefaults()` near the top of the file.
+- [x] Move the three normalization lines (78-80) into `applyBooleanSettingDefaults()`.
+- [x] Replace lines 78-80 with a single call to `applyBooleanSettingDefaults()`.
 
 ---
 
@@ -62,8 +62,8 @@
 - `src/shared/settings.js`, line 66
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const WORLD_INFO_DRAWER_SETTINGS_KEY = 'worldInfoDrawer';`
-- [ ] Replace each occurrence of the raw literal with `WORLD_INFO_DRAWER_SETTINGS_KEY`.
+- [x] At the top of the file (after imports), add: `const WORLD_INFO_DRAWER_SETTINGS_KEY = 'worldInfoDrawer';`
+- [x] Replace each occurrence of the raw literal with `WORLD_INFO_DRAWER_SETTINGS_KEY`.
 
 ---
 
@@ -76,8 +76,8 @@
 - `src/shared/settings.js`, line 69
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const DEFAULT_SORT_LOGIC = SORT.TITLE;`
-- [ ] Replace each occurrence of `SORT.TITLE` with `DEFAULT_SORT_LOGIC`.
+- [x] At the top of the file (after imports), add: `const DEFAULT_SORT_LOGIC = SORT.TITLE;`
+- [x] Replace each occurrence of `SORT.TITLE` with `DEFAULT_SORT_LOGIC`.
 
 ---
 
@@ -90,8 +90,8 @@
 - `src/shared/settings.js`, line 72
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const DEFAULT_SORT_DIRECTION = SORT_DIRECTION.ASCENDING;`
-- [ ] Replace each occurrence of `SORT_DIRECTION.ASCENDING` with `DEFAULT_SORT_DIRECTION`.
+- [x] At the top of the file (after imports), add: `const DEFAULT_SORT_DIRECTION = SORT_DIRECTION.ASCENDING;`
+- [x] Replace each occurrence of `SORT_DIRECTION.ASCENDING` with `DEFAULT_SORT_DIRECTION`.
 
 ---
 
@@ -102,7 +102,7 @@
 **Where:** `src/shared/settings.js`, line 54
 
 **Steps to fix:**
-- [ ] Rename `saved` to `savedSettings` everywhere it appears in this file.
+- [x] Rename `saved` to `savedSettings` everywhere it appears in this file.
 
 ---
 
@@ -113,7 +113,7 @@
 **Where:** `src/shared/settings.js`, line 56
 
 **Steps to fix:**
-- [ ] Rename `key` to `settingsKey` everywhere it appears in this file.
+- [x] Rename `key` to `settingsKey` everywhere it appears in this file.
 
 ---
 
@@ -124,6 +124,29 @@
 **Where:** `src/shared/settings.js`, lines 55-61 (deepest point: line 58)
 
 **Steps to fix:**
-- [ ] Extract the inner block (lines 56-61) into a new function named `applySavedSettings(savedSettings)`. It should copy known keys from `savedSettings` onto `this`.
-- [ ] Replace the `for` loop body in `constructor` with a call to `applySavedSettings(savedSettings)`.
-- [ ] (Optional) Consider returning early if `savedSettings` is not an object, so the constructor has fewer nested blocks.
+- [x] Extract the inner block (lines 56-61) into a new function named `applySavedSettings(savedSettings)`. It should copy known keys from `savedSettings` onto `this`.
+- [x] Replace the `for` loop body in `constructor` with a call to `applySavedSettings(savedSettings)`.
+- [x] (Optional) Consider returning early if `savedSettings` is not an object, so the constructor has fewer nested blocks.
+
+---
+
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+`src/shared/settings.js`
+- Added named constants for the settings storage key and the default sort values, so those values now live in one place.
+- Extracted small helper functions for enum validation, copying saved settings, and normalizing boolean settings to remove repeated code.
+- Simplified the constructor so it reads more directly and has less nesting.
+
+### Risks / What might break
+
+- The new helper functions use `.call(this)`, so future edits need to keep that binding pattern or convert them into class methods.
+- Any future code that expects the old repeated constructor blocks to exist in place will need to follow the new helper-based structure instead.
+
+### Manual checks
+
+- Reload the browser tab and open the extension settings drawer. Success looks like the saved sorting and feature toggle values still loading correctly.
+- Change the sort mode and sort direction, reload the tab, and confirm the same values are still selected after reload.
+- Toggle the folder grouping and additional matching sources options, reload the tab, and confirm those toggles keep their saved on/off state.
