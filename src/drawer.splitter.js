@@ -11,8 +11,10 @@ const MIN_LIST_WIDTH = 150;
 const MIN_EDITOR_WIDTH = 300;
 const MIN_LIST_HEIGHT = 150;
 const MIN_EDITOR_HEIGHT = 150;
+const SPLITTER_THICKNESS_FALLBACK_PX = 6;
 
 const isMobileLayout = ()=>window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
+const clamp = (value, min, max)=>Math.min(Math.max(value, min), max);
 
 const getStoredSplitterSize = (primaryKey, legacyKey)=>{
     const primaryValue = Number.parseInt(localStorage.getItem(primaryKey) ?? '', 10);
@@ -28,242 +30,370 @@ const getStoredSplitterSize = (primaryKey, legacyKey)=>{
 const saveSplitterSize = (primaryKey, legacyKey, value)=>{
     const roundedValue = String(Math.round(value));
     localStorage.setItem(primaryKey, roundedValue);
-
     localStorage.setItem(legacyKey, roundedValue);
 };
 
-export function initSplitter(body, list) {
-    let restoreSplitterForCurrentLayout = ()=>{};
+function createSplitters(body) {
+    const desktopSplitter = document.createElement('div');
+    desktopSplitter.classList.add('stwid--splitter');
+    body.append(desktopSplitter);
 
-    const splitter = document.createElement('div'); {
-        splitter.classList.add('stwid--splitter');
-        body.append(splitter);
+    const mobileSplitter = document.createElement('div');
+    mobileSplitter.classList.add('stwid--splitter-h');
+    body.append(mobileSplitter);
 
-        const splitterH = document.createElement('div'); {
-            splitterH.classList.add('stwid--splitter-h');
-            body.append(splitterH);
+    return { desktopSplitter, mobileSplitter };
+}
+
+function getMaxListSizeForLayout(bodyEl, splitterEl, minListSize, minEditorSize, measureAxis) {
+    const splitterThickness = splitterEl.getBoundingClientRect()[measureAxis] || SPLITTER_THICKNESS_FALLBACK_PX;
+    const bodySize = bodyEl.getBoundingClientRect()[measureAxis];
+    return Math.max(minListSize, bodySize - splitterThickness - minEditorSize);
+}
+
+function getDefaultListSizeForLayout(bodyEl, ratio, fallbackPx, minListSize, getMaxListSize, measureAxis) {
+    const preferred = Math.round(bodyEl.getBoundingClientRect()[measureAxis] * ratio) || fallbackPx;
+    return clamp(preferred, minListSize, getMaxListSize());
+}
+
+function applyListSizeCss(value, minValue, axis, appliedValue, list) {
+    const clamped = Math.max(minValue, value);
+    const sizeValue = `${clamped}px`;
+
+    if (axis === 'width') {
+        if (clamped === appliedValue && list.style.flexBasis === sizeValue && list.style.width === sizeValue && !list.style.height) {
+            return clamped;
+        }
+        if (list.style.height) list.style.height = '';
+        if (list.style.flexBasis !== sizeValue) list.style.flexBasis = sizeValue;
+        if (list.style.width !== sizeValue) list.style.width = sizeValue;
+        return clamped;
+    }
+
+    if (clamped === appliedValue && list.style.height === sizeValue && !list.style.width && !list.style.flexBasis) {
+        return clamped;
+    }
+    if (list.style.width) list.style.width = '';
+    if (list.style.flexBasis) list.style.flexBasis = '';
+    if (list.style.height !== sizeValue) list.style.height = sizeValue;
+    return clamped;
+}
+
+function applyListSizeWithBounds(value, minValue, getMaxSize, applyListSize, setAppliedValue) {
+    const bounded = clamp(value, minValue, getMaxSize());
+    const appliedValue = applyListSize(bounded);
+    setAppliedValue(appliedValue);
+    return appliedValue;
+}
+
+function attachSplitterPointerDragHandlers({
+    splitterEl,
+    shouldHandleDrag,
+    getStartCoord,
+    getStartSize,
+    minSize,
+    getMaxSize,
+    applyWithBounds,
+    saveAppliedSize,
+    setAppliedSize,
+}) {
+    const createPointerDownHandler = ()=>function onSplitterPointerDown(evt) {
+        if (!shouldHandleDrag()) return;
+        evt.preventDefault();
+        splitterEl.setPointerCapture(evt.pointerId);
+
+        const startCoord = getStartCoord(evt);
+        const startSize = getStartSize();
+        setAppliedSize(startSize);
+        const maxSize = getMaxSize();
+
+        let pendingSize = startSize;
+        let rafId = null;
+
+        const queueApply = (value)=>{
+            pendingSize = value;
+            if (rafId !== null) return;
+
+            rafId = requestAnimationFrame(()=>{
+                rafId = null;
+                setAppliedSize(applyWithBounds(pendingSize));
+            });
+        };
+
+        const onMove = (moveEvt)=>{
+            const delta = getStartCoord(moveEvt) - startCoord;
+            const nextSize = Math.min(Math.max(minSize, startSize + delta), maxSize);
+            queueApply(nextSize);
+        };
+
+        const cleanupSplitterDrag = (endEvt)=>{
+            try {
+                splitterEl.releasePointerCapture(endEvt.pointerId);
+            } catch {
+
+            }
+
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            window.removeEventListener('pointercancel', onCancel);
+            splitterEl.removeEventListener('lostpointercapture', onLostCapture);
+
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+                setAppliedSize(applyWithBounds(pendingSize));
+            }
+
+            saveAppliedSize();
+        };
+
+        const onUp = (upEvt)=>cleanupSplitterDrag(upEvt);
+        const onCancel = (cancelEvt)=>cleanupSplitterDrag(cancelEvt);
+        const onLostCapture = (lostEvt)=>cleanupSplitterDrag(lostEvt);
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onCancel);
+        splitterEl.addEventListener('lostpointercapture', onLostCapture);
+    };
+
+    const pointerDownHandler = createPointerDownHandler();
+    splitterEl.addEventListener('pointerdown', pointerDownHandler);
+}
+
+function attachDesktopSplitterDragHandlers({
+    desktopSplitter,
+    list,
+    getDesktopMaxWidth,
+    applyDesktopWidthWithBounds,
+    getAppliedListWidth,
+    setAppliedListWidth,
+}) {
+    attachSplitterPointerDragHandlers({
+        splitterEl: desktopSplitter,
+        shouldHandleDrag: ()=>!isMobileLayout(),
+        getStartCoord: (evt)=>evt.clientX,
+        getStartSize: ()=>list.getBoundingClientRect().width,
+        minSize: MIN_LIST_WIDTH,
+        getMaxSize: getDesktopMaxWidth,
+        applyWithBounds: applyDesktopWidthWithBounds,
+        saveAppliedSize: ()=>{
+            saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, getAppliedListWidth());
+        },
+        setAppliedSize: setAppliedListWidth,
+    });
+}
+
+function attachMobileSplitterDragHandlers({
+    mobileSplitter,
+    list,
+    getMobileMaxHeight,
+    applyMobileHeightWithBounds,
+    getAppliedListHeight,
+    setAppliedListHeight,
+}) {
+    attachSplitterPointerDragHandlers({
+        splitterEl: mobileSplitter,
+        shouldHandleDrag: ()=>isMobileLayout(),
+        getStartCoord: (evt)=>evt.clientY,
+        getStartSize: ()=>list.getBoundingClientRect().height,
+        minSize: MIN_LIST_HEIGHT,
+        getMaxSize: getMobileMaxHeight,
+        applyWithBounds: applyMobileHeightWithBounds,
+        saveAppliedSize: ()=>{
+            saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, getAppliedListHeight());
+        },
+        setAppliedSize: setAppliedListHeight,
+    });
+}
+
+function attachLayoutResizeHandler(getLastLayoutIsMobile, setLastLayoutIsMobile, reapplyBoundsForCurrentLayout, restoreSplitterForCurrentLayout) {
+    const onLayoutResize = debounce(()=>{
+        const isMobile = isMobileLayout();
+        if (isMobile === getLastLayoutIsMobile()) {
+            reapplyBoundsForCurrentLayout(isMobile);
+            return;
         }
 
-        let appliedListWidth = MIN_LIST_WIDTH;
-        let appliedListHeight = MIN_LIST_HEIGHT;
-        let lastLayoutIsMobile = isMobileLayout();
+        setLastLayoutIsMobile(isMobile);
+        restoreSplitterForCurrentLayout();
+    }, 120);
 
-        const clamp = (value, min, max)=>Math.min(Math.max(value, min), max);
-        const getDesktopMaxWidth = ()=>{
-            const splitterWidth = splitter.getBoundingClientRect().width || 6;
-            const bodyWidth = body.getBoundingClientRect().width;
-            return Math.max(MIN_LIST_WIDTH, bodyWidth - splitterWidth - MIN_EDITOR_WIDTH);
-        };
-        const getMobileMaxHeight = ()=>{
-            const splitterHeight = splitterH.getBoundingClientRect().height || 6;
-            const bodyHeight = body.getBoundingClientRect().height;
-            return Math.max(MIN_LIST_HEIGHT, bodyHeight - splitterHeight - MIN_EDITOR_HEIGHT);
-        };
-        const getDefaultDesktopWidth = ()=>{
-            const preferred = Math.round(body.getBoundingClientRect().width * 0.34) || 300;
-            return clamp(preferred, MIN_LIST_WIDTH, getDesktopMaxWidth());
-        };
-        const getDefaultMobileHeight = ()=>{
-            const preferred = Math.round(body.getBoundingClientRect().height * 0.4) || 260;
-            return clamp(preferred, MIN_LIST_HEIGHT, getMobileMaxHeight());
-        };
-        const applyListWidth = (value)=>{
-            const clamped = Math.max(MIN_LIST_WIDTH, value);
-            const width = `${clamped}px`;
-            if (clamped === appliedListWidth && list.style.flexBasis === width && list.style.width === width && !list.style.height) return clamped;
-            if (list.style.height) list.style.height = '';
-            if (list.style.flexBasis !== width) list.style.flexBasis = width;
-            if (list.style.width !== width) list.style.width = width;
-            return clamped;
-        };
-        const applyListHeight = (value)=>{
-            const clamped = Math.max(MIN_LIST_HEIGHT, value);
-            const height = `${clamped}px`;
-            if (clamped === appliedListHeight && list.style.height === height && !list.style.width && !list.style.flexBasis) return clamped;
-            if (list.style.width) list.style.width = '';
-            if (list.style.flexBasis) list.style.flexBasis = '';
-            if (list.style.height !== height) list.style.height = height;
-            return clamped;
-        };
-        const applyDesktopWidthWithBounds = (value)=>{
-            const bounded = clamp(value, MIN_LIST_WIDTH, getDesktopMaxWidth());
-            appliedListWidth = applyListWidth(bounded);
-            return appliedListWidth;
-        };
-        const applyMobileHeightWithBounds = (value)=>{
-            const bounded = clamp(value, MIN_LIST_HEIGHT, getMobileMaxHeight());
-            appliedListHeight = applyListHeight(bounded);
-            return appliedListHeight;
-        };
-        const applyOrientationDefault = (mobileLayout)=>{
-            if (mobileLayout) {
-                const defaultHeight = applyMobileHeightWithBounds(getDefaultMobileHeight());
-                saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, defaultHeight);
+    window.addEventListener('resize', onLayoutResize);
+    globalThis.addEventListener?.('beforeunload', ()=>{
+        window.removeEventListener('resize', onLayoutResize);
+    }, { once:true });
+}
+
+function createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter) {
+    let appliedListWidth = MIN_LIST_WIDTH;
+    let appliedListHeight = MIN_LIST_HEIGHT;
+
+    const getDesktopMaxWidth = ()=>getMaxListSizeForLayout(
+        body,
+        desktopSplitter,
+        MIN_LIST_WIDTH,
+        MIN_EDITOR_WIDTH,
+        'width',
+    );
+
+    const getMobileMaxHeight = ()=>getMaxListSizeForLayout(
+        body,
+        mobileSplitter,
+        MIN_LIST_HEIGHT,
+        MIN_EDITOR_HEIGHT,
+        'height',
+    );
+
+    const getDefaultDesktopWidth = ()=>getDefaultListSizeForLayout(
+        body,
+        0.34,
+        300,
+        MIN_LIST_WIDTH,
+        getDesktopMaxWidth,
+        'width',
+    );
+
+    const getDefaultMobileHeight = ()=>getDefaultListSizeForLayout(
+        body,
+        0.4,
+        260,
+        MIN_LIST_HEIGHT,
+        getMobileMaxHeight,
+        'height',
+    );
+
+    const applyListWidth = (value)=>applyListSizeCss(value, MIN_LIST_WIDTH, 'width', appliedListWidth, list);
+    const applyListHeight = (value)=>applyListSizeCss(value, MIN_LIST_HEIGHT, 'height', appliedListHeight, list);
+
+    const setAppliedListWidth = (value)=>{
+        appliedListWidth = value;
+    };
+
+    const setAppliedListHeight = (value)=>{
+        appliedListHeight = value;
+    };
+
+    const applyDesktopWidthWithBounds = (value)=>applyListSizeWithBounds(
+        value,
+        MIN_LIST_WIDTH,
+        getDesktopMaxWidth,
+        applyListWidth,
+        setAppliedListWidth,
+    );
+
+    const applyMobileHeightWithBounds = (value)=>applyListSizeWithBounds(
+        value,
+        MIN_LIST_HEIGHT,
+        getMobileMaxHeight,
+        applyListHeight,
+        setAppliedListHeight,
+    );
+
+    const applyOrientationDefault = (mobileLayout)=>{
+        if (mobileLayout) {
+            const defaultHeight = applyMobileHeightWithBounds(getDefaultMobileHeight());
+            saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, defaultHeight);
+            return;
+        }
+
+        const defaultWidth = applyDesktopWidthWithBounds(getDefaultDesktopWidth());
+        saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, defaultWidth);
+    };
+
+    const reapplyBoundsForCurrentLayout = (mobileLayout)=>{
+        if (mobileLayout) {
+            const previousHeight = appliedListHeight;
+            const nextHeight = applyMobileHeightWithBounds(previousHeight);
+            if (nextHeight !== previousHeight) {
+                saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, nextHeight);
+            }
+            return;
+        }
+
+        const previousWidth = appliedListWidth;
+        const nextWidth = applyDesktopWidthWithBounds(previousWidth);
+        if (nextWidth !== previousWidth) {
+            saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, nextWidth);
+        }
+    };
+
+    return {
+        getDesktopMaxWidth,
+        getMobileMaxHeight,
+        getDefaultDesktopWidth,
+        getDefaultMobileHeight,
+        applyDesktopWidthWithBounds,
+        applyMobileHeightWithBounds,
+        applyOrientationDefault,
+        reapplyBoundsForCurrentLayout,
+        getAppliedListWidth: ()=>appliedListWidth,
+        getAppliedListHeight: ()=>appliedListHeight,
+        setAppliedListWidth,
+        setAppliedListHeight,
+    };
+}
+
+function createRestoreSplitterForCurrentLayout({
+    applyOrientationDefault,
+    applyDesktopWidthWithBounds,
+    applyMobileHeightWithBounds,
+}) {
+    return function restoreSplitterForCurrentLayout() {
+        if (isMobileLayout()) {
+            const storedHeight = getStoredSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY);
+            if (Number.isNaN(storedHeight)) {
+                applyOrientationDefault(true);
                 return;
             }
-            const defaultWidth = applyDesktopWidthWithBounds(getDefaultDesktopWidth());
-            saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, defaultWidth);
-        };
-        const reapplyBoundsForCurrentLayout = (mobileLayout)=>{
-            if (mobileLayout) {
-                const previousHeight = appliedListHeight;
-                const nextHeight = applyMobileHeightWithBounds(previousHeight);
-                if (nextHeight !== previousHeight) {
-                    saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, nextHeight);
-                }
-                return;
-            }
 
-            const previousWidth = appliedListWidth;
-            const nextWidth = applyDesktopWidthWithBounds(previousWidth);
-            if (nextWidth !== previousWidth) {
-                saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, nextWidth);
-            }
-        };
+            applyMobileHeightWithBounds(storedHeight);
+            return;
+        }
 
-        restoreSplitterForCurrentLayout = ()=>{
-            if (isMobileLayout()) {
-                const storedHeight = getStoredSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY);
-                if (Number.isNaN(storedHeight)) {
-                    applyOrientationDefault(true);
-                    return;
-                }
-                applyMobileHeightWithBounds(storedHeight);
-                return;
-            }
+        const storedWidth = getStoredSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY);
+        if (Number.isNaN(storedWidth)) {
+            applyOrientationDefault(false);
+            return;
+        }
 
-            const storedWidth = getStoredSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY);
-            if (Number.isNaN(storedWidth)) {
-                applyOrientationDefault(false);
-                return;
-            }
-            applyDesktopWidthWithBounds(storedWidth);
-        };
+        applyDesktopWidthWithBounds(storedWidth);
+    };
+}
 
-        splitter.addEventListener('pointerdown', (evt)=>{
-            if (isMobileLayout()) return;
-            evt.preventDefault();
-            splitter.setPointerCapture(evt.pointerId);
-            const startX = evt.clientX;
-            const startWidth = list.getBoundingClientRect().width;
-            appliedListWidth = startWidth;
-            const maxWidth = getDesktopMaxWidth();
-            let pendingWidth = startWidth;
-            let rafId = null;
-            const queueWidthApply = (value)=>{
-                pendingWidth = value;
-                if (rafId !== null) return;
-                rafId = requestAnimationFrame(()=>{
-                    rafId = null;
-                    appliedListWidth = applyDesktopWidthWithBounds(pendingWidth);
-                });
-            };
-            const onMove = (moveEvt)=>{
-                const delta = moveEvt.clientX - startX;
-                const nextWidth = Math.min(Math.max(MIN_LIST_WIDTH, startWidth + delta), maxWidth);
-                queueWidthApply(nextWidth);
-            };
+export function initSplitter(body, list) {
+    const { desktopSplitter, mobileSplitter } = createSplitters(body);
+    let lastLayoutIsMobile = isMobileLayout();
 
-            const cleanupDrag = (endEvt)=>{
-                try {
-                    splitter.releasePointerCapture(endEvt.pointerId);
-                } catch {
+    const sizingHelpers = createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter);
+    const restoreSplitterForCurrentLayout = createRestoreSplitterForCurrentLayout(sizingHelpers);
 
-                }
+    attachDesktopSplitterDragHandlers({
+        desktopSplitter,
+        list,
+        getDesktopMaxWidth: sizingHelpers.getDesktopMaxWidth,
+        applyDesktopWidthWithBounds: sizingHelpers.applyDesktopWidthWithBounds,
+        getAppliedListWidth: sizingHelpers.getAppliedListWidth,
+        setAppliedListWidth: sizingHelpers.setAppliedListWidth,
+    });
 
-                window.removeEventListener('pointermove', onMove);
-                window.removeEventListener('pointerup', onUp);
-                window.removeEventListener('pointercancel', onCancel);
-                splitter.removeEventListener('lostpointercapture', onLostCapture);
+    attachMobileSplitterDragHandlers({
+        mobileSplitter,
+        list,
+        getMobileMaxHeight: sizingHelpers.getMobileMaxHeight,
+        applyMobileHeightWithBounds: sizingHelpers.applyMobileHeightWithBounds,
+        getAppliedListHeight: sizingHelpers.getAppliedListHeight,
+        setAppliedListHeight: sizingHelpers.setAppliedListHeight,
+    });
 
-                if (rafId !== null) {
-                    cancelAnimationFrame(rafId);
-                    rafId = null;
-                    appliedListWidth = applyDesktopWidthWithBounds(pendingWidth);
-                }
-
-                saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, appliedListWidth);
-            };
-
-            const onUp = (upEvt)=>cleanupDrag(upEvt);
-            const onCancel = (cancelEvt)=>cleanupDrag(cancelEvt);
-            const onLostCapture = (lostEvt)=>cleanupDrag(lostEvt);
-
-            window.addEventListener('pointermove', onMove);
-            window.addEventListener('pointerup', onUp);
-            window.addEventListener('pointercancel', onCancel);
-            splitter.addEventListener('lostpointercapture', onLostCapture);
-        });
-
-        splitterH.addEventListener('pointerdown', (evt)=>{
-            if (!isMobileLayout()) return;
-            evt.preventDefault();
-            splitterH.setPointerCapture(evt.pointerId);
-            const startY = evt.clientY;
-            const startHeight = list.getBoundingClientRect().height;
-            appliedListHeight = startHeight;
-            const maxHeight = getMobileMaxHeight();
-            let pendingHeight = startHeight;
-            let rafId = null;
-            const queueHeightApply = (value)=>{
-                pendingHeight = value;
-                if (rafId !== null) return;
-                rafId = requestAnimationFrame(()=>{
-                    rafId = null;
-                    appliedListHeight = applyMobileHeightWithBounds(pendingHeight);
-                });
-            };
-            const onMove = (moveEvt)=>{
-                const delta = moveEvt.clientY - startY;
-                const nextHeight = Math.min(Math.max(MIN_LIST_HEIGHT, startHeight + delta), maxHeight);
-                queueHeightApply(nextHeight);
-            };
-
-            const cleanupDrag = (endEvt)=>{
-                try {
-                    splitterH.releasePointerCapture(endEvt.pointerId);
-                } catch {
-
-                }
-
-                window.removeEventListener('pointermove', onMove);
-                window.removeEventListener('pointerup', onUp);
-                window.removeEventListener('pointercancel', onCancel);
-                splitterH.removeEventListener('lostpointercapture', onLostCapture);
-
-                if (rafId !== null) {
-                    cancelAnimationFrame(rafId);
-                    rafId = null;
-                    appliedListHeight = applyMobileHeightWithBounds(pendingHeight);
-                }
-
-                saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, appliedListHeight);
-            };
-
-            const onUp = (upEvt)=>cleanupDrag(upEvt);
-            const onCancel = (cancelEvt)=>cleanupDrag(cancelEvt);
-            const onLostCapture = (lostEvt)=>cleanupDrag(lostEvt);
-
-            window.addEventListener('pointermove', onMove);
-            window.addEventListener('pointerup', onUp);
-            window.addEventListener('pointercancel', onCancel);
-            splitterH.addEventListener('lostpointercapture', onLostCapture);
-        });
-
-        const onLayoutResize = debounce(()=>{
-            const isMobile = isMobileLayout();
-            if (isMobile === lastLayoutIsMobile) {
-                reapplyBoundsForCurrentLayout(isMobile);
-                return;
-            }
-            lastLayoutIsMobile = isMobile;
-            restoreSplitterForCurrentLayout();
-        }, 120);
-        window.addEventListener('resize', onLayoutResize);
-        globalThis.addEventListener?.('beforeunload', ()=>{
-            window.removeEventListener('resize', onLayoutResize);
-        }, { once:true });
-    }
+    attachLayoutResizeHandler(
+        ()=>lastLayoutIsMobile,
+        (value)=>{
+            lastLayoutIsMobile = value;
+        },
+        sizingHelpers.reapplyBoundsForCurrentLayout,
+        restoreSplitterForCurrentLayout,
+    );
 
     return restoreSplitterForCurrentLayout;
 }

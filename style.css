@@ -1976,7 +1976,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   color: var(--SmartThemeBodyColor);
   /* background-color: var(--SmartThemeBlurTintColor); */rgba(255, 255, 255, 0);
   cursor: pointer;
-  /* transition: background-color 200ms, color 200ms, opacity 200ms; */
+  transition: color 150ms ease;
   flex-direction: row;
   box-sizing: border-box;
   padding: 0.4em;
@@ -2118,8 +2118,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   
 
   &:hover {
-    /* background-color: color-mix(in srgb, var(--customThemeColor) 85%, black 15%); */
-    /* -webkit-font-smoothing: auto; */
+    color: var(--customThemeColor);
   }
 
   & #lorebook_ordering_button {
@@ -2151,12 +2150,16 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
+  color: inherit;
+  transition: color 150ms ease;
   text-align: center;
   padding: 0em 1.8em 0em 0em;
 }
 
 .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
   flex: 1 1 auto;
+  color: inherit;
+  transition: color 150ms ease;
   min-width: fit-content;
 }
 
