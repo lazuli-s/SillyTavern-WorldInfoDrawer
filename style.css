@@ -263,6 +263,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   flex-wrap: wrap;
   align-items: center;
   flex-direction: row;
+  justify-content: center;
 }
 
 .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
@@ -385,16 +386,16 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 0.4em;
-  padding: 0.5em 0.5em;
+  gap: 0.8em;
+  padding: 0.5em 0.7em;
   border: none;
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  /* margin-bottom: 0.3em; */
   background: none;
   cursor: pointer;
   color: var(--SmartThemeBodyColor);
   opacity: 0.55;
-  font-size: 0.8em;
+  font-size: 0.9em;
   transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -641,9 +642,9 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 /* Folders */
 .stwid--folder {
-  border-bottom: 2px solid var(--SmartThemeBorderColor);
-  border-radius: 8px;
-  margin: 0.35em 0;
+  /* border-bottom: 2px solid var(--SmartThemeBorderColor); */
+  /* border-radius: 8px; */
+  margin: 0.5em 0;
 }
 
 .stwid--folder .stwid--folderHeader {
@@ -657,6 +658,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   transition: background-color 150ms ease, box-shadow 150ms ease;
   min-height: 2.2em;
   line-height: 1;
+  margin-bottom: 0.5em;
 }
 
 .stwid--folder.stwid--state-target .stwid--folderHeader {
@@ -674,7 +676,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--folder .stwid--folderLabel {
   font-weight: bold;
-  font-size: 1.05em;
+  font-size: 1em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -793,8 +795,9 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
-  opacity: 0.75;
+  /* opacity: 0.75; */
   color: var(--SmartThemeQuoteColor);
+  margin-right: 0.2em;
 }
 
 .stwid--books .stwid--book .stwid--entryList.stwid--state-collapsed {
@@ -1206,8 +1209,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   gap: 0.9em;
   justify-content: flex-start;
   align-items: center;
-  background-color: var(--SmartThemeBlurTintColor);
+  /* background-color: var(--SmartThemeBlurTintColor); */
   padding: 0 0.5em;
+  margin-bottom: 1em;
 }
 
 .stwid--order-action-bar {
@@ -1336,6 +1340,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   padding-inline: 5px;
   font-size: 0.95em;
   width: 3.5em;
+  margin: 0.2em 0.2em;
 }
 
 .stwid--entryManager .stwid--thinContainer[data-field="outlet"] .stwid--input {

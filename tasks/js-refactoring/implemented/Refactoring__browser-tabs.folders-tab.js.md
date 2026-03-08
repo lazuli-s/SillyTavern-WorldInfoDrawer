@@ -31,9 +31,9 @@
 - `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`, lines 42-50 - build and wire the "Import Folder" control
 
 **Steps to fix:**
-- [ ] Extract the shared setup into a helper named `createFolderActionButton({ controlKey, iconClass, title, onClick })` near the top of the file.
-- [ ] Replace the "New Folder" block (lines 21-40) with a call to `createFolderActionButton(...)`.
-- [ ] Replace the "Import Folder" block (lines 42-50) with a call to `createFolderActionButton(...)`.
+- [x] Extract the shared setup into a helper named `createFolderActionButton({ controlKey, iconClass, title, onClick })` near the top of the file.
+- [x] Replace the "New Folder" block (lines 21-40) with a call to `createFolderActionButton(...)`.
+- [x] Replace the "Import Folder" block (lines 42-50) with a call to `createFolderActionButton(...)`.
 
 ---
 
@@ -47,8 +47,8 @@
 - `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`, line 56
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const MENU_BUTTON_CLASS = 'menu_button';`
-- [ ] Replace each occurrence of the raw literal with `MENU_BUTTON_CLASS`.
+- [x] At the top of the file (after imports), add: `const MENU_BUTTON_CLASS = 'menu_button';`
+- [x] Replace each occurrence of the raw literal with `MENU_BUTTON_CLASS`.
 
 ---
 
@@ -59,6 +59,29 @@
 **Where:** `src/book-browser/browser-tabs/browser-tabs.folders-tab.js`, line 42
 
 **Steps to fix:**
-- [ ] Rename `impFolder` to `importFolderButton` everywhere it appears in this file.
+- [x] Rename `impFolder` to `importFolderButton` everywhere it appears in this file.
+
+---
+
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+`src/book-browser/browser-tabs/browser-tabs.folders-tab.js`
+- Added a small helper that builds folder action buttons so the repeated setup only lives in one place.
+- Replaced the repeated `'menu_button'` text with a named constant so future style changes only need one edit.
+- Updated the import-folder control naming to be clearer while folding that control into the shared helper flow.
+
+### Risks / What might break
+
+- If any future code expects the folder action buttons to be built inline instead of through the helper, that code will need to follow the new helper pattern.
+- If another control needs slightly different setup later, changing the helper carelessly could affect both existing folder buttons at once.
+
+### Manual checks
+
+- Reload the browser tab, open the drawer, and confirm the Folders tab still shows New Folder, Import Folder, and Collapse All controls.
+- Click New Folder and verify the name prompt still appears and a valid new folder shows up in the list after confirming.
+- Click Import Folder and verify the folder import dialog still opens.
 
 ---

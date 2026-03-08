@@ -1,59 +1,68 @@
 import { Settings } from '../../shared/settings.js';
 import { appendSortOptions } from '../../shared/utils.js';
 
-export const createSortingTabContent = ({
+function createThinContainerLabel(labelText, hintTitle) {
+    const thinContainerLabel = document.createElement('span');
+    thinContainerLabel.classList.add('stwid--thinContainerLabel');
+    thinContainerLabel.textContent = labelText;
+
+    const thinContainerHint = document.createElement('i');
+    thinContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+    thinContainerHint.title = hintTitle;
+    thinContainerLabel.append(thinContainerHint);
+
+    return thinContainerLabel;
+}
+
+function sortAllCachedBooks(cache, getListPanelApi) {
+    const listPanelApi = getListPanelApi();
+    for (const bookName of Object.keys(cache)) {
+        listPanelApi.sortEntriesIfNeeded(bookName);
+    }
+}
+
+function createGlobalSortingSection({
     cache,
     getListPanelApi,
-})=>{
-    const sortingRow = document.createElement('div');
-    sortingRow.classList.add('stwid--browserRow');
-
+}) {
     const globalSortingWrapper = document.createElement('div');
     globalSortingWrapper.classList.add('stwid--thinContainer');
-
-    const globalSortingWrapperLabel = document.createElement('span');
-    globalSortingWrapperLabel.classList.add('stwid--thinContainerLabel');
-    globalSortingWrapperLabel.textContent = 'Global Sorting';
-
-    const globalSortingWrapperHint = document.createElement('i');
-    globalSortingWrapperHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-    globalSortingWrapperHint.title = 'This menu sets the default sorting for all lorebooks. If Per-book Sorting is on, books with saved per-book sorting use that instead.';
-    globalSortingWrapperLabel.append(globalSortingWrapperHint);
-    globalSortingWrapper.append(globalSortingWrapperLabel);
+    globalSortingWrapper.append(createThinContainerLabel(
+        'Global Sorting',
+        'This menu sets the default sorting for all lorebooks. If Per-book Sorting is on, books with saved per-book sorting use that instead.',
+    ));
 
     const globalSortingGroup = document.createElement('div');
     globalSortingGroup.classList.add('stwid--globalSorting');
 
-    const sortSel = document.createElement('select');
-    sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
-    sortSel.title = 'Global entry sort for the book browser';
-    sortSel.setAttribute('aria-label', 'Global entry sort');
-    sortSel.addEventListener('change', ()=>{
-        const value = JSON.parse(sortSel.value);
+    const globalSortSelect = document.createElement('select');
+    globalSortSelect.classList.add('text_pole', 'stwid--smallSelectTextPole');
+    globalSortSelect.title = 'Global entry sort for the book browser';
+    globalSortSelect.setAttribute('aria-label', 'Global entry sort');
+    globalSortSelect.addEventListener('change', ()=>{
+        const value = JSON.parse(globalSortSelect.value);
         Settings.instance.sortLogic = value.sort;
         Settings.instance.sortDirection = value.direction;
-        const listPanelApi = getListPanelApi();
-        for (const name of Object.keys(cache)) {
-            listPanelApi.sortEntriesIfNeeded(name);
-        }
+        sortAllCachedBooks(cache, getListPanelApi);
         Settings.instance.save();
     });
-    appendSortOptions(sortSel, Settings.instance.sortLogic, Settings.instance.sortDirection);
-    globalSortingGroup.append(sortSel);
+    appendSortOptions(globalSortSelect, Settings.instance.sortLogic, Settings.instance.sortDirection);
+    globalSortingGroup.append(globalSortSelect);
     globalSortingWrapper.append(globalSortingGroup);
 
+    return globalSortingWrapper;
+}
+
+function createPerBookSortingSection({
+    cache,
+    getListPanelApi,
+}) {
     const perBookSortingWrapper = document.createElement('div');
     perBookSortingWrapper.classList.add('stwid--thinContainer');
-
-    const perBookSortingWrapperLabel = document.createElement('span');
-    perBookSortingWrapperLabel.classList.add('stwid--thinContainerLabel');
-    perBookSortingWrapperLabel.textContent = 'Per-book Sorting';
-
-    const perBookSortingWrapperHint = document.createElement('i');
-    perBookSortingWrapperHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-    perBookSortingWrapperHint.title = 'Turn this on to let each lorebook use its own sorting preference. Turn it off to make every lorebook follow Global Sorting.';
-    perBookSortingWrapperLabel.append(perBookSortingWrapperHint);
-    perBookSortingWrapper.append(perBookSortingWrapperLabel);
+    perBookSortingWrapper.append(createThinContainerLabel(
+        'Per-book Sorting',
+        'Turn this on to let each lorebook use its own sorting preference. Turn it off to make every lorebook follow Global Sorting.',
+    ));
 
     const perBookSortingGroup = document.createElement('div');
     perBookSortingGroup.classList.add('stwid--individualSorting');
@@ -84,10 +93,7 @@ export const createSortingTabContent = ({
         Settings.instance.useBookSorts = !Settings.instance.useBookSorts;
         Settings.instance.save();
         updateToggleState();
-        const listPanelApi = getListPanelApi();
-        for (const name of Object.keys(cache)) {
-            listPanelApi.sortEntriesIfNeeded(name);
-        }
+        sortAllCachedBooks(cache, getListPanelApi);
     });
 
     const clearBookSorts = document.createElement('button');
@@ -113,7 +119,26 @@ export const createSortingTabContent = ({
     perBookSortingGroup.append(perBookButtons);
     perBookSortingWrapper.append(perBookSortingGroup);
 
-    sortingRow.append(globalSortingWrapper, perBookSortingWrapper);
+    return perBookSortingWrapper;
+}
+
+export const createSortingTabContent = ({
+    cache,
+    getListPanelApi,
+})=>{
+    const sortingRow = document.createElement('div');
+    sortingRow.classList.add('stwid--browserRow');
+
+    const globalSortingSection = createGlobalSortingSection({
+        cache,
+        getListPanelApi,
+    });
+    const perBookSortingSection = createPerBookSortingSection({
+        cache,
+        getListPanelApi,
+    });
+
+    sortingRow.append(globalSortingSection, perBookSortingSection);
     return sortingRow;
 };
 

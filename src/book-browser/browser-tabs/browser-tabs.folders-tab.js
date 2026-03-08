@@ -1,3 +1,5 @@
+const MENU_BUTTON_CLASS = 'menu_button';
+
 export const createFoldersTabContent = ({
     dom,
     registerFolderName,
@@ -9,6 +11,16 @@ export const createFoldersTabContent = ({
     const foldersGroup = document.createElement('div');
     foldersGroup.classList.add('stwid--thinContainer', 'stwid--foldersGroup');
     dom.folderControls.group = foldersGroup;
+    function createFolderActionButton({ controlKey, iconClass, title, onClick }) {
+        const button = document.createElement('div');
+        dom.folderControls[controlKey] = button;
+        button.classList.add(MENU_BUTTON_CLASS, 'fa-solid', 'fa-fw', iconClass, `stwid--control-folder-${controlKey}`);
+        button.title = title;
+        button.setAttribute('aria-label', title);
+        button.addEventListener('click', onClick);
+        foldersGroup.append(button);
+        return button;
+    }
     const foldersGroupLabel = document.createElement('span');
     foldersGroupLabel.classList.add('stwid--thinContainerLabel');
     foldersGroupLabel.textContent = 'Folders';
@@ -18,42 +30,40 @@ export const createFoldersTabContent = ({
     foldersGroupLabel.append(foldersGroupHint);
     foldersGroup.append(foldersGroupLabel);
 
-    const addFolder = document.createElement('div');
-    dom.folderControls.add = addFolder;
-    addFolder.classList.add('menu_button', 'fa-solid', 'fa-fw', 'fa-folder-plus', 'stwid--control-folder-add');
-    addFolder.title = 'New Folder';
-    addFolder.setAttribute('aria-label', 'New Folder');
-    addFolder.addEventListener('click', async()=>{
-        const folderName = await Popup.show.input('Create a new folder', 'Enter a name for the new folder:', 'New Folder');
-        if (!folderName) return;
-        const result = registerFolderName(folderName);
-        if (!result.ok) {
-            if (result.reason === 'invalid') {
-                toastr.error('Folder names cannot include "/".');
+    createFolderActionButton({
+        controlKey: 'add',
+        iconClass: 'fa-folder-plus',
+        title: 'New Folder',
+        onClick: async()=>{
+            const folderName = await Popup.show.input('Create a new folder', 'Enter a name for the new folder:', 'New Folder');
+            if (!folderName) return;
+            const result = registerFolderName(folderName);
+            if (!result.ok) {
+                if (result.reason === 'invalid') {
+                    toastr.error('Folder names cannot include "/".');
+                    return;
+                }
+                toastr.warning('Folder name cannot be empty.');
                 return;
             }
-            toastr.warning('Folder name cannot be empty.');
-            return;
-        }
-        await getListPanelApi()?.refreshList?.();
+            await getListPanelApi()?.refreshList?.();
+        },
     });
-    foldersGroup.append(addFolder);
 
-    const impFolder = document.createElement('div');
-    dom.folderControls.import = impFolder;
-    impFolder.classList.add('menu_button', 'fa-solid', 'fa-fw', 'fa-file-import', 'stwid--control-folder-import');
-    impFolder.title = 'Import Folder';
-    impFolder.setAttribute('aria-label', 'Import Folder');
-    impFolder.addEventListener('click', ()=>{
-        getListPanelApi()?.openFolderImportDialog?.();
+    createFolderActionButton({
+        controlKey: 'import',
+        iconClass: 'fa-file-import',
+        title: 'Import Folder',
+        onClick: ()=>{
+            getListPanelApi()?.openFolderImportDialog?.();
+        },
     });
-    foldersGroup.append(impFolder);
 
     const collapseAllFoldersToggle = document.createElement('button');
     dom.collapseAllFoldersToggle = collapseAllFoldersToggle;
     dom.folderControls.collapseAll = collapseAllFoldersToggle;
     collapseAllFoldersToggle.type = 'button';
-    collapseAllFoldersToggle.classList.add('menu_button', 'stwid--collapseAllFoldersToggle');
+    collapseAllFoldersToggle.classList.add(MENU_BUTTON_CLASS, 'stwid--collapseAllFoldersToggle');
     const collapseFoldersIcon = document.createElement('i');
     collapseFoldersIcon.classList.add('fa-solid', 'fa-fw');
     collapseAllFoldersToggle.append(collapseFoldersIcon);

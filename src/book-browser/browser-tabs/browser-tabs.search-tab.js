@@ -1,39 +1,91 @@
-const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveToggles)=>{
-    const setQueryFiltered = (element, isFiltered)=>{
-        if (!element) return;
-        if (isFiltered) {
-            if (!element.classList.contains('stwid--filter-query')) {
-                element.classList.add('stwid--filter-query');
-            }
-            return;
+const FILTER_QUERY_CLASS = 'stwid--filter-query';
+const INPUT_EVENT = 'input';
+
+const setQueryFiltered = (targetElement, isFiltered)=>{
+    if (!targetElement) return;
+    if (isFiltered) {
+        if (!targetElement.classList.contains(FILTER_QUERY_CLASS)) {
+            targetElement.classList.add(FILTER_QUERY_CLASS);
         }
-        if (element.classList.contains('stwid--filter-query')) {
-            element.classList.remove('stwid--filter-query');
-        }
-    };
+        return;
+    }
+    if (targetElement.classList.contains(FILTER_QUERY_CLASS)) {
+        targetElement.classList.remove(FILTER_QUERY_CLASS);
+    }
+};
 
-    const buildEntrySearchSignature = (entry)=>{
-        const comment = entry?.comment ?? '';
-        const keys = Array.isArray(entry?.key) ? entry.key.join(', ') : '';
-        return `${String(comment)}\n${String(keys)}`;
-    };
+const buildEntrySearchSignature = (entry)=>{
+    const comment = entry?.comment ?? '';
+    const entryKeysCsv = Array.isArray(entry?.key) ? entry.key.join(', ') : '';
+    return `${String(comment)}\n${String(entryKeysCsv)}`;
+};
 
-    const getEntrySearchText = (bookName, entry)=>{
-        if (!entry?.uid) return '';
-        const signature = buildEntrySearchSignature(entry);
-        listPanelState.ensureEntrySearchCacheBook(bookName);
-        const cached = listPanelState.getEntrySearchCacheValue(bookName, entry.uid);
-        if (cached?.signature === signature) return cached.text;
-        const text = signature.toLowerCase();
-        listPanelState.setEntrySearchCacheValue(bookName, entry.uid, { signature, text });
-        return text;
-    };
+const getEntrySearchText = (listPanelState, bookName, entry)=>{
+    if (!entry?.uid) return '';
+    const signature = buildEntrySearchSignature(entry);
+    listPanelState.ensureEntrySearchCacheBook(bookName);
+    const cachedEntrySearch = listPanelState.getEntrySearchCacheValue(bookName, entry.uid);
+    if (cachedEntrySearch?.signature === signature) return cachedEntrySearch.text;
+    const text = signature.toLowerCase();
+    listPanelState.setEntrySearchCacheValue(bookName, entry.uid, { signature, text });
+    return text;
+};
 
+const applyBookBrowserSearchFilter = ({
+    runtime,
+    listPanelState,
+    query,
+    shouldScanEntries,
+    setQueryFiltered,
+    updateFolderActiveToggles,
+})=>{
     const clearAllBookEntryFilters = (bookName)=>{
         for (const entry of Object.values(runtime.cache[bookName].entries)) {
             setQueryFiltered(runtime.cache[bookName].dom.entry[entry.uid]?.root, false);
         }
     };
+
+    const entryMatchesQuery = (bookName, entry, normalizedQuery)=>
+        getEntrySearchText(listPanelState, bookName, entry).includes(normalizedQuery);
+
+    const applyEntrySearchToBook = (bookName, normalizedQuery, bookMatch)=>{
+        if (bookMatch) {
+            setQueryFiltered(runtime.cache[bookName].dom.root, false);
+            clearAllBookEntryFilters(bookName);
+            return;
+        }
+
+        let anyEntryMatch = false;
+        for (const entry of Object.values(runtime.cache[bookName].entries)) {
+            const entryMatch = entryMatchesQuery(bookName, entry, normalizedQuery);
+            if (entryMatch) anyEntryMatch = true;
+            setQueryFiltered(runtime.cache[bookName].dom.entry[entry.uid]?.root, !entryMatch);
+        }
+        setQueryFiltered(runtime.cache[bookName].dom.root, !anyEntryMatch);
+    };
+
+    listPanelState.pruneEntrySearchCacheStaleBooks(Object.keys(runtime.cache));
+
+    for (const bookName of Object.keys(runtime.cache)) {
+        if (!query.length) {
+            setQueryFiltered(runtime.cache[bookName].dom.root, false);
+            clearAllBookEntryFilters(bookName);
+            continue;
+        }
+
+        const bookMatch = bookName.toLowerCase().includes(query);
+        if (shouldScanEntries) {
+            applyEntrySearchToBook(bookName, query, bookMatch);
+            continue;
+        }
+
+        setQueryFiltered(runtime.cache[bookName].dom.root, !bookMatch);
+        clearAllBookEntryFilters(bookName);
+    }
+    updateFolderActiveToggles();
+};
+
+const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveToggles)=>{
 
     const search = document.createElement('input');
     search.classList.add('stwid--search');
@@ -44,53 +96,23 @@ const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveTo
     search.setAttribute('aria-label', 'Search books');
     listPanelState.searchInput = search;
 
-    const entryMatchesQuery = (bookName, entry, normalizedQuery)=>getEntrySearchText(bookName, entry).includes(normalizedQuery);
-
-    const applyEntrySearchToBook = (bookName, query, bookMatch)=>{
-        if (bookMatch) {
-            setQueryFiltered(runtime.cache[bookName].dom.root, false);
-            clearAllBookEntryFilters(bookName);
-            return;
-        }
-
-        let anyEntryMatch = false;
-        for (const entry of Object.values(runtime.cache[bookName].entries)) {
-            const entryMatch = entryMatchesQuery(bookName, entry, query);
-            if (entryMatch) anyEntryMatch = true;
-            setQueryFiltered(runtime.cache[bookName].dom.entry[entry.uid]?.root, !entryMatch);
-        }
-        setQueryFiltered(runtime.cache[bookName].dom.root, !anyEntryMatch);
-    };
-
     const applySearchFilter = ()=>{
-        listPanelState.pruneEntrySearchCacheStaleBooks(Object.keys(runtime.cache));
-
         const query = search.value.toLowerCase();
         const searchEntries = listPanelState.searchEntriesInput.checked;
         const shouldScanEntries = searchEntries && query.length >= 2;
-
-        for (const bookName of Object.keys(runtime.cache)) {
-            if (!query.length) {
-                setQueryFiltered(runtime.cache[bookName].dom.root, false);
-                clearAllBookEntryFilters(bookName);
-                continue;
-            }
-
-            const bookMatch = bookName.toLowerCase().includes(query);
-            if (shouldScanEntries) {
-                applyEntrySearchToBook(bookName, query, bookMatch);
-                continue;
-            }
-
-            setQueryFiltered(runtime.cache[bookName].dom.root, !bookMatch);
-            clearAllBookEntryFilters(bookName);
-        }
-        updateFolderActiveToggles();
+        applyBookBrowserSearchFilter({
+            runtime,
+            listPanelState,
+            query,
+            shouldScanEntries,
+            setQueryFiltered,
+            updateFolderActiveToggles,
+        });
     };
 
     const applySearchFilterDebounced = runtime.debounce(()=>applySearchFilter(), 125);
 
-    search.addEventListener('input', ()=>{
+    search.addEventListener(INPUT_EVENT, ()=>{
         applySearchFilterDebounced();
     });
     searchRow.append(search);
@@ -102,7 +124,7 @@ const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveTo
     listPanelState.searchEntriesInput = searchEntriesCheckbox;
     searchEntriesCheckbox.type = 'checkbox';
     searchEntriesCheckbox.addEventListener('click', ()=>{
-        search.dispatchEvent(new Event('input'));
+        search.dispatchEvent(new Event(INPUT_EVENT));
     });
     searchEntriesLabel.append(searchEntriesCheckbox);
     searchEntriesLabel.append('Entries');

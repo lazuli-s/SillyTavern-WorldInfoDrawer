@@ -36,6 +36,8 @@ const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
 const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 const CSS_STATE_ACTIVE = 'stwid--state-active';
 const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselectDropdownButton';
+const CSS_MULTISELECT_DROPDOWN_OPTION = 'stwid--multiselectDropdownOption';
+const CSS_MULTISELECT_DROPDOWN_OPTION_CHECKBOX = 'stwid--multiselectDropdownOptionCheckbox';
 const DEFAULT_CSS_VISIBILITY_CHIP = 'stwid--visibilityChip';
 
 const normalizeBookSourceLinks = (links)=>({
@@ -44,52 +46,34 @@ const normalizeBookSourceLinks = (links)=>({
     persona: Boolean(links?.persona),
 });
 
-const buildVisibilityDropdownSection = ({
-    listPanelState,
+const createVisibilityMenuButton = ()=>{
+    const visibilityMenuButton = document.createElement('button');
+    visibilityMenuButton.type = 'button';
+    visibilityMenuButton.classList.add('menu_button', CSS_MULTISELECT_DROPDOWN_BUTTON);
+    visibilityMenuButton.title = 'Select which book sources are visible in the list and Entry Manager.';
+    visibilityMenuButton.setAttribute('aria-label', 'Visibility filters');
+    visibilityMenuButton.setAttribute('aria-expanded', 'false');
+    visibilityMenuButton.setAttribute('aria-haspopup', 'true');
+    const triggerIcon = document.createElement('i');
+    triggerIcon.classList.add('fa-solid', 'fa-fw', 'fa-eye');
+    visibilityMenuButton.append(triggerIcon);
+    return visibilityMenuButton;
+};
+
+const buildVisibilityMenuOptions = ({
+    menuEl,
     applyActiveFilter,
-    closeBookVisibilityMenu,
     createBookVisibilityIcon,
     setAllBooksVisibility,
     setAllActiveVisibility,
     toggleVisibilitySelection,
-    closeOpenMultiselectDropdownMenus,
     setMultiselectDropdownOptionCheckboxState,
 })=>{
-    const visibilityContainer = document.createElement('div');
-    visibilityContainer.classList.add('stwid--thinContainer', 'stwid--visibilityFilters');
-    const visibilityContainerLabel = document.createElement('span');
-    visibilityContainerLabel.classList.add('stwid--thinContainerLabel');
-    visibilityContainerLabel.textContent = 'Visibility';
-    const visibilityContainerHint = document.createElement('i');
-    visibilityContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
-    visibilityContainerHint.title = 'Pick which sources are visible and review the active filter chips.';
-    visibilityContainerLabel.append(visibilityContainerHint);
-    visibilityContainer.append(visibilityContainerLabel);
-
-    const visibilityDropdownContainer = document.createElement('div');
-    visibilityDropdownContainer.classList.add('stwid--multiselectDropdownWrap');
-
-    const trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.classList.add('menu_button', CSS_MULTISELECT_DROPDOWN_BUTTON);
-    trigger.title = 'Select which book sources are visible in the list and Entry Manager.';
-    trigger.setAttribute('aria-label', 'Visibility filters');
-    trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-haspopup', 'true');
-    const triggerIcon = document.createElement('i');
-    triggerIcon.classList.add('fa-solid', 'fa-fw', 'fa-eye');
-    trigger.append(triggerIcon);
-    visibilityDropdownContainer.append(trigger);
-
-    const menu = document.createElement('div');
-    menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu', 'stwid--small-multiselect', 'stwid--menu');
-    listPanelState.bookVisibilityMenu = menu;
-
     for (const option of BOOK_VISIBILITY_OPTIONS) {
         const optionTooltip = BOOK_VISIBILITY_OPTION_TOOLTIPS[option.mode] ?? option.label;
         const optionButton = document.createElement('button');
         optionButton.type = 'button';
-        optionButton.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+        optionButton.classList.add(CSS_MULTISELECT_DROPDOWN_OPTION, 'stwid--menuItem');
         optionButton.setAttribute('data-mode', option.mode);
         optionButton.setAttribute('aria-pressed', 'false');
         optionButton.title = optionTooltip;
@@ -99,7 +83,7 @@ const buildVisibilityDropdownSection = ({
             optionCheckbox.classList.add(
                 'fa-solid',
                 'fa-fw',
-                'stwid--multiselectDropdownOptionCheckbox',
+                CSS_MULTISELECT_DROPDOWN_OPTION_CHECKBOX,
             );
             optionCheckbox.setAttribute('aria-hidden', 'true');
             setMultiselectDropdownOptionCheckboxState(optionCheckbox, false);
@@ -119,51 +103,48 @@ const buildVisibilityDropdownSection = ({
             }
             applyActiveFilter();
         });
-        menu.append(optionButton);
+        menuEl.append(optionButton);
     }
-    menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeBookVisibilityMenu;
-    visibilityDropdownContainer.append(menu);
+};
 
-    trigger.addEventListener('click', (evt)=>{
+const createVisibilityMenuCloseHandlers = ({
+    menuEl,
+    closeBookVisibilityMenu,
+    closeOpenMultiselectDropdownMenus,
+    triggerButton,
+})=>{
+    const onVisibilityMenuButtonClick = (evt)=>{
         evt.preventDefault();
         evt.stopPropagation();
-        const shouldOpen = !menu.classList.contains(CSS_STATE_ACTIVE);
+        const shouldOpen = !menuEl.classList.contains(CSS_STATE_ACTIVE);
         closeBookVisibilityMenu();
         if (shouldOpen) {
-            closeOpenMultiselectDropdownMenus(menu);
-            menu.classList.add(CSS_STATE_ACTIVE);
-            trigger.setAttribute('aria-expanded', 'true');
+            closeOpenMultiselectDropdownMenus(menuEl);
+            menuEl.classList.add(CSS_STATE_ACTIVE);
+            triggerButton.setAttribute('aria-expanded', 'true');
         }
-    });
-    const chips = document.createElement('div');
-    chips.classList.add('stwid--visibilityChips');
-    listPanelState.bookVisibilityChips = chips;
-    visibilityContainer.append(visibilityDropdownContainer, chips);
+    };
 
     const onDocClickCloseMenu = (evt)=>{
-        if (!menu.classList.contains(CSS_STATE_ACTIVE)) return;
+        if (!menuEl.classList.contains(CSS_STATE_ACTIVE)) return;
         const target = evt.target instanceof HTMLElement ? evt.target : null;
         if (target?.closest('.stwid--browserRow')) return;
         closeBookVisibilityMenu();
     };
 
-    return { visibilityContainer, onDocClickCloseMenu };
+    return {
+        onVisibilityMenuButtonClick,
+        onDocClickCloseMenu,
+    };
 };
 
-const createVisibilitySlice = ({
+const createVisibilityScopeHelpers = ({
     listPanelState,
     runtime,
-    updateFolderActiveToggles,
-    onBookVisibilityScopeChange,
-    setApplyActiveFilter,
-    closeOpenMultiselectDropdownMenus,
-    setMultiselectDropdownOptionCheckboxState,
-    visibilityChipClass = DEFAULT_CSS_VISIBILITY_CHIP,
+    getSelectedWorldInfo,
+    isAllBooksVisibility,
+    isAllActiveVisibility,
 })=>{
-    const isAllBooksVisibility = ()=>listPanelState.bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_BOOKS;
-    const isAllActiveVisibility = ()=>listPanelState.bookVisibilityMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE;
-    const getSelectedWorldInfo = ()=>runtime.getSelectedWorldInfo ? runtime.getSelectedWorldInfo() : runtime.selected_world_info;
-
     const getBookVisibilityFlags = (name, selectedLookup = null)=>{
         const links = normalizeBookSourceLinks(runtime.getBookSourceLinks?.(name));
         const selected = selectedLookup instanceof Set
@@ -193,17 +174,197 @@ const createVisibilitySlice = ({
         });
     };
 
+    return {
+        getBookVisibilityFlags,
+        getBookVisibilityScope,
+    };
+};
+
+const createVisibilityChipsRenderer = ({
+    listPanelState,
+    visibilityChipClass,
+    createBookVisibilityIcon,
+    getBookVisibilityOption,
+    isAllBooksVisibility,
+    isAllActiveVisibility,
+})=>()=>{
+    if (!listPanelState.bookVisibilityChips) return;
+    listPanelState.bookVisibilityChips.innerHTML = '';
+    const appendVisibilityChip = (option)=>{
+        const visibilityChip = document.createElement('span');
+        visibilityChip.classList.add(visibilityChipClass);
+        visibilityChip.append(createBookVisibilityIcon(option, 'stwid--icon'));
+        const visibilityLabel = document.createElement('span');
+        visibilityLabel.textContent = option.label;
+        visibilityChip.append(visibilityLabel);
+        visibilityChip.title = `Active filter: ${option.label}.`;
+        visibilityChip.setAttribute('aria-label', `Active filter: ${option.label}.`);
+        listPanelState.bookVisibilityChips.append(visibilityChip);
+    };
+    if (isAllBooksVisibility()) {
+        appendVisibilityChip(getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_BOOKS));
+    } else if (isAllActiveVisibility()) {
+        appendVisibilityChip(getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE));
+    } else {
+        for (const mode of BOOK_VISIBILITY_MULTISELECT_MODES) {
+            if (!listPanelState.bookVisibilitySelections.has(mode)) continue;
+            appendVisibilityChip(getBookVisibilityOption(mode));
+        }
+    }
+};
+
+const syncVisibilityMenuOptionState = ({
+    optionEl,
+    isAllBooks,
+    isAllActive,
+    selections,
+    setMultiselectDropdownOptionCheckboxState,
+})=>{
+    const optionMode = optionEl.getAttribute('data-mode');
+    const isActive = optionMode === BOOK_VISIBILITY_MODES.ALL_BOOKS
+        ? isAllBooks
+        : optionMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE
+            ? isAllActive
+            : selections.has(optionMode);
+    optionEl.classList.toggle(CSS_STATE_ACTIVE, isActive);
+    optionEl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    const optionCheckbox = optionEl.querySelector(`.${CSS_MULTISELECT_DROPDOWN_OPTION_CHECKBOX}`);
+    if (optionCheckbox) {
+        setMultiselectDropdownOptionCheckboxState(optionCheckbox, isActive);
+    }
+};
+
+const createApplyActiveFilter = ({
+    listPanelState,
+    runtime,
+    getBookVisibilityScope,
+    getSelectedWorldInfo,
+    isAllBooksVisibility,
+    isAllActiveVisibility,
+    renderVisibilityChips,
+    onBookVisibilityScopeChange,
+    updateFolderActiveToggles,
+    setMultiselectDropdownOptionCheckboxState,
+})=>()=>{
+    const visibleBookNames = getBookVisibilityScope(getSelectedWorldInfo());
+    const visibleBookLookup = new Set(visibleBookNames);
+    const isAllBooks = isAllBooksVisibility();
+    const isAllActive = isAllActiveVisibility();
+    for (const bookName of Object.keys(runtime.cache)) {
+        const hideByVisibilityFilter = !visibleBookLookup.has(bookName);
+        runtime.cache[bookName].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
+    }
+    if (listPanelState.bookVisibilityMenu) {
+        for (const optionEl of listPanelState.bookVisibilityMenu.querySelectorAll(`.${CSS_MULTISELECT_DROPDOWN_OPTION}`)) {
+            syncVisibilityMenuOptionState({
+                optionEl,
+                isAllBooks,
+                isAllActive,
+                selections: listPanelState.bookVisibilitySelections,
+                setMultiselectDropdownOptionCheckboxState,
+            });
+        }
+    }
+    renderVisibilityChips();
+    onBookVisibilityScopeChange?.(visibleBookNames);
+    updateFolderActiveToggles();
+};
+
+const buildVisibilityDropdownSection = ({
+    listPanelState,
+    applyActiveFilter,
+    closeBookVisibilityMenu,
+    createBookVisibilityIcon,
+    setAllBooksVisibility,
+    setAllActiveVisibility,
+    toggleVisibilitySelection,
+    closeOpenMultiselectDropdownMenus,
+    setMultiselectDropdownOptionCheckboxState,
+})=>{
+    const visibilityContainer = document.createElement('div');
+    visibilityContainer.classList.add('stwid--thinContainer', 'stwid--visibilityFilters');
+    const visibilityContainerLabel = document.createElement('span');
+    visibilityContainerLabel.classList.add('stwid--thinContainerLabel');
+    visibilityContainerLabel.textContent = 'Visibility';
+    const visibilityContainerHint = document.createElement('i');
+    visibilityContainerHint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--thinContainerLabelHint');
+    visibilityContainerHint.title = 'Pick which sources are visible and review the active filter chips.';
+    visibilityContainerLabel.append(visibilityContainerHint);
+    visibilityContainer.append(visibilityContainerLabel);
+
+    const visibilityDropdownContainer = document.createElement('div');
+    visibilityDropdownContainer.classList.add('stwid--multiselectDropdownWrap');
+
+    const visibilityMenuButton = createVisibilityMenuButton();
+    visibilityDropdownContainer.append(visibilityMenuButton);
+
+    const bookVisibilityMenuEl = document.createElement('div');
+    bookVisibilityMenuEl.classList.add('stwid--multiselectDropdownMenu', 'stwid--bookVisibilityMenu', 'stwid--small-multiselect', 'stwid--menu');
+    listPanelState.bookVisibilityMenu = bookVisibilityMenuEl;
+
+    buildVisibilityMenuOptions({
+        menuEl: bookVisibilityMenuEl,
+        applyActiveFilter,
+        createBookVisibilityIcon,
+        setAllBooksVisibility,
+        setAllActiveVisibility,
+        toggleVisibilitySelection,
+        setMultiselectDropdownOptionCheckboxState,
+    });
+    bookVisibilityMenuEl[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeBookVisibilityMenu;
+    visibilityDropdownContainer.append(bookVisibilityMenuEl);
+
+    const { onVisibilityMenuButtonClick, onDocClickCloseMenu } = createVisibilityMenuCloseHandlers({
+        menuEl: bookVisibilityMenuEl,
+        closeBookVisibilityMenu,
+        closeOpenMultiselectDropdownMenus,
+        triggerButton: visibilityMenuButton,
+    });
+    visibilityMenuButton.addEventListener('click', onVisibilityMenuButtonClick);
+    const chips = document.createElement('div');
+    chips.classList.add('stwid--visibilityChips');
+    listPanelState.bookVisibilityChips = chips;
+    visibilityContainer.append(visibilityDropdownContainer, chips);
+
+    return { visibilityContainer, onDocClickCloseMenu };
+};
+
+const createVisibilitySlice = ({
+    listPanelState,
+    runtime,
+    updateFolderActiveToggles,
+    onBookVisibilityScopeChange,
+    setApplyActiveFilter,
+    closeOpenMultiselectDropdownMenus,
+    setMultiselectDropdownOptionCheckboxState,
+    visibilityChipClass = DEFAULT_CSS_VISIBILITY_CHIP,
+})=>{
+    const getSelectedWorldInfo = ()=>runtime.getSelectedWorldInfo ? runtime.getSelectedWorldInfo() : runtime.selected_world_info;
+    const isVisibilityMode = (mode)=>listPanelState.bookVisibilityMode === mode;
+    const isAllBooksVisibility = ()=>isVisibilityMode(BOOK_VISIBILITY_MODES.ALL_BOOKS);
+    const isAllActiveVisibility = ()=>isVisibilityMode(BOOK_VISIBILITY_MODES.ALL_ACTIVE);
+    const { getBookVisibilityScope } = createVisibilityScopeHelpers({
+        listPanelState,
+        runtime,
+        getSelectedWorldInfo,
+        isAllBooksVisibility,
+        isAllActiveVisibility,
+    });
+
     const getBookVisibilityOption = (mode)=>
         BOOK_VISIBILITY_OPTIONS.find((option)=>option.mode === mode) ?? BOOK_VISIBILITY_OPTIONS[0];
 
-    const setAllBooksVisibility = ()=>{
-        listPanelState.bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_BOOKS;
+    const setVisibilityMode = (mode)=>{
+        listPanelState.bookVisibilityMode = mode;
         listPanelState.bookVisibilitySelections.clear();
     };
 
+    const setAllBooksVisibility = ()=>{
+        setVisibilityMode(BOOK_VISIBILITY_MODES.ALL_BOOKS);
+    };
+
     const setAllActiveVisibility = ()=>{
-        listPanelState.bookVisibilityMode = BOOK_VISIBILITY_MODES.ALL_ACTIVE;
-        listPanelState.bookVisibilitySelections.clear();
+        setVisibilityMode(BOOK_VISIBILITY_MODES.ALL_ACTIVE);
     };
 
     const toggleVisibilitySelection = (mode)=>{
@@ -233,71 +394,34 @@ const createVisibilitySlice = ({
         return icon;
     };
 
-    const renderVisibilityChips = ()=>{
-        if (!listPanelState.bookVisibilityChips) return;
-        listPanelState.bookVisibilityChips.innerHTML = '';
-        const appendVisibilityChip = (option)=>{
-            const visibilityChip = document.createElement('span');
-            visibilityChip.classList.add(visibilityChipClass);
-            visibilityChip.append(createBookVisibilityIcon(option, 'stwid--icon'));
-            const visibilityLabel = document.createElement('span');
-            visibilityLabel.textContent = option.label;
-            visibilityChip.append(visibilityLabel);
-            visibilityChip.title = `Active filter: ${option.label}.`;
-            visibilityChip.setAttribute('aria-label', `Active filter: ${option.label}.`);
-            listPanelState.bookVisibilityChips.append(visibilityChip);
-        };
-        if (isAllBooksVisibility()) {
-            appendVisibilityChip(getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_BOOKS));
-        } else if (isAllActiveVisibility()) {
-            appendVisibilityChip(getBookVisibilityOption(BOOK_VISIBILITY_MODES.ALL_ACTIVE));
-        } else {
-            for (const mode of BOOK_VISIBILITY_MULTISELECT_MODES) {
-                if (!listPanelState.bookVisibilitySelections.has(mode)) continue;
-                appendVisibilityChip(getBookVisibilityOption(mode));
-            }
-        }
-    };
+    const renderVisibilityChips = createVisibilityChipsRenderer({
+        listPanelState,
+        visibilityChipClass,
+        createBookVisibilityIcon,
+        getBookVisibilityOption,
+        isAllBooksVisibility,
+        isAllActiveVisibility,
+    });
 
     const closeBookVisibilityMenu = ()=>{
         if (!listPanelState.bookVisibilityMenu) return;
         listPanelState.bookVisibilityMenu.classList.remove(CSS_STATE_ACTIVE);
-        const trigger = listPanelState.bookVisibilityMenu.parentElement?.querySelector(`.${CSS_MULTISELECT_DROPDOWN_BUTTON}`);
-        trigger?.setAttribute('aria-expanded', 'false');
+        const visibilityMenuButton = listPanelState.bookVisibilityMenu.parentElement?.querySelector(`.${CSS_MULTISELECT_DROPDOWN_BUTTON}`);
+        visibilityMenuButton?.setAttribute('aria-expanded', 'false');
     };
 
-    const applyActiveFilter = ()=>{
-        const visibleBookNames = getBookVisibilityScope(getSelectedWorldInfo());
-        const visibleBookLookup = new Set(visibleBookNames);
-        const isAllBooks = isAllBooksVisibility();
-        const isAllActive = isAllActiveVisibility();
-        for (const bookName of Object.keys(runtime.cache)) {
-            const hideByVisibilityFilter = !visibleBookLookup.has(bookName);
-            runtime.cache[bookName].dom.root.classList.toggle('stwid--filter-visibility', hideByVisibilityFilter);
-        }
-        if (listPanelState.bookVisibilityMenu) {
-            for (const option of listPanelState.bookVisibilityMenu.querySelectorAll('.stwid--multiselectDropdownOption')) {
-                const optionMode = option.getAttribute('data-mode');
-                let isActive = false;
-                if (optionMode === BOOK_VISIBILITY_MODES.ALL_BOOKS) {
-                    isActive = isAllBooks;
-                } else if (optionMode === BOOK_VISIBILITY_MODES.ALL_ACTIVE) {
-                    isActive = isAllActive;
-                } else {
-                    isActive = listPanelState.bookVisibilitySelections.has(optionMode);
-                }
-                option.classList.toggle(CSS_STATE_ACTIVE, isActive);
-                option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                const optionCheckbox = option.querySelector('.stwid--multiselectDropdownOptionCheckbox');
-                if (optionCheckbox) {
-                    setMultiselectDropdownOptionCheckboxState(optionCheckbox, isActive);
-                }
-            }
-        }
-        renderVisibilityChips();
-        onBookVisibilityScopeChange?.(visibleBookNames);
-        updateFolderActiveToggles();
-    };
+    const applyActiveFilter = createApplyActiveFilter({
+        listPanelState,
+        runtime,
+        getBookVisibilityScope,
+        getSelectedWorldInfo,
+        isAllBooksVisibility,
+        isAllActiveVisibility,
+        renderVisibilityChips,
+        onBookVisibilityScopeChange,
+        updateFolderActiveToggles,
+        setMultiselectDropdownOptionCheckboxState,
+    });
     setApplyActiveFilter(applyActiveFilter);
 
     const setupVisibilitySection = (visibilityRow)=>{
