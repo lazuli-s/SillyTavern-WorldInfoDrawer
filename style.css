@@ -335,7 +335,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--controls .stwid--state-active,
 .stwid--list .stwid--filter .stwid--state-active {
-  color: var(--SmartThemeQuoteColor);
+  /* color: var(--SmartThemeQuoteColor); */
 }
 
 /* Search / active filter row */
@@ -348,7 +348,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 
 .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
-  padding-top: 0.1em;
+  /* padding-top: 0.1em; */
 }
 
 .stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
@@ -444,15 +444,601 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
+  /* position: relative; */
+  /* display: flex; */
+  /* align-items: flex-start; */
+  /* gap: 0.35em; */
+  /* flex-wrap: nowrap; */
+  /* justify-content: flex-start; */
+  /* width: 100%; */
+  margin-top: 1em;
+  /* flex: 1 1 auto; */
+}
+
+.stwid--multiselectDropdownWrap {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.stwid--multiselectDropdownButton {
+  /* display: inline-flex; */
+  /* align-items: center; */
+  /* gap: 0.25em; */
+  /* padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x); */
+  /* border-radius: var(--stwid-radius-m); */
+}
+
+.stwid--listDropdownTrigger {
+  border-radius: var(--stwid-radius-m);
+}
+
+.stwid--menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.stwid--multiselectDropdownMenu,
+.stwid--bookVisibilityMenu {
+  position: absolute;
+  top: calc(100% + 0.35em);
+  left: 0;
+  /* background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%); */
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-m);
+  padding: 0.45em;
+  display: none;
+  flex-direction: column;
+  gap: 0.3em;
+  z-index: 3;
+  min-width: max-content;
+}
+
+.stwid--multiselectDropdownMenu.stwid--state-active,
+.stwid--bookVisibilityMenu.stwid--state-active {
+  /* display: flex; */
+  /* width: max-content; */
+  /* opacity: 1 !important; */ /* override: ST menu styles set opacity:0 on hidden menus; force visible when state-active */
+  /* background-color: var(--SmartThemeBlurTintColor) !important; */ /* override: ST button resets may override menu background; force theme blur tint */
+  /* backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important; */ /* override: parent backdrop-filter context may be cleared; force blur on menu */
+  /* box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent); */
+  /* border: 1px solid var(--SmartThemeBorderColor); */
+  text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
+  /* position: fixed; */
+  /* position-anchor: --stwid--ctxAnchor; */
+  position-area: bottom right;
+  /* position-try-fallbacks: flip-block, flip-inline; */
+  /* margin-top: -1lh; */
+  filter: drop-shadow(1px 1px 2px var(--black50a));
+  z-index: 30000;
+  overflow: hidden;
+  /* border: 1px solid var(--SmartThemeBorderColor); */
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(32 33 36 / 21%);
+  font-size: 0.9em;
+  padding: 0.9em;
+  backdrop-filter: blur(var(--SmartThemeBlurStrength));
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+/*
+  SillyTavern World Info Drawer (STWID)
+  Styles follow the same top-to-bottom order as the module tree in ARCHITECTURE.md.
+*/
+
+/* -------------------------------------------------------------------------- */
+
+/* 1) Drawer                                                                  */
+
+/* -------------------------------------------------------------------------- */
+
+/* Hide the custom drawer body unless the extension has activated the drawer. */
+  body #WorldInfo > .stwid--body {
+  display: none;
+}
+
+/* Drawer root sizing + layout */
+  body.stwid-- #WorldInfo {
+  /* Spacing and radius tokens */
+  --stwid-gap-xs: 0.25em;
+  --stwid-gap-s: 0.35em;
+  --stwid-gap-m: 0.5em;
+  --stwid-radius-s: 4px;
+  --stwid-radius-m: 6px;
+  --stwid-radius-l: 8px;
+  --stwid-radius-xl: 10px;
+  --stwid-control-height: 2.35em;
+  --stwid-splitter-width: 6px;
+  --stwid-splitter-margin-x: 10px;
+
+  /* Hit-target and focus-ring tokens */
+  --stwid-hit-padding-y: 0.15em;
+  --stwid-hit-padding-x: 0.25em;
+  --stwid-focus-ring-color: var(--SmartThemeQuoteColor);
+  --stwid-focus-ring: 2px solid var(--stwid-focus-ring-color);
+  --stwid-focus-ring-offset: 2px;
+
+  /* State tokens (hover, selected, target, disabled) */
+  --stwid-state-target-bg: color-mix(in srgb, var(--SmartThemeQuoteColor) 15%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
+  --stwid-state-target-outline: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 55%, transparent);
+  --stwid-state-selected-bg: rgb(from var(--SmartThemeQuoteColor) r g b / 0.125);
+  --stwid-state-selected-bg-strong: rgb(from var(--SmartThemeQuoteColor) r g b / 0.25);
+  --stwid-state-hover-bg: var(--white20a);
+  --stwid-state-disabled-opacity: 0.5;
+
+  /* Semantic tokens */
+  --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
+
+  /* Layout */
+  width: 100vw;
+  height: calc(100dvh - var(--topBarBlockSize));
+  max-height: unset;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Show drawer when ST sets openDrawer */
+  body.stwid-- #WorldInfo.openDrawer {
+  display: flex !important; /* override: ST's inline-drawer sets display:none by default; must force flex when openDrawer class is applied */
+}
+
+/* Hide the vanilla WI UI when drawer is active */
+  body.stwid-- #WorldInfo #wi-holder {
+  display: none;
+}
+
+/* Drawer main split layout */
+  body.stwid-- #WorldInfo > .stwid--body {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Loading overlay */
+  body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading {
+  pointer-events: none;
+}
+  body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
+  content: 'Loading...';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(4px) !important; /* override: loading overlay must blur regardless of parent backdrop-filter reset */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5em;
+}
+  @media screen and (max-width: 1000px) {
+  body.stwid-- #WorldInfo {
+    width: 100vw;
+  height: 100dvh;
+  }
+
+  body.stwid-- #WorldInfo > .stwid--body {
+  flex-direction: column;
+  overflow-x: hidden;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* Panel: all extension-owned elements inside WorldInfo root */
+#WorldInfo {
+/* -------------------------------------------------------------------------- */
+
+/* 1.5) Shared layout shells                                                 */
+
+/* -------------------------------------------------------------------------- */
+
+/* Flex-column fill shell - grows to fill parent, scrolls internally */
+.stwid--editor {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--list .stwid--books {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 2) Splitter                                                                */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--splitter {
+  flex: 0 0 auto;
+  width: var(--stwid-splitter-width);
+  margin: 0 var(--stwid-splitter-margin-x);
+  cursor: col-resize;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.stwid--splitter:
+  hover,
+.stwid--splitter:active {
+  opacity: 1;
+}
+
+.stwid--splitter-h {
+  display: none;
+  flex: 0 0 auto;
+  height: var(--stwid-splitter-width);
+  margin: var(--stwid-splitter-margin-x) 0;
+  cursor: row-resize;
+  background: var(--SmartThemeBorderColor);
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.stwid--splitter-h:
+  hover,
+.stwid--splitter-h:active {
+  opacity: 1;
+}
+  @media screen and (max-width: 1000px) {
+  .stwid--splitter {
+    display: none;
+  }
+
+  .stwid--splitter-h {
+  display: block;
+  width: 100%;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 3) Book Browser                                                           */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--list {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 20vw;
+  max-width: 100%;
+  min-height: 0;
+}
+
+/* Top controls (new book/folder, import/export, search, etc.) */
+.stwid--controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  align-items: stretch;
+}
+
+.stwid--thinContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-s, 4px);
+  padding: 0.35em 0.65em;
+  position: relative;
+}
+
+.stwid--thinContainerLabel,
+.stwid--bulkEditLabel {
+  position: absolute;
+  top: -0.6em;
+  left: 0.4em;
+  font-size: 0.7em;
+  padding: 0 0.25em;
+  color: var(--SmartThemeEmColor);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.stwid--thinContainerLabelHint {
+  font-size: 0.95em;
+  opacity: 0.8;
+  cursor: help;
+  padding-left: 0.5em;
+}
+
+.stwid--thinContainerSmallTitle {
+  font-size: 0.78em;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.stwid--thinContainerSectionTitle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25em;
+}
+
+.stwid--thinContainerSectionTitle >
+  i {
+  font-size: 0.78em;
+  opacity: 0.75;
+}
+
+.stwid--thinContainer.stwid--state-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.stwid--browserRow {
+  /* --stwid-control-height: 2.35em; */
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+  padding: 0.2em;
+  flex-wrap: wrap;
+  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
+.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
+  gap: 1.1em;
+  flex-wrap: nowrap;
+  row-gap: 0.55em;
+  padding-top: 0.7em;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+  display: flex;
+  justify-content: space-around;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting,
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
   display: flex;
   align-items: flex-start;
-  gap: 0.35em;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
+  gap: 0.5em;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting {
+  align-items: center;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
+  flex-flow: column wrap;
+  align-items: center;
+  gap: 0;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
+  flex: 0 0 100%;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
+  display: flex;
+  gap: 0.5em;
+}
+
+/* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .text_pole {
+  height: var(--stwid-control-height);
+  padding: 0.35em;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.stwid--smallSelectTextPole {
+  max-width: 9em;
+  font-size: 0.9em;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--smallSelectTextPole {
+  width: 9em;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
+.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35em;
+  height: var(--stwid-control-height);
+}
+
+.stwid--controls .stwid--state-active,
+.stwid--list .stwid--filter .stwid--state-active {
+  color: var(--SmartThemeQuoteColor);
+}
+
+/* Search / active filter row */
+.stwid--list .stwid--filter {
+  display: flex;
+  /* flex-direction: column; */
+  gap: 0.45em;
+  align-items: stretch;
+}
+
+
+.stwid--iconTabContent[
+  data-tab-id='visibility'] .stwid--browserRow {
+  /* padding-top: 0.1em; */}
+
+.stwid--iconTabContent[
+  data-tab-id='search'] .stwid--browserRow .stwid--search {
+  flex: 1 1 12em;
+  min-width: 8em;
+  font-size: 0.9em;
+}
+
+.stwid--searchEntries {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  font-size: 0.9em}
+
+.stwid--iconTab {
+  padding-top: 0.6em;
+  margin-bottom: 0.8em;
+}
+
+.stwid--entryManager .stwid--iconTab {
+  background-color: var(--SmartThemeBlurTintColor);
+}
+
+.stwid--iconTabBar {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--SmartThemeBorderColor);
+  margin-bottom: 1.3em;
+}
+
+.stwid--iconTabButton {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.5em 0.7em;
+  border: none;
+  border-bottom: 2px solid transparent;
+  /* margin-bottom: 0.3em; */
+  background: none;
+  cursor: pointer;
+  color: var(--SmartThemeBodyColor);
+  opacity: 0.55;
+  font-size: 0.9em;
+  transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.stwid--iconTabButton:
+  hover {
+  opacity: 0.8;
+}
+
+.stwid--iconTabButton.active {
+  opacity: 1;
+  border-bottom-color: var(--SmartThemeBodyColor);
+}
+
+.stwid--iconTabButton[
+  hidden],
+.stwid--iconTabContent[hidden] {
+  display: none !important; /* override: tab button/content classes set display explicitly; hidden state must win */
+}
+
+#stwid-settings-panel .stwid--settingsCheckboxGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4em 0.6em;
   width: 100%;
+}
+
+#stwid-settings-panel .stwid--settingsCheckboxCell {
+  min-width: 0;
+}
+
+#stwid-settings-panel .stwid--settingsCheckboxCell .menu_button {
+  width: 100%;
+  box-sizing: border-box;
+}
+  @media screen and (max-width: 1000px) {
+  #stwid-settings-panel .stwid--settingsCheckboxGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stwid--iconTabContent {
+  display: none;
+}
+
+.stwid--iconTabContent.active {
+  display: block;
+}
+
+.stwid--iconTabContent[
+  data-tab-id='visibility'] .stwid--browserRow {
+  /* position: relative; */
+  /* display: flex; */
+  /* align-items: flex-start; */
+  /* gap: 0.35em; */
+  /* flex-wrap: nowrap; */
+  /* justify-content: flex-start; */
+  /* width: 100%; */
   margin-top: 1em;
-  flex: 1 1 auto;
+  /* flex: 1 1 auto; */
 }
 
 .stwid--multiselectDropdownWrap {
@@ -525,7 +1111,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   text-align: left;
 }
 
-.stwid--multiselectDropdownOption:hover {
+.stwid--multiselectDropdownOption:
+  hover {
   color: var(--customThemeColor) !important; /* override: ST menu_button hover styles may override color; force theme color on hover */
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
@@ -576,6 +1163,1839 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength));
 }
 
+.stwid--small-multiselect
+  a {
+  color: var(--SmartThemeBodyColor);
+  padding: 2px 4px;
+  text-decoration: none;
+  display: flex;
+  column-gap: 4px;
+  cursor: pointer;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity var(--animation-duration);
+}
+
+.stwid--small-multiselect
+  a:hover,
+.stwid--small-multiselect a[data-selected='true'] {
+  opacity: 1;
+}
+
+.stwid--small-multiselect
+  i {
+  width: 12px;
+  height: 12px;
+  font-size: 0.85em;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.stwid--small-multiselect .multiselect-check {
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--small-multiselect
+  a[data-selected='true'] .multiselect-check {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--visibilityChips {
+  display: flex;
+  align-items: center;
+  align-content: flex-start;
+  row-gap: 0.2em;
+  column-gap: 0.2em;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: center;
+}
+
+.stwid--visibilityChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 999px;
+  padding: 0.1em 0.45em;
+  font-size: 0.8em;
+  background-color: var(--SmartThemeBlurTintColor);
+}
+
+.stwid--visibilityChip .stwid--icon {
+  color: var(--SmartThemeQuoteColor);
+}
+
+/* Scrollable book list - see shared section 1.5 */
+
+/* Folders */
+.stwid--folder {
+  /* border-bottom: 2px solid var(--SmartThemeBorderColor); */
+  /* border-radius: 8px; */
+  margin: 0.5em 0;
+}
+
+.stwid--folder .stwid--folderHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.35em 0;
+  cursor: pointer;
+  background-color: color-mix(in srgb, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))) 65%, var(--SmartThemeBorderColor) 35%);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 65%, transparent), 0 1px 3px rgb(0 0 0 / 16%);
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+  min-height: 2.2em;
+  line-height: 1;
+  margin-bottom: 0.5em;
+}
+
+.stwid--folder.stwid--state-target .stwid--folderHeader {
+  background-color: var(--stwid-state-target-bg);
+  box-shadow: var(--stwid-state-target-outline);
+}
+
+.stwid--folder .stwid--folderIcon {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--folder:not(:has(.stwid--folderBooks.stwid--state-collapsed)) .stwid--folderIcon::
+  before {
+  content: '\f07c';
+}
+
+.stwid--folder .stwid--folderLabel {
+  font-weight: bold;
+  font-size: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.stwid--folder .stwid--folderCount {
+  opacity: 0.85;
+  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 12%, transparent);
+  border-radius: 999px;
+  padding: 0.1em 0.45em;
+  font-size: 0.85em;
+  line-height: 1.2;
+}
+
+.stwid--folder .stwid--folderHeader .stwid--actions {
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
+  margin-left: auto;
+}
+
+.stwid--folder .stwid--folderIcon,
+.stwid--folder .stwid--folderActiveToggle {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.stwid--folder .stwid--folderActiveToggle {
+  cursor: pointer;
+}
+
+.stwid--folder .stwid--folderActiveToggle[
+  data-state='partial']::before {
+  content: '';
+  transform: scale(1);
+  width: 0.65em;
+  height: 2px;
+  border-radius: 999px;
+  clip-path: none;
+  box-shadow: none;
+  background-color: var(--SmartThemeCheckboxTickColor);
+}
+
+/* Folder header buttons */
+.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
+  /* Folder actions also need zero padding (book actions do not) */
+  padding: 0;
+}
+
+.stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):
+  focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+  opacity: 1;
+}
+
+.stwid--folder .stwid--folderBooks.stwid--state-collapsed {
+  display: none;
+}
+
+/* Action icon affordance - dim until hovered */
+.stwid--folder .stwid--actions .stwid--action,
+.stwid--book .stwid--actions .stwid--action {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 200ms ease;
+}
+
+.stwid--folder .stwid--actions .stwid--action:
+  hover,
+.stwid--book .stwid--actions .stwid--action:hover {
+  opacity: 1;
+}
+
+/* Books */
+.stwid--books .stwid--book {
+  border-bottom: 2px solid var(--SmartThemeBorderColor);
+}
+
+.stwid--books .stwid--book.stwid--state-target,
+.stwid--books .stwid--book.stwid--state-target .stwid--head {
+  background-color: var(--stwid-state-selected-bg);
+}
+
+.stwid--books .stwid--book.stwid--filter-visibility,
+.stwid--books .stwid--book.stwid--filter-query {
+  display: none;
+}
+
+.stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--state-active) .stwid--head {
+  background-color: var(--white20a);
+}
+
+.stwid--books .stwid--book .stwid--head {
+  display: flex;
+  gap: 0.5em;
+  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.stwid--books .stwid--book .stwid--head .stwid--title {
+  flex: 1 1 auto;
+  cursor: pointer;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stwid--books .stwid--book .stwid--head .stwid--actions {
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
+}
+
+.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
+  /* opacity: 0.75; */
+  color: var(--SmartThemeQuoteColor);
+  margin-right: 0.2em;
+}
+
+.stwid--books .stwid--book .stwid--entryList.stwid--state-collapsed {
+  display: none;
+}
+
+.stwid--book .stwid--actions .stwid--sourceLinks {
+  display: inline-flex;
+  gap: 0.1em;
+  align-items: center;
+}
+
+.stwid--book .stwid--actions .stwid--sourceLinks.stwid--state-empty {
+  display: none;
+}
+
+/* Entries */
+.stwid--books .stwid--entry {
+  display: flex;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--SmartThemeBorderColor);
+  margin-left: 0.25em;
+  overflow: hidden;
+  transition: background-color 200ms ease;
+}
+
+.stwid--books .stwid--entry:is(.stwid--state-dragging .stwid--entry:not(.stwid--state-selected)) {
+  pointer-events: none;
+}
+
+.stwid--books .stwid--entry.stwid--state-selected {
+  background-color: var(--stwid-state-selected-bg);
+  cursor: grab;
+}
+
+.stwid--books .stwid--entry.stwid--state-selected:
+  hover,
+.stwid--books .stwid--entry.stwid--state-selected.stwid--state-active {
+  background-color: var(--stwid-state-selected-bg-strong);
+}
+
+.stwid--books .stwid--entry.stwid--state-selected *:not(:is(.stwid--selector)) {
+  pointer-events: none;
+}
+
+.stwid--books .stwid--entry.stwid--filter-query {
+  display: none;
+}
+
+.stwid--books .stwid--entry:
+  hover,
+.stwid--books .stwid--entry.stwid--state-active {
+  background-color: var(--stwid-state-hover-bg);
+}
+
+.stwid--books .stwid--entry:
+  hover .stwid--status,
+.stwid--books .stwid--entry.stwid--state-active .stwid--status {
+  opacity: 1;
+}
+
+.stwid--books .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
+  opacity: var(--stwid-state-disabled-opacity);
+}
+
+.stwid--books .stwid--entry .stwid--selector {
+  display: flex;
+  align-items: center;
+  opacity: 0.25;
+  transition: opacity 200ms ease;
+  cursor: pointer;
+}
+
+.stwid--books .stwid--entry .stwid--selector:
+  hover {
+  opacity: 1;
+}
+
+.stwid--books .stwid--entry .stwid--body {
+  flex: 1 1 auto;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.stwid--books .stwid--entry .stwid--status {
+  align-self: center;
+  display: flex;
+  gap: 0.5em;
+  align-items: baseline;
+  opacity: 0.5;
+  transition: opacity 200ms ease;
+}
+
+.stwid--books .stwid--entry .stwid--status .stwid--enabled {
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+}
+
+/* Entry text truncation - one line, ellipsis if overflow */
+.stwid--entry .stwid--body .stwid--comment,
+.stwid--entry .stwid--body .stwid--key {
+  height: 1lh;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stwid--comment {
+  font-size: 1.03em;
+}
+
+.stwid--entry .stwid--body .stwid--key {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+  font-style: italic;
+}
+  @media screen and (max-width: 1000px) {
+  .stwid--list {
+    width: 100%;
+  max-width: none;
+  flex-basis: auto;
+  height: auto;
+  }
+
+  .stwid--iconTabBar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  }
+
+  .stwid--browserRow,
+  .stwid--list .stwid--browserRow,
+  .stwid--iconTabContent[data-tab-id=
+  'visibility'] .stwid--browserRow {
+    flex-wrap: wrap;
+  }
+
+  .stwid--iconTabContent[data-tab-id=
+  'sorting'] .stwid--browserRow {
+    justify-content: flex-start;
+  }
+
+  .stwid--iconTabContent[data-tab-id=
+  'sorting'] .stwid--browserRow .stwid--thinContainer,
+  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
+    min-width: 100%;
+  }
+
+  .stwid--multiselectDropdownMenu,
+  .stwid--bookVisibilityMenu {
+  max-width: calc(100vw - 2rem);
+  }
+}
+  @media screen and (max-width: 768px) {
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
+    width: 100%;
+  }
+
+  .stwid--iconTabContent[data-tab-id=
+  'sorting'] .stwid--browserRow .stwid--bookSortToggle,
+  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
+    flex: 1 1 auto;
+  }
+
+  .stwid--iconTabContent[data-tab-id=
+  'search'] .stwid--browserRow .stwid--search {
+    flex-basis: 100%;
+  min-width: 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 4) Editor Panel                                                            */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--editor:
+  empty::after {
+  content: '\f558';
+  font-family: 'Font Awesome 6 Free', sans-serif;
+  font-size: 20em;
+  opacity: 0.125;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.stwid--editor #wiActivationSettings {
+  flex-wrap: nowrap;
+}
+
+/* override: vanilla #wiCheckboxes sets width:100%; unset here so it shrinks to content in the flex activation row */
+.stwid--editor #wiActivationSettings #wiCheckboxes {
+  flex: 0 0 auto;
+  width: unset;
+}
+
+/* focus mode: hides all WI entry controls except the content field and stwim-- micromenu elements */
+.stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
+.stwid--editor.stwid--focus .world_entry *:not(:has([
+  name='content']), [name='content'], :has([class*='stwim--']), [class*='stwim--']) {
+  display: none;
+}
+
+.stwid--editor.stwid--focus .stwid--unfocusToggle {
+  display: flex;
+}
+
+.stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
+  justify-content: end;
+}
+
+.stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) .stwim--pickerTriggerWrap {
+  position: absolute;
+  top: -3em;
+  right: 0;
+}
+
+.stwid--editor .stwid--unfocusToggle {
+  display: none;
+}
+
+.stwid--editor .stwid--focusToggle {
+  margin-left: 1em;
+}
+
+/* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
+.stwid--editor .world_entry,
+.stwid--editor .world_entry_form,
+.stwid--editor .inline-drawer {
+  height: 100%;
+}
+
+/* override: vanilla inline-drawer uses block layout; drawer needs flex-column so the content area can scroll */
+.stwid--editor .inline-drawer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* override: hide the vanilla drag handle and collapse toggle - the drawer provides no use for them */
+.stwid--editor .drag-handle,
+.stwid--editor .inline-drawer-toggle {
+  display: none;
+}
+
+/* override: !important required - vanilla sets display on .inline-drawer-content; flex-column needed for scrollable layout */
+.stwid--editor .inline-drawer-content {
+  flex: 1 1 auto;
+  display: flex !important;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* override: vanilla world_entry_edit has display:contents; replaced with flex-column so the entry form fills and scrolls inside the drawer */
+.stwid--editor .inline-drawer-content > .world_entry_edit {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+}
+
+/* override: first child of world_entry_edit - the outer keywords/overrides/content wrapper; flex:1 lets it fill drawer height */
+.stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter {
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+}
+
+/* AMS: show the header/toggle button (overrides the blanket inline-drawer-toggle hide) */
+.stwid--editor .stwid--ams > .inline-drawer-header.inline-drawer-toggle {
+  display: flex;
+  cursor: pointer;
+}
+
+/* AMS: opt out of main editor full-height drawer sizing rules */
+.stwid--editor .inline-drawer.stwid--ams {
+  height: auto;
+  min-height: initial;
+  flex: 0 0 auto;
+  display: block;
+  padding-top: 0.5em;
+}
+
+/* AMS: collapsed by default - overrides the flex !important on .inline-drawer-content */
+.stwid--editor .stwid--ams > .inline-drawer-content {
+  display: none !important;
+  flex: 0 0 auto;
+  flex: initial;
+  flex-direction: initial;
+  min-height: initial;
+}
+
+/* AMS: expanded state - toggled by JS adding stwid--ams-open */
+.stwid--editor .stwid--ams.stwid--ams-open > .inline-drawer-content {
+  display: flex !important;
+}
+
+/* AMS: feature disabled - hides the section entirely */
+  body.stwid--ams-disabled .stwid--ams {
+  display: none !important;
+}
+
+/* AMS: fallback hide path when class wiring is not yet attached */
+  body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerExpandable) {
+  display: none !important;
+}
+
+/* override: vanilla ST sets a conflicting flex value on [name='contentAndCharFilterBlock'];
+   flex:1 is required so the content textarea fills the remaining editor height */
+.stwid--editor [
+  name='contentAndCharFilterBlock'] {
+  flex: 1 1 auto !important;
+  min-height: 0;
+  min-width: 0;
+}
+
+.stwid--editor [
+  name='content'] {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.stwid--editor [
+  name='WIEntryBottomControls'] {
+  display: none;
+}
+  @media screen and (max-width: 1000px) {
+  .stwid--editor {
+    width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
+  }
+
+  .stwid--editor #wiActivationSettings {
+  flex-wrap: wrap;
+  }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/* 5) Entry Manager (actions, filter, table)                                  */
+
+/* -------------------------------------------------------------------------- */
+
+/* Root */
+
+/* Column toggles */
+.stwid--entryManager.stwid--hideKeys .stwid--key {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-strategy [
+  data-col='strategy'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-position [
+  data-col='position'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-depth [
+  data-col='depth'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-outlet [
+  data-col='outlet'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-group [
+  data-col='group'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-order [
+  data-col='order'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-sticky [
+  data-col='sticky'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-cooldown [
+  data-col='cooldown'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-delay [
+  data-col='delay'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-automationId [
+  data-col='automationId'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-trigger [
+  data-col='trigger'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-recursion [
+  data-col='recursion'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-budget [
+  data-col='budget'] {
+  display: none;
+}
+
+.stwid--entryManager.stwid--hide-col-characterFilter [
+  data-col='characterFilter'] {
+  display: none;
+}
+
+/* Visibility row and bulk edit row - shared base */
+.stwid--order-action-bar,
+.stwid--bulkEditRow {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.9em;
+  justify-content: flex-start;
+  align-items: center;
+  /* background-color: var(--SmartThemeBlurTintColor); */
+  padding: 0 0.5em;
+  margin-bottom: 1em;
+}
+
+.stwid--order-action-bar {
+  flex-wrap: wrap;
+  padding: 0.4em 0.5em;
+}
+
+.stwid--order-action-bar .stwid--actionsDivider {
+  align-self: stretch;
+  width: 1px;
+  background-color: var(--SmartThemeBorderColor);
+  opacity: 0.5;
+}
+
+
+.stwid--order-action-bar .stwid--table-sort,
+.stwid--order-action-bar .stwid--columnVisibility {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--order-action-bar .stwid--columnVisibility {
+  position: relative;
+}
+
+/* Display toolbar - right side */
+.stwid--displayToolbarInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.stwid--visibilityCount {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+  white-space: nowrap;
+}
+
+.stwid--activeFilters {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  flex-wrap: wrap;
+  font-size: smaller;
+  color: var(--SmartThemeEmColor);
+}
+
+/* Filter chips - same visual style as stwid--visibilityChip but scoped to Entry Manager */
+.stwid--filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-s, 4px);
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
+}
+
+.stwid--chipRemove {
+  background: none;
+  border: none;
+  padding: 0 0.1em;
+  cursor: pointer;
+  color: var(--SmartThemeQuoteColor);
+  line-height: 1;
+  font-size: 1em;
+}
+
+.stwid--chipRemove:
+  hover {
+  color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
+}
+
+/* Bulk edit row */
+.stwid--bulkEditRow {
+  flex-wrap: wrap;
+  padding: 0.4em 0.5em;
+}
+
+.stwid--rowContentWrap {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: inherit;
+}
+
+.stwid--bulkEditLabelHint {
+  padding-left: 0.5em;
+}
+
+.stwid--bulkEditLabel {
+  background-color: var(--SmartThemeBlurTintColor);
+}
+
+.stwid--bulkEditRow .stwid--inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+}
+
+.stwid--bulkEditRow .stwid--inputWrap .stwid--input {
+  width: 4em;
+}
+
+.stwid--entryManager .stwid--thinContainer .killSwitch.fa-toggle-on {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--entryManager .stwid--thinContainer .killSwitch.fa-toggle-off {
+  color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
+}
+
+.stwid--entryManager .stwid--thinContainer.stwid--state-disabled {
+  opacity: var(--stwid-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.stwid-compactInput {
+  min-height: 5px;
+  padding-inline: 5px;
+  font-size: 0.95em;
+  width: 3.5em;
+  margin: 0.2em 0.2em;
+}
+
+.stwid--entryManager .stwid--thinContainer[
+  data-field="outlet"] .stwid--input {
+  width: 8em;
+  font-size: 0.85em;
+}
+
+/* Feature 1: Order container - stack Start and Spacing vertically */
+.stwid--orderStartSpacingPair {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stwid--entryManager .stwid--thinContainer[
+  data-field="applyAll"] {
+  min-width: 5em;
+}
+
+/* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
+.stwid--entryManager .stwid--thinContainer .stwid--applyDirty {
+  color: var(--stwid-warning-color);
+}
+
+/* Filters */
+.stwid--orderTable .stwid--columnHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8em;
+}
+
+.stwid--orderTable .stwid--columnFilter {
+  display: flex;
+  align-items: center;
+}
+
+.stwid--orderTable .stwid--orderFilterButton {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
+  min-height: 0;
+  min-width: 0;
+  line-height: 1;
+  font-size: 0.85em;
+}
+
+.stwid--orderTable .stwid--orderFilterButton.stwid--state-active {
+  opacity: 1;
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--script-filter {
+  background-color: var(--SmartThemeBlurTintColor);
+  display: none;
+  gap: 1em;
+  height: 20vh;
+}
+
+.stwid--script-filter.stwid--state-active {
+  display: flex;
+}
+
+.stwid--script-filter .stwid--main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.stwid--script-filter .stwid--main .stwid--hint {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+}
+
+.stwid--script-filter .stwid--main .stwid--hint
+  code {
+  font-size: smaller;
+}
+
+.stwid--script-filter .stwid--main .stwid--script {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.stwid--script-filter .stwid--main .stwid--script .stwid--syntax,
+.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+  grid-column: 1;
+  grid-row: 1;
+  height: 100%;
+  width: 100%;
+  font-family: var(--monoFontFamily, monospace);
+  padding: 0.75em;
+  margin: 0;
+  line-height: 1.2;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 5px;
+  white-space: pre;
+  resize: none;
+  tab-size: 4;
+  max-height: unset;
+}
+
+.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+  caret-color: var(--ac-style-color-text);
+}
+
+.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+  scrollbar-width: none; /* Firefox */
+}
+.stwid--script-filter .stwid--main .stwid--script .stwid--input::
+  -webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.stwid--script-filter .stwid--main .stwid--script .stwid--input::
+  selection {
+  color: transparent;
+  background-color: rgba(108 171 251 / 0.25);
+}
+  @supports (rgb(from var(--ac-style-color-matchedText) r g b / 0.25)) {
+  .stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
+    background-color: rgb(from var(--ac-style-color-matchedText) r g b / 0.25);
+  }
+}
+
+.stwid--script-filter .stwid--preview {
+  font-family: var(--monoFontFamily, monospace);
+  font-size: 0.6em;
+  white-space: pre;
+  max-width: 30%;
+  overflow: auto;
+  height: 100%;
+}
+
+/* Table wrapper - see shared section 1.5 */
+
+/* Table */
+.stwid--orderTable {
+  border: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-align: left;
+  white-space: normal;
+  width: 100%;
+}
+
+.stwid--orderTable
+  thead {
+  background-color: var(--SmartThemeBlurTintColor);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: smaller;
+}
+
+.stwid--orderTable
+  tr {
+  border-bottom: 5px solid var(--SmartThemeBorderColor);
+  transition: background-color 200ms ease;
+  background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
+}
+
+.stwid--orderTable
+  tr:hover {
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
+}
+
+.stwid--orderTable
+  tbody tr.stwid--state-target {
+  background-color: var(--stwid-state-target-bg);
+  box-shadow: var(--stwid-state-target-outline);
+}
+
+.stwid--orderTable
+  tbody tr.stwid--state-target:hover {
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 25%, var(--stwid-state-target-bg));
+}
+
+.stwid--orderTable
+  tbody tr.stwid--state-selected {
+  background-color: var(--stwid-state-selected-bg);
+}
+
+.stwid--orderTable
+  tbody tr.stwid--state-selected:hover {
+  background-color: var(--stwid-state-selected-bg-strong);
+}
+
+.stwid--orderTable
+  tr.stwid--state-filtered {
+  display: none;
+}
+
+.stwid--orderTable
+  tbody tr:not(.stwid--applySelected) {
+  opacity: 0.6;
+}
+
+
+.stwid--orderTable
+  tr th,
+.stwid--orderTable tr td {
+  text-align: left;
+  padding: 0 0.7em;
+  width: 0;
+}
+
+.stwid--orderTable
+  thead th {
+  text-align: center;
+}
+
+.stwid--orderTable
+  thead th[data-col='entry'] {
+  text-align: left;
+}
+
+/* Table column sizing */
+.stwid--orderTable
+  tr th[data-col='select'] {
+  min-width: 1em;
+  text-align: center;
+}
+
+.stwid--orderTable
+  tr th[data-col='drag'] {
+  min-width: 1.5em;
+  text-align: center;
+}
+
+.stwid--orderTable
+  tr th[data-col='enabled'] {
+  min-width: 1em;
+  text-align: center;
+}
+
+.stwid--orderTable
+  tr th[data-col='entry'] {
+  min-width: 16em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+.stwid--orderTable
+  tr th[data-col='strategy'] {
+  min-width: 5em;
+}
+
+.stwid--orderTable
+  tr th[data-col='position'] {
+  min-width: 7em;
+}
+
+.stwid--orderTable
+  tr th[data-col='outlet'] {
+  min-width: 8em;
+}
+
+.stwid--orderTable .stwid--orderTable--NumberColumns {
+  min-width: 5em;
+}
+
+.stwid--orderTable
+  tr th[data-col='recursion'] {
+  min-width: 14em;
+}
+
+.stwid--orderTable
+  tr th[data-col='characterFilter'] {
+  min-width: 14em;
+}
+
+.stwid--orderTable
+  tr th[data-col='budget'] {
+  min-width: 7em;
+}
+
+/* Row details */
+.stwid--recursionOptions,
+.stwid--characterFilterOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stwid--characterFilterRow,
+.stwid--small-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.stwid--small-check-row {
+  font-size: 0.85em;
+}
+
+.stwid--characterFilterRow--include {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--characterFilterRow--exclude {
+  color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));
+}
+
+/* override: FA icon checkbox defaults are too large for the compact recursion options row */
+.stwid--small-check-row .checkbox {
+  width: 0.85em;
+  height: 0.85em;
+}
+
+.stwid--recursionOptions
+  br {
+  display: none;
+}
+
+.stwid--orderTable
+  tr td {
+  color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
+  font-size: small;
+}
+
+.stwid--orderTable
+  tr td[data-col='select'] {
+  min-width: 1em;
+  text-align: center;
+}
+
+.stwid--orderTable
+  tr td[data-col='drag'] {
+  min-width: 1.5em;
+  text-align: center;
+}
+
+.stwid--orderTable
+  tr td[data-col='enabled'] {
+  min-width: 1em;
+  text-align: center;
+}
+
+.stwid--orderTable
+  tr td[data-col='entry'] {
+  min-width: 16em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+.stwid--orderTable
+  tr td[data-col='strategy'] {
+  min-width: 5em;
+}
+
+.stwid--orderTable
+  tr td[data-col='position'] {
+  min-width: 7em;
+}
+
+.stwid--orderTable
+  tr td[data-col='outlet'] {
+  min-width: 8em;
+}
+
+.stwid--orderTable
+  tr td[data-col='recursion'] {
+  min-width: 14em;
+}
+
+.stwid--orderTable
+  tr td[data-col='characterFilter'] {
+  min-width: 14em;
+}
+
+.stwid--orderTable
+  tr td[data-col='budget'] {
+  min-width: 7em;
+}
+
+.stwid--orderTable
+  tr td .stwid--sortableHandle {
+  cursor: pointer;
+  opacity: 0.5;
+  padding: 2px;
+  font-size: 0.85em;
+  transition: opacity 200ms ease;
+}
+
+.stwid--orderTable
+  tr td .stwid--sortableHandle:hover {
+  opacity: 1;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderMove {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.10em;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderMoveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 150ms ease;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderMoveButton:hover {
+  opacity: 1;
+  color: var(--SmartThemeQuoteColor);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--SmartThemeQuoteColor) 65%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent);
+  border-radius: 4px;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderMoveButton:focus-visible,
+.stwid--orderTable tr td .stwid--sortableHandle:focus-visible,
+.stwid--orderTable tr td .stwid--orderSelect:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderSelect {
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em;
+  transition: opacity 200ms ease;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderSelect:hover {
+  opacity: 0.8;
+}
+
+.stwid--orderTable
+  tr td .stwid--orderSelect .stwid--icon {
+  pointer-events: none;
+}
+
+.stwid--orderTable
+  tr td [name='depth'] {
+  display: none;
+}
+
+.stwid--orderTable
+  tr td:has([name='position'] > [value='4']:checked) + td > [name='depth'] {
+  display: inline-block;
+}
+
+.stwid--orderTable
+  tr td:has(.stwid--entry) {
+  width: 100%;
+}
+
+.stwid--orderTable
+  tr td:has(.stwid--entry) .stwid--book {
+  color: var(--SmartThemeEmColor);
+  font-size: 0.8em;
+  line-height: 1;
+}
+
+.stwid--orderTable
+  tr td:has(.stwid--entry) .stwid--commentLink {
+  color: inherit;
+}
+
+.stwid--orderTable
+  tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
+  font-size: 1.03em;
+  font-weight: 500;
+}
+
+.stwid--orderTable
+  tr td:has(.stwid--entry) .stwid--key {
+  color: var(--SmartThemeEmColor);
+  font-size: 0.75em;
+  font-style: italic;
+  line-height: 1;
+}
+
+.stwid--orderTable
+  tr td .stwid--outlet {
+  color: var(--SmartThemeBodyColor);
+  font-size: 0.85em;
+  min-width: 6em;
+}
+
+.stwid--orderTable
+  tr td .stwid--outlet input[name='outletName'] {
+  width: 100%;
+  min-width: 7em;
+}
+
+.stwid--orderTable
+  tr td .stwid--position {
+  font-size: 0.9em;
+}
+
+.stwid--orderTable
+  tr td input[name='depth'],
+.stwid--orderTable tr td input[name='order'],
+.stwid--orderTable tr td input[name='selective_probability'] {
+  min-width: 4em;
+  font-size: 0.95em;
+}
+
+.stwid--orderTable
+  tr td .stwid--enabled {
+  color: var(--SmartThemeQuoteColor);
+  cursor: pointer;
+}
+
+.stwid--orderInputTight,
+.stwid--orderTable
+  input:is(
+    [name='depth'],
+    [name='order'],
+    [name='sticky'],
+    [name='cooldown'],
+    [name='delay'],
+    [name='automationId'],
+    [name='selective_probability']
+  ) {
+  min-height: 5px;
+  padding-inline: 5px;
+  font-size: 0.95em;
+}
+  @media screen and (max-width: 1000px) {
+  .stwid--entryManager {
+    width: 100%;
+  max-width: none;
+  }
+
+  .stwid--script-filter {
+  flex-direction: column;
+  height: auto;
+  min-height: 20vh;
+  }
+
+  .stwid--script-filter .stwid--preview {
+  max-width: none;
+  width: 100%;
+  max-height: 16em;
+  }
+
+  .stwid--orderTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  }
+
+  .stwid--orderTable {
+  width: max-content;
+  min-width: 100%;
+  }
+}
+  @media screen and (max-width: 768px) {
+  .stwid--order-action-bar,
+  .stwid--bulkEditRow {
+    gap: 0.6em;
+  padding-inline: 0.35em;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 6) Shared UI Patterns (drawer-internal)                                   */
+
+/* Shared menu/item patterns
+   Keep selectors local to this extension and avoid changing layout/positioning.
+*/
+:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton) {
+  border-radius: var(--stwid-radius-m);
+}
+
+:is(.stwid--action, .stwid--folderAction, .stwid--folderMenu, .stwid--folderToggle, .stwid--orderFilterButton):
+  focus-visible,
+.stwid--multiselectDropdownOption:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+} 
+
+/* -------------------------------------------------------------------------- */
+
+/* 5.5) Context Menu + Modals                                                 */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+}
+
+.stwid--blocker .stwid--listDropdownItem:
+  focus-visible {
+  /* outline: var(--stwid-focus-ring); */
+  /* outline-offset: var(--stwid-focus-ring-offset); */
+  color: var(--SmartThemeBodyColor);
+  padding: 2px 4px;
+  text-decoration: none;
+  display: flex;
+  column-gap: 4px;
+  cursor: pointer;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity var(--animation-duration);
+}
+
+/* Move Book to Folder dialog layout */
+.stwid--moveBookContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stwid--moveBookContent
+  h3 {
+  align-self: stretch;
+  text-align: left;
+}
+
+.stwid--moveBookContent .stwid--moveBookRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside the drawer root */
+.stwid--moveBookContent .stwid--moveBookRow .text_pole {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.stwid--moveBookContent .stwid--moveBookQuickActions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35em;
+}
+
+/* override: vanilla menu_button uses block flex; inline-flex keeps buttons inline in the Move Book row */
+.stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+  min-width: 2.35em; /* override: ensures icon-only buttons have a minimum click target */
+  display: inline-flex; /* override: vanilla is display:flex (block-level); inline here for compact row */
+}
+
+/* Context menu container */
+.stwid--blocker .stwid--listDropdownMenu {
+  /* --stwid-menu-item-height: 2.05em; */
+  position: fixed;
+  position-anchor: --stwid--ctxAnchor;
+  position-area: bottom right;
+  position-try-fallbacks: flip-block, flip-inline;
+  margin-top: -1lh;
+  filter: drop-shadow(1px 1px 2px var(--black50a));
+  z-index: 30000;
+  overflow: hidden;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(32 33 36 / 21%);rgba(255, 255, 255, 0);
+  font-size: 0.9em;
+  padding: 0.9em;
+  backdrop-filter: blur(var(--SmartThemeBlurStrength));
+}
+
+.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
+  min-height: var(--stwid-menu-item-height);
+  height: var(--stwid-menu-item-height);
+  /* opacity: 1; */
+  color: var(--SmartThemeBodyColor);
+  /* background-color: var(--SmartThemeBlurTintColor); */rgba(255, 255, 255, 0);
+  cursor: pointer;
+  transition: color 150ms ease;
+  flex-direction: row;
+  box-sizing: border-box;
+  padding: 0.4em;
+  /* border-radius: var(--stwid-radius-m); */
+  display: block;
+  overflow: hidden;
+  /* border: 1px solid var(--SmartThemeBorderColor); */
+  /* border-radius: 6px; */
+  /* background-color: var(--SmartThemeBlurTintColor); */
+  /* backdrop-filter: blur(var(--SmartThemeBlurStrength)); */
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  &:
+  hover {
+    color: var(--customThemeColor);
+  }
+
+  & #lorebook_ordering_button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35em;
+  }
+
+  &.stwid--bookSort {
+  /* opacity: 1; */
+  cursor: default;
+  }
+
+  &.stwid--bookSort
+  select {
+    width: 9em;
+  color: var(--SmartThemeBodyColor);
+  background-color: rgba(255, 255, 255, 0.05);
+  min-height: var(--stwid-menu-item-height);
+  height: 100%;
+  margin-left: 1em;
+  font-size: 1em;
+  /* padding: 0em 0em 0em 0em; */
+  margin-bottom: 0;
+  margin-top: 0;
+  }
+}
+
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
+  flex: 0 0 auto;
+  width: 1.05em;
+  color: inherit;
+  transition: color 150ms ease;
+  text-align: center;
+  padding: 0em 1.8em 0em 0em;
+}
+
+.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+  flex: 1 1 auto;
+  color: inherit;
+  transition: color 150ms ease;
+  min-width: fit-content;
+}
+  @media screen and (max-width: 1000px) {
+  .stwid--moveBookContent {
+    width: min(100%, 38rem);
+  }
+
+  .stwid--moveBookContent .stwid--moveBookRow {
+  flex-wrap: wrap;
+  }
+
+  .stwid--moveBookContent .stwid--moveBookQuickActions {
+  width: 100%;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  }
+
+  .stwid--blocker .stwid--listDropdownMenu {
+  max-width: calc(100vw - 2rem);
+  }
+
+  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  }
+}
+  @media screen and (max-width: 768px) {
+  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+    min-width: 2em;
+  }
+}
+
+/* Flex-column fill shell - grows to fill parent, scrolls internally */
+.stwid--entryManager {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--orderTableWrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 7) Misc                                                                    */
+
+/* -------------------------------------------------------------------------- */
+
+.stwid--helpToast {
+  margin: 0;
+  padding-left: 0.5em;
+  font-size: small;
+}
+  @media screen and (max-width: 1000px) {
+  .stwid--helpToast {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 8) Accessibility                                                           */
+
+/* -------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
+  animation-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
+  }
+}';;
+}
+
+.stwid--menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  border-radius: var(--stwid-radius-s);
+}
+
+.stwid--multiselectDropdownOption {
+  font-size: 1em;
+  transition: color 150ms ease, background-color 150ms ease;
+  padding: 2px 4px;
+  border: 0;
+  /* color: inherit; */
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.stwid--multiselectDropdownOption:hover {
+  color: var(--customThemeColor) !important; /* override: ST menu_button hover styles may override color; force theme color on hover */
+  /* background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent); */
+}
+
+.stwid--multiselectDropdownOption.stwid--state-active {
+  /* color: var(--SmartThemeQuoteColor); */
+}
+
+.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
+  color: var(--customThemeColor);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  width: 1em;
+  /* margin-right: 0.1em; */
+  /* padding-left: 0.5em; */
+}
+
+.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+  width: 1em;
+  text-align: center;
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--multiselectDropdownOption.stwid--state-active .stwid--multiselectDropdownOptionCheckbox {
+  color: var(--SmartThemeQuoteColor);
+}
+
+/* note: no body.stwid-- scope guard - this selector is tightly scoped by the unique .stwid--multiselectDropdownOption class */
+.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
+  color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--multiselectDropdownOptionInput {
+  position: absolute;
+  /* width: 0; */
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  /* margin-right: 2em; */
+}
+
+.stwid--small-multiselect {
+  overflow: hidden;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  background-color: var(--SmartThemeBlurTintColor);
+  backdrop-filter: blur(var(--SmartThemeBlurStrength));
+  -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength));
+}
+
 .stwid--small-multiselect a {
   color: var(--SmartThemeBodyColor);
   padding: 2px 4px;
@@ -596,6 +3016,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 .stwid--small-multiselect i {
   width: 12px;
   height: 12px;
+  margin: 0em 0.2em 0em 0em;
   font-size: 0.85em;
   display: flex;
   justify-content: center;

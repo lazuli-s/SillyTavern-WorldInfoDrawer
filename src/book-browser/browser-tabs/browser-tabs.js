@@ -220,7 +220,7 @@ const createFilterBarSlice = ({
         const filter = document.createElement('div'); {
             const { searchRow } = createSearchRow(listPanelState, runtime, updateFolderActiveToggles);
             const visibilityRow = document.createElement('div');
-            visibilityRow.classList.add('stwid--visibilityRow');
+            visibilityRow.classList.add('stwid--browserRow');
             const sortingRow = runtime?.dom?.sortingRow instanceof HTMLElement
                 ? runtime.dom.sortingRow
                 : document.createElement('div');
