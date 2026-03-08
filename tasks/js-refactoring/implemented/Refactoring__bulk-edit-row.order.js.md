@@ -31,10 +31,10 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, lines 91-106 -- build and persist the "Spacing" input
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new helper function named `buildPersistedNumberInput({ labelText, tooltipText, storageKey, defaultValue, maxValue, onDirty })` near the top of the file.
-- [ ] Replace the first copy (lines 74-89) with a call to `buildPersistedNumberInput(...)`, assign the returned input to `dom.order.start`, and append the returned label to `startSpacingPair`.
-- [ ] Replace the second copy (lines 91-106) with a call to `buildPersistedNumberInput(...)`, assign the returned input to `dom.order.step`, and append the returned label to `startSpacingPair`.
-- [ ] Keep the "mark apply button dirty" behavior (lines 109-110), either by keeping those listeners in the main function or by passing an `onDirty` callback into the helper.
+- [x] Extract the shared pattern into a new helper function named `buildPersistedNumberInput({ labelText, tooltipText, storageKey, defaultValue, maxValue, onDirty })` near the top of the file.
+- [x] Replace the first copy (lines 74-89) with a call to `buildPersistedNumberInput(...)`, assign the returned input to `dom.order.start`, and append the returned label to `startSpacingPair`.
+- [x] Replace the second copy (lines 91-106) with a call to `buildPersistedNumberInput(...)`, assign the returned input to `dom.order.step`, and append the returned label to `startSpacingPair`.
+- [x] Keep the "mark apply button dirty" behavior (lines 109-110), either by keeping those listeners in the main function or by passing an `onDirty` callback into the helper.
 
 ---
 
@@ -48,8 +48,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 134
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const ORDER_DIRECTION_GROUP = 'stwid--order-direction';`
-- [ ] Replace each occurrence of the raw literal with `ORDER_DIRECTION_GROUP` (both the `directionRadioGroupName` assignment and the 5th argument to `buildDirectionRadio`).
+- [x] At the top of the file (after imports), add: `const ORDER_DIRECTION_GROUP = 'stwid--order-direction';`
+- [x] Replace each occurrence of the raw literal with `ORDER_DIRECTION_GROUP` (both the `directionRadioGroupName` assignment and the 5th argument to `buildDirectionRadio`).
 
 ---
 
@@ -62,8 +62,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 86
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const ORDER_START_STORAGE_KEY = 'stwid--order-start';`
-- [ ] Replace each occurrence of the raw literal with `ORDER_START_STORAGE_KEY`.
+- [x] At the top of the file (after imports), add: `const ORDER_START_STORAGE_KEY = 'stwid--order-start';`
+- [x] Replace each occurrence of the raw literal with `ORDER_START_STORAGE_KEY`.
 
 ---
 
@@ -76,8 +76,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 103
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const ORDER_STEP_STORAGE_KEY = 'stwid--order-step';`
-- [ ] Replace each occurrence of the raw literal with `ORDER_STEP_STORAGE_KEY`.
+- [x] At the top of the file (after imports), add: `const ORDER_STEP_STORAGE_KEY = 'stwid--order-step';`
+- [x] Replace each occurrence of the raw literal with `ORDER_STEP_STORAGE_KEY`.
 
 ---
 
@@ -88,7 +88,7 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 45
 
 **Steps to fix:**
-- [ ] Rename `up` to `shouldReverseTargets` everywhere it appears in this file.
+- [x] Rename `up` to `shouldReverseTargets` everywhere it appears in this file.
 
 ---
 
@@ -99,7 +99,7 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 50
 
 **Steps to fix:**
-- [ ] Rename `tr` to `entryRowEl` everywhere it appears in this file.
+- [x] Rename `tr` to `entryRowEl` everywhere it appears in this file.
 
 ---
 
@@ -110,8 +110,8 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 78
 
 **Steps to fix:**
-- [ ] Rename this DOM variable `start` to `startInputEl` everywhere it appears in this file.
-- [ ] Consider also renaming the numeric `start` (line 32) to `startValue` to make the two meanings clearly different.
+- [x] Rename this DOM variable `start` to `startInputEl` everywhere it appears in this file.
+- [x] Consider also renaming the numeric `start` (line 32) to `startValue` to make the two meanings clearly different.
 
 ---
 
@@ -122,8 +122,8 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, line 95
 
 **Steps to fix:**
-- [ ] Rename this DOM variable `step` to `stepInputEl` everywhere it appears in this file.
-- [ ] Consider also renaming the numeric `step` (line 33) to `stepValue` to make the two meanings clearly different.
+- [x] Rename this DOM variable `step` to `stepInputEl` everywhere it appears in this file.
+- [x] Consider also renaming the numeric `step` (line 33) to `stepValue` to make the two meanings clearly different.
 
 ---
 
@@ -134,10 +134,10 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, lines 23-144
 
 **Steps to fix:**
-- [ ] Extract the apply handler creation (lines 30-63) into a new function named `createRunApplyOrder({ dom, cache, isEntryManagerRowSelected, saveWorldInfo, buildSavePayload, applyOrder })`. It should return the `runApplyOrder` function.
-- [ ] Extract the start/spacing input UI construction (lines 71-110) into a new function named `buildOrderStartSpacingControls({ dom, applyOrder })`. It should return the `startSpacingPair` element.
-- [ ] Extract the direction UI construction (lines 112-140) into a new function named `buildOrderDirectionControls({ dom, applyOrder })`. It should return the `directionGroup` element.
-- [ ] Keep `buildBulkOrderSection` as an orchestration function that calls the helpers and appends their returned DOM elements in order.
+- [x] Extract the apply handler creation (lines 30-63) into a new function named `createRunApplyOrder({ dom, cache, isEntryManagerRowSelected, saveWorldInfo, buildSavePayload, applyOrder })`. It should return the `runApplyOrder` function.
+- [x] Extract the start/spacing input UI construction (lines 71-110) into a new function named `buildOrderStartSpacingControls({ dom, applyOrder })`. It should return the `startSpacingPair` element.
+- [x] Extract the direction UI construction (lines 112-140) into a new function named `buildOrderDirectionControls({ dom, applyOrder })`. It should return the `directionGroup` element.
+- [x] Keep `buildBulkOrderSection` as an orchestration function that calls the helpers and appends their returned DOM elements in order.
 
 ---
 
@@ -148,5 +148,29 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`, lines 49-58 (deepest point: line 57)
 
 **Steps to fix:**
-- [ ] Extract the "pause every N items" logic (lines 56-58) into a new function named `maybeYieldToEventLoop(index, batchSize)`. It should return a promise you can `await` (or be an `async` function).
-- [ ] Replace the inline nested `if` block with `await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);` inside the loop.
+- [x] Extract the "pause every N items" logic (lines 56-58) into a new function named `maybeYieldToEventLoop(index, batchSize)`. It should return a promise you can `await` (or be an `async` function).
+- [x] Replace the inline nested `if` block with `await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);` inside the loop.
+
+---
+
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+[`src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js`](C:/ST%20Test/SillyTavern/data/default-user/extensions/SillyTavern-WorldInfoDrawer/src/entry-manager/bulk-editor-tab/bulk-edit-row.order.js)
+- Extracted small helper functions for the apply flow, the two saved number inputs, the direction controls, and the event-loop yield step.
+- Replaced repeated localStorage keys and the direction group name with named constants to reduce typo risk.
+- Renamed unclear variables so the code reads by purpose instead of by HTML shape or short labels.
+
+### Risks / What might break
+
+- The apply button now depends on helper functions, so a future change to helper wiring could stop the dirty state from updating.
+- The direction controls still use the same saved browser key, so any outside code that expects a different key name would still need to match this file.
+- If another file was depending on the old internal variable names while copying code manually, that copied code would not automatically stay in sync.
+
+### Manual checks
+
+- Open the Entry Manager bulk order section and confirm the Start and Spacing fields still load their last-used values after a page reload.
+- Change Start, Spacing, or Direction and confirm the apply button becomes visibly dirty before clicking it.
+- Apply order changes to a few selected rows and confirm the numbers update in the table in the expected top-to-bottom or bottom-to-top direction.

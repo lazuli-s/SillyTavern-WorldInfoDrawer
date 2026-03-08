@@ -20,14 +20,14 @@ export function createLabeledBulkContainer(fieldKey, labelText, hintText) {
     return container;
 }
 
-export function createApplyButton(tooltip, runFn, applyRegistry) {
+export function createApplyButton(tooltip, runApply, applyRegistry) {
     const applyButtonEl = document.createElement('div');
     applyButtonEl.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
     setTooltip(applyButtonEl, tooltip);
-    applyButtonEl.addEventListener('click', ()=>runFn());
+    applyButtonEl.addEventListener('click', ()=>runApply());
     applyRegistry.push({
         isDirty: ()=>applyButtonEl.classList.contains(APPLY_DIRTY_CLASS),
-        runApply: runFn,
+        runApply,
     });
     return applyButtonEl;
 }
@@ -66,8 +66,8 @@ export function buildRecursionCheckboxRow(value, label, recursionCheckboxes) {
     return recursionRow;
 }
 
-export function getSafeTbodyRows(dom) {
-    const tbody = dom.order?.tbody;
+export function getSafeTbodyRows(entryManagerDom) {
+    const tbody = entryManagerDom.order?.tbody;
     if (!(tbody instanceof HTMLElement)) {
         toastr.warning('Entry Manager table is not ready yet.');
         return null;
@@ -79,21 +79,21 @@ export function getBulkTargets(rows, cache, isEntryManagerRowSelected, { reverse
     const orderedRows = reverse ? [...rows].reverse() : rows;
     const targets = [];
     let skippedInvalidRow = false;
-    for (const tr of orderedRows) {
-        if (tr.classList.contains('stwid--state-filtered')) continue;
-        if (!isEntryManagerRowSelected(tr)) continue;
-        const bookName = tr.getAttribute('data-book');
-        const uid = tr.getAttribute('data-uid');
-        if (!bookName || uid === null) {
+    for (const rowEl of orderedRows) {
+        if (rowEl.classList.contains('stwid--state-filtered')) continue;
+        if (!isEntryManagerRowSelected(rowEl)) continue;
+        const bookName = rowEl.getAttribute('data-book');
+        const entryUid = rowEl.getAttribute('data-uid');
+        if (!bookName || entryUid === null) {
             skippedInvalidRow = true;
             continue;
         }
-        const entryData = cache?.[bookName]?.entries?.[uid];
+        const entryData = cache?.[bookName]?.entries?.[entryUid];
         if (!entryData) {
             skippedInvalidRow = true;
             continue;
         }
-        targets.push({ tr, bookName, uid, entryData });
+        targets.push({ tr: rowEl, bookName, uid: entryUid, entryData });
     }
     if (skippedInvalidRow) {
         console.warn('STWID: skipped one or more bulk-edit rows due to missing book/entry data.');
@@ -156,7 +156,7 @@ export async function runApplyNonNegativeIntegerField({
     rowInputName,
     emptyValueWarning,
     invalidValueWarning,
-    dom,
+    dom: entryManagerDom,
     cache,
     isEntryManagerRowSelected,
     saveWorldInfo,
@@ -175,7 +175,7 @@ export async function runApplyNonNegativeIntegerField({
         return;
     }
 
-    const rows = getSafeTbodyRows(dom);
+    const rows = getSafeTbodyRows(entryManagerDom);
     if (!rows) return;
 
     const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);

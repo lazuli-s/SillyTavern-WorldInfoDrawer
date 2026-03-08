@@ -32,15 +32,15 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, lines 222-244 - Apply Outlet (bulk update + save + clear dirty)
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new function named `runBulkApplyForSelectedEntries({ dom, cache, isEntryManagerRowSelected, saveWorldInfo, buildSavePayload, applyButton, perTargetUpdate, afterTargetsUpdate })` near the top of the file.
-- [ ] Inside `runBulkApplyForSelectedEntries(...)`, centralize:
+- [x] Extract the shared pattern into a new function named `runBulkApplyForSelectedEntries({ dom, cache, isEntryManagerRowSelected, saveWorldInfo, buildSavePayload, applyButton, perTargetUpdate, afterTargetsUpdate })` near the top of the file.
+- [x] Inside `runBulkApplyForSelectedEntries(...)`, centralize:
       - `getSafeTbodyRows(dom)` and early return if missing
       - `getBulkTargets(rows, cache, isEntryManagerRowSelected)`
       - `books` collection and `saveUpdatedBooks(books, saveWorldInfo, buildSavePayload)`
       - clearing `APPLY_DIRTY_CLASS` on `applyButton`
-- [ ] Replace the Apply Position body (lines 54-73) with a call to `runBulkApplyForSelectedEntries(...)` and pass a `perTargetUpdate` callback that sets `entryData.position`, updates `domPos`, and calls `applyEntryManagerPositionFilterToRow(...)`.
-- [ ] Replace the Apply Depth body (lines 102-121) with a call to `runBulkApplyForSelectedEntries(...)` and pass a `perTargetUpdate` callback that sets `entryData.depth` and updates the row's `[name="depth"]` input.
-- [ ] Replace the Apply Outlet body (lines 222-244) with a call to `runBulkApplyForSelectedEntries(...)` and pass:
+- [x] Replace the Apply Position body (lines 54-73) with a call to `runBulkApplyForSelectedEntries(...)` and pass a `perTargetUpdate` callback that sets `entryData.position`, updates `domPos`, and calls `applyEntryManagerPositionFilterToRow(...)`.
+- [x] Replace the Apply Depth body (lines 102-121) with a call to `runBulkApplyForSelectedEntries(...)` and pass a `perTargetUpdate` callback that sets `entryData.depth` and updates the row's `[name="depth"]` input.
+- [x] Replace the Apply Outlet body (lines 222-244) with a call to `runBulkApplyForSelectedEntries(...)` and pass:
       - a `perTargetUpdate` callback that sets `entryData.outletName` and updates the row's `[name="outletName"]` input
       - an `afterTargetsUpdate` callback that runs `syncEntryManagerOutletFilters()`, re-applies `applyEntryManagerOutletFilterToRow(...)` across targets, and triggers `filterIndicatorRefs.outlet?.()`
 
@@ -55,8 +55,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, line 50
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const STORAGE_KEY_BULK_POSITION = 'stwid--bulk-position-value';`
-- [ ] Replace each occurrence of the raw literal with `STORAGE_KEY_BULK_POSITION`.
+- [x] At the top of the file (after imports), add: `const STORAGE_KEY_BULK_POSITION = 'stwid--bulk-position-value';`
+- [x] Replace each occurrence of the raw literal with `STORAGE_KEY_BULK_POSITION`.
 
 ---
 
@@ -69,8 +69,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, line 98
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const STORAGE_KEY_BULK_DEPTH = 'stwid--bulk-depth-value';`
-- [ ] Replace each occurrence of the raw literal with `STORAGE_KEY_BULK_DEPTH`.
+- [x] At the top of the file (after imports), add: `const STORAGE_KEY_BULK_DEPTH = 'stwid--bulk-depth-value';`
+- [x] Replace each occurrence of the raw literal with `STORAGE_KEY_BULK_DEPTH`.
 
 ---
 
@@ -85,8 +85,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, line 210
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const STORAGE_KEY_BULK_OUTLET = 'stwid--bulk-outlet-value';`
-- [ ] Replace each occurrence of the raw literal with `STORAGE_KEY_BULK_OUTLET`.
+- [x] At the top of the file (after imports), add: `const STORAGE_KEY_BULK_OUTLET = 'stwid--bulk-outlet-value';`
+- [x] Replace each occurrence of the raw literal with `STORAGE_KEY_BULK_OUTLET`.
 
 ---
 
@@ -102,8 +102,8 @@
 - `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, line 185
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const STATE_ACTIVE_CLASS = 'stwid--state-active';`
-- [ ] Replace each occurrence of the raw literal with `STATE_ACTIVE_CLASS`.
+- [x] At the top of the file (after imports), add: `const STATE_ACTIVE_CLASS = 'stwid--state-active';`
+- [x] Replace each occurrence of the raw literal with `STATE_ACTIVE_CLASS`.
 
 ---
 
@@ -114,7 +114,7 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, line 39
 
 **Steps to fix:**
-- [ ] Rename `opt` to `positionOption` everywhere it appears in this loop.
+- [x] Rename `opt` to `positionOption` everywhere it appears in this loop.
 
 ---
 
@@ -125,7 +125,31 @@
 **Where:** `src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`, lines 29-262
 
 **Steps to fix:**
-- [ ] Extract the "Position UI" creation (lines 30-80) into a new function named `buildBulkPositionControls(...)`. One sentence: Create the Position select, restore its stored value, and return the container plus the apply button wiring.
-- [ ] Extract the "Depth UI" creation (lines 82-137) into a new function named `buildBulkDepthControls(...)`. One sentence: Create the Depth input, validate and apply depth changes, and toggle disabled state based on Position.
-- [ ] Extract the "Outlet UI" creation (lines 138-260) into a new function named `buildBulkOutletControls(...)`. One sentence: Create the Outlet input + dropdown menu, manage open/close behavior, and apply outlet changes in bulk.
-- [ ] Keep `buildBulkPositionSection(...)` as a short "orchestrator" that calls the three helper builders and returns `{ positionContainer, depthContainer, outletContainer, cleanup }`.
+- [x] Extract the "Position UI" creation (lines 30-80) into a new function named `buildBulkPositionControls(...)`. One sentence: Create the Position select, restore its stored value, and return the container plus the apply button wiring.
+- [x] Extract the "Depth UI" creation (lines 82-137) into a new function named `buildBulkDepthControls(...)`. One sentence: Create the Depth input, validate and apply depth changes, and toggle disabled state based on Position.
+- [x] Extract the "Outlet UI" creation (lines 138-260) into a new function named `buildBulkOutletControls(...)`. One sentence: Create the Outlet input + dropdown menu, manage open/close behavior, and apply outlet changes in bulk.
+- [x] Keep `buildBulkPositionSection(...)` as a short "orchestrator" that calls the three helper builders and returns `{ positionContainer, depthContainer, outletContainer, cleanup }`.
+
+---
+
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+`src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`
+- Added named constants for the saved Position, Depth, and Outlet values, plus the shared active-state class.
+- Pulled the repeated "apply changes to selected rows, save touched books, clear dirty state" flow into one shared helper.
+- Split the long builder into three smaller helpers for Position, Depth, and Outlet, leaving the exported function as a short coordinator.
+
+### Risks / What might break
+
+- The apply buttons now depend on the new shared helper, so any later change to that helper will affect Position, Depth, and Outlet together.
+- The outlet dropdown still relies on document-level click handling, so future changes around menu cleanup could affect whether it closes correctly.
+- If another file later copies the old raw storage key strings instead of reusing these constants, behavior could drift again.
+
+### Manual checks
+
+- Open the Entry Manager bulk editor, change Position, click apply, and confirm every selected row updates and the apply icon no longer shows as dirty afterward.
+- Set Position to Depth mode, enter a number and also test a blank value, click apply, and confirm selected rows show the new depth or cleared depth correctly.
+- Set Position to Outlet mode, type or pick an outlet from the dropdown, click apply, and confirm selected rows update and the outlet filter indicator refreshes.
