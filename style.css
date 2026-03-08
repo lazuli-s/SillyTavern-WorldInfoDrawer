@@ -2135,7 +2135,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   &.stwid--bookSort select {
     width: 9em;
-    color: inherit;
+    color: var(--SmartThemeBodyColor);
     background-color: rgba(255, 255, 255, 0.05);
     min-height: var(--stwid-menu-item-height);
     height: 100%;
