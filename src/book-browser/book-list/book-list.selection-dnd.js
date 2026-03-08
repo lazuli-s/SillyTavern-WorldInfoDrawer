@@ -1,25 +1,30 @@
 import { resetSelectionMemory } from '../book-browser.state.js';
 
-const createSelectionDnDSlice = ({
-    listPanelState,
-    runtime,
-    handleDraggedBookMoveOrCopy,
-})=>{
+const ENTRY_SELECTION_ICON_SELECTOR = '.stwid--selector > .stwid--icon';
+const UNSELECTED_ENTRY_ICON_CLASS = 'fa-square';
+const DROP_TARGET_CLASS = 'stwid--state-target';
+
+const setEntrySelectionIcon = (entry, isSelected)=>{
+    const icon = entry.querySelector(ENTRY_SELECTION_ICON_SELECTOR);
+    if (!icon) return;
+    icon.classList.toggle(UNSELECTED_ENTRY_ICON_CLASS, !isSelected);
+    icon.classList.toggle('fa-square-check', isSelected);
+};
+
+const createSelectionStateHelpers = ({ listPanelState, runtime })=>{
     const selectEnd = ()=>{
         resetSelectionMemory((toast)=>toastr.clear(toast));
         runtime.dom.books.classList.remove('stwid--state-dragging');
         [...runtime.dom.books.querySelectorAll('.stwid--entry.stwid--state-selected')]
-            .forEach((item)=>{
-                item.classList.remove('stwid--state-selected');
-                item.removeAttribute('draggable');
-                const icon = item.querySelector('.stwid--selector > .stwid--icon');
-                icon.classList.add('fa-square');
-                icon.classList.remove('fa-square-check');
+            .forEach((selectedEntry)=>{
+                selectedEntry.classList.remove('stwid--state-selected');
+                selectedEntry.removeAttribute('draggable');
+                setEntrySelectionIcon(selectedEntry, false);
             })
         ;
-        [...runtime.dom.books.querySelectorAll('.stwid--book.stwid--state-target')]
-            .forEach((item)=>{
-                item.classList.remove('stwid--state-target');
+        [...runtime.dom.books.querySelectorAll(`.stwid--book.${DROP_TARGET_CLASS}`)]
+            .forEach((selectedEntry)=>{
+                selectedEntry.classList.remove(DROP_TARGET_CLASS);
             })
         ;
     };
@@ -27,17 +32,13 @@ const createSelectionDnDSlice = ({
     const selectAdd = (entry)=>{
         entry.classList.add('stwid--state-selected');
         entry.setAttribute('draggable', 'true');
-        const icon = entry.querySelector('.stwid--selector > .stwid--icon');
-        icon.classList.remove('fa-square');
-        icon.classList.add('fa-square-check');
+        setEntrySelectionIcon(entry, true);
     };
 
     const selectRemove = (entry)=>{
         entry.classList.remove('stwid--state-selected');
         entry.setAttribute('draggable', 'false');
-        const icon = entry.querySelector('.stwid--selector > .stwid--icon');
-        icon.classList.add('fa-square');
-        icon.classList.remove('fa-square-check');
+        setEntrySelectionIcon(entry, false);
     };
 
     const keepOnlyFailedSelection = (failedUids)=>{
@@ -53,6 +54,128 @@ const createSelectionDnDSlice = ({
         listPanelState.selectMode = listPanelState.selectList.length > 0;
     };
 
+    return {
+        keepOnlyFailedSelection,
+        selectAdd,
+        selectEnd,
+        selectRemove,
+    };
+};
+
+const watchEntryTransferBooks = (targetBookName, sourceBookName, isCopy)=>{
+    const stContext = SillyTavern.getContext();
+    const eventBus = stContext?.eventSource;
+    const eventTypes = stContext?.eventTypes ?? stContext?.event_types;
+    const worldInfoUpdatedEvent = eventTypes?.WORLDINFO_UPDATED;
+    const watchedBooks = new Set([targetBookName]);
+    if (!isCopy && sourceBookName !== targetBookName) {
+        watchedBooks.add(sourceBookName);
+    }
+    const state = { hasConcurrentBookUpdate:false };
+    const onWorldInfoUpdated = (name)=>{
+        if (watchedBooks.has(name)) {
+            state.hasConcurrentBookUpdate = true;
+        }
+    };
+    if (eventBus && worldInfoUpdatedEvent) {
+        eventBus.on(worldInfoUpdatedEvent, onWorldInfoUpdated);
+    }
+
+    return {
+        cleanup: ()=>{
+            if (eventBus && worldInfoUpdatedEvent) {
+                eventBus.removeListener(worldInfoUpdatedEvent, onWorldInfoUpdated);
+            }
+        },
+        hasConcurrentBookUpdate: ()=>state.hasConcurrentBookUpdate,
+    };
+};
+
+const tryDeleteTransferredSourceEntry = async(runtime, srcBook, uid)=>{
+    try {
+        const deleted = await runtime.deleteWorldInfoEntry(srcBook, uid, { silent:true });
+        if (!deleted) {
+            return false;
+        }
+        if (typeof runtime.deleteWIOriginalDataValue === 'function') {
+            runtime.deleteWIOriginalDataValue(srcBook, uid);
+        }
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+const transferSelectedEntries = async(srcBook, dstBook, selectedUids, isCopy, hasConcurrentBookUpdate, runtime)=>{
+    const result = {
+        attemptedMoveCount: 0,
+        failedUids: [],
+        hasDstChanges: false,
+        hasSrcChanges: false,
+    };
+
+    for (const uid of selectedUids) {
+        if (hasConcurrentBookUpdate()) {
+            throw new Error('Lorebook changed while moving entries. Please retry.');
+        }
+
+        const srcEntry = srcBook.entries[uid];
+        if (!srcEntry) continue;
+        result.attemptedMoveCount += 1;
+
+        const entryPayload = Object.assign({}, srcEntry);
+        delete entryPayload.uid;
+
+        const dstEntry = runtime.createWorldInfoEntry(null, dstBook);
+        Object.assign(dstEntry, entryPayload);
+        result.hasDstChanges = true;
+
+        if (isCopy) continue;
+        if (typeof runtime.deleteWorldInfoEntry !== 'function') {
+            throw new Error('Move is unavailable: deleteWorldInfoEntry helper is missing.');
+        }
+
+        const deleted = await tryDeleteTransferredSourceEntry(runtime, srcBook, uid);
+        if (deleted) {
+            result.hasSrcChanges = true;
+            continue;
+        }
+        result.failedUids.push(uid);
+    }
+
+    return result;
+};
+
+const finalizeEntryTransfer = async(result, sourceBookName, targetBookName, srcBook, dstBook, isCopy, runtime, keepOnlyFailedSelection, selectEnd)=>{
+    if (result.hasDstChanges) {
+        await runtime.saveWorldInfo(targetBookName, dstBook, true);
+        if (typeof runtime.updateWIChange === 'function') {
+            runtime.updateWIChange(targetBookName, dstBook);
+        } else {
+            console.warn('[STWID] runtime.updateWIChange is unavailable for destination save.');
+        }
+    }
+
+    if (!isCopy && sourceBookName !== targetBookName && result.hasSrcChanges) {
+        await runtime.saveWorldInfo(sourceBookName, srcBook, true);
+        if (typeof runtime.updateWIChange === 'function') {
+            runtime.updateWIChange(sourceBookName, srcBook);
+        } else {
+            console.warn('[STWID] runtime.updateWIChange is unavailable for source save.');
+        }
+    }
+
+    if (!isCopy && result.failedUids.length > 0) {
+        keepOnlyFailedSelection(result.failedUids);
+        const succeeded = Math.max(result.attemptedMoveCount - result.failedUids.length, 0);
+        toastr.warning(`Move partially completed. ${succeeded} moved, ${result.failedUids.length} failed. Failed entries remain selected.`);
+        return;
+    }
+
+    selectEnd();
+};
+
+const createEntryTransferHandlers = ({ listPanelState, runtime, keepOnlyFailedSelection, selectEnd })=>{
     const moveOrCopySelectedEntriesToBook = async(targetBookName, isCopy)=>{
         if (!listPanelState.selectList?.length) {
             selectEnd();
@@ -64,23 +187,7 @@ const createSelectionDnDSlice = ({
             return;
         }
 
-        const stContext = SillyTavern.getContext();
-        const eventBus = stContext?.eventSource;
-        const eventTypes = stContext?.eventTypes ?? stContext?.event_types;
-        const worldInfoUpdatedEvent = eventTypes?.WORLDINFO_UPDATED;
-        const watchedBooks = new Set([targetBookName]);
-        if (!isCopy && sourceBookName !== targetBookName) {
-            watchedBooks.add(sourceBookName);
-        }
-        let hasConcurrentBookUpdate = false;
-        const onWorldInfoUpdated = (name)=>{
-            if (watchedBooks.has(name)) {
-                hasConcurrentBookUpdate = true;
-            }
-        };
-        if (eventBus && worldInfoUpdatedEvent) {
-            eventBus.on(worldInfoUpdatedEvent, onWorldInfoUpdated);
-        }
+        const transferWatch = watchEntryTransferBooks(targetBookName, sourceBookName, isCopy);
 
         try {
             const srcBook = await runtime.loadWorldInfo(sourceBookName);
@@ -89,113 +196,73 @@ const createSelectionDnDSlice = ({
                 throw new Error('Could not load source or destination lorebook.');
             }
 
-            let hasDstChanges = false;
-            let hasSrcChanges = false;
-            let attemptedMoveCount = 0;
-            const failedUids = [];
-            for (const uid of listPanelState.selectList) {
-                if (hasConcurrentBookUpdate) {
-                    throw new Error('Lorebook changed while moving entries. Please retry.');
-                }
+            const result = await transferSelectedEntries(
+                srcBook,
+                dstBook,
+                listPanelState.selectList,
+                isCopy,
+                transferWatch.hasConcurrentBookUpdate,
+                runtime,
+            );
 
-                const srcEntry = srcBook.entries[uid];
-                if (!srcEntry) continue;
-                attemptedMoveCount += 1;
-
-                const entryPayload = Object.assign({}, srcEntry);
-                delete entryPayload.uid;
-
-                const dstEntry = runtime.createWorldInfoEntry(null, dstBook);
-                Object.assign(dstEntry, entryPayload);
-                hasDstChanges = true;
-
-                if (!isCopy) {
-                    if (typeof runtime.deleteWorldInfoEntry !== 'function') {
-                        throw new Error('Move is unavailable: deleteWorldInfoEntry helper is missing.');
-                    }
-                    try {
-                        const deleted = await runtime.deleteWorldInfoEntry(srcBook, uid, { silent:true });
-                        if (deleted) {
-                            if (typeof runtime.deleteWIOriginalDataValue === 'function') {
-                                runtime.deleteWIOriginalDataValue(srcBook, uid);
-                            }
-                            hasSrcChanges = true;
-                        } else {
-                            failedUids.push(uid);
-                        }
-                    } catch {
-                        failedUids.push(uid);
-                    }
-                }
-            }
-
-            if (hasConcurrentBookUpdate) {
+            if (transferWatch.hasConcurrentBookUpdate()) {
                 throw new Error('Lorebook changed during move/copy. No changes were saved.');
             }
 
-            if (hasDstChanges) {
-                await runtime.saveWorldInfo(targetBookName, dstBook, true);
-                if (typeof runtime.updateWIChange === 'function') {
-                    runtime.updateWIChange(targetBookName, dstBook);
-                } else {
-                    console.warn('[STWID] runtime.updateWIChange is unavailable for destination save.');
-                }
-            }
-
-            if (!isCopy && sourceBookName !== targetBookName && hasSrcChanges) {
-                await runtime.saveWorldInfo(sourceBookName, srcBook, true);
-                if (typeof runtime.updateWIChange === 'function') {
-                    runtime.updateWIChange(sourceBookName, srcBook);
-                } else {
-                    console.warn('[STWID] runtime.updateWIChange is unavailable for source save.');
-                }
-            }
-
-            if (!isCopy && failedUids.length > 0) {
-                keepOnlyFailedSelection(failedUids);
-                const succeeded = Math.max(attemptedMoveCount - failedUids.length, 0);
-                toastr.warning(`Move partially completed. ${succeeded} moved, ${failedUids.length} failed. Failed entries remain selected.`);
-                return;
-            }
-
-            selectEnd();
+            await finalizeEntryTransfer(
+                result,
+                sourceBookName,
+                targetBookName,
+                srcBook,
+                dstBook,
+                isCopy,
+                runtime,
+                keepOnlyFailedSelection,
+                selectEnd,
+            );
         } catch (error) {
             console.error('[STWID] Failed to move/copy selected entries', error);
             const action = isCopy ? 'copy' : 'move';
             const reason = error instanceof Error ? error.message : 'Unknown error.';
             toastr.error(`Could not ${action} selected entries. ${reason}`);
         } finally {
-            if (eventBus && worldInfoUpdatedEvent) {
-                eventBus.removeListener(worldInfoUpdatedEvent, onWorldInfoUpdated);
-            }
+            transferWatch.cleanup();
         }
     };
 
-    const onBookDropTargetDragOver = (evt, book)=>{
+    return { moveOrCopySelectedEntriesToBook };
+};
+
+const updateBookDropTargetState = (targetBookRow, shouldHighlight)=>{
+    targetBookRow.classList.toggle(DROP_TARGET_CLASS, shouldHighlight);
+};
+
+const createBookDropHandlers = ({ listPanelState, handleDraggedBookMoveOrCopy, moveOrCopySelectedEntriesToBook })=>{
+    const onBookDropTargetDragOver = (evt, targetBookRow)=>{
         if (listPanelState.dragBookName) {
             evt.preventDefault();
-            book.classList.add('stwid--state-target');
+            updateBookDropTargetState(targetBookRow, true);
             return;
         }
         if (listPanelState.selectFrom === null) return;
         evt.preventDefault();
-        book.classList.add('stwid--state-target');
+        updateBookDropTargetState(targetBookRow, true);
     };
 
-    const onBookDropTargetDragLeave = (_evt, book)=>{
+    const onBookDropTargetDragLeave = (_evt, targetBookRow)=>{
         if (listPanelState.dragBookName) {
-            book.classList.remove('stwid--state-target');
+            updateBookDropTargetState(targetBookRow, false);
             return;
         }
         if (listPanelState.selectFrom === null) return;
-        book.classList.remove('stwid--state-target');
+        updateBookDropTargetState(targetBookRow, false);
     };
 
-    const onBookDropTargetDrop = async(evt, targetBookName, book, getTargetFolder)=>{
+    const onBookDropTargetDrop = async(evt, targetBookName, targetBookRow, getTargetFolder)=>{
         if (listPanelState.dragBookName) {
             evt.preventDefault();
             evt.stopPropagation();
-            book.classList.remove('stwid--state-target');
+            updateBookDropTargetState(targetBookRow, false);
             const draggedName = listPanelState.dragBookName;
             listPanelState.dragBookName = null;
             const targetFolder = getTargetFolder?.() ?? null;
@@ -233,6 +300,46 @@ const createSelectionDnDSlice = ({
         listPanelState.dragBookName = null;
         await handleDraggedBookMoveOrCopy(draggedName, null, evt.ctrlKey, { skipIfSameFolder: false });
     };
+
+    return {
+        onBookDropTargetDragLeave,
+        onBookDropTargetDragOver,
+        onBookDropTargetDrop,
+        onFolderDropTargetDragStateChange,
+        onFolderDropTargetDrop,
+        onRootDropTargetDragOver,
+        onRootDropTargetDrop,
+    };
+};
+
+const createSelectionDnDSlice = ({
+    listPanelState,
+    runtime,
+    handleDraggedBookMoveOrCopy,
+})=>{
+    const { keepOnlyFailedSelection, selectAdd, selectEnd, selectRemove } = createSelectionStateHelpers({
+        listPanelState,
+        runtime,
+    });
+    const { moveOrCopySelectedEntriesToBook } = createEntryTransferHandlers({
+        keepOnlyFailedSelection,
+        listPanelState,
+        runtime,
+        selectEnd,
+    });
+    const {
+        onBookDropTargetDragLeave,
+        onBookDropTargetDragOver,
+        onBookDropTargetDrop,
+        onFolderDropTargetDragStateChange,
+        onFolderDropTargetDrop,
+        onRootDropTargetDragOver,
+        onRootDropTargetDrop,
+    } = createBookDropHandlers({
+        handleDraggedBookMoveOrCopy,
+        listPanelState,
+        moveOrCopySelectedEntriesToBook,
+    });
 
     const getSelectionState = ()=>({
         get selectFrom() {

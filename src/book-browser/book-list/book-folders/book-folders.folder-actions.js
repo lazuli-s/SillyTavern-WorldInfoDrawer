@@ -17,6 +17,87 @@ const getFolderImportBookNames = (payload)=>{
     return Object.keys(payload.books);
 };
 
+const collectFailedBookOperations = async(bookNames, runBookOperation, buildFailureMessage)=>{
+    const failedBookNames = [];
+    for (const bookName of bookNames) {
+        try {
+            const operationResult = await runBookOperation(bookName);
+            if (operationResult === false || operationResult?.ok === false) {
+                failedBookNames.push(bookName);
+            }
+        } catch (error) {
+            console.warn(buildFailureMessage(bookName), error);
+            failedBookNames.push(bookName);
+        }
+    }
+    return failedBookNames;
+};
+
+const waitForImportedBooksToStabilize = async(getWorldNames, updatePromise)=>{
+    const hasUpdate = await Promise.race([
+        updatePromise ? updatePromise.then(()=>true) : Promise.resolve(false),
+        new Promise((resolve)=>setTimeout(()=>resolve(false), 15000)),
+    ]);
+    if (!hasUpdate) {
+        return false;
+    }
+
+    const deadline = Date.now() + 4000;
+    let lastSnapshot = getWorldNames().slice().sort();
+    while (Date.now() < deadline) {
+        await new Promise((resolve)=>setTimeout(resolve, 250));
+        const nextSnapshot = getWorldNames().slice().sort();
+        const unchanged = nextSnapshot.length === lastSnapshot.length
+            && nextSnapshot.every((value, index)=>value === lastSnapshot[index]);
+        if (unchanged) break;
+        lastSnapshot = nextSnapshot;
+    }
+
+    return true;
+};
+
+const matchImportedBookNames = (expectedBookNames, beforeNames, afterNames)=>{
+    const newNames = afterNames.filter((name)=>!beforeNames.has(name));
+    const importPrefixes = expectedBookNames.map((name)=>`${name} (imported`);
+    const attributedNames = expectedBookNames.length
+        ? newNames.filter((name)=>expectedBookNames.includes(name)
+            || importPrefixes.some((prefix)=>name.startsWith(prefix)))
+        : [];
+    const unmatchedNames = newNames.filter((name)=>!attributedNames.includes(name));
+    return { attributedNames, unmatchedNames };
+};
+
+const moveImportedBooksIntoFolder = async(attributedNames, folderName, menuActions, unmatchedNames)=>{
+    const failedMoveNames = await collectFailedBookOperations(
+        attributedNames,
+        (bookName)=>menuActions.setBookFolder(bookName, folderName),
+        (bookName)=>`[STWID] Failed to move imported book "${bookName}" into folder "${folderName}".`
+    );
+    const movedCount = Math.max(attributedNames.length - failedMoveNames.length, 0);
+
+    if (unmatchedNames.length) {
+        toastr.info(
+            `Moved ${movedCount} books to folder "${folderName}". Could not identify: ${summarizeBookNames(unmatchedNames)}.`
+        );
+    }
+    if (failedMoveNames.length) {
+        toastr.warning(
+            `Import partially completed (${movedCount}/${attributedNames.length} identified books moved). Failed: ${summarizeBookNames(failedMoveNames)}.`
+        );
+    }
+    if (attributedNames.length) {
+        await menuActions.refreshList?.();
+    }
+};
+
+const moveBooksOutOfFolder = async(bookNames, menuActions, folderName)=>{
+    return collectFailedBookOperations(
+        bookNames,
+        (bookName)=>menuActions.setBookFolder(bookName, null),
+        (bookName)=>`[STWID] Failed to move "${bookName}" out of folder "${folderName}"`
+    );
+};
+
 const setFolderBooksActive = async(bookNames, isActive, onWorldInfoChange)=>{
     const select = (document.querySelector('#world_info'));
     if (!select) return;
@@ -43,18 +124,18 @@ const createBookInFolder = async({
     if (!finalName) return null;
     const created = await createNewWorldInfo(finalName, { interactive: true });
     if (!created) return null;
-    const data = await loadWorldInfo(finalName);
-    if (!data || typeof data !== 'object') {
+    const newBookData = await loadWorldInfo(finalName);
+    if (!newBookData || typeof newBookData !== 'object') {
         console.warn(`[STWID] Failed to load newly created book "${finalName}" for folder assignment.`);
         toastr.warning(`Created "${finalName}", but it could not be placed into folder "${folderName}". You can move it manually.`);
         await refreshList?.();
         return finalName;
     }
-    const metadata = data.metadata ?? {};
-    const updated = setFolderInMetadata(metadata, folderName);
-    if (!updated.ok) return null;
-    data.metadata = metadata;
-    await saveWorldInfo(finalName, data, true);
+    const metadata = newBookData.metadata ?? {};
+    const folderAssignmentResult = setFolderInMetadata(metadata, folderName);
+    if (!folderAssignmentResult.ok) return null;
+    newBookData.metadata = metadata;
+    await saveWorldInfo(finalName, newBookData, true);
     registerFolderName(folderName);
     await refreshList?.();
     return finalName;
@@ -76,18 +157,11 @@ const renameFolderAction = async({ folderName, menuActions })=>{
     }
     if (normalized === folderName) return;
     const bookNames = getFolderBookNames(menuActions.cache, folderName);
-    const failedBookNames = [];
-    for (const bookName of bookNames) {
-        try {
-            const updated = await menuActions.setBookFolder(bookName, normalized);
-            if (!updated?.ok) {
-                failedBookNames.push(bookName);
-            }
-        } catch (error) {
-            console.warn(`[STWID] Failed to move "${bookName}" while renaming folder "${folderName}"`, error);
-            failedBookNames.push(bookName);
-        }
-    }
+    const failedBookNames = await collectFailedBookOperations(
+        bookNames,
+        (bookName)=>menuActions.setBookFolder(bookName, normalized),
+        (bookName)=>`[STWID] Failed to move "${bookName}" while renaming folder "${folderName}"`
+    );
     const movedCount = Math.max(bookNames.length - failedBookNames.length, 0);
     if (movedCount > 0) {
         registerFolderName(normalized);
@@ -118,65 +192,23 @@ const importFolderAction = async({ folderName, menuActions })=>{
             toastr.warning('This import format cannot be attributed safely. New books will not be auto-moved into the folder.');
             return;
         }
-        const hasUpdate = await Promise.race([
-            updatePromise ? updatePromise.then(()=>true) : Promise.resolve(false),
-            new Promise((resolve)=>setTimeout(()=>resolve(false), 15000)),
-        ]);
+        const hasUpdate = await waitForImportedBooksToStabilize(menuActions.getWorldNames, updatePromise);
         if (!hasUpdate) {
             console.warn(`[STWID] Folder import timed out waiting for WORLDINFO_UPDATED for folder "${folderName}".`);
             toastr.warning('Import did not complete in time. No books were moved into the folder.');
             return;
         }
 
-        const deadline = Date.now() + 4000;
-        let lastSnapshot = menuActions.getWorldNames().slice().sort();
-        while (Date.now() < deadline) {
-            await new Promise((resolve)=>setTimeout(resolve, 250));
-            const nextSnapshot = menuActions.getWorldNames().slice().sort();
-            const unchanged = nextSnapshot.length === lastSnapshot.length
-                && nextSnapshot.every((v, i)=>v === lastSnapshot[i]);
-            if (unchanged) break;
-            lastSnapshot = nextSnapshot;
-        }
-
         await menuActions.refreshList?.();
         const afterNames = menuActions.getWorldNames();
-        const newNames = afterNames.filter((name)=>!beforeNames.has(name));
-
-        const importPrefixes = expectedBookNames.map((name)=>`${name} (imported`);
-        const attributedNames = expectedBookNames.length
-            ? newNames.filter((name)=>expectedBookNames.includes(name)
-                || importPrefixes.some((prefix)=>name.startsWith(prefix)))
-            : [];
-        const unmatchedNames = newNames.filter((name)=>!attributedNames.includes(name));
+        const { attributedNames, unmatchedNames } = matchImportedBookNames(expectedBookNames, beforeNames, afterNames);
 
         if (!attributedNames.length) {
             toastr.warning('Import finished, but new books could not be confidently identified. No books were moved into the folder.');
             return;
         }
 
-        const failedMoveNames = [];
-        for (const name of attributedNames) {
-            const moved = await menuActions.setBookFolder(name, folderName);
-            if (!moved?.ok) {
-                console.warn(`[STWID] Failed to move imported book "${name}" into folder "${folderName}".`);
-                failedMoveNames.push(name);
-            }
-        }
-        const movedCount = Math.max(attributedNames.length - failedMoveNames.length, 0);
-        if (unmatchedNames.length) {
-            toastr.info(
-                `Moved ${movedCount} books to folder "${folderName}". Could not identify: ${summarizeBookNames(unmatchedNames)}.`
-            );
-        }
-        if (failedMoveNames.length) {
-            toastr.warning(
-                `Import partially completed (${movedCount}/${attributedNames.length} identified books moved). Failed: ${summarizeBookNames(failedMoveNames)}.`
-            );
-        }
-        if (attributedNames.length) {
-            await menuActions.refreshList?.();
-        }
+        await moveImportedBooksIntoFolder(attributedNames, folderName, menuActions, unmatchedNames);
     } finally {
         menuActions.setFolderImporting?.(false);
     }
@@ -212,28 +244,15 @@ const deleteFolderAction = async({ folderName, menuActions })=>{
         'Move books out'
     );
     const bookNames = getFolderBookNames(menuActions.cache, folderName);
-    const failedBookNames = [];
+    let failedBookNames = [];
     if (shouldDeleteBooks) {
-        for (const bookName of bookNames) {
-            try {
-                await menuActions.deleteBook?.(bookName, { skipConfirm: true });
-            } catch (error) {
-                console.warn(`[STWID] Failed to delete "${bookName}" while deleting folder "${folderName}"`, error);
-                failedBookNames.push(bookName);
-            }
-        }
+        failedBookNames = await collectFailedBookOperations(
+            bookNames,
+            (bookName)=>menuActions.deleteBook?.(bookName, { skipConfirm: true }) ?? true,
+            (bookName)=>`[STWID] Failed to delete "${bookName}" while deleting folder "${folderName}"`
+        );
     } else {
-        for (const bookName of bookNames) {
-            try {
-                const updated = await menuActions.setBookFolder(bookName, null);
-                if (!updated?.ok) {
-                    failedBookNames.push(bookName);
-                }
-            } catch (error) {
-                console.warn(`[STWID] Failed to move "${bookName}" out of folder "${folderName}"`, error);
-                failedBookNames.push(bookName);
-            }
-        }
+        failedBookNames = await moveBooksOutOfFolder(bookNames, menuActions, folderName);
     }
     if (!failedBookNames.length) {
         removeFolderName(folderName);

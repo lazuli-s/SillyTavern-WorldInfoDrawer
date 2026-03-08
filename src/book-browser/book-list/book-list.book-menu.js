@@ -1,120 +1,120 @@
-
 import { createExtensionIntegrationsSlice } from './book-list.extension-integrations.js';
 
 const UNSAVED_EDITS_WARNING_PREFIX = 'Unsaved edits detected. Save or discard changes before';
+const MOVE_BOOK_ACTION_LABEL = 'moving a book';
 
-const createBookMenuSlice = ({
-    listPanelState,
-    runtime: state,
-    coreUiSelectors,
-    coreUiActionSelectors,
-    folderDeps,
-    setSelectedBookInCoreUi,
-    clickCoreUiAction,
-    getBookSortChoice,
-    refreshList,
-    setBookFolder,
-    setBookSortPreference,
-    applyBookFolderChange,
+const addKeyboardClickSupport = (target)=>{
+    target.tabIndex = 0;
+    target.addEventListener('keydown', (evt)=>{
+        if (evt.key === 'Enter' || evt.key === ' ') {
+            evt.preventDefault();
+            target.click();
+        }
+    });
+};
+
+const createImportDialogResolver = (resolve, abortController)=>{
+    let isDone = false;
+    let timeoutId = null;
+
+    const finish = (value)=>{
+        if (isDone) return;
+        isDone = true;
+        abortController.abort();
+        clearTimeout(timeoutId);
+        resolve(value);
+    };
+
+    return {
+        finish,
+        isDone: ()=>isDone,
+        setTimeoutId: (nextTimeoutId)=>{
+            timeoutId = nextTimeoutId;
+        },
+    };
+};
+
+const readImportedJsonFile = async(input, finish)=>{
+    const [file] = input.files ?? [];
+    if (!file) {
+        finish(null);
+        return;
+    }
+    try {
+        finish(JSON.parse(await file.text()));
+    } catch {
+        finish(null);
+    }
+};
+
+const watchImportDialogCancel = (input, finish)=>()=>{
+    setTimeout(()=>{
+        if ((input.files?.length ?? 0) === 0) {
+            finish(null);
+        }
+    }, 0);
+};
+
+const createBookMenuActionItem = ({
+    itemClass,
+    iconClass,
+    labelText,
+    onClick,
+    enableKeyboard = true,
+    attributes = {},
 })=>{
-    const addMenuItemKeyboardSupport = (item)=>{
-        item.tabIndex = 0;
-        item.addEventListener('keydown', (evt)=>{
-            if (evt.key === 'Enter' || evt.key === ' ') {
-                evt.preventDefault();
-                item.click();
-            }
-        });
-    };
-
-    const createBookMenuActionItem = ({
-        itemClass,
-        iconClass,
-        labelText,
-        onClick,
-        enableKeyboard = true,
-        attributes = {},
-    })=>{
-        const item = document.createElement('div');
-        item.classList.add('stwid--listDropdownItem', 'stwid--menuItem', itemClass);
-        for (const [key, value] of Object.entries(attributes)) {
-            if (value !== undefined && value !== null) {
-                item.setAttribute(key, value);
-            }
+    const item = document.createElement('div');
+    item.classList.add('stwid--listDropdownItem', 'stwid--menuItem', itemClass);
+    for (const [key, value] of Object.entries(attributes)) {
+        if (value !== undefined && value !== null) {
+            item.setAttribute(key, value);
         }
-        if (enableKeyboard) {
-            addMenuItemKeyboardSupport(item);
-        }
-        item.addEventListener('click', onClick);
+    }
+    if (enableKeyboard) {
+        addKeyboardClickSupport(item);
+    }
+    item.addEventListener('click', onClick);
 
-        const itemIcon = document.createElement('i');
-        itemIcon.classList.add('stwid--icon', 'fa-solid', 'fa-fw', iconClass);
-        item.append(itemIcon);
+    const itemIcon = document.createElement('i');
+    itemIcon.classList.add('stwid--icon', 'fa-solid', 'fa-fw', iconClass);
+    item.append(itemIcon);
 
-        const menuLabel = document.createElement('span');
-        menuLabel.classList.add('stwid--label');
-        menuLabel.textContent = labelText;
-        item.append(menuLabel);
+    const menuLabel = document.createElement('span');
+    menuLabel.classList.add('stwid--label');
+    menuLabel.textContent = labelText;
+    item.append(menuLabel);
 
-        return item;
-    };
+    return item;
+};
 
-    const abortIfUnsavedChanges = (actionLabel)=>{
-        if (!state.isDirtyCheck?.()) return false;
-        toastr.warning(`${UNSAVED_EDITS_WARNING_PREFIX} ${actionLabel}.`);
-        return true;
-    };
-
+const createBookImportHandlers = ({
+    listPanelState,
+    state,
+    coreUiSelectors,
+    folderDeps,
+    refreshList,
+})=>{
     const openImportDialog = ()=>{
-        const input = (document.querySelector(coreUiSelectors.importFileInput));
+        const input = document.querySelector(coreUiSelectors.importFileInput);
         if (!input) return null;
 
-        
-        
-        
-        const filePromise = new Promise((resolve)=>{
-            let isDone = false;
+        return new Promise((resolve)=>{
             const abortController = new AbortController();
-            const finish = (value)=>{
-                if (isDone) return;
-                isDone = true;
-                abortController.abort();
-                clearTimeout(timeoutId);
-                resolve(value);
-            };
-            const onChange = async()=>{
-                const [file] = input.files ?? [];
-                if (!file) {
-                    finish(null);
-                    return;
-                }
-                try {
-                    finish(JSON.parse(await file.text()));
-                } catch {
-                    finish(null);
-                }
-            };
-            const onWindowFocus = ()=>{
-                
-                
-                setTimeout(()=>{
-                    if (isDone) return;
-                    if ((input.files?.length ?? 0) === 0) {
-                        finish(null);
-                    }
-                }, 0);
-            };
-            const timeoutId = setTimeout(()=>finish(null), 15000);
+            const dialogResolver = createImportDialogResolver(resolve, abortController);
+            const onChange = ()=>readImportedJsonFile(input, dialogResolver.finish);
+            const onWindowFocus = watchImportDialogCancel(input, dialogResolver.finish);
+
             input.value = '';
-            input.addEventListener('change', onChange, { once:true, signal:abortController.signal });
-            window.addEventListener('focus', onWindowFocus, { once:true, signal:abortController.signal });
+            input.addEventListener('change', onChange, { once: true, signal: abortController.signal });
+            window.addEventListener('focus', onWindowFocus, { once: true, signal: abortController.signal });
+            dialogResolver.setTimeoutId(setTimeout(()=>dialogResolver.finish(null), 15000));
+
             try {
                 input.click();
             } catch {
-                finish(null);
+                dialogResolver.finish(null);
             }
         });
-        return filePromise;
     };
 
     const parseFolderImportPayload = async(file)=>{
@@ -230,7 +230,20 @@ const createBookMenuSlice = ({
         listPanelState.folderImportInput.click();
     };
 
-    
+    return {
+        openImportDialog,
+        openFolderImportDialog,
+    };
+};
+
+const createBookCrudHandlers = ({
+    state,
+    refreshList,
+    setBookFolder,
+    setSelectedBookInCoreUi,
+    clickCoreUiAction,
+    coreUiActionSelectors,
+})=>{
     const duplicateBook = async(name)=>{
         const getNames = ()=>state.getWorldNames ? state.getWorldNames() : state.world_names;
         const initialNames = [...(getNames() ?? [])];
@@ -238,27 +251,21 @@ const createBookMenuSlice = ({
         const selected = await setSelectedBookInCoreUi(name);
         if (!selected) return null;
 
-        
-        
         const clicked = await clickCoreUiAction(coreUiActionSelectors.duplicateBook);
         if (!clicked) return null;
 
         const findNewName = ()=>{
             const currentNames = getNames() ?? [];
             const addedNames = currentNames.filter((entry)=>!initialNameSet.has(entry));
-            
             return addedNames.length === 1 ? addedNames[0] : null;
         };
 
-        
         const immediate = findNewName();
         if (immediate) return immediate;
 
         const timeoutMs = 8000;
 
         if (state.waitForWorldInfoUpdate) {
-            
-            
             const updated = await Promise.race([
                 state.waitForWorldInfoUpdate().then(() => true),
                 state.delay(timeoutMs).then(() => false),
@@ -266,7 +273,6 @@ const createBookMenuSlice = ({
             return updated ? findNewName() : null;
         }
 
-        
         const start = Date.now();
         while (Date.now() - start < timeoutMs) {
             await state.delay(250);
@@ -277,10 +283,6 @@ const createBookMenuSlice = ({
     };
 
     const duplicateBookIntoFolder = async(name, folderName)=>{
-        
-        
-        
-        
         const duplicatedName = await duplicateBook(name);
         if (!duplicatedName) return false;
         await setBookFolder(duplicatedName, folderName);
@@ -299,10 +301,24 @@ const createBookMenuSlice = ({
         await clickCoreUiAction(coreUiActionSelectors.deleteBook);
     };
 
+    return {
+        deleteBook,
+        duplicateBook,
+        duplicateBookIntoFolder,
+    };
+};
+
+const createMoveBookDialogHelpers = ({
+    listPanelState,
+    state,
+    folderDeps,
+    applyBookFolderChange,
+    abortIfUnsavedChanges,
+})=>{
     const getSortedFolderNamesForMoveDialog = ()=>Array.from(new Set([
         ...folderDeps.getFolderRegistry(),
         ...listPanelState.getFolderDomNames(),
-    ])).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    ])).sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
 
     const createMoveBookDialogShell = (cleanName)=>{
         const modal = document.createElement('dialog');
@@ -344,7 +360,7 @@ const createBookMenuSlice = ({
             }
             return;
         }
-        if (abortIfUnsavedChanges('moving a book')) return;
+        if (abortIfUnsavedChanges(MOVE_BOOK_ACTION_LABEL)) return;
         await applyBookFolderChange(name, folderRegistrationResult.folder, { centerAfterRefresh: true });
         modal.close();
     };
@@ -355,7 +371,7 @@ const createBookMenuSlice = ({
             toastr.info('Book is already in that folder.');
             return;
         }
-        if (abortIfUnsavedChanges('moving a book')) return;
+        if (abortIfUnsavedChanges(MOVE_BOOK_ACTION_LABEL)) return;
         await applyBookFolderChange(name, selectedFolder, { centerAfterRefresh: true });
         modal.close();
     };
@@ -415,7 +431,7 @@ const createBookMenuSlice = ({
                 toastr.info('Book is already not in a folder.');
                 return;
             }
-            if (abortIfUnsavedChanges('moving a book')) return;
+            if (abortIfUnsavedChanges(MOVE_BOOK_ACTION_LABEL)) return;
             await applyBookFolderChange(name, null, { centerAfterRefresh: true });
             modal.close();
         });
@@ -478,169 +494,198 @@ const createBookMenuSlice = ({
         });
     };
 
-    const createBookMenuTriggerButton = ()=>{
-        const menuTrigger = document.createElement('div');
-        menuTrigger.classList.add('stwid--action', 'stwid--listDropdownTrigger', 'fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
-        menuTrigger.title = 'Book menu';
-        menuTrigger.setAttribute('aria-label', 'Book menu');
-        menuTrigger.setAttribute('aria-expanded', 'false');
-        menuTrigger.setAttribute('aria-haspopup', 'true');
-        menuTrigger.tabIndex = 0;
-        menuTrigger.addEventListener('keydown', (evt)=>{
-            if (evt.key === 'Enter' || evt.key === ' ') {
-                evt.preventDefault();
-                menuTrigger.click();
-            }
-        });
-        return menuTrigger;
+    return {
+        buildMoveBookMenuItem,
     };
+};
 
-    const createBookMenuOverlay = (menuTrigger)=>{
-        menuTrigger.style.anchorName = '--stwid--ctxAnchor';
-        const blocker = document.createElement('div');
-        blocker.classList.add('stwid--blocker');
-        for (const eventName of ['mousedown', 'pointerdown', 'touchstart']) {
-            blocker.addEventListener(eventName, (evt)=>{
-                evt.stopPropagation();
-            });
-        }
-        const closeMenu = ()=>{
-            blocker.remove();
-            menuTrigger.style.anchorName = '';
-            menuTrigger.setAttribute('aria-expanded', 'false');
-            menuTrigger.focus();
-        };
-        blocker.addEventListener('click', (evt)=>{
+const createBookMenuTriggerButton = ()=>{
+    const menuTrigger = document.createElement('div');
+    menuTrigger.classList.add('stwid--action', 'stwid--listDropdownTrigger', 'fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
+    menuTrigger.title = 'Book menu';
+    menuTrigger.setAttribute('aria-label', 'Book menu');
+    menuTrigger.setAttribute('aria-expanded', 'false');
+    menuTrigger.setAttribute('aria-haspopup', 'true');
+    addKeyboardClickSupport(menuTrigger);
+    return menuTrigger;
+};
+
+const createBookMenuOverlay = (menuTrigger)=>{
+    menuTrigger.style.anchorName = '--stwid--ctxAnchor';
+    const blocker = document.createElement('div');
+    blocker.classList.add('stwid--blocker');
+    for (const eventName of ['mousedown', 'pointerdown', 'touchstart']) {
+        blocker.addEventListener(eventName, (evt)=>{
             evt.stopPropagation();
-            closeMenu();
         });
-        const menu = document.createElement('div');
-        menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
-        menu.setAttribute('role', 'menu');
-        menuTrigger.setAttribute('aria-expanded', 'true');
-        return { blocker, menu, closeMenu };
+    }
+    const closeMenu = ()=>{
+        blocker.remove();
+        menuTrigger.style.anchorName = '';
+        menuTrigger.setAttribute('aria-expanded', 'false');
+        menuTrigger.focus();
     };
+    blocker.addEventListener('click', (evt)=>{
+        evt.stopPropagation();
+        closeMenu();
+    });
+    const menu = document.createElement('div');
+    menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
+    menu.setAttribute('role', 'menu');
+    menuTrigger.setAttribute('aria-expanded', 'true');
+    return { blocker, menu, closeMenu };
+};
 
+const buildRenameBookMenuItem = (name, closeMenu, { setSelectedBookInCoreUi, clickCoreUiAction, coreUiActionSelectors })=>createBookMenuActionItem({
+    itemClass: 'stwid--rename',
+    iconClass: 'fa-pencil',
+    labelText: 'Rename Book',
+    onClick: async()=>{
+        closeMenu?.();
+        const selected = await setSelectedBookInCoreUi(name);
+        if (!selected) return;
+        await clickCoreUiAction(coreUiActionSelectors.renameBook);
+    },
+});
+
+const buildFillTitlesMenuItem = (name, closeMenu, { abortIfUnsavedChanges, state })=>createBookMenuActionItem({
+    itemClass: 'stwid--fillTitles',
+    iconClass: 'fa-wand-magic-sparkles',
+    labelText: 'Fill Empty Titles',
+    onClick: async()=>{
+        if (abortIfUnsavedChanges('filling titles')) return;
+        await state.fillEmptyTitlesWithKeywords(name);
+        closeMenu?.();
+    },
+});
+
+const buildBookSortSelect = (name, closeMenu, { state, getBookSortChoice, setBookSortPreference })=>{
+    const sortSelect = document.createElement('select');
+    sortSelect.classList.add('text_pole');
+    sortSelect.addEventListener('click', (evt)=>evt.stopPropagation());
+
+    const hasCustomSort = Boolean(state.cache[name].sort);
+    const { sort, direction } = getBookSortChoice(name);
+    const globalLabel = state.getSortLabel(state.Settings.instance.sortLogic, state.Settings.instance.sortDirection) ?? 'Global default';
+    const globalOption = document.createElement('option');
+    globalOption.value = 'null';
+    globalOption.textContent = `Use global (${globalLabel})`;
+    globalOption.selected = !hasCustomSort;
+    sortSelect.append(globalOption);
+    state.appendSortOptions(sortSelect, sort, direction);
+
+    sortSelect.addEventListener('change', async()=>{
+        const value = sortSelect.value === 'null' ? null : JSON.parse(sortSelect.value);
+        if (value) {
+            await setBookSortPreference(name, value.sort, value.direction);
+        } else {
+            await setBookSortPreference(name, null, null);
+        }
+        closeMenu();
+    });
+
+    return sortSelect;
+};
+
+const buildBookSortMenuRow = (name, closeMenu, deps)=>{
+    const bookSort = document.createElement('div');
+    bookSort.classList.add('stwid--listDropdownItem', 'stwid--menuItem', 'stwid--bookSort');
+    bookSort.addEventListener('click', (evt)=>evt.stopPropagation());
+
+    const sortIcon = document.createElement('i');
+    sortIcon.classList.add('stwid--icon', 'fa-solid', 'fa-fw', 'fa-list-ol');
+    bookSort.append(sortIcon);
+
+    const label = document.createElement('span');
+    label.classList.add('stwid--label');
+    label.textContent = 'Book Sort';
+    bookSort.append(label);
+
+    bookSort.append(buildBookSortSelect(name, closeMenu, deps));
+    return bookSort;
+};
+
+const buildEntryManagerMenuItem = (name, closeMenu, { state })=>createBookMenuActionItem({
+    itemClass: 'stwid--entryManager',
+    iconClass: 'fa-arrow-down-wide-short',
+    labelText: 'Entry Manager',
+    onClick: ()=>{
+        state.openEntryManager(name, [name]);
+        closeMenu?.();
+    },
+    enableKeyboard: false,
+});
+
+const buildExportBookMenuItem = (name, closeMenu, { state })=>createBookMenuActionItem({
+    itemClass: 'stwid--export',
+    iconClass: 'fa-file-export',
+    labelText: 'Export Book',
+    onClick: async()=>{
+        state.download(JSON.stringify({
+            entries: structuredClone(state.cache[name].entries),
+            metadata: structuredClone(state.cache[name].metadata ?? {}),
+        }), name, 'application/json');
+        closeMenu?.();
+    },
+});
+
+const buildDuplicateBookMenuItem = (name, closeMenu, { duplicateBook })=>createBookMenuActionItem({
+    itemClass: 'stwid--duplicate',
+    iconClass: 'fa-paste',
+    labelText: 'Duplicate Book',
+    onClick: async()=>{
+        await duplicateBook(name);
+        closeMenu?.();
+    },
+});
+
+const buildDeleteBookMenuItem = (name, closeMenu, { deleteBook })=>createBookMenuActionItem({
+    itemClass: 'stwid--delete',
+    iconClass: 'fa-trash-can',
+    labelText: 'Delete Book',
+    onClick: async()=>{
+        await deleteBook(name);
+        closeMenu?.();
+    },
+});
+
+const createBookMenuUiHelpers = ({
+    state,
+    getBookSortChoice,
+    setBookSortPreference,
+    setSelectedBookInCoreUi,
+    clickCoreUiAction,
+    coreUiActionSelectors,
+    abortIfUnsavedChanges,
+    buildMoveBookMenuItem,
+    appendIntegrationMenuItems,
+    duplicateBook,
+    deleteBook,
+})=>{
     const appendCoreBookMenuItems = (menu, name, closeMenu)=>{
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--rename',
-            iconClass: 'fa-pencil',
-            labelText: 'Rename Book',
-            onClick: async()=>{
-                closeMenu?.();
-                const selected = await setSelectedBookInCoreUi(name);
-                if (!selected) return;
-                await clickCoreUiAction(coreUiActionSelectors.renameBook);
-            },
+        menu.append(buildRenameBookMenuItem(name, closeMenu, {
+            setSelectedBookInCoreUi,
+            clickCoreUiAction,
+            coreUiActionSelectors,
         }));
 
         const moveBook = buildMoveBookMenuItem(name, closeMenu);
         if (moveBook) menu.append(moveBook);
 
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--fillTitles',
-            iconClass: 'fa-wand-magic-sparkles',
-            labelText: 'Fill Empty Titles',
-            onClick: async()=>{
-                if (abortIfUnsavedChanges('filling titles')) return;
-                await state.fillEmptyTitlesWithKeywords(name);
-                closeMenu?.();
-            },
+        menu.append(buildFillTitlesMenuItem(name, closeMenu, {
+            abortIfUnsavedChanges,
+            state,
         }));
-
-        const bookSort = document.createElement('div'); {
-                            bookSort.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
-                            bookSort.classList.add('stwid--bookSort');
-                            bookSort.addEventListener('click', (evt)=>evt.stopPropagation());
-                            const i = document.createElement('i'); {
-                                i.classList.add('stwid--icon');
-                                i.classList.add('fa-solid', 'fa-fw', 'fa-list-ol');
-                                bookSort.append(i);
-                            }
-                            const label = document.createElement('span'); {
-                                label.classList.add('stwid--label');
-                                label.textContent = 'Book Sort';
-                                bookSort.append(label);
-                            }
-                            const sortSelect = document.createElement('select'); {
-                                sortSelect.classList.add('text_pole');
-                                sortSelect.addEventListener('click', (evt)=>evt.stopPropagation());
-                                const hasCustomSort = Boolean(state.cache[name].sort);
-                                const { sort, direction } = getBookSortChoice(name);
-                                const globalLabel = state.getSortLabel(state.Settings.instance.sortLogic, state.Settings.instance.sortDirection) ?? 'Global default';
-                                const globalOpt = document.createElement('option'); {
-                                    globalOpt.value = 'null';
-                                    globalOpt.textContent = `Use global (${globalLabel})`;
-                                    globalOpt.selected = !hasCustomSort;
-                                    sortSelect.append(globalOpt);
-                                }
-                                state.appendSortOptions(sortSelect, sort, direction);
-                                sortSelect.addEventListener('change', async()=>{
-                                    const value = sortSelect.value === 'null' ? null : JSON.parse(sortSelect.value);
-                                    if (value) {
-                                        await setBookSortPreference(name, value.sort, value.direction);
-                                    } else {
-                                        await setBookSortPreference(name, null, null);
-                                    }
-                                    closeMenu();
-                                });
-                            }
-                            bookSort.append(sortSelect);
-                            menu.append(bookSort);
-                        }
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--entryManager',
-            iconClass: 'fa-arrow-down-wide-short',
-            labelText: 'Entry Manager',
-            onClick: ()=>{
-                state.openEntryManager(name, [name]);
-                closeMenu?.();
-            },
-            enableKeyboard: false,
+        menu.append(buildBookSortMenuRow(name, closeMenu, {
+            state,
+            getBookSortChoice,
+            setBookSortPreference,
         }));
-
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--export',
-            iconClass: 'fa-file-export',
-            labelText: 'Export Book',
-            onClick: async()=>{
-                state.download(JSON.stringify({
-                    entries: structuredClone(state.cache[name].entries),
-                    metadata: structuredClone(state.cache[name].metadata ?? {}),
-                }), name, 'application/json');
-                closeMenu?.();
-            },
-        }));
-
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--duplicate',
-            iconClass: 'fa-paste',
-            labelText: 'Duplicate Book',
-            onClick: async()=>{
-                await duplicateBook(name);
-                closeMenu?.();
-            },
-        }));
-
-        menu.append(createBookMenuActionItem({
-            itemClass: 'stwid--delete',
-            iconClass: 'fa-trash-can',
-            labelText: 'Delete Book',
-            onClick: async()=>{
-                await deleteBook(name);
-                closeMenu?.();
-            },
-        }));
+        menu.append(buildEntryManagerMenuItem(name, closeMenu, { state }));
+        menu.append(buildExportBookMenuItem(name, closeMenu, { state }));
+        menu.append(buildDuplicateBookMenuItem(name, closeMenu, { duplicateBook }));
+        menu.append(buildDeleteBookMenuItem(name, closeMenu, { deleteBook }));
     };
-
-    const { appendIntegrationMenuItems } = createExtensionIntegrationsSlice({
-        extensionNames: state.extensionNames,
-        getRequestHeaders: state.getRequestHeaders,
-        executeSlashCommand: state.executeSlashCommand,
-        setSelectedBookInCoreUi,
-        clickCoreUiAction,
-        createBookMenuActionItem,
-    });
 
     const buildBookMenuTrigger = (name)=>{
         const menuTrigger = createBookMenuTriggerButton();
@@ -656,10 +701,83 @@ const createBookMenuSlice = ({
 
     return {
         buildBookMenuTrigger,
-        deleteBook,
-        duplicateBookIntoFolder,
-        openFolderImportDialog,
-        openImportDialog,
+    };
+};
+
+const createBookMenuSlice = ({
+    listPanelState,
+    runtime: state,
+    coreUiSelectors,
+    coreUiActionSelectors,
+    folderDeps,
+    setSelectedBookInCoreUi,
+    clickCoreUiAction,
+    getBookSortChoice,
+    refreshList,
+    setBookFolder,
+    setBookSortPreference,
+    applyBookFolderChange,
+})=>{
+    const abortIfUnsavedChanges = (actionLabel)=>{
+        if (!state.isDirtyCheck?.()) return false;
+        toastr.warning(`${UNSAVED_EDITS_WARNING_PREFIX} ${actionLabel}.`);
+        return true;
+    };
+
+    const importHandlers = createBookImportHandlers({
+        listPanelState,
+        state,
+        coreUiSelectors,
+        folderDeps,
+        refreshList,
+    });
+
+    const crudHandlers = createBookCrudHandlers({
+        state,
+        refreshList,
+        setBookFolder,
+        setSelectedBookInCoreUi,
+        clickCoreUiAction,
+        coreUiActionSelectors,
+    });
+
+    const moveDialogHelpers = createMoveBookDialogHelpers({
+        listPanelState,
+        state,
+        folderDeps,
+        applyBookFolderChange,
+        abortIfUnsavedChanges,
+    });
+
+    const { appendIntegrationMenuItems } = createExtensionIntegrationsSlice({
+        extensionNames: state.extensionNames,
+        getRequestHeaders: state.getRequestHeaders,
+        executeSlashCommand: state.executeSlashCommand,
+        setSelectedBookInCoreUi,
+        clickCoreUiAction,
+        createBookMenuActionItem,
+    });
+
+    const menuUiHelpers = createBookMenuUiHelpers({
+        state,
+        getBookSortChoice,
+        setBookSortPreference,
+        setSelectedBookInCoreUi,
+        clickCoreUiAction,
+        coreUiActionSelectors,
+        abortIfUnsavedChanges,
+        buildMoveBookMenuItem: moveDialogHelpers.buildMoveBookMenuItem,
+        appendIntegrationMenuItems,
+        duplicateBook: crudHandlers.duplicateBook,
+        deleteBook: crudHandlers.deleteBook,
+    });
+
+    return {
+        buildBookMenuTrigger: menuUiHelpers.buildBookMenuTrigger,
+        deleteBook: crudHandlers.deleteBook,
+        duplicateBookIntoFolder: crudHandlers.duplicateBookIntoFolder,
+        openFolderImportDialog: importHandlers.openFolderImportDialog,
+        openImportDialog: importHandlers.openImportDialog,
     };
 };
 

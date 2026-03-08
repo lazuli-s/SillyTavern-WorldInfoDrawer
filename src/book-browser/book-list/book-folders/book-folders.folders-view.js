@@ -2,6 +2,9 @@ import { getFolderFromMetadata } from './book-folders.lorebook-folders.js';
 import { createFolderDom, setFolderCollapsed } from './book-folders.folder-dom.js';
 import { persistFolderCollapseStates, setFolderCollapsedAndPersist } from '../../book-browser.state.js';
 
+const FOLDER_COLLAPSED_CLASS = 'stwid--state-collapsed';
+const BOOK_ROW_CLASS = 'stwid--book';
+
 const createFoldersViewSlice = ({
     listPanelState,
     runtime,
@@ -12,20 +15,20 @@ const createFoldersViewSlice = ({
 
     const hasExpandedFolders = ()=>listPanelState.getFolderDomValues().some((folderDom)=>{
         const books = folderDom?.books;
-        return books && !books.classList.contains('stwid--state-collapsed');
+        return books && !books.classList.contains(FOLDER_COLLAPSED_CLASS);
     });
 
     const updateCollapseAllFoldersToggle = ()=>{
         const hasExpanded = hasExpandedFolders();
-        const btn = runtime.dom.collapseAllFoldersToggle;
-        if (!btn) return;
-        const icon = btn.querySelector('i');
+        const collapseAllFoldersButton = runtime.dom.collapseAllFoldersToggle;
+        if (!collapseAllFoldersButton) return;
+        const icon = collapseAllFoldersButton.querySelector('i');
         icon?.classList.toggle('fa-folder-tree', hasExpanded);
         icon?.classList.toggle('fa-folder-open', !hasExpanded);
         const label = hasExpanded ? 'Collapse All Folders' : 'Expand All Folders';
-        btn.title = label;
-        btn.setAttribute('aria-label', label);
-        btn.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
+        collapseAllFoldersButton.title = label;
+        collapseAllFoldersButton.setAttribute('aria-label', label);
+        collapseAllFoldersButton.setAttribute('aria-pressed', hasExpanded ? 'true' : 'false');
     };
 
     const setAllFoldersCollapsed = (isCollapsed)=>{
@@ -52,7 +55,7 @@ const createFoldersViewSlice = ({
                 const books = folderDom?.books;
                 if (!books) return;
                 bulkFolderCollapsedIntent = null;
-                const isCollapsed = !books.classList.contains('stwid--state-collapsed');
+                const isCollapsed = !books.classList.contains(FOLDER_COLLAPSED_CLASS);
                 setFolderCollapsedAndPersist(folderName, isCollapsed);
                 updateCollapseAllFoldersToggle();
             },
@@ -76,7 +79,7 @@ const createFoldersViewSlice = ({
                 }
                 continue;
             }
-            if (child.classList.contains('stwid--book')) {
+            if (child.classList.contains(BOOK_ROW_CLASS)) {
                 insertBefore = child;
                 break;
             }
@@ -120,7 +123,7 @@ const createFoldersViewSlice = ({
         for (const folderDom of listPanelState.getFolderDomValues()) {
             const hasVisibleBooks = Array.from(folderDom.books.children).some((child)=>{
                 if (!(child instanceof HTMLElement)) return false;
-                if (!child.classList.contains('stwid--book')) return false;
+                if (!child.classList.contains(BOOK_ROW_CLASS)) return false;
                 return !isBookDomFilteredOut(child);
             });
             folderDom.root.hidden = !hasVisibleBooks;

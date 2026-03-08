@@ -6,6 +6,27 @@
 
 ---
 
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+`src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`
+- Added `readValidatedMetadataFolder(metadata)` so the metadata folder validation logic lives in one place.
+- Updated `getFolderFromMetadata` and `sanitizeFolderMetadata` to reuse that helper while keeping the metadata cleanup behavior.
+- Renamed generic variables to clearer names: `value` to `folderNameInput`, `raw` to `storedRegistryJson`, and `parsed` to `storedRegistry`.
+
+### Risks / What might break
+
+- If any future edit expects `sanitizeFolderMetadata` to handle invalid metadata differently, that edit could accidentally rely on the old duplicated logic.
+- If another change copies the old variable names from an outdated note or review file, that code will no longer match this source file.
+
+### Manual checks
+
+- Reload the browser tab, open the drawer, and confirm books assigned to folders still appear under the correct folder names.
+- Create or rename a folder with extra spaces around the name and confirm the saved name is trimmed correctly.
+- Add an invalid folder value containing `/`, reload, and confirm that invalid metadata is removed instead of showing a broken folder.
+
 ## Summary
 
 | Check | ID | Findings |
@@ -31,9 +52,9 @@
 - `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`, lines 96-105 - reads and validates the stored folder name, then repairs metadata when needed
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new function named `readValidatedMetadataFolder(metadata)` near the top of the file.
-- [ ] Replace the first copy (lines 72-78) with a call to `readValidatedMetadataFolder(metadata)`.
-- [ ] Replace the second copy (lines 96-105) with a call to `readValidatedMetadataFolder(metadata)` and keep only the metadata-repair step in `sanitizeFolderMetadata`.
+- [x] Extract the shared pattern into a new function named `readValidatedMetadataFolder(metadata)` near the top of the file.
+- [x] Replace the first copy (lines 72-78) with a call to `readValidatedMetadataFolder(metadata)`.
+- [x] Replace the second copy (lines 96-105) with a call to `readValidatedMetadataFolder(metadata)` and keep only the metadata-repair step in `sanitizeFolderMetadata`.
 
 ---
 
@@ -44,7 +65,7 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`, line 4
 
 **Steps to fix:**
-- [ ] Rename `value` to `folderNameInput` everywhere it appears in this file.
+- [x] Rename `value` to `folderNameInput` everywhere it appears in this file.
 
 ---
 
@@ -55,7 +76,7 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`, line 17
 
 **Steps to fix:**
-- [ ] Rename `raw` to `storedRegistryJson` everywhere it appears in this file.
+- [x] Rename `raw` to `storedRegistryJson` everywhere it appears in this file.
 
 ---
 
@@ -66,6 +87,6 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.lorebook-folders.js`, line 19
 
 **Steps to fix:**
-- [ ] Rename `parsed` to `storedRegistry` everywhere it appears in this file.
+- [x] Rename `parsed` to `storedRegistry` everywhere it appears in this file.
 
 ---

@@ -1,23 +1,31 @@
 const FOLDER_METADATA_KEY = 'folder';
 const FOLDER_REGISTRY_STORAGE_KEY = 'stwid--folder-registry';
 
-const normalizeFolderName = (value)=>String(value ?? '').trim();
+const normalizeFolderName = (folderNameInput)=>String(folderNameInput ?? '').trim();
 
-const validateFolderName = (value)=>{
-    const normalized = normalizeFolderName(value);
+const validateFolderName = (folderNameInput)=>{
+    const normalized = normalizeFolderName(folderNameInput);
     return {
         normalized,
         isValid: !normalized.includes('/'),
     };
 };
 
+const readValidatedMetadataFolder = (metadata)=>{
+    if (!metadata || typeof metadata !== 'object') return null;
+    if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
+    const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
+    if (!isValid || !normalized) return null;
+    return normalized;
+};
+
 const loadFolderRegistry = ()=>{
     if (typeof localStorage === 'undefined') return [];
     try {
-        const raw = localStorage.getItem(FOLDER_REGISTRY_STORAGE_KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
+        const storedRegistryJson = localStorage.getItem(FOLDER_REGISTRY_STORAGE_KEY);
+        if (!storedRegistryJson) return [];
+        const storedRegistry = JSON.parse(storedRegistryJson);
+        return Array.isArray(storedRegistry) ? storedRegistry : [];
     } catch (error) {
         console.warn('[STWID] Failed to load folder registry', error);
         return [];
@@ -70,11 +78,7 @@ const registerFolderName = (folderName)=>{
 };
 
 const getFolderFromMetadata = (metadata)=>{
-    if (!metadata || typeof metadata !== 'object') return null;
-    if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
-    const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
-    if (!isValid || !normalized) return null;
-    return normalized;
+    return readValidatedMetadataFolder(metadata);
 };
 
 const setFolderInMetadata = (metadata, folderName)=>{
@@ -94,15 +98,15 @@ const setFolderInMetadata = (metadata, folderName)=>{
 };
 
 const sanitizeFolderMetadata = (metadata)=>{
-    if (!metadata || typeof metadata !== 'object') return null;
-    if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
-    const { normalized, isValid } = validateFolderName(metadata[FOLDER_METADATA_KEY]);
-    if (!isValid || !normalized) {
+    const folderName = readValidatedMetadataFolder(metadata);
+    if (!folderName) {
+        if (!metadata || typeof metadata !== 'object') return null;
+        if (!Object.hasOwn(metadata, FOLDER_METADATA_KEY)) return null;
         delete metadata[FOLDER_METADATA_KEY];
         return null;
     }
-    metadata[FOLDER_METADATA_KEY] = normalized;
-    return normalized;
+    metadata[FOLDER_METADATA_KEY] = folderName;
+    return folderName;
 };
 
 const getFolderBookNames = (cache, folderName)=>{

@@ -34,12 +34,12 @@
 - `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, lines 243-261 - Delete Folder item
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new function named `createFolderMenuItem({ itemClass, iconClass, label, onSelect })` near the top of the file.
-- [ ] Replace the first copy (lines 163-181) with a call to `createFolderMenuItem(...)`.
-- [ ] Replace the second copy (lines 183-201) with a call to `createFolderMenuItem(...)`.
-- [ ] Replace the third copy (lines 203-221) with a call to `createFolderMenuItem(...)`.
-- [ ] Replace the fourth copy (lines 223-241) with a call to `createFolderMenuItem(...)`.
-- [ ] Replace the fifth copy (lines 243-261) with a call to `createFolderMenuItem(...)`.
+- [x] Extract the shared pattern into a new function named `createFolderMenuItem({ itemClass, iconClass, label, onSelect })` near the top of the file.
+- [x] Replace the first copy (lines 163-181) with a call to `createFolderMenuItem(...)`.
+- [x] Replace the second copy (lines 183-201) with a call to `createFolderMenuItem(...)`.
+- [x] Replace the third copy (lines 203-221) with a call to `createFolderMenuItem(...)`.
+- [x] Replace the fourth copy (lines 223-241) with a call to `createFolderMenuItem(...)`.
+- [x] Replace the fifth copy (lines 243-261) with a call to `createFolderMenuItem(...)`.
 
 ---
 
@@ -56,13 +56,13 @@
 - `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, lines 247-249 - Delete Folder click closes the menu
 
 **Steps to fix:**
-- [ ] Extract the shared pattern into a new function named `closeFolderMenu()` inside the menu trigger click handler.
-- [ ] Replace the first copy (lines 156-159) with a call to `closeFolderMenu()`.
-- [ ] Replace the second copy (lines 167-169) with a call to `closeFolderMenu()`.
-- [ ] Replace the third copy (lines 187-189) with a call to `closeFolderMenu()`.
-- [ ] Replace the fourth copy (lines 207-209) with a call to `closeFolderMenu()`.
-- [ ] Replace the fifth copy (lines 227-229) with a call to `closeFolderMenu()`.
-- [ ] Replace the sixth copy (lines 247-249) with a call to `closeFolderMenu()`.
+- [x] Extract the shared pattern into a new function named `closeFolderMenu()` inside the menu trigger click handler.
+- [x] Replace the first copy (lines 156-159) with a call to `closeFolderMenu()`.
+- [x] Replace the second copy (lines 167-169) with a call to `closeFolderMenu()`.
+- [x] Replace the third copy (lines 187-189) with a call to `closeFolderMenu()`.
+- [x] Replace the fourth copy (lines 207-209) with a call to `closeFolderMenu()`.
+- [x] Replace the fifth copy (lines 227-229) with a call to `closeFolderMenu()`.
+- [x] Replace the sixth copy (lines 247-249) with a call to `closeFolderMenu()`.
 
 ---
 
@@ -80,8 +80,8 @@
 - `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, line 248
 
 **Steps to fix:**
-- [ ] At the top of the file (after imports), add: `const FOLDER_MENU_ANCHOR_NAME = '--stwid--ctxAnchor';`
-- [ ] Replace each occurrence of the raw literal with `FOLDER_MENU_ANCHOR_NAME`.
+- [x] At the top of the file (after imports), add: `const FOLDER_MENU_ANCHOR_NAME = '--stwid--ctxAnchor';`
+- [x] Replace each occurrence of the raw literal with `FOLDER_MENU_ANCHOR_NAME`.
 
 ---
 
@@ -92,8 +92,8 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, line 171
 
 **Steps to fix:**
-- [ ] Rename `i` to `renameIcon` everywhere it appears in this block.
-- [ ] Repeat the same purpose-based naming pattern for the matching icon variables at lines 191, 211, 231, and 251.
+- [x] Rename `i` to `renameIcon` everywhere it appears in this block.
+- [x] Repeat the same purpose-based naming pattern for the matching icon variables at lines 191, 211, 231, and 251.
 
 ---
 
@@ -104,8 +104,8 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, line 176
 
 **Steps to fix:**
-- [ ] Rename `txt` to `renameLabel` everywhere it appears in this block.
-- [ ] Repeat the same purpose-based naming pattern for the matching label variables at lines 196, 216, 236, and 256.
+- [x] Rename `txt` to `renameLabel` everywhere it appears in this block.
+- [x] Repeat the same purpose-based naming pattern for the matching label variables at lines 196, 216, 236, and 256.
 
 ---
 
@@ -116,10 +116,10 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, lines 30-334
 
 **Steps to fix:**
-- [ ] Extract the drag-and-drop header wiring (lines 48-70) into a new function named `bindFolderHeaderDropHandlers()`. This should attach the folder drag events and reuse the same drop-state rules.
-- [ ] Extract the folder actions area setup (lines 85-280) into a new function named `createFolderActionsDom()`. This should build the active toggle, add button, menu trigger, and collapse toggle.
-- [ ] Extract the active-toggle refresh logic (lines 298-321) into a new function named `syncFolderActiveToggleState()`. This should compute the state and apply the checkbox attributes.
-- [ ] Replace the extracted blocks in `createFolderDom` with calls to the new functions.
+- [x] Extract the drag-and-drop header wiring (lines 48-70) into a new function named `bindFolderHeaderDropHandlers()`. This should attach the folder drag events and reuse the same drop-state rules.
+- [x] Extract the folder actions area setup (lines 85-280) into a new function named `createFolderActionsDom()`. This should build the active toggle, add button, menu trigger, and collapse toggle.
+- [x] Extract the active-toggle refresh logic (lines 298-321) into a new function named `syncFolderActiveToggleState()`. This should compute the state and apply the checkbox attributes.
+- [x] Replace the extracted blocks in `createFolderDom` with calls to the new functions.
 
 ---
 
@@ -130,7 +130,31 @@
 **Where:** `src/book-browser/book-list/book-folders/book-folders.folder-dom.js`, lines 145-261 (deepest point: line 173)
 
 **Steps to fix:**
-- [ ] Extract the inner block (lines 145-261) into a new function named `buildFolderMenuOverlay({ folderName, menuActions, menuTrigger })`. This should create the blocker, build the menu items, and return the finished overlay element.
-- [ ] Replace the inner block with a call to `buildFolderMenuOverlay(...)`.
+- [x] Extract the inner block (lines 145-261) into a new function named `buildFolderMenuOverlay({ folderName, menuActions, menuTrigger })`. This should create the blocker, build the menu items, and return the finished overlay element.
+- [x] Replace the inner block with a call to `buildFolderMenuOverlay(...)`.
+
+---
+
+## After Implementation
+*Implemented: March 8, 2026*
+
+### What changed
+
+[`src/book-browser/book-list/book-folders/book-folders.folder-dom.js`](C:/ST%20Test/SillyTavern/data/default-user/extensions/SillyTavern-WorldInfoDrawer/src/book-browser/book-list/book-folders/book-folders.folder-dom.js)
+- Pulled the repeated folder menu row builder into `createFolderMenuItem(...)` so all menu items now use one shared pattern.
+- Split `createFolderDom(...)` into smaller helpers for drag/drop wiring, folder actions, menu overlay creation, and active-toggle state syncing.
+- Replaced the repeated menu anchor string with `FOLDER_MENU_ANCHOR_NAME` and gave the extracted menu icon and label elements purpose-based names.
+
+### Risks / What might break
+
+- The folder menu now closes through one shared helper, so any future change to menu close behavior affects every folder action at once.
+- The drag/drop header wiring now goes through a helper, so a mistake there would affect all folder drop highlighting and drops.
+- The active toggle refresh now runs through a helper, so any future change to the computed state should be checked against empty, partial, and fully active folders.
+
+### Manual checks
+
+- Open a folder menu and click each action. Success looks like the menu closing first and the correct action still running.
+- Drag a book over a folder header, then leave and drop it. Success looks like the target highlight appearing, clearing when you leave, and the drop still working.
+- Test folders with no visible books, some active books, and all active books. Success looks like the folder checkbox showing disabled, mixed, and checked states correctly.
 
 ---
