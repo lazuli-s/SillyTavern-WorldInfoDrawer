@@ -255,14 +255,14 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--browserRow {
-  --stwid-control-height: 2.35em;
-
+  /* --stwid-control-height: 2.35em; */
   display: flex;
-  gap: 0.7em;
+  gap: 1em;
   margin-top: 1em;
-  align-items: center;
+  padding: 0.2em;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: row;
 }
 
 .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
@@ -340,18 +340,11 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 /* Search / active filter row */
 .stwid--list .stwid--filter {
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   gap: 0.45em;
   align-items: stretch;
 }
 
-.stwid--list .stwid--browserRow {
-  display: flex;
-  gap: 1.5em;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
 
 .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
   padding-top: 0.1em;
@@ -359,18 +352,20 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
   flex: 1 1 12em;
-  min-width: 10em;
+  min-width: 8em;
+  font-size: 0.9em;
 }
 
 .stwid--searchEntries {
   display: flex;
   gap: 0.5em;
   align-items: center;
+  font-size: 0.9em
 }
 
 .stwid--iconTab {
   padding-top: 0.6em;
-  margin-bottom: 1.2em;
+  margin-bottom: 0.8em;
 }
 
 .stwid--entryManager .stwid--iconTab {
@@ -381,7 +376,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: flex;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--SmartThemeBorderColor);
-  margin-bottom: 0.6em;
+  margin-bottom: 1.3em;
 }
 
 .stwid--iconTabButton {
