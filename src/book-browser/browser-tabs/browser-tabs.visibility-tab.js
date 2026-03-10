@@ -109,32 +109,46 @@ const buildVisibilityMenuOptions = ({
 
 const createVisibilityMenuCloseHandlers = ({
     menuEl,
+    menuWrap,
     closeBookVisibilityMenu,
     closeOpenMultiselectDropdownMenus,
     triggerButton,
 })=>{
+    const handleOutsideClick = (evt)=>{
+        if (menuWrap.contains(evt.target)) return;
+        wrappedClose();
+    };
+    const handleEscapeKey = (evt)=>{
+        if (evt.key === 'Escape') {
+            wrappedClose();
+        }
+    };
+    const removeListeners = ()=>{
+        document.removeEventListener('click', handleOutsideClick, true);
+        document.removeEventListener('keydown', handleEscapeKey);
+    };
+    const wrappedClose = ()=>{
+        if (!menuEl.classList.contains(CSS_STATE_ACTIVE)) return;
+        closeBookVisibilityMenu();
+        removeListeners();
+    };
     const onVisibilityMenuButtonClick = (evt)=>{
         evt.preventDefault();
         evt.stopPropagation();
-        const shouldOpen = !menuEl.classList.contains(CSS_STATE_ACTIVE);
-        closeBookVisibilityMenu();
-        if (shouldOpen) {
+        if (menuEl.classList.contains(CSS_STATE_ACTIVE)) {
+            wrappedClose();
+        } else {
             closeOpenMultiselectDropdownMenus(menuEl);
             menuEl.classList.add(CSS_STATE_ACTIVE);
             triggerButton.setAttribute('aria-expanded', 'true');
+            document.addEventListener('click', handleOutsideClick, true);
+            document.addEventListener('keydown', handleEscapeKey);
         }
-    };
-
-    const onDocClickCloseMenu = (evt)=>{
-        if (!menuEl.classList.contains(CSS_STATE_ACTIVE)) return;
-        const target = evt.target instanceof HTMLElement ? evt.target : null;
-        if (target?.closest('.stwid--browserRow')) return;
-        closeBookVisibilityMenu();
     };
 
     return {
         onVisibilityMenuButtonClick,
-        onDocClickCloseMenu,
+        wrappedClose,
     };
 };
 
@@ -311,22 +325,23 @@ const buildVisibilityDropdownSection = ({
         toggleVisibilitySelection,
         setMultiselectDropdownOptionCheckboxState,
     });
-    bookVisibilityMenuEl[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeBookVisibilityMenu;
     visibilityDropdownContainer.append(bookVisibilityMenuEl);
 
-    const { onVisibilityMenuButtonClick, onDocClickCloseMenu } = createVisibilityMenuCloseHandlers({
+    const { onVisibilityMenuButtonClick, wrappedClose } = createVisibilityMenuCloseHandlers({
         menuEl: bookVisibilityMenuEl,
+        menuWrap: visibilityDropdownContainer,
         closeBookVisibilityMenu,
         closeOpenMultiselectDropdownMenus,
         triggerButton: visibilityMenuButton,
     });
+    bookVisibilityMenuEl[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = wrappedClose;
     visibilityMenuButton.addEventListener('click', onVisibilityMenuButtonClick);
     const chips = document.createElement('div');
     chips.classList.add('stwid--visibilityChips');
     listPanelState.bookVisibilityChips = chips;
     visibilityContainer.append(visibilityDropdownContainer, chips);
 
-    return { visibilityContainer, onDocClickCloseMenu };
+    return { visibilityContainer };
 };
 
 const createVisibilitySlice = ({
@@ -425,7 +440,7 @@ const createVisibilitySlice = ({
     setApplyActiveFilter(applyActiveFilter);
 
     const setupVisibilitySection = (visibilityRow)=>{
-        const { visibilityContainer, onDocClickCloseMenu } = buildVisibilityDropdownSection({
+        const { visibilityContainer } = buildVisibilityDropdownSection({
             listPanelState,
             applyActiveFilter,
             closeBookVisibilityMenu,
@@ -437,7 +452,6 @@ const createVisibilitySlice = ({
             setMultiselectDropdownOptionCheckboxState,
         });
         visibilityRow.append(visibilityContainer);
-        return onDocClickCloseMenu;
     };
 
     return {

@@ -6,6 +6,8 @@
 
 
 export const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
+const CSS_STATE_ACTIVE = 'stwid--state-active';
+const ARIA_EXPANDED_ATTR = 'aria-expanded';
 
 export const setTooltip = (element, text, { ariaLabel = null } = {})=>{
     if (!element) return;
@@ -36,7 +38,7 @@ export const createMultiselectDropdownCheckbox = (checked = false)=>{
         setMultiselectDropdownOptionCheckboxState(checkbox, input.checked);
     };
     input.addEventListener('change', ()=>{
-        setMultiselectDropdownOptionCheckboxState(checkbox, input.checked);
+        setChecked(input.checked);
     });
     setChecked(checked);
     return {
@@ -47,16 +49,16 @@ export const createMultiselectDropdownCheckbox = (checked = false)=>{
 };
 
 export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
-    for (const menu of document.querySelectorAll('.stwid--multiselectDropdownMenu.stwid--state-active')) {
+    for (const menu of document.querySelectorAll(`.stwid--multiselectDropdownMenu.${CSS_STATE_ACTIVE}`)) {
         if (menu === excludeMenu) continue;
         const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
         if (typeof closeMenu === 'function') {
             closeMenu();
             continue;
         }
-        menu.classList.remove('stwid--state-active');
+        menu.classList.remove(CSS_STATE_ACTIVE);
         const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
-        trigger?.setAttribute('aria-expanded', 'false');
+        trigger?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
     }
     
     for (const blocker of document.querySelectorAll('.stwid--blocker')) {
@@ -66,9 +68,9 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
             closeMenu();
             continue;
         }
-        const trigger = document.querySelector('.stwid--listDropdownTrigger[aria-expanded="true"]');
+        const trigger = document.querySelector(`.stwid--listDropdownTrigger[${ARIA_EXPANDED_ATTR}="true"]`);
         blocker.remove();
-        trigger?.setAttribute('aria-expanded', 'false');
+        trigger?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
         trigger?.focus();
     }
 };
@@ -79,28 +81,35 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null)=>{
 
 
 export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
-    const closeMenu = ()=>{
-        if (!menu.classList.contains('stwid--state-active')) return;
-        menu.classList.remove('stwid--state-active');
-        menuButton?.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('click', handleOutsideClick);
-    };
-    const openMenu = ()=>{
-        if (menu.classList.contains('stwid--state-active')) return;
-        closeOpenMultiselectDropdownMenus(menu);
-        menu.classList.add('stwid--state-active');
-        menuButton?.setAttribute('aria-expanded', 'true');
-        document.addEventListener('click', handleOutsideClick);
-    };
     const handleOutsideClick = (event)=>{
         if (menuWrap.contains(event.target)) return;
         closeMenu();
+    };
+    const handleEscapeKey = (event)=>{
+        if (event.key === 'Escape') {
+            closeMenu();
+        }
+    };
+    const closeMenu = ()=>{
+        if (!menu.classList.contains(CSS_STATE_ACTIVE)) return;
+        menu.classList.remove(CSS_STATE_ACTIVE);
+        menuButton?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
+        document.removeEventListener('click', handleOutsideClick, true);
+        document.removeEventListener('keydown', handleEscapeKey);
+    };
+    const openMenu = ()=>{
+        if (menu.classList.contains(CSS_STATE_ACTIVE)) return;
+        closeOpenMultiselectDropdownMenus(menu);
+        menu.classList.add(CSS_STATE_ACTIVE);
+        menuButton?.setAttribute(ARIA_EXPANDED_ATTR, 'true');
+        document.addEventListener('click', handleOutsideClick, true);
+        document.addEventListener('keydown', handleEscapeKey);
     };
     menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
     menu.addEventListener('click', (event)=>event.stopPropagation());
     menuButton.addEventListener('click', (event)=>{
         event.stopPropagation();
-        if (menu.classList.contains('stwid--state-active')) {
+        if (menu.classList.contains(CSS_STATE_ACTIVE)) {
             closeMenu();
         } else {
             openMenu();
@@ -109,6 +118,10 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap)=>{
     return closeMenu;
 };
 
+const resetContentWrapAfterExpand = (contentWrap)=>{
+    contentWrap.style.overflow = '';
+    contentWrap.style.maxHeight = '';
+};
 
 export const wireCollapseRow = (rowTitle, row, contentWrap, chevron, { initialCollapsed = false } = {})=>{
     const applyCollapsedState = (collapsed)=>{
@@ -125,8 +138,7 @@ export const wireCollapseRow = (rowTitle, row, contentWrap, chevron, { initialCo
             contentWrap.style.overflow = 'hidden';
             contentWrap.style.maxHeight = '1000px';
             contentWrap.addEventListener('transitionend', ()=>{
-                contentWrap.style.overflow = '';
-                contentWrap.style.maxHeight = '';
+                resetContentWrapAfterExpand(contentWrap);
             }, { once: true });
         } else {
             closeOpenMultiselectDropdownMenus();
