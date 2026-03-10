@@ -12,6 +12,317 @@
 import { createEntryManagerFilters } from './logic/logic.filters.js';
 import { createEntryManagerRenderer } from './bulk-editor-tab/bulk-editor-tab.js';
 
+const ROW_SELECTED_CLASS = 'stwid--applySelected';
+const ICON_UNCHECKED_CLASS = 'fa-square';
+const ICON_CHECKED_CLASS = 'fa-square-check';
+const STATE_ACTIVE_CLASS = 'stwid--state-active';
+
+const createScopeHelpers = ()=>{
+    const normalizeScope = (scope)=>Array.isArray(scope) ? [...scope].sort() : null;
+    const isSameScope = (a, b)=>{
+        if (a === b) return true;
+        if (!Array.isArray(a) || !Array.isArray(b)) return false;
+        if (a.length !== b.length) return false;
+        return a.every((name, index)=>name === b[index]);
+    };
+    return { normalizeScope, isSameScope };
+};
+
+const createDynamicOptionAccessors = ({ getEntries, getValueForEntry, noneValue })=>{
+    const getOptions = (book)=>buildDynamicOptions(getEntries(book), getValueForEntry, noneValue);
+    const getValues = (book)=>getOptions(book).map((option)=>option.value);
+    return { getOptions, getValues };
+};
+
+const getMaxDisplayIndex = (entries, getEntryDisplayIndex)=>{
+    let maxIndex = -1;
+    for (const entry of entries) {
+        const displayIndex = getEntryDisplayIndex(entry);
+        if (Number.isFinite(displayIndex)) {
+            maxIndex = Math.max(maxIndex, displayIndex);
+        }
+    }
+    return maxIndex;
+};
+
+const getEntryManagerRowData = ({ entryBook, row, cache })=>{
+    const uid = row.getAttribute('data-uid');
+    if (!uid || !cache[entryBook] || !cache[entryBook].entries[uid]) return null;
+    return {
+        book: entryBook,
+        dom: row,
+        data: cache[entryBook].entries[uid],
+    };
+};
+
+function buildDynamicOptions(entries, getValueFn, noneValue) {
+    const values = new Set();
+    for (const entry of entries) {
+        const result = getValueFn(entry.data);
+        if (Array.isArray(result)) {
+            for (const optionValue of result) values.add(optionValue);
+        } else {
+            values.add(result);
+        }
+    }
+    const labels = [...values].filter((optionValue)=>optionValue !== noneValue);
+    labels.sort((a, b)=>a.localeCompare(b));
+    return [
+        { value: noneValue, label: '(none)' },
+        ...labels.map((label)=>({ value: label, label })),
+    ];
+}
+
+const createEntryAccessors = ({
+    cache,
+    getSelectedWorldInfo,
+    sortEntries,
+    entryManagerState,
+    getScopedBookNames,
+})=>{
+    const getEntryDisplayIndex = (entry)=>{
+        const displayIndex = Number(entry?.extensions?.display_index);
+        return Number.isFinite(displayIndex) ? displayIndex : null;
+    };
+
+    const compareEntryUid = (a, b)=>{
+        const auid = Number(a.uid);
+        const buid = Number(b.uid);
+        if (Number.isFinite(auid) && Number.isFinite(buid) && auid !== buid) return auid - buid;
+        return String(a.uid).localeCompare(String(b.uid));
+    };
+
+    const getEntryManagerSourceEntries = (book = entryManagerState.book)=>{
+        const scopeSet = new Set(getScopedBookNames() ?? getSelectedWorldInfo());
+        if (book) {
+            if (!scopeSet.has(book) || !cache[book]) return [];
+            return Object.values(cache[book].entries).map((entryData)=>({ book, data:entryData }));
+        }
+        return Object.entries(cache)
+            .filter(([name])=>scopeSet.has(name))
+            .map(([name, data])=>Object.values(data.entries).map((entryData)=>({ book:name, data:entryData })))
+            .flat();
+    };
+
+    const ensureCustomDisplayIndex = (book = entryManagerState.book)=>{
+        const source = getEntryManagerSourceEntries(book);
+        const entriesByBook = new Map();
+        for (const entry of source) {
+            if (!entriesByBook.has(entry.book)) {
+                entriesByBook.set(entry.book, []);
+            }
+            entriesByBook.get(entry.book).push(entry.data);
+        }
+        const updatedBooks = new Set();
+        for (const [bookName, entries] of entriesByBook.entries()) {
+            const maxIndex = getMaxDisplayIndex(entries, getEntryDisplayIndex);
+            let nextIndex = maxIndex + 1;
+            const missing = entries
+                .filter((entry)=>!Number.isFinite(getEntryDisplayIndex(entry)))
+                .sort(compareEntryUid);
+            for (const entry of missing) {
+                entry.extensions ??= {};
+                entry.extensions.display_index = nextIndex;
+                nextIndex += 1;
+                updatedBooks.add(bookName);
+            }
+        }
+        return [...updatedBooks];
+    };
+
+    const getEntryManagerEntries = (book = entryManagerState.book, includeDom = false, dom = null)=>{
+        const source = includeDom && dom?.order?.entries && dom?.order?.tbody
+            ? Object.entries(dom.order.entries)
+                .map(([entryBook, entries])=>Object.values(entries).map((row)=>getEntryManagerRowData({
+                    entryBook,
+                    row,
+                    cache,
+                })))
+                .flat()
+                .filter(Boolean)
+            : getEntryManagerSourceEntries(book);
+        return sortEntries(source, entryManagerState.sort, entryManagerState.direction)
+            .filter((entry)=>!book || entry.book === book);
+    };
+
+    return {
+        ensureCustomDisplayIndex,
+        getEntryManagerEntries,
+    };
+};
+
+const createDynamicOptionHelpers = ({
+    getEntryManagerEntries,
+    entryManagerState,
+    isOutletPosition,
+})=>{
+    const OUTLET_NONE_VALUE = '';
+    const AUTOMATION_ID_NONE_VALUE = '';
+    const GROUP_NONE_VALUE = '';
+
+    const getOutletValueForEntry = (entry)=>{
+        if (!isOutletPosition(entry?.position)) {
+            return OUTLET_NONE_VALUE;
+        }
+        const outletName = entry?.outletName;
+        if (outletName === null || outletName === undefined) return OUTLET_NONE_VALUE;
+        const normalized = String(outletName).trim();
+        return normalized || OUTLET_NONE_VALUE;
+    };
+
+    const getAutomationIdValueForEntry = (entry)=>{
+        const automationId = entry?.automationId;
+        if (automationId === null || automationId === undefined) return AUTOMATION_ID_NONE_VALUE;
+        const normalized = String(automationId).trim();
+        return normalized || AUTOMATION_ID_NONE_VALUE;
+    };
+
+    const splitGroupValues = (value)=>String(value ?? '').split(/,\s*/).filter(Boolean);
+
+    const getGroupValueForEntry = (entry)=>{
+        const groupValue = entry?.group;
+        if (groupValue === null || groupValue === undefined) return [GROUP_NONE_VALUE];
+        const groups = splitGroupValues(groupValue);
+        return groups.length ? groups : [GROUP_NONE_VALUE];
+    };
+
+    const {
+        getOptions: getOutletOptions,
+        getValues: getOutletValues,
+    } = createDynamicOptionAccessors({
+        getEntries: (book = entryManagerState.book)=>getEntryManagerEntries(book),
+        getValueForEntry: getOutletValueForEntry,
+        noneValue: OUTLET_NONE_VALUE,
+    });
+
+    const {
+        getOptions: getAutomationIdOptions,
+        getValues: getAutomationIdValues,
+    } = createDynamicOptionAccessors({
+        getEntries: (book = entryManagerState.book)=>getEntryManagerEntries(book),
+        getValueForEntry: getAutomationIdValueForEntry,
+        noneValue: AUTOMATION_ID_NONE_VALUE,
+    });
+
+    const {
+        getOptions: getGroupOptions,
+        getValues: getGroupValues,
+    } = createDynamicOptionAccessors({
+        getEntries: (book = entryManagerState.book)=>getEntryManagerEntries(book),
+        getValueForEntry: getGroupValueForEntry,
+        noneValue: GROUP_NONE_VALUE,
+    });
+
+    return {
+        getAutomationIdOptions,
+        getAutomationIdValueForEntry,
+        getAutomationIdValues,
+        getGroupOptions,
+        getGroupValueForEntry,
+        getGroupValues,
+        getOutletOptions,
+        getOutletValueForEntry,
+        getOutletValues,
+    };
+};
+
+const createSelectionAndPreviewHelpers = ({ dom })=>{
+    const updateEntryManagerPreview = (entries)=>{
+        if (!dom.order.filter.preview) return;
+        const previewEntry = entries[0];
+        if (!previewEntry) {
+            dom.order.filter.preview.textContent = '';
+            return;
+        }
+        dom.order.filter.preview.textContent = JSON.stringify(Object.assign({ book:previewEntry.book }, previewEntry.data), null, 2);
+    };
+
+    const getEntryManagerRows = ()=>[...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
+
+    const isEntryManagerRowSelected = (row)=>row?.classList.contains(ROW_SELECTED_CLASS);
+
+    const setEntryManagerRowSelected = (row, selected)=>{
+        if (!row) return;
+        row.classList.toggle(ROW_SELECTED_CLASS, selected);
+        row.setAttribute('aria-selected', selected ? 'true' : 'false');
+        const icon = row.querySelector('.stwid--orderSelect .stwid--icon');
+        if (icon) {
+            icon.classList.toggle(ICON_UNCHECKED_CLASS, !selected);
+            icon.classList.toggle(ICON_CHECKED_CLASS, selected);
+        }
+    };
+
+    const setAllEntryManagerRowSelected = (selected)=>{
+        for (const row of getEntryManagerRows()) {
+            setEntryManagerRowSelected(row, selected);
+        }
+    };
+
+    const updateEntryManagerSelectAllButton = ()=>{
+        if (!dom.order.selectAll) return;
+        const rows = getEntryManagerRows();
+        const allSelected = rows.length > 0 && rows.every(isEntryManagerRowSelected);
+        dom.order.selectAll.classList.toggle(STATE_ACTIVE_CLASS, allSelected);
+        dom.order.selectAll.classList.toggle(ICON_CHECKED_CLASS, allSelected);
+        dom.order.selectAll.classList.toggle(ICON_UNCHECKED_CLASS, !allSelected);
+    };
+
+    return {
+        getEntryManagerRows,
+        isEntryManagerRowSelected,
+        setAllEntryManagerRowSelected,
+        setEntryManagerRowSelected,
+        updateEntryManagerPreview,
+        updateEntryManagerSelectAllButton,
+    };
+};
+
+const initEntryManagerFilters = (args)=>createEntryManagerFilters(args);
+
+const initEntryManagerRenderer = (args)=>createEntryManagerRenderer(args);
+
+const createEntryManagerOpeners = ({
+    dom,
+    entryManagerState,
+    getCurrentEditor,
+    getEditorPanelApi,
+    renderEntryManager,
+    normalizeScope,
+    isSameScope,
+    syncEntryManagerStrategyFilters,
+    syncEntryManagerPositionFilters,
+    getScopedBookNames,
+    setScopedBookNames,
+})=>{
+    const openEntryManager = (book = null, scope = null)=>{
+        if (!dom.order.toggle) return;
+        const currentEditor = getCurrentEditor?.();
+        const dirty = Boolean(currentEditor && getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
+        if (dirty) {
+            toastr.warning('Unsaved edits detected. Save or discard changes before opening Entry Manager.');
+            return;
+        }
+
+        syncEntryManagerStrategyFilters();
+        syncEntryManagerPositionFilters();
+
+        setScopedBookNames(normalizeScope(scope));
+        dom.order.toggle.classList.add(STATE_ACTIVE_CLASS);
+        renderEntryManager(book);
+    };
+
+    const refreshEntryManagerScope = (scope = null)=>{
+        if (!dom.order.toggle?.classList.contains(STATE_ACTIVE_CLASS)) return;
+        if (entryManagerState.book) return;
+        const nextScope = normalizeScope(scope);
+        if (isSameScope(getScopedBookNames(), nextScope)) return;
+        setScopedBookNames(nextScope);
+        renderEntryManager(null);
+    };
+
+    return { openEntryManager, refreshEntryManagerScope };
+};
+
 export const initEntryManager = ({
     dom,
     cache,
@@ -35,191 +346,47 @@ export const initEntryManager = ({
     $,
 }) => {
     const entryManagerState = createEntryManagerState({ SORT, SORT_DIRECTION });
-    const OUTLET_NONE_VALUE = '';
-    const AUTOMATION_ID_NONE_VALUE = '';
-    const GROUP_NONE_VALUE = '';
     let scopedBookNames = null;
-    const normalizeScope = (scope)=>Array.isArray(scope) ? [...scope].sort() : null;
-    const isSameScope = (a, b)=>{
-        if (a === b) return true;
-        if (!Array.isArray(a) || !Array.isArray(b)) return false;
-        if (a.length !== b.length) return false;
-        return a.every((name, index)=>name === b[index]);
-    };
-
-    const getEntryDisplayIndex = (entry)=>{
-        const displayIndex = Number(entry?.extensions?.display_index);
-        return Number.isFinite(displayIndex) ? displayIndex : null;
-    };
-
-    const compareEntryUid = (a, b)=>{
-        const auid = Number(a.uid);
-        const buid = Number(b.uid);
-        if (Number.isFinite(auid) && Number.isFinite(buid) && auid !== buid) return auid - buid;
-        return String(a.uid).localeCompare(String(b.uid));
-    };
-
-    const getEntryManagerSourceEntries = (book = entryManagerState.book)=>{
-        const scopeSet = new Set(scopedBookNames ?? getSelectedWorldInfo());
-        if (book) {
-            if (!scopeSet.has(book) || !cache[book]) return [];
-            return Object.values(cache[book].entries).map(it=>({ book, data:it }));
-        }
-        return Object.entries(cache)
-            .filter(([name])=>scopeSet.has(name))
-            .map(([name, data])=>Object.values(data.entries).map(it=>({ book:name, data:it })))
-            .flat();
-    };
-
-    const ensureCustomDisplayIndex = (book = entryManagerState.book)=>{
-        const source = getEntryManagerSourceEntries(book);
-        const entriesByBook = new Map();
-        for (const entry of source) {
-            if (!entriesByBook.has(entry.book)) {
-                entriesByBook.set(entry.book, []);
-            }
-            entriesByBook.get(entry.book).push(entry.data);
-        }
-        const updatedBooks = new Set();
-        for (const [bookName, entries] of entriesByBook.entries()) {
-            let maxIndex = -1;
-            for (const entry of entries) {
-                const displayIndex = getEntryDisplayIndex(entry);
-                if (Number.isFinite(displayIndex)) {
-                    maxIndex = Math.max(maxIndex, displayIndex);
-                }
-            }
-            let nextIndex = maxIndex + 1;
-            const missing = entries
-                .filter((entry)=>!Number.isFinite(getEntryDisplayIndex(entry)))
-                .sort(compareEntryUid);
-            for (const entry of missing) {
-                entry.extensions ??= {};
-                entry.extensions.display_index = nextIndex;
-                nextIndex += 1;
-                updatedBooks.add(bookName);
-            }
-        }
-        return [...updatedBooks];
-    };
-
-    const getEntryManagerEntries = (book = entryManagerState.book, includeDom = false)=>{
-        const source = includeDom && dom.order.entries && dom.order.tbody
-            ? Object.entries(dom.order.entries)
-            .map(([entryBook, entries])=>Object.values(entries).map(tr=>{
-                    const uid = tr.getAttribute('data-uid');
-                    if (!uid || !cache[entryBook] || !cache[entryBook].entries[uid]) return null;
-                    return {
-                        book: entryBook,
-                        dom: tr,
-                        data: cache[entryBook].entries[uid],
-                    };
-                }))
-                .flat()
-                .filter(Boolean)
-            : getEntryManagerSourceEntries(book);
-        return sortEntries(source, entryManagerState.sort, entryManagerState.direction)
-            .filter((entry)=>!book || entry.book === book);
-    };
-
-    const getOutletValueForEntry = (entry)=>{
-        if (!isOutletPosition(entry?.position)) {
-            return OUTLET_NONE_VALUE;
-        }
-        const outletName = entry?.outletName;
-        if (outletName == null) return OUTLET_NONE_VALUE;
-        const normalized = String(outletName).trim();
-        return normalized || OUTLET_NONE_VALUE;
-    };
-
-    function buildDynamicOptions(entries, getValueFn, noneValue) {
-        const values = new Set();
-        for (const entry of entries) {
-            const result = getValueFn(entry.data);
-            if (Array.isArray(result)) {
-                for (const v of result) values.add(v);
-            } else {
-                values.add(result);
-            }
-        }
-        const labels = [...values].filter((v)=>v !== noneValue);
-        labels.sort((a, b)=>a.localeCompare(b));
-        return [
-            { value: noneValue, label: '(none)' },
-            ...labels.map((label)=>({ value: label, label })),
-        ];
-    }
-
-    const getOutletOptions = (book = entryManagerState.book)=>
-        buildDynamicOptions(getEntryManagerEntries(book), getOutletValueForEntry, OUTLET_NONE_VALUE);
-
-    const getOutletValues = (book = entryManagerState.book)=>getOutletOptions(book).map((option)=>option.value);
-
-    const getAutomationIdValueForEntry = (entry)=>{
-        const automationId = entry?.automationId;
-        if (automationId == null) return AUTOMATION_ID_NONE_VALUE;
-        const normalized = String(automationId).trim();
-        return normalized || AUTOMATION_ID_NONE_VALUE;
-    };
-
-    const getAutomationIdOptions = (book = entryManagerState.book)=>
-        buildDynamicOptions(getEntryManagerEntries(book), getAutomationIdValueForEntry, AUTOMATION_ID_NONE_VALUE);
-
-    const getAutomationIdValues = (book = entryManagerState.book)=>getAutomationIdOptions(book).map((option)=>option.value);
-
-    const splitGroupValues = (value)=>String(value ?? '').split(/,\s*/).filter(Boolean);
-
-    const getGroupValueForEntry = (entry)=>{
-        const groupValue = entry?.group;
-        if (groupValue == null) return [GROUP_NONE_VALUE];
-        const groups = splitGroupValues(groupValue);
-        return groups.length ? groups : [GROUP_NONE_VALUE];
-    };
-
-    const getGroupOptions = (book = entryManagerState.book)=>
-        buildDynamicOptions(getEntryManagerEntries(book), getGroupValueForEntry, GROUP_NONE_VALUE);
-
-    const getGroupValues = (book = entryManagerState.book)=>getGroupOptions(book).map((option)=>option.value);
-
-    const updateEntryManagerPreview = (entries)=>{
-        if (!dom.order.filter.preview) return;
-        const previewEntry = entries[0];
-        if (!previewEntry) {
-            dom.order.filter.preview.textContent = '';
-            return;
-        }
-        dom.order.filter.preview.textContent = JSON.stringify(Object.assign({ book:previewEntry.book }, previewEntry.data), null, 2);
-    };
-
-    const getEntryManagerRows = ()=>[...(dom.order.tbody?.querySelectorAll('tr') ?? [])];
-
-    const isEntryManagerRowSelected = (row)=>row?.classList.contains('stwid--applySelected');
-
-    const setEntryManagerRowSelected = (row, selected)=>{
-        if (!row) return;
-        row.classList.toggle('stwid--applySelected', selected);
-        row.setAttribute('aria-selected', selected ? 'true' : 'false');
-        const icon = row.querySelector('.stwid--orderSelect .stwid--icon');
-        if (icon) {
-            icon.classList.toggle('fa-square', !selected);
-            icon.classList.toggle('fa-square-check', selected);
-        }
-    };
-
-    const setAllEntryManagerRowSelected = (selected)=>{
-        for (const row of getEntryManagerRows()) {
-            setEntryManagerRowSelected(row, selected);
-        }
-    };
-
-    const updateEntryManagerSelectAllButton = ()=>{
-        if (!dom.order.selectAll) return;
-        const rows = getEntryManagerRows();
-        const allSelected = rows.length > 0 && rows.every(isEntryManagerRowSelected);
-        dom.order.selectAll.classList.toggle('stwid--state-active', allSelected);
-        dom.order.selectAll.classList.toggle('fa-square-check', allSelected);
-        dom.order.selectAll.classList.toggle('fa-square', !allSelected);
-    };
+    const { normalizeScope, isSameScope } = createScopeHelpers();
+    const getScopedBookNames = ()=>scopedBookNames;
+    const setScopedBookNames = (scope)=>{ scopedBookNames = scope; };
+    const {
+        ensureCustomDisplayIndex,
+        getEntryManagerEntries: getBaseEntryManagerEntries,
+    } = createEntryAccessors({
+        cache,
+        getSelectedWorldInfo,
+        sortEntries,
+        entryManagerState,
+        getScopedBookNames,
+    });
+    const getEntryManagerEntries = (book = entryManagerState.book, includeDom = false)=>
+        getBaseEntryManagerEntries(book, includeDom, dom);
+    const {
+        getAutomationIdOptions,
+        getAutomationIdValueForEntry,
+        getAutomationIdValues,
+        getGroupOptions,
+        getGroupValueForEntry,
+        getGroupValues,
+        getOutletOptions,
+        getOutletValueForEntry,
+        getOutletValues,
+    } = createDynamicOptionHelpers({
+        getEntryManagerEntries,
+        entryManagerState,
+        isOutletPosition,
+    });
+    const {
+        getEntryManagerRows,
+        isEntryManagerRowSelected,
+        setAllEntryManagerRowSelected,
+        setEntryManagerRowSelected,
+        updateEntryManagerPreview,
+        updateEntryManagerSelectAllButton,
+    } = createSelectionAndPreviewHelpers({
+        dom,
+    });
 
     const applyEntryManagerSortToDom = ()=>{
         if (!dom.order.tbody) return;
@@ -275,7 +442,7 @@ export const initEntryManager = ({
         syncEntryManagerGroupFilters,
         syncEntryManagerPositionFilters,
         syncEntryManagerStrategyFilters,
-    } = createEntryManagerFilters({
+    } = initEntryManagerFilters({
         dom,
         entryManagerState,
         entryState,
@@ -299,7 +466,7 @@ export const initEntryManager = ({
         entryDom.click();
     };
 
-    const { renderEntryManager } = createEntryManagerRenderer({
+    const { renderEntryManager } = initEntryManagerRenderer({
         dom,
         cache,
         entryManagerState,
@@ -368,38 +535,19 @@ export const initEntryManager = ({
         getEditorPanelApi,
     });
 
-    const openEntryManager = (book = null, scope = null)=>{
-        if (!dom.order.toggle) return;
-
-        
-        
-        
-        const currentEditor = getCurrentEditor?.();
-        const dirty = Boolean(currentEditor && getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
-        if (dirty) {
-            toastr.warning('Unsaved edits detected. Save or discard changes before opening Entry Manager.');
-            return;
-        }
-
-        
-        
-        
-        syncEntryManagerStrategyFilters();
-        syncEntryManagerPositionFilters();
-
-        scopedBookNames = normalizeScope(scope);
-        dom.order.toggle.classList.add('stwid--state-active');
-        renderEntryManager(book);
-    };
-
-    const refreshEntryManagerScope = (scope = null)=>{
-        if (!dom.order.toggle?.classList.contains('stwid--state-active')) return;
-        if (entryManagerState.book) return;
-        const nextScope = normalizeScope(scope);
-        if (isSameScope(scopedBookNames, nextScope)) return;
-        scopedBookNames = nextScope;
-        renderEntryManager(null);
-    };
+    const { openEntryManager, refreshEntryManagerScope } = createEntryManagerOpeners({
+        dom,
+        entryManagerState,
+        getCurrentEditor,
+        getEditorPanelApi,
+        renderEntryManager,
+        normalizeScope,
+        isSameScope,
+        syncEntryManagerStrategyFilters,
+        syncEntryManagerPositionFilters,
+        getScopedBookNames,
+        setScopedBookNames,
+    });
 
     return { openEntryManager, refreshEntryManagerScope };
 };

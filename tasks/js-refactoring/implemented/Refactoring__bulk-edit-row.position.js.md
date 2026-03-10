@@ -153,3 +153,24 @@
 - Open the Entry Manager bulk editor, change Position, click apply, and confirm every selected row updates and the apply icon no longer shows as dirty afterward.
 - Set Position to Depth mode, enter a number and also test a blank value, click apply, and confirm selected rows show the new depth or cleared depth correctly.
 - Set Position to Outlet mode, type or pick an outlet from the dropdown, click apply, and confirm selected rows update and the outlet filter indicator refreshes.
+
+---
+
+## After Implementation
+*Implemented: March 10, 2026*
+
+### What changed
+
+`src/entry-manager/bulk-editor-tab/bulk-edit-row.position.js`
+- Verified the refactor described in this report is present in the source file.
+- Confirmed the shared bulk-apply helper, named storage-key constants, and split helper builders are all in place.
+
+### Risks / What might break
+
+- Future edits to the shared bulk-apply helper will affect Position, Depth, and Outlet together.
+- The outlet dropdown still depends on document click cleanup, so later menu changes could affect close behavior.
+
+### Manual checks
+
+- Open the bulk editor and confirm Position, Depth, and Outlet still enable and disable at the right times.
+- Apply each control to selected rows and confirm the matching table cells update and the dirty icon clears.

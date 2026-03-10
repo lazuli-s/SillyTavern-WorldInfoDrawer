@@ -206,7 +206,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 .stwid--thinContainer {
     display: flex;
     align-items: center;
-    gap: 0.5em;
+    gap: 0.8em;
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: var(--stwid-radius-s, 4px);
     padding: 0.35em 0.65em;
@@ -268,14 +268,14 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
 .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
-  gap: 1.1em;
-  flex-wrap: nowrap;
-  row-gap: 0.55em;
-  padding-top: 0.7em;
-  padding-left: 1.5em;
-  padding-right: 1.5em;
-  display: flex;
-  justify-content: space-around;
+  /* gap: 1.1em; */
+  /* flex-wrap: nowrap; */
+  /* row-gap: 0.55em; */
+  /* padding-top: 0.7em; */
+  /* padding-left: 1.5em; */
+  /* padding-right: 1.5em; */
+  /* display: flex; */
+  /* justify-content: space-around; */
 }
 
 .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting,
@@ -335,7 +335,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--controls .stwid--state-active,
 .stwid--list .stwid--filter .stwid--state-active {
-  /* color: var(--SmartThemeQuoteColor); */
+  color: var(--SmartThemeQuoteColor);
 }
 
 /* Search / active filter row */
@@ -1052,8 +1052,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
-  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
-  border-radius: var(--stwid-radius-m);
+}
+
+/* override: higher specificity (2 classes) beats menu_button (1 class) for all visual properties */
+.menu_button.stwid--multiselectDropdownButton {
+  background-color: var(--black30a); /* override: menu_button uses BlurTintColor; match text_pole input look */
+  filter: none; /* override: menu_button applies grayscale(0.5); text_pole has no filter */
+  border-radius: 5px; /* override: match text_pole border-radius */
+  padding: 0.35em; /* override: match compact sorting-tab text_pole padding */
+  height: var(--stwid-control-height);
+  box-sizing: border-box;
+  font-size: 0.9em;
+  max-width: 9em;
 }
 
 .stwid--listDropdownTrigger {
@@ -1246,10 +1256,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   cursor: pointer;
   background-color: color-mix(in srgb, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))) 65%, var(--SmartThemeBorderColor) 35%);
   box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 65%, transparent), 0 1px 3px rgb(0 0 0 / 16%);
-  transition: background-color 150ms ease, box-shadow 150ms ease;
+  transition: background-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+  opacity: 0.92;
   min-height: 2.2em;
   line-height: 1;
   margin-bottom: 0.5em;
+}
+
+.stwid--folder .stwid--folderHeader:hover {
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, transparent);
+  opacity: 1;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 50%, transparent),
+              0 1px 3px rgb(0 0 0 / 10%);
 }
 
 .stwid--folder.stwid--state-target .stwid--folderHeader {
@@ -1372,6 +1390,11 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   position: sticky;
   top: 0;
   z-index: 1;
+  transition: background-color 150ms ease;
+}
+
+.stwid--books .stwid--book .stwid--head:hover {
+  background-color: var(--stwid-state-hover-bg);
 }
 
 .stwid--books .stwid--book .stwid--head .stwid--title {
@@ -2924,6 +2947,13 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }';;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .stwid--books .stwid--book .stwid--head,
+  .stwid--folder .stwid--folderHeader {
+    transition: none;
+  }
+}
+
 .stwid--menuItem {
   display: flex;
   align-items: center;
@@ -3076,10 +3106,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   cursor: pointer;
   background-color: color-mix(in srgb, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))) 65%, var(--SmartThemeBorderColor) 35%);
   box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 65%, transparent), 0 1px 3px rgb(0 0 0 / 16%);
-  transition: background-color 150ms ease, box-shadow 150ms ease;
+  transition: background-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+  opacity: 0.92;
   min-height: 2.2em;
   line-height: 1;
   margin-bottom: 0.5em;
+}
+
+.stwid--folder .stwid--folderHeader:hover {
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, transparent);
+  opacity: 1;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 50%, transparent),
+              0 1px 3px rgb(0 0 0 / 10%);
 }
 
 .stwid--folder.stwid--state-target .stwid--folderHeader {
@@ -3198,6 +3236,11 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   position: sticky;
   top: 0;
   z-index: 1;
+  transition: background-color 150ms ease;
+}
+
+.stwid--books .stwid--book .stwid--head:hover {
+  background-color: var(--stwid-state-hover-bg);
 }
 
 .stwid--books .stwid--book .stwid--head .stwid--title {
@@ -4662,5 +4705,10 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   *::after {
     transition-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
     animation-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
+  }
+
+  .stwid--books .stwid--book .stwid--head,
+  .stwid--folder .stwid--folderHeader {
+    transition: none;
   }
 }
