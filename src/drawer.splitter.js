@@ -10,7 +10,7 @@ const MOBILE_LAYOUT_BREAKPOINT = 1000;
 const MIN_LIST_WIDTH = 150;
 const MIN_EDITOR_WIDTH = 300;
 const MIN_LIST_HEIGHT = 150;
-const MIN_EDITOR_HEIGHT = 150;
+const MIN_EDITOR_HEIGHT = 260;
 const SPLITTER_THICKNESS_FALLBACK_PX = 6;
 
 const isMobileLayout = ()=>window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
@@ -48,7 +48,9 @@ function createSplitters(body) {
 function getMaxListSizeForLayout(bodyEl, splitterEl, minListSize, minEditorSize, measureAxis) {
     const splitterThickness = splitterEl.getBoundingClientRect()[measureAxis] || SPLITTER_THICKNESS_FALLBACK_PX;
     const bodySize = bodyEl.getBoundingClientRect()[measureAxis];
-    return Math.max(minListSize, bodySize - splitterThickness - minEditorSize);
+    const maxSize = bodySize - splitterThickness - minEditorSize;
+    if (maxSize >= minListSize) return maxSize;
+    return Math.max(0, maxSize);
 }
 
 function getDefaultListSizeForLayout(bodyEl, ratio, fallbackPx, minListSize, getMaxListSize, measureAxis) {
@@ -57,7 +59,7 @@ function getDefaultListSizeForLayout(bodyEl, ratio, fallbackPx, minListSize, get
 }
 
 function applyListSizeCss(value, minValue, axis, appliedValue, list) {
-    const clamped = Math.max(minValue, value);
+    const clamped = Number.isFinite(value) ? value : minValue;
     const sizeValue = `${clamped}px`;
 
     if (axis === 'width') {

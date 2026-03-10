@@ -10,581 +10,6 @@
 /* -------------------------------------------------------------------------- */
 
 /* Hide the custom drawer body unless the extension has activated the drawer. */
-body #WorldInfo > .stwid--body {
-  display: none;
-}
-
-/* Drawer root sizing + layout */
-body.stwid-- #WorldInfo {
-  /* Spacing and radius tokens */
-  --stwid-gap-xs: 0.25em;
-  --stwid-gap-s: 0.35em;
-  --stwid-gap-m: 0.5em;
-  --stwid-radius-s: 4px;
-  --stwid-radius-m: 6px;
-  --stwid-radius-l: 8px;
-  --stwid-radius-xl: 10px;
-  --stwid-control-height: 2.35em;
-  --stwid-splitter-width: 6px;
-  --stwid-splitter-margin-x: 10px;
-
-  /* Hit-target and focus-ring tokens */
-  --stwid-hit-padding-y: 0.15em;
-  --stwid-hit-padding-x: 0.25em;
-  --stwid-focus-ring-color: var(--SmartThemeQuoteColor);
-  --stwid-focus-ring: 2px solid var(--stwid-focus-ring-color);
-  --stwid-focus-ring-offset: 2px;
-
-  /* State tokens (hover, selected, target, disabled) */
-  --stwid-state-target-bg: color-mix(in srgb, var(--SmartThemeQuoteColor) 15%, rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))));
-  --stwid-state-target-outline: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 55%, transparent);
-  --stwid-state-selected-bg: rgb(from var(--SmartThemeQuoteColor) r g b / 0.125);
-  --stwid-state-selected-bg-strong: rgb(from var(--SmartThemeQuoteColor) r g b / 0.25);
-  --stwid-state-hover-bg: var(--white20a);
-  --stwid-state-disabled-opacity: 0.5;
-
-  /* Semantic tokens */
-  --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
-
-  /* Layout */
-  width: 100vw;
-  height: calc(100dvh - var(--topBarBlockSize));
-  max-height: unset;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Show drawer when ST sets openDrawer */
-body.stwid-- #WorldInfo.openDrawer {
-  display: flex !important; /* override: ST's inline-drawer sets display:none by default; must force flex when openDrawer class is applied */
-}
-
-/* Hide the vanilla WI UI when drawer is active */
-body.stwid-- #WorldInfo #wi-holder {
-  display: none;
-}
-
-/* Drawer main split layout */
-body.stwid-- #WorldInfo > .stwid--body {
-  flex: 1 1 auto;
-  display: flex;
-  gap: 0;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Loading overlay */
-body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading {
-  pointer-events: none;
-}
-
-body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
-  content: 'Loading...';
-  position: absolute;
-  inset: 0;
-  backdrop-filter: blur(4px) !important; /* override: loading overlay must blur regardless of parent backdrop-filter reset */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 5em;
-}
-
-@media screen and (max-width: 1000px) {
-  body.stwid-- #WorldInfo {
-    width: 100vw;
-    height: 100dvh;
-  }
-
-  body.stwid-- #WorldInfo > .stwid--body {
-    flex-direction: column;
-    overflow-x: hidden;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* Panel: all extension-owned elements inside WorldInfo root */
-#WorldInfo {
-/* -------------------------------------------------------------------------- */
-
-/* 1.5) Shared layout shells                                                 */
-
-/* -------------------------------------------------------------------------- */
-
-/* Flex-column fill shell - grows to fill parent, scrolls internally */
-.stwid--editor {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
-.stwid--list .stwid--books {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 2) Splitter                                                                */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--splitter {
-  flex: 0 0 auto;
-  width: var(--stwid-splitter-width);
-  margin: 0 var(--stwid-splitter-margin-x);
-  cursor: col-resize;
-  background: var(--SmartThemeBorderColor);
-  opacity: 0.6;
-  transition: opacity 0.15s ease-in-out;
-}
-
-.stwid--splitter:hover,
-.stwid--splitter:active {
-  opacity: 1;
-}
-
-.stwid--splitter-h {
-  display: none;
-  flex: 0 0 auto;
-  height: var(--stwid-splitter-width);
-  margin: var(--stwid-splitter-margin-x) 0;
-  cursor: row-resize;
-  background: var(--SmartThemeBorderColor);
-  opacity: 0.6;
-  transition: opacity 0.15s ease-in-out;
-}
-
-.stwid--splitter-h:hover,
-.stwid--splitter-h:active {
-  opacity: 1;
-}
-
-@media screen and (max-width: 1000px) {
-  .stwid--splitter {
-    display: none;
-  }
-
-  .stwid--splitter-h {
-    display: block;
-    width: 100%;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 3) Book Browser                                                           */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--list {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 20vw;
-  max-width: 100%;
-  min-height: 0;
-}
-
-/* Top controls (new book/folder, import/export, search, etc.) */
-.stwid--controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25em;
-  align-items: stretch;
-}
-
-.stwid--thinContainer {
-    display: flex;
-    align-items: center;
-    gap: 0.8em;
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: var(--stwid-radius-s, 4px);
-    padding: 0.35em 0.65em;
-    position: relative;
-}
-
-.stwid--thinContainerLabel,
-.stwid--bulkEditLabel {
-    position: absolute;
-    top: -0.6em;
-    left: 0.4em;
-    font-size: 0.7em;
-    padding: 0 0.25em;
-    color: var(--SmartThemeEmColor);
-    line-height: 1;
-    white-space: nowrap;
-}
-
-.stwid--thinContainerLabelHint {
-  font-size: 0.95em;
-  opacity: 0.8;
-  cursor: help;
-  padding-left: 0.5em;
-}
-
-.stwid--thinContainerSmallTitle {
-  font-size: 0.78em;
-  opacity: 0.75;
-  white-space: nowrap;
-}
-
-.stwid--thinContainerSectionTitle {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.25em;
-}
-
-.stwid--thinContainerSectionTitle > i {
-  font-size: 0.78em;
-  opacity: 0.75;
-}
-
-.stwid--thinContainer.stwid--state-disabled {
-    opacity: 0.4;
-    pointer-events: none;
-}
-
-.stwid--browserRow {
-  /* --stwid-control-height: 2.35em; */
-  display: flex;
-  gap: 1em;
-  margin-top: 1em;
-  padding: 0.2em;
-  flex-wrap: wrap;
-  align-items: center;
-  flex-direction: row;
-  justify-content: center;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
-.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
-  /* gap: 1.1em; */
-  /* flex-wrap: nowrap; */
-  /* row-gap: 0.55em; */
-  /* padding-top: 0.7em; */
-  /* padding-left: 1.5em; */
-  /* padding-right: 1.5em; */
-  /* display: flex; */
-  /* justify-content: space-around; */
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting,
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5em;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting {
-  align-items: center;
-  flex-direction: column;
-  gap: 0;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
-  flex-flow: column wrap;
-  align-items: center;
-  gap: 0;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting > .stwid--thinContainerSectionTitle {
-  flex: 0 0 100%;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
-  display: flex;
-  gap: 0.5em;
-}
-
-/* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .text_pole {
-  height: var(--stwid-control-height);
-  padding: 0.35em;
-  display: inline-flex;
-  align-items: center;
-  box-sizing: border-box;
-}
-
-.stwid--smallSelectTextPole {
-  max-width: 9em;
-  font-size: 0.9em;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--smallSelectTextPole {
-  width: 9em;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.35em;
-  height: var(--stwid-control-height);
-}
-
-.stwid--controls .stwid--state-active,
-.stwid--list .stwid--filter .stwid--state-active {
-  color: var(--SmartThemeQuoteColor);
-}
-
-/* Search / active filter row */
-.stwid--list .stwid--filter {
-  display: flex;
-  /* flex-direction: column; */
-  gap: 0.45em;
-  align-items: stretch;
-}
-
-
-.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
-  /* padding-top: 0.1em; */
-}
-
-.stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
-  flex: 1 1 12em;
-  min-width: 8em;
-  font-size: 0.9em;
-}
-
-.stwid--searchEntries {
-  display: flex;
-  gap: 0.5em;
-  align-items: center;
-  font-size: 0.9em
-}
-
-.stwid--iconTab {
-  padding-top: 0.6em;
-  margin-bottom: 0.8em;
-}
-
-.stwid--entryManager .stwid--iconTab {
-  background-color: var(--SmartThemeBlurTintColor);
-}
-
-.stwid--iconTabBar {
-  display: flex;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--SmartThemeBorderColor);
-  margin-bottom: 1.3em;
-}
-
-.stwid--iconTabButton {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 0.8em;
-  padding: 0.5em 0.7em;
-  border: none;
-  border-bottom: 2px solid transparent;
-  /* margin-bottom: 0.3em; */
-  background: none;
-  cursor: pointer;
-  color: var(--SmartThemeBodyColor);
-  opacity: 0.55;
-  font-size: 0.9em;
-  transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.stwid--iconTabButton:hover {
-  opacity: 0.8;
-}
-
-.stwid--iconTabButton.active {
-  opacity: 1;
-  border-bottom-color: var(--SmartThemeBodyColor);
-}
-
-.stwid--iconTabButton[hidden],
-.stwid--iconTabContent[hidden] {
-  display: none !important; /* override: tab button/content classes set display explicitly; hidden state must win */
-}
-
-#stwid-settings-panel .stwid--settingsCheckboxGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.4em 0.6em;
-  width: 100%;
-}
-
-#stwid-settings-panel .stwid--settingsCheckboxCell {
-  min-width: 0;
-}
-
-#stwid-settings-panel .stwid--settingsCheckboxCell .menu_button {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-@media screen and (max-width: 1000px) {
-  #stwid-settings-panel .stwid--settingsCheckboxGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stwid--iconTabContent {
-  display: none;
-}
-
-.stwid--iconTabContent.active {
-  display: block;
-}
-
-.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
-  /* position: relative; */
-  /* display: flex; */
-  /* align-items: flex-start; */
-  /* gap: 0.35em; */
-  /* flex-wrap: nowrap; */
-  /* justify-content: flex-start; */
-  /* width: 100%; */
-  margin-top: 1em;
-  /* flex: 1 1 auto; */
-}
-
-.stwid--multiselectDropdownWrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
-}
-
-.stwid--multiselectDropdownButton {
-  /* display: inline-flex; */
-  /* align-items: center; */
-  /* gap: 0.25em; */
-  /* padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x); */
-  /* border-radius: var(--stwid-radius-m); */
-}
-
-.stwid--listDropdownTrigger {
-  border-radius: var(--stwid-radius-m);
-}
-
-.stwid--menu {
-  display: flex;
-  flex-direction: column;
-}
-
-.stwid--multiselectDropdownMenu,
-.stwid--bookVisibilityMenu {
-  position: absolute;
-  top: calc(100% + 0.35em);
-  left: 0;
-  /* background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%); */
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: var(--stwid-radius-m);
-  padding: 0.45em;
-  display: none;
-  flex-direction: column;
-  gap: 0.3em;
-  z-index: 3;
-  min-width: max-content;
-}
-
-.stwid--multiselectDropdownMenu.stwid--state-active,
-.stwid--bookVisibilityMenu.stwid--state-active {
-  /* display: flex; */
-  /* width: max-content; */
-  /* opacity: 1 !important; */ /* override: ST menu styles set opacity:0 on hidden menus; force visible when state-active */
-  /* background-color: var(--SmartThemeBlurTintColor) !important; */ /* override: ST button resets may override menu background; force theme blur tint */
-  /* backdrop-filter: blur(calc(var(--SmartThemeBlurStrength))) !important; */ /* override: parent backdrop-filter context may be cleared; force blur on menu */
-  /* box-shadow: 0 0 15px color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent); */
-  /* border: 1px solid var(--SmartThemeBorderColor); */
-  text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
-  /* position: fixed; */
-  /* position-anchor: --stwid--ctxAnchor; */
-  position-area: bottom right;
-  /* position-try-fallbacks: flip-block, flip-inline; */
-  /* margin-top: -1lh; */
-  filter: drop-shadow(1px 1px 2px var(--black50a));
-  z-index: 30000;
-  overflow: hidden;
-  /* border: 1px solid var(--SmartThemeBorderColor); */
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  background-color: rgb(32 33 36 / 21%);
-  font-size: 0.9em;
-  padding: 0.9em;
-  backdrop-filter: blur(var(--SmartThemeBlurStrength));
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-/*
-  SillyTavern World Info Drawer (STWID)
-  Styles follow the same top-to-bottom order as the module tree in ARCHITECTURE.md.
-*/
-
-/* -------------------------------------------------------------------------- */
-
-/* 1) Drawer                                                                  */
-
-/* -------------------------------------------------------------------------- */
-
-/* Hide the custom drawer body unless the extension has activated the drawer. */
   body #WorldInfo > .stwid--body {
   display: none;
 }
@@ -1387,9 +812,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: flex;
   gap: 0.5em;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
-  position: sticky;
-  top: 0;
-  z-index: 1;
   transition: background-color 150ms ease;
 }
 
@@ -3233,9 +2655,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   display: flex;
   gap: 0.5em;
   background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
-  position: sticky;
-  top: 0;
-  z-index: 1;
   transition: background-color 150ms ease;
 }
 
@@ -3384,10 +2803,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   }
 
   .stwid--iconTabBar {
+    display: flex;
+    flex-wrap: nowrap;
     position: sticky;
     top: 0;
     z-index: 1;
     background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
+  }
+
+  .stwid--iconTabButton {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
   }
 
   .stwid--browserRow,
@@ -3597,10 +3024,76 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
     max-width: none;
     flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .stwid--editor #wiActivationSettings {
+    flex-direction: column;
     flex-wrap: wrap;
+  }
+
+  .stwid--editor #WIEntryHeaderTitlesPC {
+    display: none;
+  }
+
+  .stwid--editor .world_entry,
+  .stwid--editor .world_entry_form,
+  .stwid--editor .inline-drawer,
+  .stwid--editor .inline-drawer-content,
+  .stwid--editor .inline-drawer-content > .world_entry_edit,
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter,
+  .stwid--editor [name='contentAndCharFilterBlock'] {
+    height: auto;
+    min-height: 0;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit,
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter,
+  .stwid--editor [name='contentAndCharFilterBlock'] {
+    flex: 0 0 auto !important;
+  }
+
+  .stwid--editor [name='keywordsAndLogicBlock'],
+  .stwid--editor [name='perEntryOverridesBlock'],
+  .stwid--editor [name='contentAndCharFilterBlock'],
+  .stwid--editor .commentContainer,
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control,
+  .stwid--editor .inline-drawer-content small.flex-container {
+    width: 100%;
+  }
+
+  .stwid--editor [name='keywordsAndLogicBlock'],
+  .stwid--editor [name='perEntryOverridesBlock'],
+  .stwid--editor [name='contentAndCharFilterBlock'],
+  .stwid--editor .commentContainer,
+  .stwid--editor .inline-drawer-content,
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stwid--editor .world_entry_thin_controls,
+  .stwid--editor .flex-container.wide100p.flexGap10,
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span,
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > .flex-container:last-child {
+    flex-wrap: wrap;
+  }
+
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span {
+    justify-content: flex-start;
+    gap: 0.5em;
+  }
+
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > span:nth-child(2),
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > .flex-container:last-child {
+    width: 100%;
+  }
+
+  .stwid--editor .world_entry_form_control.world_entry_form_horizontal {
+    align-items: flex-start;
+    row-gap: 0.5rem;
   }
 }
 
