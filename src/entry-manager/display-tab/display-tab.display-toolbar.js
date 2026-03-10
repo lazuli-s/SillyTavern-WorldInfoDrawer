@@ -1,12 +1,15 @@
 import {
     MULTISELECT_DROPDOWN_CLOSE_HANDLER,
-    closeOpenMultiselectDropdownMenus,
     setTooltip,
     createMultiselectDropdownCheckbox,
     wireMultiselectDropdown,
     wrapRowContent,
 } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_TOGGLE_COLUMNS, ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
+
+const COLUMN_VISIBILITY_HINT = 'Choose which columns are visible';
+const TABLE_SORT_HINT = 'Sort rows in the table';
+const KEYWORD_COLUMN_TEXT_TOGGLE_HINT = 'Show/hide keyword column text';
 
 function createActionThinContainer(labelText, hintText) {
     const container = document.createElement('div');
@@ -47,47 +50,32 @@ function buildColumnDropdownButton(hint) {
     return menuButton;
 }
 
-
-function buildColumnCheckboxOptions(menu, columns, entryManagerState, columnInputs, onColumnChange) {
-    for (const column of columns) {
-        const option = document.createElement('label');
-        option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-        const inputControl = createMultiselectDropdownCheckbox(Boolean(entryManagerState.columns[column.key]));
-        columnInputs.set(column.key, inputControl);
-        inputControl.input.addEventListener('change', ()=>onColumnChange(column, inputControl));
-        option.append(inputControl.input);
-        option.append(inputControl.checkbox);
-        const optionLabel = document.createElement('span');
-        optionLabel.textContent = column.label;
-        option.append(optionLabel);
-        menu.append(option);
-    }
-}
-
-function buildColumnVisibilityDropdown({
-    body,
-    entryManagerState,
-    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
-    ENTRY_MANAGER_DEFAULT_COLUMNS,
-    applyEntryManagerColumnVisibility,
-}) {
-    const columnVisibilityContainer = createActionThinContainer('Columns', 'Choose which columns are visible');
+function createColumnVisibilityDropdownDom() {
+    const columnVisibilityContainer = createActionThinContainer('Columns', COLUMN_VISIBILITY_HINT);
     const columnVisibilityWrap = document.createElement('div');
     columnVisibilityWrap.classList.add('stwid--columnVisibility');
 
     const menuWrap = document.createElement('div');
     menuWrap.classList.add('stwid--multiselectDropdownWrap');
-    const menuButton = buildColumnDropdownButton('Choose which columns are visible');
+
+    const menuButton = buildColumnDropdownButton(COLUMN_VISIBILITY_HINT);
     menuWrap.append(menuButton);
 
     const menu = document.createElement('div');
     menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
-    const columnInputs = new Map();
-    const mainColumnDefaults = Object.fromEntries(
-        Object.entries(ENTRY_MANAGER_DEFAULT_COLUMNS)
-            .map(([key, value])=>[key, Boolean(value)]),
-    );
-    const setColumnVisibility = (overrides)=>{
+
+    return { columnVisibilityContainer, columnVisibilityWrap, menuWrap, menuButton, menu };
+}
+
+function applyAndPersistColumnVisibility({
+    entryManagerState,
+    columnInputs,
+    body,
+    storageKey,
+    applyEntryManagerColumnVisibility,
+    menu,
+}) {
+    return (overrides)=>{
         for (const column of ENTRY_MANAGER_TOGGLE_COLUMNS) {
             const nextValue = Boolean(overrides[column.key]);
             entryManagerState.columns[column.key] = nextValue;
@@ -95,7 +83,7 @@ function buildColumnVisibilityDropdown({
             if (inputControl) inputControl.setChecked(nextValue);
         }
         localStorage.setItem(
-            ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+            storageKey,
             JSON.stringify(entryManagerState.columns),
         );
         applyEntryManagerColumnVisibility(body);
@@ -103,6 +91,9 @@ function buildColumnVisibilityDropdown({
         const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
         if (typeof closeMenu === 'function') closeMenu();
     };
+}
+
+function addColumnVisibilityPresetActions({ menu, setColumnVisibility, mainColumnDefaults }) {
     const addColumnAction = ({ label, icon, onClick })=>{
         const action = document.createElement('div');
         action.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
@@ -129,6 +120,54 @@ function buildColumnVisibilityDropdown({
         icon: 'fa-table-columns',
         onClick: ()=>setColumnVisibility(mainColumnDefaults),
     });
+}
+
+
+function buildColumnCheckboxOptions(menu, columns, entryManagerState, columnInputs, onColumnChange) {
+    for (const column of columns) {
+        const option = document.createElement('label');
+        option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+        const inputControl = createMultiselectDropdownCheckbox(Boolean(entryManagerState.columns[column.key]));
+        columnInputs.set(column.key, inputControl);
+        inputControl.input.addEventListener('change', ()=>onColumnChange(column, inputControl));
+        option.append(inputControl.input);
+        option.append(inputControl.checkbox);
+        const optionLabel = document.createElement('span');
+        optionLabel.textContent = column.label;
+        option.append(optionLabel);
+        menu.append(option);
+    }
+}
+
+function buildColumnVisibilityDropdown({
+    body,
+    entryManagerState,
+    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+    ENTRY_MANAGER_DEFAULT_COLUMNS,
+    applyEntryManagerColumnVisibility,
+}) {
+    const {
+        columnVisibilityContainer,
+        columnVisibilityWrap,
+        menuWrap,
+        menuButton,
+        menu,
+    } = createColumnVisibilityDropdownDom();
+    const columnInputs = new Map();
+    const mainColumnDefaults = Object.fromEntries(
+        Object.entries(ENTRY_MANAGER_DEFAULT_COLUMNS)
+            .map(([key, value])=>[key, Boolean(value)]),
+    );
+    const setColumnVisibility = applyAndPersistColumnVisibility({
+        entryManagerState,
+        columnInputs,
+        body,
+        storageKey: ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
+        applyEntryManagerColumnVisibility,
+        menu,
+    });
+
+    addColumnVisibilityPresetActions({ menu, setColumnVisibility, mainColumnDefaults });
     buildColumnCheckboxOptions(
         menu,
         ENTRY_MANAGER_TOGGLE_COLUMNS,
@@ -162,13 +201,13 @@ function buildSortSelector({
     buildSavePayload,
     applyEntryManagerSortToDom,
 }) {
-    const tableSortContainer = createActionThinContainer('Table Sorting', 'Sort rows in the table');
+    const tableSortContainer = createActionThinContainer('Table Sorting', TABLE_SORT_HINT);
     const sortWrap = document.createElement('label');
     sortWrap.classList.add('stwid--table-sort');
-    setTooltip(sortWrap, 'Sort rows in the table');
+    setTooltip(sortWrap, TABLE_SORT_HINT);
     const sortSel = document.createElement('select');
     sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
-    setTooltip(sortSel, 'Sort rows in the table');
+    setTooltip(sortSel, TABLE_SORT_HINT);
     dom.order.sortSelect = sortSel;
     appendSortOptions(sortSel, entryManagerState.sort, entryManagerState.direction);
     sortSel.addEventListener('change', async()=>{
@@ -185,6 +224,52 @@ function buildSortSelector({
     sortWrap.append(sortSel);
     tableSortContainer.append(sortWrap);
     return { tableSortContainer, sortSel };
+}
+
+function buildFilterChip({ headerName, valueLabels, onRemove }) {
+    const chip = document.createElement('div');
+    chip.classList.add('stwid--filterChip');
+
+    const chipLabel = document.createElement('span');
+    chipLabel.textContent = `${headerName}: ${valueLabels.join(', ')}`;
+    chip.append(chipLabel);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.classList.add('stwid--chipRemove');
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', onRemove);
+    chip.append(removeBtn);
+
+    return chip;
+}
+
+function renderActiveFilterChips({
+    chipContainer,
+    entryManagerState,
+    filterConfigs,
+    FILTER_KEY_LABELS,
+    getFilterValueLabels,
+    clearFilterHandlers,
+    activeFiltersEl,
+}) {
+    chipContainer.innerHTML = '';
+    const filters = entryManagerState.filters;
+    let hasActiveFilter = false;
+
+    for (const { key, allValues } of filterConfigs) {
+        const selected = filters[key] ?? [];
+        if (!allValues.length) continue;
+        if (selected.length >= allValues.length) continue;
+        hasActiveFilter = true;
+
+        chipContainer.append(buildFilterChip({
+            headerName: FILTER_KEY_LABELS[key] ?? key,
+            valueLabels: getFilterValueLabels(key, selected),
+            onRemove: clearFilterHandlers[key],
+        }));
+    }
+
+    activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
 }
 
 
@@ -210,8 +295,6 @@ function buildFilterChipDisplay({
     activeFiltersEl.append(chipContainer);
 
     const refresh = ()=>{
-        chipContainer.innerHTML = '';
-        const filters = entryManagerState.filters;
         const filterConfigs = [
             { key: 'strategy', allValues: entryManagerState.strategyValues.length ? entryManagerState.strategyValues : getStrategyValues() },
             { key: 'position', allValues: entryManagerState.positionValues.length ? entryManagerState.positionValues : getPositionValues() },
@@ -220,36 +303,118 @@ function buildFilterChipDisplay({
             { key: 'automationId', allValues: entryManagerState.automationIdValues.length ? entryManagerState.automationIdValues : getAutomationIdValues() },
             { key: 'group', allValues: entryManagerState.groupValues.length ? entryManagerState.groupValues : getGroupValues() },
         ];
-
-        let hasActiveFilter = false;
-        for (const { key, allValues } of filterConfigs) {
-            const selected = filters[key] ?? [];
-            if (!allValues.length) continue;
-            if (selected.length >= allValues.length) continue;
-            hasActiveFilter = true;
-
-            const chip = document.createElement('div');
-            chip.classList.add('stwid--filterChip');
-
-            const chipLabel = document.createElement('span');
-            const headerName = FILTER_KEY_LABELS[key] ?? key;
-            const valueLabels = getFilterValueLabels(key, selected);
-            chipLabel.textContent = `${headerName}: ${valueLabels.join(', ')}`;
-            chip.append(chipLabel);
-
-            const removeBtn = document.createElement('button');
-            removeBtn.classList.add('stwid--chipRemove');
-            removeBtn.textContent = '×';
-            removeBtn.addEventListener('click', clearFilterHandlers[key]);
-            chip.append(removeBtn);
-
-            chipContainer.append(chip);
-        }
-
-        activeFiltersEl.style.display = hasActiveFilter ? '' : 'none';
+        renderActiveFilterChips({
+            chipContainer,
+            entryManagerState,
+            filterConfigs,
+            FILTER_KEY_LABELS,
+            getFilterValueLabels,
+            clearFilterHandlers,
+            activeFiltersEl,
+        });
     };
 
     return { activeFiltersEl, chipContainer, refresh };
+}
+
+function buildKeysToggle({ body, entryManagerState, storageKey }) {
+    const keyToggleContainer = createActionThinContainer('Keys', KEYWORD_COLUMN_TEXT_TOGGLE_HINT);
+    const keyToggle = document.createElement('div');
+    keyToggle.classList.add('menu_button');
+    keyToggle.classList.add('fa-solid', 'fa-fw');
+    setTooltip(keyToggle, KEYWORD_COLUMN_TEXT_TOGGLE_HINT);
+
+    const applyKeyToggleStyle = ()=>{
+        keyToggle.classList.toggle('fa-eye', !entryManagerState.hideKeys);
+        keyToggle.classList.toggle('fa-eye-slash', entryManagerState.hideKeys);
+        keyToggle.classList.toggle('stwid--state-active', entryManagerState.hideKeys);
+    };
+
+    applyKeyToggleStyle();
+    keyToggle.addEventListener('click', ()=>{
+        entryManagerState.hideKeys = !entryManagerState.hideKeys;
+        localStorage.setItem(storageKey, entryManagerState.hideKeys);
+        body.classList.toggle('stwid--hideKeys', entryManagerState.hideKeys);
+        applyKeyToggleStyle();
+    });
+
+    keyToggleContainer.append(keyToggle);
+    return keyToggleContainer;
+}
+
+function buildFilterToggle({ dom, entryManagerState, getEntryManagerEntries, updateEntryManagerPreview, clearEntryManagerScriptFilters }) {
+    const filterToggle = document.createElement('div');
+    filterToggle.classList.add('menu_button');
+    filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
+    setTooltip(filterToggle, 'Open filters. Apply Order only affects rows that are not filtered out');
+    filterToggle.addEventListener('click', ()=>{
+        const is = dom.order.filter.root.classList.toggle('stwid--state-active');
+        if (is) {
+            updateEntryManagerPreview(getEntryManagerEntries(entryManagerState.book, true));
+        } else {
+            clearEntryManagerScriptFilters();
+        }
+    });
+
+    return filterToggle;
+}
+
+function createFilterValueLabelHelpers({
+    getStrategyOptions,
+    getPositionOptions,
+    getOutletOptions,
+    getAutomationIdOptions,
+    getGroupOptions,
+}) {
+    const FILTER_KEY_LABELS = Object.fromEntries(
+        ENTRY_MANAGER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
+    );
+
+    const getFilterValueLabels = (filterKey, selectedValues)=>{
+        let options;
+        switch (filterKey) {
+            case 'strategy':     options = getStrategyOptions();     break;
+            case 'position':     options = getPositionOptions();     break;
+            case 'outlet':       options = getOutletOptions();       break;
+            case 'automationId': options = getAutomationIdOptions(); break;
+            case 'group':        options = getGroupOptions();        break;
+            case 'recursion':    options = ENTRY_MANAGER_RECURSION_OPTIONS; break;
+            default: return selectedValues.map(String);
+        }
+        const labelMap = Object.fromEntries(options.map((opt)=>[opt.value, opt.label]));
+        return selectedValues.map((selectedValue)=>labelMap[selectedValue] ?? String(selectedValue));
+    };
+
+    return { FILTER_KEY_LABELS, getFilterValueLabels };
+}
+
+function buildClearFilterHandlers({
+    entryManagerState,
+    filterIndicatorRefs,
+    refresh,
+    getValues,
+    applyFilters,
+}) {
+    const filterHandlerConfigs = [
+        { key: 'strategy', getAllValues: getValues.strategy, applyFn: applyFilters.strategy },
+        { key: 'position', getAllValues: getValues.position, applyFn: applyFilters.position },
+        { key: 'recursion', getAllValues: getValues.recursion, applyFn: applyFilters.recursion },
+        { key: 'outlet', getAllValues: getValues.outlet, applyFn: applyFilters.outlet },
+        { key: 'automationId', getAllValues: getValues.automationId, applyFn: applyFilters.automationId },
+        { key: 'group', getAllValues: getValues.group, applyFn: applyFilters.group },
+    ];
+
+    return Object.fromEntries(filterHandlerConfigs.map(({ key, getAllValues, applyFn })=>[
+        key,
+        makeClearFilterHandler(
+            key,
+            getAllValues,
+            applyFn,
+            entryManagerState,
+            filterIndicatorRefs[key],
+            refresh,
+        ),
+    ]));
 }
 
 
@@ -288,33 +453,16 @@ export function buildDisplayToolbar({
     getAutomationIdValues,
     getGroupValues,
     filterIndicatorRefs,
-    initialCollapsed = false,
 }) {
-    const row = document.createElement('div');
-    row.classList.add('stwid--order-action-bar');
+    const displayToolbarRow = document.createElement('div');
+    displayToolbarRow.classList.add('stwid--order-action-bar');
 
 
-    const keyToggleContainer = createActionThinContainer('Keys', 'Show/hide keyword column text');
-    const keyToggle = document.createElement('div'); {
-        keyToggle.classList.add('menu_button');
-        keyToggle.classList.add('fa-solid', 'fa-fw');
-        setTooltip(keyToggle, 'Show/hide keyword column text');
-        const applyKeyToggleStyle = ()=>{
-            keyToggle.classList.toggle('fa-eye', !entryManagerState.hideKeys);
-            keyToggle.classList.toggle('fa-eye-slash', entryManagerState.hideKeys);
-            keyToggle.classList.toggle('stwid--state-active', entryManagerState.hideKeys);
-        };
-        applyKeyToggleStyle();
-        keyToggle.addEventListener('click', ()=>{
-
-            entryManagerState.hideKeys = !entryManagerState.hideKeys;
-            localStorage.setItem(ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY, entryManagerState.hideKeys);
-            body.classList.toggle('stwid--hideKeys', entryManagerState.hideKeys);
-            applyKeyToggleStyle();
-        });
-        keyToggleContainer.append(keyToggle);
-    }
-    row.append(keyToggleContainer);
+    displayToolbarRow.append(buildKeysToggle({
+        body,
+        entryManagerState,
+        storageKey: ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
+    }));
 
     const columnVisibilityContainer = buildColumnVisibilityDropdown({
         body,
@@ -323,12 +471,12 @@ export function buildDisplayToolbar({
         ENTRY_MANAGER_DEFAULT_COLUMNS,
         applyEntryManagerColumnVisibility,
     });
-    row.append(columnVisibilityContainer);
+    displayToolbarRow.append(columnVisibilityContainer);
 
     const addDivider = ()=>{
         const divider = document.createElement('div');
         divider.classList.add('stwid--actionsDivider');
-        row.append(divider);
+        displayToolbarRow.append(divider);
     };
 
     const { tableSortContainer } = buildSortSelector({
@@ -342,108 +490,57 @@ export function buildDisplayToolbar({
         buildSavePayload,
         applyEntryManagerSortToDom,
     });
-    row.append(tableSortContainer);
+    displayToolbarRow.append(tableSortContainer);
     addDivider();
 
 
-    const filterToggle = document.createElement('div'); {
-        filterToggle.classList.add('menu_button');
-        filterToggle.classList.add('fa-solid', 'fa-fw', 'fa-filter');
-        setTooltip(filterToggle, 'Open filters. Apply Order only affects rows that are not filtered out');
-        filterToggle.addEventListener('click', ()=>{
-            const is = dom.order.filter.root.classList.toggle('stwid--state-active');
-            if (is) {
-                updateEntryManagerPreview(getEntryManagerEntries(entryManagerState.book, true));
-            } else {
-                clearEntryManagerScriptFilters();
-            }
-        });
-        row.append(filterToggle);
-    }
+    displayToolbarRow.append(buildFilterToggle({
+        dom,
+        entryManagerState,
+        getEntryManagerEntries,
+        updateEntryManagerPreview,
+        clearEntryManagerScriptFilters,
+    }));
 
 
     const displayToolbarInfo = document.createElement('div');
     displayToolbarInfo.classList.add('stwid--displayToolbarInfo');
 
-    row.append(displayToolbarInfo);
+    displayToolbarRow.append(displayToolbarInfo);
 
 
-    const FILTER_KEY_LABELS = Object.fromEntries(
-        ENTRY_MANAGER_TOGGLE_COLUMNS.map((col)=>[col.key, col.label]),
-    );
-
-
-    const getFilterValueLabels = (filterKey, selectedValues)=>{
-        let options;
-        switch (filterKey) {
-            case 'strategy':     options = getStrategyOptions();     break;
-            case 'position':     options = getPositionOptions();     break;
-            case 'outlet':       options = getOutletOptions();       break;
-            case 'automationId': options = getAutomationIdOptions(); break;
-            case 'group':        options = getGroupOptions();        break;
-            case 'recursion':    options = ENTRY_MANAGER_RECURSION_OPTIONS; break;
-            default: return selectedValues.map(String);
-        }
-        const labelMap = Object.fromEntries(options.map((opt)=>[opt.value, opt.label]));
-        return selectedValues.map((selectedValue)=>labelMap[selectedValue] ?? String(selectedValue));
-    };
-
-
-
+    const { FILTER_KEY_LABELS, getFilterValueLabels } = createFilterValueLabelHelpers({
+        getStrategyOptions,
+        getPositionOptions,
+        getOutletOptions,
+        getAutomationIdOptions,
+        getGroupOptions,
+    });
 
     let refresh = ()=>{};
 
 
-    const clearFilterHandlers = {
-        strategy: makeClearFilterHandler(
-            'strategy',
-            ()=>entryManagerState.strategyValues.length ? entryManagerState.strategyValues : getStrategyValues(),
-            applyEntryManagerStrategyFilters,
-            entryManagerState,
-            filterIndicatorRefs.strategy,
-            ()=>refresh(),
-        ),
-        position: makeClearFilterHandler(
-            'position',
-            ()=>entryManagerState.positionValues.length ? entryManagerState.positionValues : getPositionValues(),
-            applyEntryManagerPositionFilters,
-            entryManagerState,
-            filterIndicatorRefs.position,
-            ()=>refresh(),
-        ),
-        recursion: makeClearFilterHandler(
-            'recursion',
-            ()=>entryManagerState.recursionValues ?? [],
-            applyEntryManagerRecursionFilters,
-            entryManagerState,
-            filterIndicatorRefs.recursion,
-            ()=>refresh(),
-        ),
-        outlet: makeClearFilterHandler(
-            'outlet',
-            ()=>entryManagerState.outletValues.length ? entryManagerState.outletValues : getOutletValues(),
-            applyEntryManagerOutletFilters,
-            entryManagerState,
-            filterIndicatorRefs.outlet,
-            ()=>refresh(),
-        ),
-        automationId: makeClearFilterHandler(
-            'automationId',
-            ()=>entryManagerState.automationIdValues.length ? entryManagerState.automationIdValues : getAutomationIdValues(),
-            applyEntryManagerAutomationIdFilters,
-            entryManagerState,
-            filterIndicatorRefs.automationId,
-            ()=>refresh(),
-        ),
-        group: makeClearFilterHandler(
-            'group',
-            ()=>entryManagerState.groupValues.length ? entryManagerState.groupValues : getGroupValues(),
-            applyEntryManagerGroupFilters,
-            entryManagerState,
-            filterIndicatorRefs.group,
-            ()=>refresh(),
-        ),
-    };
+    const clearFilterHandlers = buildClearFilterHandlers({
+        entryManagerState,
+        filterIndicatorRefs,
+        refresh: ()=>refresh(),
+        getValues: {
+            strategy: ()=>entryManagerState.strategyValues.length ? entryManagerState.strategyValues : getStrategyValues(),
+            position: ()=>entryManagerState.positionValues.length ? entryManagerState.positionValues : getPositionValues(),
+            recursion: ()=>entryManagerState.recursionValues ?? [],
+            outlet: ()=>entryManagerState.outletValues.length ? entryManagerState.outletValues : getOutletValues(),
+            automationId: ()=>entryManagerState.automationIdValues.length ? entryManagerState.automationIdValues : getAutomationIdValues(),
+            group: ()=>entryManagerState.groupValues.length ? entryManagerState.groupValues : getGroupValues(),
+        },
+        applyFilters: {
+            strategy: applyEntryManagerStrategyFilters,
+            position: applyEntryManagerPositionFilters,
+            recursion: applyEntryManagerRecursionFilters,
+            outlet: applyEntryManagerOutletFilters,
+            automationId: applyEntryManagerAutomationIdFilters,
+            group: applyEntryManagerGroupFilters,
+        },
+    });
 
     const filterChipDisplay = buildFilterChipDisplay({
         entryManagerState,
@@ -459,7 +556,7 @@ export function buildDisplayToolbar({
     displayToolbarInfo.append(filterChipDisplay.activeFiltersEl);
     refresh = filterChipDisplay.refresh;
 
-    wrapRowContent(row);
+    wrapRowContent(displayToolbarRow);
 
-    return { element: row, refresh };
+    return { element: displayToolbarRow, refresh };
 }

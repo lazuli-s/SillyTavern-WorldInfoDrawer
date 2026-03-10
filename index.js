@@ -7,6 +7,7 @@ import { Settings } from './src/shared/settings.js';
 
 
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
+const DISPLAY_STYLE_PROPERTY = 'display';
 const HIDDEN_TAB_SETTINGS = Object.freeze([
     { id: 'settings', selector: '#stwid-hidden-tab-settings' },
     { id: 'lorebooks', selector: '#stwid-hidden-tab-lorebooks' },
@@ -34,16 +35,16 @@ const watchCss = async()=>{
             NAME,
             'style.css',
         ].join('/');
-        const ev = await FilesPluginApi.watch(path);
+        const cssWatchEventSource = await FilesPluginApi.watch(path);
         
         const onCssMessage = async(exists)=>{
             if (!exists) return;
             style.innerHTML = await (await FilesPluginApi.get(path)).text();
             document.querySelector(`#third-party_${NAME}-css`)?.remove();
         };
-        ev.addEventListener('message', onCssMessage);
+        cssWatchEventSource.addEventListener('message', onCssMessage);
         cleanupCssWatch = ()=>{
-            ev.removeEventListener('message', onCssMessage);
+            cssWatchEventSource.removeEventListener('message', onCssMessage);
             style.remove();
         };
     } catch (error) {
@@ -60,6 +61,71 @@ let editorPanelApi;
 let featureSettingsRoot = null;
 let lastAppliedFolderGroupingVisibility = null;
 
+const setCurrentEditor = (value)=>{
+    currentEditor = value;
+};
+
+const deactivateToggle = (toggleButton)=>{
+    if (toggleButton?.classList.contains('stwid--active')) {
+        toggleButton.click();
+    }
+};
+
+const bindFeatureCheckbox = (checkbox, settingKey)=>{
+    if (!(checkbox instanceof HTMLInputElement)) {
+        return;
+    }
+    checkbox.checked = Boolean(Settings.instance[settingKey]);
+    checkbox.addEventListener('change', ()=>{
+        Settings.instance[settingKey] = checkbox.checked;
+        Settings.instance.save();
+        applyFeatureVisibility();
+    });
+};
+
+const mountSettingsPanel = async()=>{
+    const context = SillyTavern.getContext();
+    const settingsContainer = document.querySelector('#extensions_settings');
+    if (!(settingsContainer instanceof HTMLElement)) {
+        console.warn('[STWID] Could not find #extensions_settings to mount extension settings.');
+        return null;
+    }
+
+    featureSettingsRoot?.remove();
+    const wrapper = document.createElement('div');
+    wrapper.id = 'stwid-settings-panel';
+    wrapper.innerHTML = await renderSettingsTemplateHtml(context);
+    settingsContainer.append(wrapper);
+    featureSettingsRoot = wrapper;
+    return wrapper;
+};
+
+const bindFeatureSettingControls = (wrapper)=>{
+    const folderGroupingCheckbox = wrapper.querySelector('#stwid-feature-folder-grouping');
+    const amsCheckbox = wrapper.querySelector('#stwid-feature-additional-matching-sources');
+
+    bindFeatureCheckbox(folderGroupingCheckbox, 'featureFolderGrouping');
+    bindFeatureCheckbox(amsCheckbox, 'featureAdditionalMatchingSources');
+};
+
+const bindHiddenTabControls = (wrapper)=>{
+    for (const { id: tabId, selector } of HIDDEN_TAB_SETTINGS) {
+        const checkbox = wrapper.querySelector(selector);
+        if (!(checkbox instanceof HTMLInputElement)) {
+            continue;
+        }
+        checkbox.checked = Settings.instance.hiddenTabs.includes(tabId);
+        checkbox.addEventListener('change', ()=>{
+            const nextHiddenTabs = checkbox.checked
+                ? [...Settings.instance.hiddenTabs, tabId]
+                : Settings.instance.hiddenTabs.filter((hiddenTabId)=>hiddenTabId !== tabId);
+            Settings.instance.hiddenTabs = [...new Set(nextHiddenTabs)];
+            Settings.instance.save();
+            applyHiddenTabsVisibility();
+        });
+    }
+};
+
 const bookSourceLinksApi = initBookSourceLinks({
     getListPanelApi: ()=>listPanelApi,
 });
@@ -67,9 +133,7 @@ const bookSourceLinksApi = initBookSourceLinks({
 const wiHandlerApi = initWIUpdateHandler({
     cache,
     getCurrentEditor: ()=>currentEditor,
-    setCurrentEditor: (value)=>{
-        currentEditor = value;
-    },
+    setCurrentEditor,
     getListPanelApi: ()=>listPanelApi,
     getEditorPanelApi: ()=>editorPanelApi,
     getRefreshBookSourceLinks: ()=>bookSourceLinksApi.refreshBookSourceLinks,
@@ -78,9 +142,7 @@ const wiHandlerApi = initWIUpdateHandler({
 const drawerApi = initDrawer({
     cache,
     getCurrentEditor: ()=>currentEditor,
-    setCurrentEditor: (value)=>{
-        currentEditor = value;
-    },
+    setCurrentEditor,
     wiHandlerApi,
     bookSourceLinksApi,
 });
@@ -123,8 +185,8 @@ const applyAdditionalMatchingSourcesVisibility = (enabled)=>{
     }
 
     for (const drawer of amsDrawers) {
-        if (visible) drawer.style.removeProperty('display');
-        else drawer.style.setProperty('display', 'none', 'important');
+        if (visible) drawer.style.removeProperty(DISPLAY_STYLE_PROPERTY);
+        else drawer.style.setProperty(DISPLAY_STYLE_PROPERTY, 'none', 'important');
         if (!visible) {
             drawer.classList.remove('stwid--ams-open');
             drawer.classList.remove('openDrawer');
@@ -135,8 +197,8 @@ const applyAdditionalMatchingSourcesVisibility = (enabled)=>{
     for (const drawer of document.querySelectorAll('.stwid--editor .inline-drawer')) {
         if (!(drawer instanceof HTMLElement)) continue;
         if (amsDrawers.has(drawer)) continue;
-        if (drawer.style.getPropertyValue('display') === 'none') {
-            drawer.style.removeProperty('display');
+        if (drawer.style.getPropertyValue(DISPLAY_STYLE_PROPERTY) === 'none') {
+            drawer.style.removeProperty(DISPLAY_STYLE_PROPERTY);
         }
     }
 };
@@ -180,56 +242,13 @@ const renderSettingsTemplateHtml = async(context)=>{
 };
 
 const initSettingsPanel = async()=>{
-    const context = SillyTavern.getContext();
-    const settingsContainer = document.querySelector('#extensions_settings');
-    if (!(settingsContainer instanceof HTMLElement)) {
-        console.warn('[STWID] Could not find #extensions_settings to mount extension settings.');
+    const wrapper = await mountSettingsPanel();
+    if (!(wrapper instanceof HTMLElement)) {
         return;
     }
 
-    featureSettingsRoot?.remove();
-    const wrapper = document.createElement('div');
-    wrapper.id = 'stwid-settings-panel';
-    wrapper.innerHTML = await renderSettingsTemplateHtml(context);
-    settingsContainer.append(wrapper);
-    featureSettingsRoot = wrapper;
-
-    const folderGroupingCheckbox = wrapper.querySelector('#stwid-feature-folder-grouping');
-    const amsCheckbox = wrapper.querySelector('#stwid-feature-additional-matching-sources');
-
-    if (folderGroupingCheckbox instanceof HTMLInputElement) {
-        folderGroupingCheckbox.checked = Boolean(Settings.instance.featureFolderGrouping);
-        folderGroupingCheckbox.addEventListener('change', ()=>{
-            Settings.instance.featureFolderGrouping = folderGroupingCheckbox.checked;
-            Settings.instance.save();
-            applyFeatureVisibility();
-        });
-    }
-
-    if (amsCheckbox instanceof HTMLInputElement) {
-        amsCheckbox.checked = Boolean(Settings.instance.featureAdditionalMatchingSources);
-        amsCheckbox.addEventListener('change', ()=>{
-            Settings.instance.featureAdditionalMatchingSources = amsCheckbox.checked;
-            Settings.instance.save();
-            applyFeatureVisibility();
-        });
-    }
-
-    for (const { id: tabId, selector } of HIDDEN_TAB_SETTINGS) {
-        const checkbox = wrapper.querySelector(selector);
-        if (!(checkbox instanceof HTMLInputElement)) {
-            continue;
-        }
-        checkbox.checked = Settings.instance.hiddenTabs.includes(tabId);
-        checkbox.addEventListener('change', ()=>{
-            const nextHiddenTabs = checkbox.checked
-                ? [...Settings.instance.hiddenTabs, tabId]
-                : Settings.instance.hiddenTabs.filter((hiddenTabId)=>hiddenTabId !== tabId);
-            Settings.instance.hiddenTabs = [...new Set(nextHiddenTabs)];
-            Settings.instance.save();
-            applyHiddenTabsVisibility();
-        });
-    }
+    bindFeatureSettingControls(wrapper);
+    bindHiddenTabControls(wrapper);
 
     applyFeatureVisibility();
 };
@@ -256,13 +275,9 @@ export const jumpToEntry = async(name, uid)=>{
     }
 
     const activationToggle = drawerApi.getActivationToggle();
-    if (activationToggle?.classList.contains('stwid--active')) {
-        activationToggle.click();
-    }
+    deactivateToggle(activationToggle);
     const orderToggle = drawerApi.getOrderToggle();
-    if (orderToggle?.classList.contains('stwid--active')) {
-        orderToggle.click();
-    }
+    deactivateToggle(orderToggle);
     listPanelApi.setBookCollapsed(name, false);
     entryDom.scrollIntoView({ block:'center', inline:'center' });
     if (currentEditor?.name != name || currentEditor?.uid != uid) {

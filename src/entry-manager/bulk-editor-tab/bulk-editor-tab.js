@@ -165,7 +165,6 @@ const buildEntryManagerTopRows = ({
         getAutomationIdValues,
         getGroupValues,
         filterIndicatorRefs,
-        initialCollapsed: false,
     });
 
     const { element: bulkEditRowEl, refreshSelectionCount, cleanup } = buildBulkEditRow({
