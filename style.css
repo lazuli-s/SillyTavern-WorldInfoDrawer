@@ -3412,6 +3412,15 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 @media screen and (max-width: 768px) {
+  .stwid--iconTabButton > span {
+    display: none;
+  }
+
+  .stwid--iconTabButton {
+    gap: 0;
+    padding: 0.5em;
+  }
+
   .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
     width: 100%;
   }
@@ -4311,6 +4320,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--orderTableWrap {
     width: 100%;
     overflow-x: auto;
+  }
+
+  .stwid--bulkEditRow {
+    overflow-x: auto;
+    flex-wrap: nowrap;
   }
 
   .stwid--orderTable {

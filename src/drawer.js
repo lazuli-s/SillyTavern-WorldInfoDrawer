@@ -331,6 +331,8 @@ const buildAndAttachDrawerDom = ({
         getCurrentEditor,
     });
 
+    const editorContainer = buildDrawerEditorContainer({ dom, wiHandlerApi });
+
     const editorPanelApi = initEditorPanel({
         dom,
         activationBlock,
@@ -448,7 +450,7 @@ const buildAndAttachDrawerDom = ({
     body.append(list);
 
     restoreSplitterForCurrentLayout = initSplitter(body, list);
-    body.append(buildDrawerEditorContainer({ dom, wiHandlerApi }));
+    body.append(editorContainer);
     drawerContent?.append(body);
     restoreSplitterForCurrentLayout();
 
