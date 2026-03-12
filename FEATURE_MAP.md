@@ -87,6 +87,7 @@ For module design intent, see the Module Responsibilities table in `ARCHITECTURE
 ## Editor Panel
 
 - Entry editor render pipeline → src/editor-panel/editor-panel.js
+- Mobile editor header and content layout transforms → src/editor-panel/editor-panel-mobile.js
 - Editor dirty tracking during refresh → src/editor-panel/editor-panel.js, src/shared/wi-update-handler.js
 - Editor reset and clear behavior → src/editor-panel/editor-panel.js
 - Active-row highlight control → src/editor-panel/editor-panel.js
@@ -152,5 +153,3 @@ For module design intent, see the Module Responsibilities table in `ARCHITECTURE
 - Optional plugin and extension integrations (Bulk Edit, External Editor, STLO) → src/book-browser/book-list/book-list.extension-integrations.js
 - Integration menu items wired into book menu → src/book-browser/book-list/book-list.book-menu.js
 - Entry Manager table column and option schema constants → src/shared/constants.js
-
-

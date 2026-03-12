@@ -34,7 +34,8 @@
 |   |           |-- book-folders.folder-actions.js     # Folder actions (create/toggle/menu handlers)
 |   |           └-- book-folders.folder-dom.js         # Folder DOM construction + count/collapse helpers
 |   |-- editor-panel/
-|   |   └-- editor-panel.js                    # Entry editor panel integration with ST templates
+|   |   |-- editor-panel.js                    # Entry editor panel integration with ST templates
+|   |   └-- editor-panel-mobile.js             # Mobile entry editor header layout transforms
 |   |-- entry-manager/
 |   |   |-- entry-manager.js                   # Entry Manager orchestration
 |   |   |-- logic/
@@ -121,6 +122,7 @@
 | `src/book-browser/book-list/book-folders/book-folders.folder-dom.js` | Folder DOM construction (`createFolderDom`) plus folder count and collapse DOM helpers |
 | `src/book-browser/book-list/book-list.world-entry.js` | Entry row renderer; selection UI, enable/disable toggle, click-to-open editor |
 | `src/editor-panel/editor-panel.js` | Entry editor panel using ST templates; focus/unfocus and `#wiActivationSettings` embedding |
+| `src/editor-panel/editor-panel-mobile.js` | Mobile layout transforms for the entry editor header and content sections; detects mobile viewport and restructures ST-rendered editor DOM for narrow screens |
 | `src/entry-manager/entry-manager.js` | Entry Manager orchestration: state creation, scope gathering, derived filter options, and feature-toggle open guard |
 | `src/entry-manager/logic/logic.state.js` | Entry Manager persisted state (sort/hide-keys/columns) via localStorage |
 | `src/entry-manager/logic/logic.filters.js` | Filter logic for Entry Manager rows (strategy/position/recursion/outlet/group/script) |
