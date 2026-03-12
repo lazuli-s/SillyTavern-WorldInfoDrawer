@@ -52,9 +52,7 @@ Work through every check ID in `references/checks.md` in order. Record all viola
 
 ## 6. Update the queue
 
-**Queue mode only:** In `tasks/js-refactoring/js-refactoring-queue.md`, remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
-
-**Direct mode:** Skip this step.
+ In `tasks/js-refactoring/js-refactoring-queue.md`, remove `TARGET_FILE` from the bullet list under `## Files Pending Review`.
 
 ---
 
