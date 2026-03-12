@@ -1064,14 +1064,14 @@
 }
 
 .stwid--editor .stwid--focusToggle {
-  margin-left: 1em;
+  /* margin-left: 1em; */
 }
 
 /* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
 .stwid--editor .world_entry,
 .stwid--editor .world_entry_form,
 .stwid--editor .inline-drawer {
-  height: 100%;
+  /* height: 100%; */
 }
 
 /* override: vanilla inline-drawer uses block layout; drawer needs flex-column so the content area can scroll */
@@ -1156,8 +1156,8 @@
 .stwid--editor [
   name='contentAndCharFilterBlock'] {
   flex: 1 1 auto !important;
-  min-height: 0;
-  min-width: 0;
+  /* min-height: 0; */
+  /* min-width: 0; */
 }
 
 .stwid--editor [
@@ -2915,7 +2915,8 @@
 }
 
 .stwid--editor .stwid--focusToggle {
-  margin-left: 1em;
+  /* margin-left: 1em; */
+  /* margin: 0; */
 }
 
 /* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
@@ -3053,7 +3054,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   /* Mobile card sizing: let the bordered wi-card-entry box grow with the full
      editor content instead of inheriting the desktop fill-height slot. */
   .stwid--editor .world_entry {
-    overflow: visible;
+    /* overflow: visible; */
   }
 
   .stwid--editor .world_entry > .world_entry_form.wi-card-entry {
@@ -3113,19 +3114,43 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--editor .world_entry_thin_controls,
   .stwid--editor .flex-container.wide100p.flexGap10,
-  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span,
+  .stwid--editor .stwid--editorContentHeaderRow,
   .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > .flex-container:last-child {
     flex-wrap: wrap;
   }
 
-  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span {
-    justify-content: flex-start;
-    gap: 0.5em;
+  .stwid--editor .stwid--editorContentHeaderRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 1em;
+    padding-right: 1em;
   }
 
-  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > span:nth-child(2),
+  .stwid--editor .stwid--editorContentHeaderRow > span:nth-child(1) {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 1em;
+  }
+
+  .stwid--editor .stwid--editorContentHeaderRow > span:nth-child(2) {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+  }
+
   .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > .flex-container:last-child {
     width: 100%;
+  }
+
+  .stwid--editor .stwid--editorContentBodySection {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorContentBodySection > textarea[name='content'] {
+    width: 100%;
+    min-width: 0;
   }
 
   .stwid--editor .world_entry_form_control.world_entry_form_horizontal {
@@ -3145,7 +3170,56 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
   }
 
-  .stwid--editor .stwid--editorHeaderTopRow {
+  .stwid--editor .stwid--editorHeaderContextRow {
+    display: grid;
+    grid-template-columns: minmax(5.75rem, 0.95fr) minmax(0, 1.05fr);
+    align-items: stretch;
+    column-gap: 0.45rem;
+    row-gap: 0.45rem;
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorHeaderContextRow > .world_entry_form_control,
+  .stwid--editor .stwid--editorHeaderContextRow > .world_entry_form_control.world_entry_form_horizontal {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    align-items: stretch;
+  }
+
+  .stwid--editor .stwid--editorHeaderContextRow input[name='depth'],
+  .stwid--editor .stwid--editorHeaderContextRow input[name='outletName'] {
+    /* width: 100%; */
+    /* min-width: 1rem; */
+  }
+
+  .stwid--editor .stwid--editorHeaderContextPosition {
+    grid-column: 1 / 2;
+  }
+
+  .stwid--editor .stwid--editorHeaderContextDepth {
+    grid-column: 2 / 3;
+  }
+
+  .stwid--editor .stwid--editorHeaderContextOutlet {
+    grid-column: 2 / 3;
+  }
+
+  .stwid--editor .world_entry:not(:has(select[name='position'] option[value='4']:checked)) .stwid--editorHeaderContextDepth {
+    display: none;
+  }
+
+  .stwid--editor .world_entry:not(:has(select[name='position'] option[value='7']:checked)) .stwid--editorHeaderContextOutlet {
+    display: none;
+  }
+
+  .stwid--editor .world_entry:not(:has(select[name='position'] option[value='4']:checked)):not(:has(select[name='position'] option[value='7']:checked)) .stwid--editorHeaderContextPosition {
+    grid-column: 1 / -1;
+  }
+
+  .stwid--editor .stwid--editorTitleRow {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
@@ -3163,10 +3237,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--editor .stwid--editorHeaderToggleSlot {
     display: flex;
-    align-items: center;
-    justify-content: center;
     align-self: center;
-    min-width: 2.5rem;
+    min-width: 1rem;
+    align-items: center;
+    /* align-content: stretch; */
+    flex-wrap: nowrap;
   }
 
   .stwid--editor .stwid--editorHeaderToggleSlot > .killSwitch {
@@ -3194,75 +3269,93 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-height: calc(2lh + 0.75rem);
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow {
+  .stwid--editor .stwid--editorMainSettingsRow {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: stretch;
     column-gap: 0.45rem;
     row-gap: 0.45rem;
   }
 
-  .stwid--editor .world_entry:has(select[name='position'] option[value='4']:checked) .stwid--editorHeaderFieldRow {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control {
+  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control {
     min-width: 0;
   }
 
-  .stwid--editor .world_entry:not(:has(select[name='position'] option[value='4']:checked)) .stwid--editorHeaderFieldRow > .world_entry_form_control:has(input[name='depth']) {
+  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control:has(input[name='depth']) {
     display: none;
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control,
-  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control.world_entry_form_horizontal,
-  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control.world_entry_form_radios {
+  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control,
+  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control.world_entry_form_horizontal,
+  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control.world_entry_form_radios {
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow > .wi-enter-footer-text {
+  .stwid--editor .stwid--editorMainSettingsRow > .wi-enter-footer-text {
     font-size: inherit;
     color: inherit;
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow .stwid--editorHeaderLabel {
+  .stwid--editor .stwid--editorMainSettingsRow .stwid--editorHeaderLabel {
     min-height: 1.2em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow select,
-  .stwid--editor .stwid--editorHeaderFieldRow input {
+  .stwid--editor .stwid--editorMainSettingsRow select,
+  .stwid--editor .stwid--editorMainSettingsRow input {
     width: 100%;
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow .widthNatural {
+  .stwid--editor .stwid--editorMainSettingsRow input {
+    text-align: center;
+  }
+
+  .stwid--editor .stwid--editorHeaderStrategy select[name='entryStateSelector'] {
+    text-align: center;
+    text-align-last: center;
+    padding-left: 0.75rem;
+    padding-right: 1.75rem;
+  }
+
+  .stwid--editor .stwid--editorMainSettingsRow .widthNatural {
     width: 100% !important;
     min-width: 0 !important;
   }
 
-  .stwid--editor .stwid--editorHeaderFieldRow .wideMax100px {
+  .stwid--editor .stwid--editorMainSettingsRow .wideMax100px {
     max-width: none;
   }
 
-  .stwid--editor .world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header > .menu_button {
+  .stwid--editor .stwid--editorActionsRow {
     display: flex;
-    flex: 1 1 0;
-    align-items: center;
+    /* grid-template-columns: repeat(3, minmax(0, 1fr)); */
+    gap: 1.1rem;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
     justify-content: center;
-    min-height: 2.5rem;
   }
 
-  .stwid--editor [name='keywordsAndLogicBlock'] {
-    gap: 0.75rem;
+  .stwid--editor .stwid--editorActionsRow > .menu_button {
+    /* display: flex; */
+    /* flex: 1 1 0; */
+    /* align-items: center; */
+    /* justify-content: center; */
+    /* min-height: 2.5rem; */
   }
 
-  .stwid--editor [name='keywordsAndLogicBlock'] > .world_entry_form_control {
+  .stwid--editor .stwid--editorKeywordsAndFiltersSection {
+    /* gap: 0.75rem; */
+  }
+
+  .stwid--editor .stwid--editorKeywordsAndFiltersSection > .world_entry_form_control {
     width: 100%;
     min-width: 0;
   }
@@ -3271,10 +3364,94 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     display: flex;
     flex-wrap: wrap;
     align-items: stretch;
-    gap: 0.75rem;
+    /* gap: 0.75rem; */
+    flex-direction: row;
   }
 
   .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control {
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorContentSettingsSection {
+    display: flex;
+    flex-direction: column;
+    /* gap: 0.75rem; */
+    width: 100%;
+    min-width: 0;
+    /* margin-top: 0.75rem; */
+    /* padding: 0.75rem; */
+    /* border: 1px solid var(--SmartThemeBorderColor); */
+    /* border-radius: 0.5rem; */
+    /* background: var(--black30a); */
+  }
+
+  .stwid--editor .stwid--editorContentSettingsSection > .stwid--editorRecursionSection {
+    display: flex;
+    flex-direction: column;
+    /* gap: 0.75rem; */
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorRecursionDelayRow {
+    display: flex;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    align-content: center;
+  }
+
+  .stwid--editor .stwid--editorRecursionToggleRow,
+  .stwid--editor .stwid--editorRecursionLevelControl {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stwid--editor .stwid--editorRecursionToggleRow > label {
+    width: 100%;
+  }
+
+  .stwid--editor .stwid--editorRecursionGuardsRow {
+    display: flex;
+    /* gap: 0.5rem; */
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+
+  .stwid--editor .stwid--editorRecursionGuardsRow > label {
+    min-width: 0;
+    /* text-overflow: ellipsis; */
+  }
+
+  .stwid--editor .stwid--editorBudgetRow {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorBudgetRow > label {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editorRecursionMetaRow {
+    order: 3;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorRecursionMetaRow > * {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
   }
 
@@ -3288,12 +3465,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='scanDepth']) {
-    order: 2;
+    order: 3;
     flex: 1 1 calc((100% - 1.5rem) / 3);
   }
 
   .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='delayUntilRecursionLevel']) {
-    order: 3;
+    order: 999;
     flex: 1 1 calc((100% - 1.5rem) / 3);
   }
 
@@ -3317,6 +3494,48 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex: 1 1 calc((100% - 1.5rem) / 3);
   }
 
+  @media screen and (max-width: 520px) {
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='scanDepth']),
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='delayUntilRecursionLevel']),
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='caseSensitive']),
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='matchWholeWords']) {
+      flex: 1 1 calc((100% - 0.75rem) / 2);
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='automationId']),
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='useGroupScoring']) {
+      flex: 1 1 100%;
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='scanDepth']) {
+      order: 3;
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='automationId']) {
+      order: 4;
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='caseSensitive']) {
+      order: 5;
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='matchWholeWords']) {
+      order: 6;
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='useGroupScoring']) {
+      order: 7;
+    }
+
+    .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editorRecursionMetaRow {
+      gap: 1rem;
+    }
+
+    .stwid--editor .stwid--editorRecursionDelayRow {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control {
     width: 100%;
   }
@@ -3332,34 +3551,114 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
   }
 
+  .stwid--editor .stwid--editorContentFlagsSection {
+    display: flex;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+    width: 100%;
+    /* margin-top: 0.75rem; */
+    grid-auto-flow: row;
+    flex-direction: row;
+  }
+
+  .stwid--editor .stwid--editorContentFlagsSection > .flex-container {
+    width: 100%;
+    min-width: 0;
+  }
+
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* gap: 0.75rem; */
     align-items: start;
   }
 
-  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(1) {
-    grid-column: span 4;
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > * {
+    display: flex;
+    flex-direction: row;
     min-width: 0;
+    align-content: center;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(1) {
+    grid-column: span 3;
   }
 
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(2),
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(3),
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(4),
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(5) {
+    /* grid-column: span 1; */
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > .stwid--editorGroupSection {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    grid-column: span 3;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorGroupSectionPrimary {
+    display: flex;
+    flex-direction: column;
     grid-column: span 2;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorGroupSectionSecondary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0.75rem;
+    row-gap: 0.45rem;
+    grid-column: span 2;
+    align-items: start;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorGroupSectionSecondary > * {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .stwid--editor .stwid--editorGroupSectionSecondary input,
+  .stwid--editor .stwid--editorGroupSectionSecondary select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorTimingRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    grid-column: span 3;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorTimingRow > * {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
   }
 
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(3) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    /* gap: 0.75rem; */
     align-items: start;
   }
 
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(3) > * {
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorCharacterTagFilterSection,
+  .stwid--editor .stwid--editorTriggerFilterSection {
     min-width: 0;
   }
 
@@ -3379,17 +3678,24 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 @media screen and (max-width: 768px) {
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* gap: 0.5rem; */
   }
 
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(1) {
-    grid-column: span 2;
+    grid-column: span 3;
   }
 
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(2),
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(3),
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(4),
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(5) {
-    grid-column: span 1;
+    /* grid-column: span 1; */
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > .stwid--editorGroupSection,
+  .stwid--editor .stwid--editorGroupSectionSecondary,
+  .stwid--editor .stwid--editorTimingRow {
+    gap: 0.5rem;
   }
 
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(3) {
