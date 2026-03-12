@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          allowed_files=(index.js style.css manifest.json README.md)
+          allowed_files=(index.js style.css manifest.json README.md settings.html)
           allowed_dirs=(src .github)
 
           in_allowed_files() {
