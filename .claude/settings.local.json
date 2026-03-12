@@ -23,7 +23,9 @@
       "WebFetch(domain:github.com)",
       "Bash(cmd /c \"move \"\"c:\\\\ST Test\\\\SillyTavern\\\\data\\\\default-user\\\\extensions\\\\SillyTavern-WorldInfoDrawer\\\\.claude\\\\skills\\\\cline-headless\"\" \"\"c:\\\\ST Test\\\\SillyTavern\\\\data\\\\default-user\\\\extensions\\\\SillyTavern-WorldInfoDrawer\\\\.claude\\\\skills\\\\script-cline\"\"\")",
       "Bash(git mv \"c:/ST Test/SillyTavern/data/default-user/extensions/SillyTavern-WorldInfoDrawer/src/book-browser/browser-tabs/browser-tabs.filter-bar.js\" \"c:/ST Test/SillyTavern/data/default-user/extensions/SillyTavern-WorldInfoDrawer/src/book-browser/browser-tabs/browser-tabs.js\")",
-      "Bash(sort -t: -k1,1)"
+      "Bash(sort -t: -k1,1)",
+      "Bash(node -e \":*)",
+      "Read(//c/ST Test/SillyTavern/public/**)"
     ]
   },
   "hooks": {

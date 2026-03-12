@@ -5,6 +5,7 @@ const AMS_WIRED_DATASET_VALUE = '1';
 const EDITOR_EVENT_INPUT = 'input';
 const EDITOR_EVENT_CHANGE = 'change';
 const EDITOR_EVENT_KEYDOWN = 'keydown';
+const MOBILE_EDITOR_MEDIA_QUERY = '(max-width: 1000px)';
 
 const resetEditorOwnershipState = ({ setCurrentEditor, setCurrentEditorKey, setIsEditorDirty }) => {
     setCurrentEditor(null);
@@ -164,6 +165,79 @@ const buildEntryEditDom = async ({ buildSavePayload, getWorldEntry, isTokenCurre
     }
     if (!isTokenCurrent()) return null;
     return editDom;
+};
+
+const shouldUseMobileEditorLayout = () => {
+    return window.matchMedia?.(MOBILE_EDITOR_MEDIA_QUERY)?.matches ?? false;
+};
+
+const createMobileHeaderLabel = (text) => {
+    const label = document.createElement('small');
+    label.classList.add('textAlignCenter', 'stwid--editorHeaderLabel');
+    label.textContent = text.replace(/:\s*$/, '');
+    return label;
+};
+
+const normalizeMobileHeaderControl = (control) => {
+    control.classList.add('stwid--editorHeaderControl');
+    control.classList.remove(
+        'wi-enter-footer-text',
+        'flex-container',
+        'flexNoGap',
+        'world_entry_form_radios',
+        'probabilityContainer',
+    );
+    const existingLabel = control.querySelector('.WIEntryHeaderTitleMobile');
+    if (!existingLabel || control.querySelector('.stwid--editorHeaderLabel')) return control;
+
+    const label = createMobileHeaderLabel(existingLabel.textContent ?? '');
+    existingLabel.remove();
+    control.prepend(label);
+    return control;
+};
+
+const applyMobileHeaderLayout = (editDom) => {
+    if (!shouldUseMobileEditorLayout()) return;
+
+    const thinControls = editDom.querySelector('.world_entry_thin_controls');
+    const headerContent = thinControls?.querySelector('.flex-container.alignitemscenter.wide100p');
+    const titleAndStatus = editDom.querySelector('.WIEntryTitleAndStatus');
+    const titleTextarea = titleAndStatus?.querySelector("textarea[name='comment']");
+    const headerControls = editDom.querySelector('.WIEnteryHeaderControls');
+    const strategySelect = titleAndStatus?.querySelector?.("select[name='entryStateSelector']");
+    const killSwitch = thinControls?.querySelector('.killSwitch');
+    if (!thinControls || !headerContent || !titleAndStatus || !titleTextarea || !headerControls || !strategySelect || !killSwitch) return;
+    if (thinControls.querySelector('.stwid--editorHeaderTopRow')) return;
+
+    const topRow = document.createElement('div');
+    topRow.classList.add('stwid--editorHeaderTopRow');
+
+    const toggleSlot = document.createElement('div');
+    toggleSlot.classList.add('stwid--editorHeaderToggleSlot');
+    toggleSlot.append(killSwitch);
+
+    const titleControl = document.createElement('div');
+    titleControl.classList.add('world_entry_form_control', 'stwid--editorHeaderTitleControl');
+    titleTextarea.rows = 2;
+    titleControl.append(createMobileHeaderLabel('Title/Memo'), titleTextarea);
+
+    topRow.append(toggleSlot, titleControl);
+
+    const strategyControl = document.createElement('div');
+    strategyControl.classList.add(
+        'world_entry_form_control',
+        'stwid--editorHeaderStrategy',
+    );
+    strategyControl.append(createMobileHeaderLabel('Strategy'), strategySelect);
+
+    headerControls.classList.add('stwid--editorHeaderFieldRow');
+    headerControls.prepend(strategyControl);
+    Array.from(headerControls.children)
+        .filter((child) => child instanceof HTMLElement && child.classList.contains('world_entry_form_control'))
+        .forEach((child) => normalizeMobileHeaderControl(child));
+
+    titleAndStatus.remove();
+    headerContent.replaceChildren(topRow, headerControls);
 };
 
 const renderEntryEditorDom = ({
@@ -357,6 +431,7 @@ export const initEditorPanel = ({
             entry,
         });
         if (!editDom) return;
+        applyMobileHeaderLayout(editDom);
         appendFocusButton(editDom);
         activeEntryDom = renderEntryEditorDom({
             appendUnfocusButton,

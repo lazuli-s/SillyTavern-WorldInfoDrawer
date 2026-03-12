@@ -3025,8 +3025,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     max-width: none;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   .stwid--editor #wiActivationSettings {
@@ -3049,10 +3050,46 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-height: 0;
   }
 
+  /* Mobile card sizing: let the bordered wi-card-entry box grow with the full
+     editor content instead of inheriting the desktop fill-height slot. */
+  .stwid--editor .world_entry {
+    overflow: visible;
+  }
+
+  .stwid--editor .world_entry > .world_entry_form.wi-card-entry {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  .stwid--editor .world_entry > .world_entry_form.wi-card-entry > .inline-drawer {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  /* Mobile fallback: let the whole editor column scroll instead of nesting another
+     scroll container inside the entry drawer. This is more reliable for touch scroll. */
+  .stwid--editor .inline-drawer-content {
+    overflow: visible;
+    flex: 0 0 auto;
+  }
+
   .stwid--editor .inline-drawer-content > .world_entry_edit,
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter,
-  .stwid--editor [name='contentAndCharFilterBlock'] {
+  .stwid--editor [name='contentAndCharFilterBlock'],
+  .stwid--editor [name='content'] {
     flex: 0 0 auto !important;
+    min-height: auto;
   }
 
   .stwid--editor [name='keywordsAndLogicBlock'],
@@ -3094,6 +3131,269 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--editor .world_entry_form_control.world_entry_form_horizontal {
     align-items: flex-start;
     row-gap: 0.5rem;
+  }
+
+  .stwid--editor .world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header {
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    column-gap: 0.75rem;
+    row-gap: 0.75rem;
+  }
+
+  .stwid--editor .world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header > .world_entry_thin_controls {
+    width: 100%;
+  }
+
+  .stwid--editor .stwid--editorHeaderTopRow {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.5rem;
+  }
+
+  .stwid--editor .world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header > .world_entry_thin_controls > .flex-container.alignitemscenter.wide100p {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorHeaderToggleSlot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    min-width: 2.5rem;
+  }
+
+  .stwid--editor .stwid--editorHeaderToggleSlot > .killSwitch {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: var(--mainFontSize);
+    color: var(--SmartThemeBodyColor);
+    line-height: 1;
+  }
+
+  .stwid--editor .stwid--editorHeaderToggleSlot > .killSwitch.fa-toggle-on {
+    color: var(--SmartThemeQuoteColor);
+  }
+
+  .stwid--editor .stwid--editorHeaderTitleControl {
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorHeaderTitleControl textarea[name='comment'] {
+    width: 100%;
+    min-width: 0;
+    min-height: calc(2lh + 0.75rem);
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    column-gap: 0.45rem;
+    row-gap: 0.45rem;
+  }
+
+  .stwid--editor .world_entry:has(select[name='position'] option[value='4']:checked) .stwid--editorHeaderFieldRow {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control {
+    min-width: 0;
+  }
+
+  .stwid--editor .world_entry:not(:has(select[name='position'] option[value='4']:checked)) .stwid--editorHeaderFieldRow > .world_entry_form_control:has(input[name='depth']) {
+    display: none;
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control,
+  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control.world_entry_form_horizontal,
+  .stwid--editor .stwid--editorHeaderFieldRow > .world_entry_form_control.world_entry_form_radios {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow > .wi-enter-footer-text {
+    font-size: inherit;
+    color: inherit;
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow .stwid--editorHeaderLabel {
+    min-height: 1.2em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow select,
+  .stwid--editor .stwid--editorHeaderFieldRow input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow .widthNatural {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .stwid--editor .stwid--editorHeaderFieldRow .wideMax100px {
+    max-width: none;
+  }
+
+  .stwid--editor .world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header > .menu_button {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+  }
+
+  .stwid--editor [name='keywordsAndLogicBlock'] {
+    gap: 0.75rem;
+  }
+
+  .stwid--editor [name='keywordsAndLogicBlock'] > .world_entry_form_control {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control {
+    min-width: 0;
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='outletName']) {
+    order: 1;
+    flex: 1 1 100%;
+  }
+
+  .stwid--editor .world_entry:not(:has(select[name='position'] option[value='7']:checked)) [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='outletName']) {
+    display: none;
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='scanDepth']) {
+    order: 2;
+    flex: 1 1 calc((100% - 1.5rem) / 3);
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='delayUntilRecursionLevel']) {
+    order: 3;
+    flex: 1 1 calc((100% - 1.5rem) / 3);
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='automationId']) {
+    order: 4;
+    flex: 1 1 calc((100% - 1.5rem) / 3);
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='caseSensitive']) {
+    order: 5;
+    flex: 1 1 calc((100% - 1.5rem) / 3);
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='matchWholeWords']) {
+    order: 6;
+    flex: 1 1 calc((100% - 1.5rem) / 3);
+  }
+
+  .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='useGroupScoring']) {
+    order: 7;
+    flex: 1 1 calc((100% - 1.5rem) / 3);
+  }
+
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control {
+    width: 100%;
+  }
+
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > .flex-container:last-child {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+    width: 100%;
+  }
+
+  .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small > span > .flex-container:last-child > .flex-container {
+    width: 100%;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(1) {
+    grid-column: span 4;
+    min-width: 0;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(2),
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(3),
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(4),
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(5) {
+    grid-column: span 2;
+    min-width: 0;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(3) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(3) > * {
+    min-width: 0;
+  }
+
+  .stwid--editor .stwid--ams > .inline-drawer-content {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    align-items: start;
+  }
+
+  .stwid--editor .stwid--ams > .inline-drawer-content > small {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(1) {
+    grid-column: span 2;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(2),
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(3),
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(4),
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(2) > :nth-child(5) {
+    grid-column: span 1;
+  }
+
+  .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:nth-child(3) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

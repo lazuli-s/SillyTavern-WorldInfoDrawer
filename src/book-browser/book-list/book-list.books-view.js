@@ -350,6 +350,7 @@ const createBooksViewSlice = ({
         book.append(entryList);
 
         insertBookInAlphabeticalOrder(name, book, targetParent, before);
+
         return book;
     };
 
