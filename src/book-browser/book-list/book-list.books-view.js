@@ -34,12 +34,18 @@ const createBooksViewSlice = ({
             return null;
         }
 
+        const {
+            entries: rawEntries,
+            metadata: rawMetadata,
+            ...rawExtras
+        } = data;
         const world = {
             entries: {},
-            metadata: cloneMetadata(data.metadata),
-            sort: runtime.getSortFromMetadata(data.metadata),
+            metadata: cloneMetadata(rawMetadata),
+            sort: runtime.getSortFromMetadata(rawMetadata),
+            extras: structuredClone(rawExtras),
         };
-        for (const [entryId, entryData] of Object.entries(data.entries)) {
+        for (const [entryId, entryData] of Object.entries(rawEntries ?? {})) {
             world.entries[entryId] = structuredClone(entryData);
         }
         world.dom = {
@@ -375,5 +381,4 @@ const createBooksViewSlice = ({
 };
 
 export { createBooksViewSlice };
-
 
