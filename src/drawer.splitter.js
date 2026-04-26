@@ -3,14 +3,10 @@
 import { debounce } from '../../../../utils.js';
 
 const DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--splitter-size';
-const MOBILE_SPLITTER_STORAGE_KEY = 'stwid--splitter-size-mobile';
 const LEGACY_DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--list-width';
-const LEGACY_MOBILE_SPLITTER_STORAGE_KEY = 'stwid--list-height';
 const MOBILE_LAYOUT_BREAKPOINT = 1000;
 const MIN_LIST_WIDTH = 150;
 const MIN_EDITOR_WIDTH = 300;
-const MIN_LIST_HEIGHT = 150;
-const MIN_EDITOR_HEIGHT = 260;
 const SPLITTER_THICKNESS_FALLBACK_PX = 6;
 
 const isMobileLayout = ()=>window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
@@ -38,11 +34,7 @@ function createSplitters(body) {
     desktopSplitter.classList.add('stwid--splitter');
     body.append(desktopSplitter);
 
-    const mobileSplitter = document.createElement('div');
-    mobileSplitter.classList.add('stwid--splitter-h');
-    body.append(mobileSplitter);
-
-    return { desktopSplitter, mobileSplitter };
+    return { desktopSplitter };
 }
 
 function getMaxListSizeForLayout(bodyEl, splitterEl, minListSize, minEditorSize, measureAxis) {
@@ -186,29 +178,6 @@ function attachDesktopSplitterDragHandlers({
     });
 }
 
-function attachMobileSplitterDragHandlers({
-    mobileSplitter,
-    list,
-    getMobileMaxHeight,
-    applyMobileHeightWithBounds,
-    getAppliedListHeight,
-    setAppliedListHeight,
-}) {
-    attachSplitterPointerDragHandlers({
-        splitterEl: mobileSplitter,
-        shouldHandleDrag: ()=>isMobileLayout(),
-        getStartCoord: (evt)=>evt.clientY,
-        getStartSize: ()=>list.getBoundingClientRect().height,
-        minSize: MIN_LIST_HEIGHT,
-        getMaxSize: getMobileMaxHeight,
-        applyWithBounds: applyMobileHeightWithBounds,
-        saveAppliedSize: ()=>{
-            saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, getAppliedListHeight());
-        },
-        setAppliedSize: setAppliedListHeight,
-    });
-}
-
 function attachLayoutResizeHandler(getLastLayoutIsMobile, setLastLayoutIsMobile, reapplyBoundsForCurrentLayout, restoreSplitterForCurrentLayout) {
     const onLayoutResize = debounce(()=>{
         const isMobile = isMobileLayout();
@@ -227,9 +196,8 @@ function attachLayoutResizeHandler(getLastLayoutIsMobile, setLastLayoutIsMobile,
     }, { once:true });
 }
 
-function createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter) {
+function createSplitterSizingHelpers(body, list, desktopSplitter) {
     let appliedListWidth = MIN_LIST_WIDTH;
-    let appliedListHeight = MIN_LIST_HEIGHT;
 
     const getDesktopMaxWidth = ()=>getMaxListSizeForLayout(
         body,
@@ -237,14 +205,6 @@ function createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter
         MIN_LIST_WIDTH,
         MIN_EDITOR_WIDTH,
         'width',
-    );
-
-    const getMobileMaxHeight = ()=>getMaxListSizeForLayout(
-        body,
-        mobileSplitter,
-        MIN_LIST_HEIGHT,
-        MIN_EDITOR_HEIGHT,
-        'height',
     );
 
     const getDefaultDesktopWidth = ()=>getDefaultListSizeForLayout(
@@ -256,24 +216,10 @@ function createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter
         'width',
     );
 
-    const getDefaultMobileHeight = ()=>getDefaultListSizeForLayout(
-        body,
-        0.4,
-        260,
-        MIN_LIST_HEIGHT,
-        getMobileMaxHeight,
-        'height',
-    );
-
     const applyListWidth = (value)=>applyListSizeCss(value, MIN_LIST_WIDTH, 'width', appliedListWidth, list);
-    const applyListHeight = (value)=>applyListSizeCss(value, MIN_LIST_HEIGHT, 'height', appliedListHeight, list);
 
     const setAppliedListWidth = (value)=>{
         appliedListWidth = value;
-    };
-
-    const setAppliedListHeight = (value)=>{
-        appliedListHeight = value;
     };
 
     const applyDesktopWidthWithBounds = (value)=>applyListSizeWithBounds(
@@ -284,34 +230,13 @@ function createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter
         setAppliedListWidth,
     );
 
-    const applyMobileHeightWithBounds = (value)=>applyListSizeWithBounds(
-        value,
-        MIN_LIST_HEIGHT,
-        getMobileMaxHeight,
-        applyListHeight,
-        setAppliedListHeight,
-    );
-
-    const applyOrientationDefault = (mobileLayout)=>{
-        if (mobileLayout) {
-            const defaultHeight = applyMobileHeightWithBounds(getDefaultMobileHeight());
-            saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, defaultHeight);
-            return;
-        }
-
+    const applyOrientationDefault = ()=>{
         const defaultWidth = applyDesktopWidthWithBounds(getDefaultDesktopWidth());
         saveSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY, defaultWidth);
     };
 
     const reapplyBoundsForCurrentLayout = (mobileLayout)=>{
-        if (mobileLayout) {
-            const previousHeight = appliedListHeight;
-            const nextHeight = applyMobileHeightWithBounds(previousHeight);
-            if (nextHeight !== previousHeight) {
-                saveSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY, nextHeight);
-            }
-            return;
-        }
+        if (mobileLayout) return;
 
         const previousWidth = appliedListWidth;
         const nextWidth = applyDesktopWidthWithBounds(previousWidth);
@@ -322,40 +247,25 @@ function createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter
 
     return {
         getDesktopMaxWidth,
-        getMobileMaxHeight,
         getDefaultDesktopWidth,
-        getDefaultMobileHeight,
         applyDesktopWidthWithBounds,
-        applyMobileHeightWithBounds,
         applyOrientationDefault,
         reapplyBoundsForCurrentLayout,
         getAppliedListWidth: ()=>appliedListWidth,
-        getAppliedListHeight: ()=>appliedListHeight,
         setAppliedListWidth,
-        setAppliedListHeight,
     };
 }
 
 function createRestoreSplitterForCurrentLayout({
     applyOrientationDefault,
     applyDesktopWidthWithBounds,
-    applyMobileHeightWithBounds,
 }) {
     return function restoreSplitterForCurrentLayout() {
-        if (isMobileLayout()) {
-            const storedHeight = getStoredSplitterSize(MOBILE_SPLITTER_STORAGE_KEY, LEGACY_MOBILE_SPLITTER_STORAGE_KEY);
-            if (Number.isNaN(storedHeight)) {
-                applyOrientationDefault(true);
-                return;
-            }
-
-            applyMobileHeightWithBounds(storedHeight);
-            return;
-        }
+        if (isMobileLayout()) return;
 
         const storedWidth = getStoredSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY);
         if (Number.isNaN(storedWidth)) {
-            applyOrientationDefault(false);
+            applyOrientationDefault();
             return;
         }
 
@@ -364,10 +274,10 @@ function createRestoreSplitterForCurrentLayout({
 }
 
 export function initSplitter(body, list) {
-    const { desktopSplitter, mobileSplitter } = createSplitters(body);
+    const { desktopSplitter } = createSplitters(body);
     let lastLayoutIsMobile = isMobileLayout();
 
-    const sizingHelpers = createSplitterSizingHelpers(body, list, desktopSplitter, mobileSplitter);
+    const sizingHelpers = createSplitterSizingHelpers(body, list, desktopSplitter);
     const restoreSplitterForCurrentLayout = createRestoreSplitterForCurrentLayout(sizingHelpers);
 
     attachDesktopSplitterDragHandlers({
@@ -377,15 +287,6 @@ export function initSplitter(body, list) {
         applyDesktopWidthWithBounds: sizingHelpers.applyDesktopWidthWithBounds,
         getAppliedListWidth: sizingHelpers.getAppliedListWidth,
         setAppliedListWidth: sizingHelpers.setAppliedListWidth,
-    });
-
-    attachMobileSplitterDragHandlers({
-        mobileSplitter,
-        list,
-        getMobileMaxHeight: sizingHelpers.getMobileMaxHeight,
-        applyMobileHeightWithBounds: sizingHelpers.applyMobileHeightWithBounds,
-        getAppliedListHeight: sizingHelpers.getAppliedListHeight,
-        setAppliedListHeight: sizingHelpers.setAppliedListHeight,
     });
 
     attachLayoutResizeHandler(

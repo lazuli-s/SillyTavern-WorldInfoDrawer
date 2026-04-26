@@ -21,6 +21,7 @@ import { appendSortOptions, executeSlashCommand, getSortLabel, isOutletPosition,
 const FILTER_QUERY_CLASS = 'stwid--filter-query';
 const DRAWER_ACTIVE_CLASS = 'stwid--';
 const STYLE_ATTRIBUTE = 'style';
+const ENTRY_MANAGER_ACTIVE_CLASS = 'stwid--state-active';
 
 const getEventTargetElement = (evt)=>evt.target instanceof HTMLElement ? evt.target : null;
 
@@ -279,6 +280,17 @@ const buildDrawerListContainer = ({
 };
 
 const buildDrawerEditorContainer = ({ dom, wiHandlerApi })=>{
+    const editorPanel = document.createElement('div');
+    editorPanel.classList.add('stwid--editor-panel');
+
+    const mobileBackBtn = document.createElement('button');
+    mobileBackBtn.classList.add('stwid--mobile-back-btn', 'menu_button');
+    mobileBackBtn.type = 'button';
+    const backIcon = document.createElement('i');
+    backIcon.classList.add('fa-solid', 'fa-arrow-left');
+    mobileBackBtn.append(backIcon, document.createTextNode(' Back to Books'));
+    editorPanel.append(mobileBackBtn);
+
     const editor = document.createElement('div');
     dom.editor = editor;
     editor.classList.add('stwid--editor');
@@ -287,7 +299,9 @@ const buildDrawerEditorContainer = ({ dom, wiHandlerApi })=>{
         if (!target?.closest('.duplicate_entry_button')) return;
         wiHandlerApi.queueEditorDuplicateRefresh();
     }, true);
-    return editor;
+    editorPanel.append(editor);
+
+    return { editorContainer: editorPanel, mobileBackBtn };
 };
 
 const buildAndAttachDrawerDom = ({
@@ -331,7 +345,7 @@ const buildAndAttachDrawerDom = ({
         getCurrentEditor,
     });
 
-    const editorContainer = buildDrawerEditorContainer({ dom, wiHandlerApi });
+    const { editorContainer, mobileBackBtn } = buildDrawerEditorContainer({ dom, wiHandlerApi });
 
     const editorPanelApi = initEditorPanel({
         dom,
@@ -346,6 +360,15 @@ const buildAndAttachDrawerDom = ({
         selectEnd: ()=>setListPanelApi.current.selectEnd(),
     });
     setEditorPanelApi.current = editorPanelApi;
+
+    mobileBackBtn.addEventListener('click', ()=>{
+        if (dom.order.toggle?.classList?.contains(ENTRY_MANAGER_ACTIVE_CLASS)) {
+            dom.order.toggle.click();
+            return;
+        }
+
+        editorPanelApi.resetEditorState();
+    });
 
     const listPanelApi = initBookBrowser({
         Settings,
