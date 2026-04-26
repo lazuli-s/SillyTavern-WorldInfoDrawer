@@ -20,8 +20,9 @@ For module design intent, see the Module Responsibilities table in `ARCHITECTURE
 - Drawer DOM bootstrap and panel wiring → src/drawer.js
 - Drawer keyboard delete handling for selected entries → src/drawer.js
 - Duplicate-entry refresh queue reopen handling → src/shared/wi-update-handler.js, src/drawer.js
-- Splitter drag/resize on desktop and mobile → src/drawer.splitter.js
-- Splitter size persistence and legacy key compatibility (`stwid--splitter-size`, `stwid--splitter-size-mobile`, `stwid--list-width`, `stwid--list-height`) → src/drawer.splitter.js
+- Splitter drag/resize on desktop → src/drawer.splitter.js
+- Splitter size persistence and legacy width-key compatibility (`stwid--splitter-size`, `stwid--list-width`) → src/drawer.splitter.js
+- Mobile full-screen panel navigation between Book Browser and editor/Entry Manager → src/drawer.js, src/editor-panel/editor-panel.js, src/entry-manager/entry-manager.js, src/book-browser/browser-tabs/browser-tabs.settings-tab.js, style.css
 
 ## Book Browser - Books
 

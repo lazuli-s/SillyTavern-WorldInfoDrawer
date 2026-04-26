@@ -16,6 +16,7 @@ const ROW_SELECTED_CLASS = 'stwid--applySelected';
 const ICON_UNCHECKED_CLASS = 'fa-square';
 const ICON_CHECKED_CLASS = 'fa-square-check';
 const STATE_ACTIVE_CLASS = 'stwid--state-active';
+const MOBILE_PANEL_OPEN_CLASS = 'stwid--mobile-panel-open';
 
 const createScopeHelpers = ()=>{
     const normalizeScope = (scope)=>Array.isArray(scope) ? [...scope].sort() : null;
@@ -308,6 +309,7 @@ const createEntryManagerOpeners = ({
 
         setScopedBookNames(normalizeScope(scope));
         dom.order.toggle.classList.add(STATE_ACTIVE_CLASS);
+        dom.drawer.body?.classList?.add(MOBILE_PANEL_OPEN_CLASS);
         renderEntryManager(book);
     };
 
