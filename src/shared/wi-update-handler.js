@@ -141,6 +141,11 @@ const syncBookEntriesAndDom = async ({
         world.entries[entryUid] = structuredClone(entryData);
     }
 
+    const updatedExtras = structuredClone(data ?? {});
+    delete updatedExtras.entries;
+    delete updatedExtras.metadata;
+    cache[bookName].extras = updatedExtras;
+
     for (const entryUid of Object.keys(cache[bookName].entries)) {
         if (world.entries[entryUid]) continue;
         cache[bookName].dom.entry[entryUid].root.remove();
@@ -314,6 +319,7 @@ export const initWIUpdateHandler = ({
     };
 
     const buildSavePayload = (name) => ({
+        ...structuredClone(cache[name].extras ?? {}),
         entries: structuredClone(cache[name].entries),
         metadata: cloneMetadata(cache[name].metadata),
     });
