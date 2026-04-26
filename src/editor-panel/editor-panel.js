@@ -3,6 +3,7 @@ import { applyMobileHeaderLayout } from './editor-panel-mobile.js';
 const ACTIVE_STATE_CLASS = 'stwid--state-active';
 const FOCUS_CLASS = 'stwid--focus';
 const AMS_OPEN_CLASS = 'stwid--ams-open';
+const MOBILE_PANEL_OPEN_CLASS = 'stwid--mobile-panel-open';
 const AMS_WIRED_DATASET_VALUE = '1';
 const EDITOR_EVENT_INPUT = 'input';
 const EDITOR_EVENT_CHANGE = 'change';
@@ -71,6 +72,7 @@ const createActivationSettingsController = ({
             dom.editor.append(activationHeading);
         }
         dom.editor.append(activationBlock);
+        dom.drawer.body?.classList?.add(MOBILE_PANEL_OPEN_CLASS);
     };
 
     const showActivationSettings = () => {
@@ -189,6 +191,7 @@ const renderEntryEditorDom = ({
     clearEntryHighlights();
     entryRowDom.classList.add(ACTIVE_STATE_CLASS);
     appendUnfocusButton();
+    dom.drawer.body?.classList?.add(MOBILE_PANEL_OPEN_CLASS);
     if (header) dom.editor.append(header);
     dom.editor.append(entryEditorDom);
     return entryRowDom;
@@ -261,6 +264,7 @@ const createEditorClearer = ({ dom, resetEditorOwnership }) => {
         dom.editor.innerHTML = '';
         dom.editor.classList.remove(FOCUS_CLASS);
         if (resetCurrent) {
+            dom.drawer.body?.classList?.remove(MOBILE_PANEL_OPEN_CLASS);
             resetEditorOwnership();
         }
     };
@@ -316,6 +320,7 @@ export const initEditorPanel = ({
         dom.activationToggle.classList.remove(ACTIVE_STATE_CLASS);
         activationBlockParent.append(activationBlock);
         clearEditor({ resetCurrent: false });
+        dom.drawer.body?.classList?.remove(MOBILE_PANEL_OPEN_CLASS);
         resetEditorOwnership();
     };
 

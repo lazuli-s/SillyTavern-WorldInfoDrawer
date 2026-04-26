@@ -250,12 +250,16 @@ const setCacheMetadata = (name, metadata = {})=>{
     sanitizeFolderMetadata(state.cache[name].metadata);
 };
 
-const buildLatestBookSavePayload = (latest)=>({
-    entries: structuredClone(latest?.entries ?? {}),
-    metadata: latest?.metadata && typeof latest.metadata === 'object'
-        ? structuredClone(latest.metadata)
-        : {},
-});
+const buildLatestBookSavePayload = (latest)=>{
+    const { entries, metadata, ...extras } = latest ?? {};
+    return {
+        ...structuredClone(extras),
+        entries: structuredClone(entries ?? {}),
+        metadata: metadata && typeof metadata === 'object'
+            ? structuredClone(metadata)
+            : {},
+    };
+};
 
 const saveBookMetadataUpdate = async(name, updateMetadata, messages)=>{
     let latest;

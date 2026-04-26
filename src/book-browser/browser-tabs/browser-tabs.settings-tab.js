@@ -1,5 +1,6 @@
 const ICON_BUTTON_BASE_CLASSES = ['menu_button', 'fa-solid', 'fa-fw'];
 const ACTIVE_STATE_CLASS = 'stwid--state-active';
+const MOBILE_PANEL_OPEN_CLASS = 'stwid--mobile-panel-open';
 
 function getIsEditorDirty(getCurrentEditor, getEditorPanelApi) {
     const currentEditor = getCurrentEditor();
@@ -77,6 +78,7 @@ function createEntryManagerToggleButton({
                 return;
             }
             entryManagerToggleButton.classList.remove(ACTIVE_STATE_CLASS);
+            dom.drawer.body?.classList?.remove(MOBILE_PANEL_OPEN_CLASS);
             getEditorPanelApi()?.clearEditor?.();
             return;
         }
