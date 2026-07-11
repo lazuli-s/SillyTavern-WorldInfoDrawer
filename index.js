@@ -53,6 +53,7 @@ const watchCss = async()=>{
 };
 watchCss();
 
+/** @type {Record<string, { dom?: Record<string, Record<string, { root?: HTMLElement }> }}>} */
 const cache = {};
 
 let currentEditor = null;
@@ -171,14 +172,9 @@ const applyAdditionalMatchingSourcesVisibility = (enabled)=>{
     document.body.classList.toggle('stwid--ams-disabled', !visible);
 
     const amsDrawers = new Set();
-    for (const header of document.querySelectorAll('.stwid--editor .userSettingsInnerExpandable')) {
+    for (const header of document.querySelectorAll('.stwid--editor .userSettingsInnerExpandable, .stwid--editor .inline-drawer.stwid--ams')) {
         if (!(header instanceof HTMLElement)) continue;
         const drawer = header.closest('.inline-drawer');
-        if (drawer instanceof HTMLElement) {
-            amsDrawers.add(drawer);
-        }
-    }
-    for (const drawer of document.querySelectorAll('.stwid--editor .inline-drawer.stwid--ams')) {
         if (drawer instanceof HTMLElement) {
             amsDrawers.add(drawer);
         }
@@ -255,13 +251,17 @@ const initSettingsPanel = async()=>{
 
 void initSettingsPanel().catch((error)=>{
     console.error('[STWID] Failed to initialize extension settings panel', error);
+    toastr.warning('WorldInfo Drawer: settings panel failed to load. Check the console for details.');
 });
 
 void refreshList()
     .then(()=>{
         applyFeatureVisibility();
     })
-    .catch((error)=>{ console.error('[STWID] Startup list load failed', error); })
+    .catch((error)=>{
+        console.error('[STWID] Startup list load failed', error);
+        toastr.warning('WorldInfo Drawer: failed to load book list. Check the console for details.');
+    })
 ;
 
 export const jumpToEntry = async(name, uid)=>{

@@ -592,9 +592,10 @@ function buildEntryManagerRow({
         name: 'selective_probability',
         tooltip: 'Trigger chance percentage',
         max: '100',
-        getValue: ()=>entryRow.data.selective_probability,
+        getValue: ()=>entryRow.data.probability,
         onSave: async (value)=> {
-            cache[entryRow.book].entries[entryRow.data.uid].selective_probability = value;
+            cache[entryRow.book].entries[entryRow.data.uid].probability = value;
+            entryRow.data.probability = value;
             await enqueueSave(entryRow.book);
         },
     }));

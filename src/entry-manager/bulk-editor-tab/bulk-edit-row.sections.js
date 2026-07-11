@@ -163,6 +163,17 @@ async function applyBulkStrategyToTargets({ targets, cache, value, applyEntryMan
     return books;
 }
 
+export async function applyBulkProbabilityToTargets({ targets, parsed }) {
+    const books = new Set();
+    for (const { tr, bookName, entryData } of targets) {
+        books.add(bookName);
+        entryData.probability = parsed;
+        const rowProbabilityInput = tr.querySelector('[name="selective_probability"]');
+        if (rowProbabilityInput) rowProbabilityInput.value = String(parsed);
+    }
+    return books;
+}
+
 export function buildBulkSelectSection({
     dom,
     getEntryManagerRows,
@@ -269,13 +280,7 @@ export function buildBulkProbabilitySection({
         const rows = getSafeTbodyRows(dom);
         if (!rows) return;
         const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-        const books = new Set();
-        for (const { tr, bookName, entryData } of targets) {
-            books.add(bookName);
-            entryData.selective_probability = parsed;
-            const rowProbabilityInput = tr.querySelector('[name="selective_probability"]');
-            if (rowProbabilityInput) rowProbabilityInput.value = String(parsed);
-        }
+        const books = await applyBulkProbabilityToTargets({ targets, parsed });
         await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
         applyProbability.classList.remove(APPLY_DIRTY_CLASS);
     };

@@ -123,7 +123,7 @@
 /* -------------------------------------------------------------------------- */
 
 /* Panel: all extension-owned elements inside WorldInfo root */
-#WorldInfo {
+
 /* -------------------------------------------------------------------------- */
 
 /* 1.5) Shared layout shells                                                 */
@@ -2025,8 +2025,6 @@
   outline-offset: var(--stwid-focus-ring-offset);
 }
 
-} 
-
 /* -------------------------------------------------------------------------- */
 
 /* 5.5) Context Menu + Modals                                                 */
@@ -2110,7 +2108,7 @@
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: rgb(32 33 36 / 21%);rgba(255, 255, 255, 0);
+  background-color: rgb(32 33 36 / 21%);
   font-size: 0.9em;
   padding: 0.9em;
   backdrop-filter: blur(var(--SmartThemeBlurStrength));
@@ -2121,7 +2119,7 @@
   height: var(--stwid-menu-item-height);
   /* opacity: 1; */
   color: var(--SmartThemeBodyColor);
-  /* background-color: var(--SmartThemeBlurTintColor); */rgba(255, 255, 255, 0);
+  /* background-color: var(--SmartThemeBlurTintColor); */
   cursor: pointer;
   transition: color 150ms ease;
   flex-direction: row;
@@ -2387,7 +2385,6 @@
     transition-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
   animation-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
   }
-}';;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3515,7 +3512,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex: 1 1 calc((100% - 1.5rem) / 3);
   }
 
-  @media screen and (max-width: 520px) {
+  @media screen and (max-width: 768px) {
     .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='scanDepth']),
     .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='delayUntilRecursionLevel']),
     .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control:has([name='caseSensitive']),
@@ -4443,8 +4440,8 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   .stwid--bulkEditRow {
-    overflow-x: auto;
-    flex-wrap: nowrap;
+    overflow-x: hidden;
+    flex-wrap: wrap;
   }
 
   .stwid--orderTable {
@@ -4477,8 +4474,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
-
-} 
 
 /* -------------------------------------------------------------------------- */
 
@@ -4561,7 +4556,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: rgb(32 33 36 / 21%);rgba(255, 255, 255, 0);
+  background-color: rgb(32 33 36 / 21%);
   font-size: 0.9em;
   padding: 0.9em;
   backdrop-filter: blur(var(--SmartThemeBlurStrength));
@@ -4572,7 +4567,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   height: var(--stwid-menu-item-height);
   /* opacity: 1; */
   color: var(--SmartThemeBodyColor);
-  /* background-color: var(--SmartThemeBlurTintColor); */rgba(255, 255, 255, 0);
+  /* background-color: var(--SmartThemeBlurTintColor); */
   cursor: pointer;
   transition: color 150ms ease;
   flex-direction: row;

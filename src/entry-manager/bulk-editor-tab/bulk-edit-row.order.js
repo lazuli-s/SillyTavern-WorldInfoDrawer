@@ -5,6 +5,8 @@ import {
     createLabeledBulkContainer,
     createApplyButton,
     buildDirectionRadio,
+    buildPersistedNumberInput,
+    maybeYieldToEventLoop,
     getSafeTbodyRows,
     getBulkTargets,
     saveUpdatedBooks,
@@ -15,43 +17,6 @@ const MAX_ORDER_INPUT = '10000';
 const ORDER_DIRECTION_GROUP = 'stwid--order-direction';
 const ORDER_START_STORAGE_KEY = 'stwid--order-start';
 const ORDER_STEP_STORAGE_KEY = 'stwid--order-step';
-
-async function maybeYieldToEventLoop(index, batchSize) {
-    if ((index + 1) % batchSize !== 0) {
-        return;
-    }
-    await new Promise((resolve)=>setTimeout(resolve, 0));
-}
-
-function buildPersistedNumberInput({
-    labelText,
-    tooltipText,
-    storageKey,
-    defaultValue,
-    maxValue,
-    onDirty,
-}) {
-    const label = document.createElement('label');
-    label.classList.add('stwid--inputWrap');
-    setTooltip(label, tooltipText);
-    label.append(`${labelText}: `);
-
-    const inputEl = document.createElement('input');
-    inputEl.classList.add('stwid-compactInput', 'text_pole');
-    inputEl.type = 'number';
-    inputEl.min = '1';
-    inputEl.max = maxValue;
-    inputEl.value = localStorage.getItem(storageKey) ?? defaultValue;
-    inputEl.addEventListener('change', ()=>{
-        localStorage.setItem(storageKey, inputEl.value);
-    });
-    if (typeof onDirty === 'function') {
-        inputEl.addEventListener('change', onDirty);
-    }
-
-    label.append(inputEl);
-    return { label, inputEl };
-}
 
 function createRunApplyOrder({
     dom,

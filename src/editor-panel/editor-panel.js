@@ -306,6 +306,37 @@ export const initEditorPanel = ({
 
     const { clearEntryHighlights, clearEditor, setActiveEntryDom } = createEditorClearer({ dom, resetEditorOwnership });
 
+    // Responsive lifecycle for the open entry editor. The mobile header transform only runs
+    // once at open time, so without this the editor keeps a stale layout when the viewport
+    // crosses the 1000px breakpoint (e.g. window resize, phone rotation, split-screen).
+    const editorLayoutMedia = window.matchMedia?.('(max-width: 1000px)');
+    let currentEntryEditorDom = null;
+    let reopenCurrentEditor = null;
+    let openEditorIsMobileLayout = false;
+
+    const handleEditorLayoutBreakpointChange = () => {
+        if (!currentEntryEditorDom || !document.contains(currentEntryEditorDom)) return;
+        const nowMobileLayout = editorLayoutMedia?.matches ?? false;
+        if (nowMobileLayout === openEditorIsMobileLayout) return;
+
+        if (nowMobileLayout) {
+            // Entering mobile: restructure the live editor in place. applyMobileHeaderLayout
+            // relocates existing nodes (it does not rebuild them), so unsaved edits survive.
+            applyMobileHeaderLayout(currentEntryEditorDom);
+            openEditorIsMobileLayout = true;
+            return;
+        }
+
+        // Leaving mobile for desktop: the transform is destructive and not reversible in
+        // place, so the only clean recovery is a full re-render from saved entry data. That
+        // would discard unsaved edits, so re-render only when the editor is clean; otherwise
+        // keep the user's current input intact even if the layout looks slightly off.
+        if (getIsEditorDirty()) return;
+        reopenCurrentEditor?.();
+    };
+
+    editorLayoutMedia?.addEventListener?.('change', handleEditorLayoutBreakpointChange);
+
     const resetEditorState = () => {
         if (dom.activationToggle.classList.contains(ACTIVE_STATE_CLASS)) {
             hideActivationSettings();
@@ -393,6 +424,14 @@ export const initEditorPanel = ({
         fixTextpoleHeights(entryEditorDom);
         setCurrentEditor({ name, uid: entry.uid });
         markEditorClean(name, entry.uid);
+
+        // Track the open editor so a later viewport breakpoint change can re-apply or
+        // re-render the correct layout. Reusing the original isTokenCurrent keeps the
+        // re-render safe: if the user has since opened another entry, the token is stale
+        // and the re-open aborts on its own.
+        currentEntryEditorDom = entryEditorDom;
+        reopenCurrentEditor = () => openEntryEditor({ entry, entryDom: entryRowDom, name, isTokenCurrent });
+        openEditorIsMobileLayout = editorLayoutMedia?.matches ?? false;
     };
 
     const isDirty = (name, uid) => {
@@ -406,8 +445,13 @@ export const initEditorPanel = ({
         setIsEditorDirty(false);
     };
 
+    const cleanupEditorPanel = () => {
+        cleanup();
+        editorLayoutMedia?.removeEventListener?.('change', handleEditorLayoutBreakpointChange);
+    };
+
     return {
-        cleanup,
+        cleanup: cleanupEditorPanel,
         clearEditor,
         clearEntryHighlights,
         hideActivationSettings,

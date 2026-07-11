@@ -20,16 +20,56 @@ export function createLabeledBulkContainer(fieldKey, labelText, hintText) {
     return container;
 }
 
-export function createApplyButton(tooltip, runApply, applyRegistry) {
+export function createApplyButton(tooltip, runApply, applyRegistry, { registerInApplyAll = true } = {}) {
     const applyButtonEl = document.createElement('div');
     applyButtonEl.classList.add('menu_button', 'interactable', 'fa-solid', 'fa-fw', 'fa-check');
     setTooltip(applyButtonEl, tooltip);
     applyButtonEl.addEventListener('click', ()=>runApply());
-    applyRegistry.push({
-        isDirty: ()=>applyButtonEl.classList.contains(APPLY_DIRTY_CLASS),
-        runApply,
-    });
+    if (registerInApplyAll) {
+        applyRegistry.push({
+            isDirty: ()=>applyButtonEl.classList.contains(APPLY_DIRTY_CLASS),
+            runApply,
+        });
+    }
     return applyButtonEl;
+}
+
+export async function maybeYieldToEventLoop(index, batchSize) {
+    if ((index + 1) % batchSize !== 0) {
+        return;
+    }
+    await new Promise((resolve)=>setTimeout(resolve, 0));
+}
+
+export function buildPersistedNumberInput({
+    labelText,
+    tooltipText,
+    storageKey,
+    defaultValue,
+    minValue = '1',
+    maxValue,
+    onDirty,
+}) {
+    const label = document.createElement('label');
+    label.classList.add('stwid--inputWrap');
+    setTooltip(label, tooltipText);
+    label.append(`${labelText}: `);
+
+    const inputEl = document.createElement('input');
+    inputEl.classList.add('stwid-compactInput', 'text_pole');
+    inputEl.type = 'number';
+    inputEl.min = minValue;
+    inputEl.max = maxValue;
+    inputEl.value = localStorage.getItem(storageKey) ?? defaultValue;
+    inputEl.addEventListener('change', ()=>{
+        localStorage.setItem(storageKey, inputEl.value);
+    });
+    if (typeof onDirty === 'function') {
+        inputEl.addEventListener('change', onDirty);
+    }
+
+    label.append(inputEl);
+    return { label, inputEl };
 }
 
 export function buildDirectionRadio(groupName, value, labelText, hint, directionStorageKey, applyButton) {

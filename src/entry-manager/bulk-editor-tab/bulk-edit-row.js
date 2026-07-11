@@ -13,6 +13,7 @@ import {
 } from './bulk-edit-row.sections.js';
 import { buildBulkPositionSection } from './bulk-edit-row.position.js';
 import { buildBulkOrderSection } from './bulk-edit-row.order.js';
+import { buildBulkUidSection } from './bulk-edit-row.uid.js';
 
 function createBulkEditRowRoot() {
     const row = document.createElement('div');
@@ -98,6 +99,7 @@ function appendBulkEditSections(row, {
     row.append(positionContainer, depthContainer, outletContainer);
 
     appendBulkSection(buildBulkOrderSection);
+    appendBulkSection(buildBulkUidSection);
     appendBulkSection(buildBulkRecursionSection, {
         applyEntryManagerRecursionFilterToRow,
     });

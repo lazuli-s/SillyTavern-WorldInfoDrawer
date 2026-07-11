@@ -73,6 +73,16 @@ function applyListSizeCss(value, minValue, axis, appliedValue, list) {
     return clamped;
 }
 
+// Desktop drag writes inline width/flex-basis/height onto the list panel. Those inline
+// values outrank the mobile stylesheet rule (.stwid--list { width: 100% }), so they must be
+// cleared when the layout crosses into mobile or the panel keeps a stale desktop width.
+// Idempotent: clearing already-empty styles is harmless on repeated resize events.
+function clearListSizeCssForMobile(list) {
+    if (list.style.width) list.style.width = '';
+    if (list.style.flexBasis) list.style.flexBasis = '';
+    if (list.style.height) list.style.height = '';
+}
+
 function applyListSizeWithBounds(value, minValue, getMaxSize, applyListSize, setAppliedValue) {
     const bounded = clamp(value, minValue, getMaxSize());
     const appliedValue = applyListSize(bounded);
@@ -257,11 +267,15 @@ function createSplitterSizingHelpers(body, list, desktopSplitter) {
 }
 
 function createRestoreSplitterForCurrentLayout({
+    list,
     applyOrientationDefault,
     applyDesktopWidthWithBounds,
 }) {
     return function restoreSplitterForCurrentLayout() {
-        if (isMobileLayout()) return;
+        if (isMobileLayout()) {
+            clearListSizeCssForMobile(list);
+            return;
+        }
 
         const storedWidth = getStoredSplitterSize(DESKTOP_SPLITTER_STORAGE_KEY, LEGACY_DESKTOP_SPLITTER_STORAGE_KEY);
         if (Number.isNaN(storedWidth)) {
@@ -278,7 +292,7 @@ export function initSplitter(body, list) {
     let lastLayoutIsMobile = isMobileLayout();
 
     const sizingHelpers = createSplitterSizingHelpers(body, list, desktopSplitter);
-    const restoreSplitterForCurrentLayout = createRestoreSplitterForCurrentLayout(sizingHelpers);
+    const restoreSplitterForCurrentLayout = createRestoreSplitterForCurrentLayout({ list, ...sizingHelpers });
 
     attachDesktopSplitterDragHandlers({
         desktopSplitter,

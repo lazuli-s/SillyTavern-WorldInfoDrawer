@@ -295,7 +295,7 @@ const createEntryManagerOpeners = ({
     getScopedBookNames,
     setScopedBookNames,
 })=>{
-    const openEntryManager = (book = null, scope = null)=>{
+    const openEntryManager = async (book = null, scope = null)=>{
         if (!dom.order.toggle) return;
         const currentEditor = getCurrentEditor?.();
         const dirty = Boolean(currentEditor && getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
@@ -309,8 +309,8 @@ const createEntryManagerOpeners = ({
 
         setScopedBookNames(normalizeScope(scope));
         dom.order.toggle.classList.add(STATE_ACTIVE_CLASS);
+        await renderEntryManager(book);
         dom.drawer.body?.classList?.add(MOBILE_PANEL_OPEN_CLASS);
-        renderEntryManager(book);
     };
 
     const refreshEntryManagerScope = (scope = null)=>{

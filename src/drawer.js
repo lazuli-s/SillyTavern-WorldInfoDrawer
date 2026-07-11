@@ -59,6 +59,9 @@ const createDrawerRuntimeState = ({ saveWorldInfo, wiHandlerApi })=>{
                 up: undefined,
                 down: undefined,
             },
+            uid: {
+                start: undefined,
+            },
             filter: {
                 root: undefined,
                 preview: undefined,
