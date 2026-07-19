@@ -9,6 +9,11 @@ import {
 } from '../../shared/constants.js';
 
 const ACTIVE_FILTER_CLASS = 'stwid--state-active';
+// Outlet/automationId/group option counts scale with the number of distinct
+// entry values and are unbounded; strategy/position/recursion are small fixed
+// sets and are left uncapped. Capping is display-only: values beyond the cap
+// stay in entryManagerState.filters, so no row is hidden by an unbuilt option.
+const FILTER_OPTION_DISPLAY_CAP = 200;
 
 function ensureDefaultFiltersSelected({ stateKey, allValues, entryManagerState }) {
   if (!entryManagerState.filters[stateKey].length) {
@@ -53,7 +58,7 @@ function applyFiltersAndNotify({ updateFilterIndicator, applyFilters, onFilterCh
 
 function createFilterMenuShell() {
   const menuWrap = document.createElement('div');
-  menuWrap.classList.add('stwid--multiselectDropdownWrap');
+  menuWrap.classList.add('stwid--multiselect-dropdown__wrap');
 
   const menuButton = document.createElement('div');
   menuButton.classList.add(
@@ -61,13 +66,13 @@ function createFilterMenuShell() {
     'fa-solid',
     'fa-fw',
     'fa-filter',
-    'stwid--orderFilterButton',
-    'stwid--multiselectDropdownButton',
+    'stwid--order-filter-button',
+    'stwid--multiselect-dropdown__button',
   );
   menuWrap.append(menuButton);
 
   const menu = document.createElement('div');
-  menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
+  menu.classList.add('stwid--multiselect-dropdown__menu', 'stwid--menu');
 
   return { menuWrap, menuButton, menu };
 }
@@ -136,33 +141,78 @@ function toggleFilterValue({ stateKey, value, isChecked, entryManagerState }) {
   );
 }
 
-function renderFilterMenuOptions({ options, stateKey, entryManagerState, updateFilters, menu }) {
+function buildFilterMenuOption({ optionData, stateKey, entryManagerState, updateFilters }) {
+  const option = document.createElement('label');
+  option.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
+  const inputControl = createMultiselectDropdownCheckbox(
+    entryManagerState.filters[stateKey].includes(optionData.value),
+  );
+  inputControl.input.addEventListener('change', () => {
+    toggleFilterValue({
+      stateKey,
+      value: optionData.value,
+      isChecked: inputControl.input.checked,
+      entryManagerState,
+    });
+    updateFilters();
+  });
+  option.append(inputControl.input, inputControl.checkbox);
+  const optionLabel = document.createElement('span');
+  optionLabel.textContent = optionData.label;
+  option.append(optionLabel);
+  return option;
+}
+
+function buildShowAllOptionsButton({ hiddenCount, onShowAll }) {
+  const showAll = document.createElement('button');
+  showAll.type = 'button';
+  showAll.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
+  const icon = document.createElement('i');
+  icon.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis', 'stwid--multiselect-dropdown__option-icon');
+  const label = document.createElement('span');
+  label.textContent = `Show all (${hiddenCount} more)`;
+  showAll.append(icon, label);
+  showAll.addEventListener('click', onShowAll);
+  return showAll;
+}
+
+function renderFilterMenuOptions({
+  options,
+  stateKey,
+  entryManagerState,
+  updateFilters,
+  menu,
+  capOptions = false,
+}) {
   if (!options.length) {
     menu.classList.add('stwid--empty');
     menu.textContent = 'No options available.';
   }
 
-  for (const optionData of options) {
-    const option = document.createElement('label');
-    option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
-    const inputControl = createMultiselectDropdownCheckbox(
-      entryManagerState.filters[stateKey].includes(optionData.value),
-    );
-    inputControl.input.addEventListener('change', () => {
-      toggleFilterValue({
-        stateKey,
-        value: optionData.value,
-        isChecked: inputControl.input.checked,
-        entryManagerState,
-      });
-      updateFilters();
-    });
-    option.append(inputControl.input, inputControl.checkbox);
-    const optionLabel = document.createElement('span');
-    optionLabel.textContent = optionData.label;
-    option.append(optionLabel);
-    menu.append(option);
+  const appendOptions = (optionList) => {
+    const fragment = document.createDocumentFragment();
+    for (const optionData of optionList) {
+      fragment.append(
+        buildFilterMenuOption({ optionData, stateKey, entryManagerState, updateFilters }),
+      );
+    }
+    menu.append(fragment);
+  };
+
+  if (!capOptions || options.length <= FILTER_OPTION_DISPLAY_CAP) {
+    appendOptions(options);
+    return;
   }
+
+  appendOptions(options.slice(0, FILTER_OPTION_DISPLAY_CAP));
+  const showAllButton = buildShowAllOptionsButton({
+    hiddenCount: options.length - FILTER_OPTION_DISPLAY_CAP,
+    onShowAll: () => {
+      showAllButton.remove();
+      appendOptions(options.slice(FILTER_OPTION_DISPLAY_CAP));
+    },
+  });
+  menu.append(showAllButton);
 }
 
 function finalizeFilterMenu({ menu, menuButton, menuWrap, updateFilterIndicator }) {
@@ -182,6 +232,7 @@ function buildFilterMenu({
   applyFilters,
   onFilterChange,
   entryManagerState,
+  capOptions,
 }) {
   const { menuWrap, menuButton, menu } = createFilterMenuShell();
   const { updateFilterIndicator, updateFilters } = createFilterMenuUpdaters({
@@ -196,19 +247,26 @@ function buildFilterMenu({
   });
 
   const options = getOptions();
-  renderFilterMenuOptions({ options, stateKey, entryManagerState, updateFilters, menu });
+  renderFilterMenuOptions({
+    options,
+    stateKey,
+    entryManagerState,
+    updateFilters,
+    menu,
+    capOptions,
+  });
 
   return finalizeFilterMenu({ menu, menuButton, menuWrap, updateFilterIndicator });
 }
 
 function buildFilterColumnHeader(label, menuConfig, entryManagerState) {
   const header = document.createElement('div');
-  header.classList.add('stwid--columnHeader');
+  header.classList.add('stwid--column-header');
   const headerTitle = document.createElement('div');
   headerTitle.textContent = label;
   header.append(headerTitle);
   const filterWrap = document.createElement('div');
-  filterWrap.classList.add('stwid--columnFilter');
+  filterWrap.classList.add('stwid--column-filter');
   const { menuWrap, updateFilterIndicator } = buildFilterMenu({ ...menuConfig, entryManagerState });
   filterWrap.append(menuWrap);
   header.append(filterWrap);
@@ -274,6 +332,7 @@ export function buildTableHeader({
       getValues: getOutletValues,
       normalizeFilters: normalizeOutletFilters,
       applyFilters: applyEntryManagerOutletFilters,
+      capOptions: true,
     },
     automationId: {
       stateKey: 'automationId',
@@ -282,6 +341,7 @@ export function buildTableHeader({
       getValues: getAutomationIdValues,
       normalizeFilters: normalizeAutomationIdFilters,
       applyFilters: applyEntryManagerAutomationIdFilters,
+      capOptions: true,
     },
     group: {
       stateKey: 'group',
@@ -290,6 +350,7 @@ export function buildTableHeader({
       getValues: getGroupValues,
       normalizeFilters: normalizeGroupFilters,
       applyFilters: applyEntryManagerGroupFilters,
+      capOptions: true,
     },
   };
 
@@ -314,7 +375,7 @@ export function buildTableHeader({
         if (col.key) {
           headerCell.setAttribute('data-col', col.key);
           if (ENTRY_MANAGER_NUMBER_COLUMN_KEYS.has(col.key)) {
-            headerCell.classList.add('stwid--orderTable--NumberColumns');
+            headerCell.classList.add('stwid--order-table--number-columns');
           }
         }
         headerRow.append(headerCell);

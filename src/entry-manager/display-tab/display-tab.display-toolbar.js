@@ -16,10 +16,10 @@ const KEYWORD_COLUMN_TEXT_TOGGLE_HINT = 'Show/hide keyword column text';
 
 function createActionThinContainer(labelText, hintText) {
   const container = document.createElement('div');
-  container.classList.add('stwid--thinContainer');
+  container.classList.add('stwid--field-group');
 
   const containerLabel = document.createElement('div');
-  containerLabel.classList.add('stwid--thinContainerLabel');
+  containerLabel.classList.add('stwid--field-group__label');
   containerLabel.textContent = labelText;
 
   const containerHint = document.createElement('i');
@@ -27,7 +27,7 @@ function createActionThinContainer(labelText, hintText) {
     'fa-solid',
     'fa-fw',
     'fa-circle-question',
-    'stwid--thinContainerLabelHint',
+    'stwid--field-group__label-hint',
   );
   setTooltip(containerHint, hintText);
   containerLabel.append(containerHint);
@@ -47,7 +47,7 @@ function makeClearFilterHandler(key, getAllValues, applyFn, stateRef, indicatorR
 
 function buildColumnDropdownButton(hint) {
   const menuButton = document.createElement('div');
-  menuButton.classList.add('menu_button', 'stwid--multiselectDropdownButton');
+  menuButton.classList.add('menu_button', 'stwid--multiselect-dropdown__button');
   menuButton.textContent = 'Select';
   setTooltip(menuButton, hint);
 
@@ -60,16 +60,16 @@ function buildColumnDropdownButton(hint) {
 function createColumnVisibilityDropdownDom() {
   const columnVisibilityContainer = createActionThinContainer('Columns', COLUMN_VISIBILITY_HINT);
   const columnVisibilityWrap = document.createElement('div');
-  columnVisibilityWrap.classList.add('stwid--columnVisibility');
+  columnVisibilityWrap.classList.add('stwid--column-visibility');
 
   const menuWrap = document.createElement('div');
-  menuWrap.classList.add('stwid--multiselectDropdownWrap');
+  menuWrap.classList.add('stwid--multiselect-dropdown__wrap');
 
   const menuButton = buildColumnDropdownButton(COLUMN_VISIBILITY_HINT);
   menuWrap.append(menuButton);
 
   const menu = document.createElement('div');
-  menu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
+  menu.classList.add('stwid--multiselect-dropdown__menu', 'stwid--menu');
 
   return { columnVisibilityContainer, columnVisibilityWrap, menuWrap, menuButton, menu };
 }
@@ -100,10 +100,10 @@ function applyAndPersistColumnVisibility({
 function addColumnVisibilityPresetActions({ menu, setColumnVisibility, mainColumnDefaults }) {
   const addColumnAction = ({ label, icon, onClick }) => {
     const action = document.createElement('div');
-    action.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+    action.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
     action.style.fontWeight = 'bold';
     const iconEl = document.createElement('i');
-    iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--multiselectDropdownOptionIcon');
+    iconEl.classList.add('fa-solid', 'fa-fw', icon, 'stwid--multiselect-dropdown__option-icon');
     action.append(iconEl);
     const labelText = document.createElement('span');
     labelText.textContent = label;
@@ -136,7 +136,7 @@ function buildColumnCheckboxOptions(
 ) {
   for (const column of columns) {
     const option = document.createElement('label');
-    option.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+    option.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
     const inputControl = createMultiselectDropdownCheckbox(
       Boolean(entryManagerState.columns[column.key]),
     );
@@ -211,7 +211,7 @@ function buildSortSelector({
   sortWrap.classList.add('stwid--table-sort');
   setTooltip(sortWrap, TABLE_SORT_HINT);
   const sortSel = document.createElement('select');
-  sortSel.classList.add('text_pole', 'stwid--smallSelectTextPole');
+  sortSel.classList.add('text_pole', 'stwid--sort-select');
   setTooltip(sortSel, TABLE_SORT_HINT);
   dom.order.sortSelect = sortSel;
   appendSortOptions(sortSel, entryManagerState.sort, entryManagerState.direction);
@@ -233,14 +233,14 @@ function buildSortSelector({
 
 function buildFilterChip({ headerName, valueLabels, onRemove }) {
   const chip = document.createElement('div');
-  chip.classList.add('stwid--filterChip');
+  chip.classList.add('stwid--filter-chip');
 
   const chipLabel = document.createElement('span');
   chipLabel.textContent = `${headerName}: ${valueLabels.join(', ')}`;
   chip.append(chipLabel);
 
   const removeBtn = document.createElement('button');
-  removeBtn.classList.add('stwid--chipRemove');
+  removeBtn.classList.add('stwid--chip-remove');
   removeBtn.textContent = '×';
   removeBtn.addEventListener('click', onRemove);
   chip.append(removeBtn);
@@ -291,7 +291,7 @@ function buildFilterChipDisplay({
   getFilterValueLabels,
 }) {
   const activeFiltersEl = document.createElement('div');
-  activeFiltersEl.classList.add('stwid--activeFilters');
+  activeFiltersEl.classList.add('stwid--active-filters');
   activeFiltersEl.style.display = 'none';
   const activeFiltersLabel = document.createElement('span');
   activeFiltersLabel.textContent = 'Active filters:';
@@ -365,7 +365,7 @@ function buildKeysToggle({ body, entryManagerState, storageKey }) {
   keyToggle.addEventListener('click', () => {
     entryManagerState.hideKeys = !entryManagerState.hideKeys;
     localStorage.setItem(storageKey, entryManagerState.hideKeys);
-    body.classList.toggle('stwid--hideKeys', entryManagerState.hideKeys);
+    body.classList.toggle('stwid--hide-keys', entryManagerState.hideKeys);
     applyKeyToggleStyle();
   });
 
@@ -531,7 +531,7 @@ export function buildDisplayToolbar({
 
   const addDivider = () => {
     const divider = document.createElement('div');
-    divider.classList.add('stwid--actionsDivider');
+    divider.classList.add('stwid--actions-divider');
     displayToolbarRow.append(divider);
   };
 
@@ -560,7 +560,7 @@ export function buildDisplayToolbar({
   );
 
   const displayToolbarInfo = document.createElement('div');
-  displayToolbarInfo.classList.add('stwid--displayToolbarInfo');
+  displayToolbarInfo.classList.add('stwid--display-toolbar-info');
 
   displayToolbarRow.append(displayToolbarInfo);
 

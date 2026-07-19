@@ -10,7 +10,7 @@ import {
   deleteFolderAction,
 } from './book-folders.folder-actions.js';
 
-const FOLDER_MENU_ANCHOR_NAME = '--stwid--ctxAnchor';
+const FOLDER_MENU_ANCHOR_NAME = '--stwid--ctx-anchor';
 
 const updateFolderCount = (countElement, count) => {
   if (!countElement) return;
@@ -32,7 +32,7 @@ const setFolderCollapsed = (folderDom, isCollapsed) => {
 const createFolderMenuItem = ({ itemClass, iconClass, label, onSelect }) => {
   const item = document.createElement('div');
   {
-    item.classList.add('stwid--listDropdownItem', 'stwid--menuItem');
+    item.classList.add('stwid--list-dropdown__item', 'stwid--menu-item');
     item.classList.add(itemClass);
     item.addEventListener('click', onSelect);
     const menuIcon = document.createElement('i');
@@ -103,7 +103,7 @@ const buildFolderMenuOverlay = ({ folderName, menuActions, menuTrigger }) => {
     });
     const menu = document.createElement('div');
     {
-      menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
+      menu.classList.add('stwid--list-dropdown__menu', 'stwid--menu');
       menu.append(
         createFolderMenuItem({
           itemClass: 'stwid--rename',
@@ -139,7 +139,7 @@ const buildFolderMenuOverlay = ({ folderName, menuActions, menuTrigger }) => {
       );
       menu.append(
         createFolderMenuItem({
-          itemClass: 'stwid--entryManager',
+          itemClass: 'stwid--entry-manager',
           iconClass: 'fa-arrow-down-wide-short',
           label: 'Entry Manager (Folder)',
           onSelect: () => {
@@ -171,7 +171,7 @@ const createFolderActionsDom = ({ folderName, header, menuActions }) => {
     actions.classList.add('stwid--actions');
     const activeToggle = document.createElement('input');
     {
-      activeToggle.classList.add('stwid--folderActiveToggle');
+      activeToggle.classList.add('stwid--folder-active-toggle');
       activeToggle.type = 'checkbox';
       activeToggle.title = 'Toggle global active status for visible books in this folder';
       activeToggle.setAttribute(
@@ -201,7 +201,7 @@ const createFolderActionsDom = ({ folderName, header, menuActions }) => {
     const addButton = document.createElement('div');
     {
       addButton.classList.add('stwid--action');
-      addButton.classList.add('stwid--folderAction');
+      addButton.classList.add('stwid--folder-action');
       addButton.classList.add('stwid--add');
       addButton.classList.add('stwid--folderAdd');
       addButton.classList.add('fa-solid', 'fa-fw', 'fa-plus');
@@ -224,8 +224,8 @@ const createFolderActionsDom = ({ folderName, header, menuActions }) => {
       const menuTrigger = document.createElement('div');
       {
         menuTrigger.classList.add('stwid--action');
-        menuTrigger.classList.add('stwid--folderMenu');
-        menuTrigger.classList.add('stwid--listDropdownTrigger');
+        menuTrigger.classList.add('stwid--folder-menu');
+        menuTrigger.classList.add('stwid--list-dropdown__trigger');
         menuTrigger.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis-vertical');
         menuTrigger.title = 'Folder menu';
         menuTrigger.setAttribute('aria-label', 'Folder menu');
@@ -241,7 +241,7 @@ const createFolderActionsDom = ({ folderName, header, menuActions }) => {
     const toggle = document.createElement('i');
     {
       toggle.classList.add('stwid--action');
-      toggle.classList.add('stwid--folderToggle');
+      toggle.classList.add('stwid--folder-toggle');
       toggle.classList.add('stwid--collapseToggle');
       toggle.classList.add('fa-solid', 'fa-fw', 'fa-chevron-down');
       toggle.title = 'Collapse/expand this folder';
@@ -298,7 +298,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     root.dataset.folder = folderName;
     const header = document.createElement('div');
     {
-      header.classList.add('stwid--folderHeader');
+      header.classList.add('stwid--folder-header');
       header.title = 'Collapse/expand this folder';
       if (menuActions) {
         header.classList.add('stwid--hasMenu');
@@ -322,19 +322,19 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
       });
       const icon = document.createElement('i');
       {
-        icon.classList.add('stwid--folderIcon');
+        icon.classList.add('stwid--folder-icon');
         icon.classList.add('fa-solid', 'fa-fw', 'fa-folder');
         header.append(icon);
       }
       const label = document.createElement('span');
       {
-        label.classList.add('stwid--folderLabel');
+        label.classList.add('stwid--folder-label');
         label.textContent = folderName;
         header.append(label);
       }
       const count = document.createElement('span');
       {
-        count.classList.add('stwid--folderCount');
+        count.classList.add('stwid--folder-count');
         header.append(count);
       }
       createFolderActionsDom({ folderName, header, menuActions });
@@ -342,14 +342,14 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
     }
     const books = document.createElement('div');
     {
-      books.classList.add('stwid--folderBooks');
+      books.classList.add('stwid--folder-books');
       root.append(books);
     }
   }
-  const books = root.querySelector('.stwid--folderBooks');
-  const count = root.querySelector('.stwid--folderCount');
-  const toggle = root.querySelector('.stwid--folderToggle');
-  const activeToggle = root.querySelector('.stwid--folderActiveToggle');
+  const books = root.querySelector('.stwid--folder-books');
+  const count = root.querySelector('.stwid--folder-count');
+  const toggle = root.querySelector('.stwid--folder-toggle');
+  const activeToggle = root.querySelector('.stwid--folder-active-toggle');
   const observer = new MutationObserver(() => {
     updateFolderCount(count, books.childElementCount);
   });
@@ -365,7 +365,7 @@ const createFolderDom = ({ folderName, onToggle, onDrop, onDragStateChange, menu
   updateActiveToggle();
   return {
     root,
-    header: root.querySelector('.stwid--folderHeader'),
+    header: root.querySelector('.stwid--folder-header'),
     books,
     count,
     toggle,

@@ -1,10 +1,10 @@
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 import {
   BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
   createLabeledBulkContainer,
   createApplyButton,
   buildPersistedNumberInput,
-  maybeYieldToEventLoop,
   getSafeTbodyRows,
   getBulkTargets,
   saveUpdatedBooks,

@@ -1,19 +1,20 @@
 import { setTooltip } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 
 export const BULK_APPLY_BATCH_SIZE = 200;
-export const APPLY_DIRTY_CLASS = 'stwid--applyDirty';
+export const APPLY_DIRTY_CLASS = 'stwid--apply-dirty';
 export const NON_NEGATIVE_PLACEHOLDER = '0+';
 
 export function createLabeledBulkContainer(fieldKey, labelText, hintText) {
   const container = document.createElement('div');
-  container.classList.add('stwid--thinContainer');
+  container.classList.add('stwid--field-group');
   container.dataset.field = fieldKey;
   const label = document.createElement('span');
-  label.classList.add('stwid--bulkEditLabel');
+  label.classList.add('stwid--bulk-edit-label');
   label.textContent = labelText;
   const hint = document.createElement('i');
-  hint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulkEditLabelHint');
+  hint.classList.add('fa-solid', 'fa-fw', 'fa-circle-question', 'stwid--bulk-edit-label-hint');
   setTooltip(hint, hintText);
   label.append(hint);
   container.append(label);
@@ -39,13 +40,6 @@ export function createApplyButton(
   return applyButtonEl;
 }
 
-export async function maybeYieldToEventLoop(index, batchSize) {
-  if ((index + 1) % batchSize !== 0) {
-    return;
-  }
-  await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
 export function buildPersistedNumberInput({
   labelText,
   tooltipText,
@@ -56,12 +50,12 @@ export function buildPersistedNumberInput({
   onDirty,
 }) {
   const label = document.createElement('label');
-  label.classList.add('stwid--inputWrap');
+  label.classList.add('stwid--input-wrap');
   setTooltip(label, tooltipText);
   label.append(`${labelText}: `);
 
   const inputEl = document.createElement('input');
-  inputEl.classList.add('stwid-compactInput', 'text_pole');
+  inputEl.classList.add('stwid--cell-input', 'text_pole');
   inputEl.type = 'number';
   inputEl.min = minValue;
   inputEl.max = maxValue;
@@ -86,7 +80,7 @@ export function buildDirectionRadio(
   applyButton,
 ) {
   const directionRow = document.createElement('label');
-  directionRow.classList.add('stwid--inputWrap');
+  directionRow.classList.add('stwid--input-wrap');
   setTooltip(directionRow, hint);
 
   const radioInput = document.createElement('input');
@@ -106,7 +100,7 @@ export function buildDirectionRadio(
 
 export function buildRecursionCheckboxRow(value, label, recursionCheckboxes) {
   const recursionRow = document.createElement('label');
-  recursionRow.classList.add('stwid--small-check-row');
+  recursionRow.classList.add('stwid--option-check-row');
 
   const recursionCheckbox = document.createElement('input');
   recursionCheckbox.type = 'checkbox';
@@ -185,7 +179,7 @@ export function createPersistedBulkNumberInput({
   tooltip,
 }) {
   const input = document.createElement('input');
-  input.classList.add('stwid-compactInput', 'text_pole');
+  input.classList.add('stwid--cell-input', 'text_pole');
   input.type = 'number';
   input.min = min;
   if (max !== undefined) input.max = max;
@@ -227,24 +221,28 @@ export async function runApplyNonNegativeIntegerField({
     return;
   }
 
-  const rows = getSafeTbodyRows(entryManagerDom);
-  if (!rows) return;
+  await withApplyButtonLock(applyButton, async () => {
+    const rows = getSafeTbodyRows(entryManagerDom);
+    if (!rows) return;
 
-  const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-  const books = new Set();
-  for (const { tr, bookName, entryData } of targets) {
-    books.add(bookName);
-    entryData[entryField] = parsedValue;
-    const rowInput = tr.querySelector(`[name="${rowInputName}"]`);
-    if (rowInput) rowInput.value = String(parsedValue);
-  }
-  try {
-    await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-    applyButton.classList.remove(APPLY_DIRTY_CLASS);
-  } catch (error) {
-    console.error('Failed to save bulk non-negative integer field.', error);
-    toastr.error('Failed to save bulk changes.');
-  }
+    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
+    const books = new Set();
+    for (let i = 0; i < targets.length; i++) {
+      const { tr, bookName, entryData } = targets[i];
+      books.add(bookName);
+      entryData[entryField] = parsedValue;
+      const rowInput = tr.querySelector(`[name="${rowInputName}"]`);
+      if (rowInput) rowInput.value = String(parsedValue);
+      await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
+    }
+    try {
+      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      applyButton.classList.remove(APPLY_DIRTY_CLASS);
+    } catch (error) {
+      console.error('Failed to save bulk non-negative integer field.', error);
+      toastr.error('Failed to save bulk changes.');
+    }
+  });
 }
 
 export function applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes) {

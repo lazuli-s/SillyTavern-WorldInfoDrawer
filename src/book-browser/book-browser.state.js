@@ -152,6 +152,29 @@ export const listPanelState = {
       }
     }
   },
+  pruneCollapseStatesStaleBooks(activeBookNames) {
+    return pruneStaleStateKeys(bookBrowserStateStore.collapseStates, activeBookNames);
+  },
+  pruneFolderCollapseStatesStaleFolders(activeFolderNames) {
+    return pruneStaleStateKeys(bookBrowserStateStore.folderCollapseStates, activeFolderNames);
+  },
+};
+
+// Delete every key in `stateMap` that is not present in the authoritative
+// `activeNames` list, returning how many keys were removed. An empty array is a
+// valid authoritative set (a deleted final book/folder) and prunes everything;
+// only a non-array (missing/failed source) is rejected without pruning.
+const pruneStaleStateKeys = (stateMap, activeNames) => {
+  if (!Array.isArray(activeNames)) return 0;
+  const activeSet = new Set(activeNames);
+  let removedCount = 0;
+  for (const key of Object.keys(stateMap)) {
+    if (!activeSet.has(key)) {
+      delete stateMap[key];
+      removedCount += 1;
+    }
+  }
+  return removedCount;
 };
 
 const clearObjectKeys = (target) => {

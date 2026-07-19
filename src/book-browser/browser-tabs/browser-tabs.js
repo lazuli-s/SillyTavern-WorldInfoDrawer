@@ -9,8 +9,8 @@ import { Settings } from '../../shared/settings.js';
 
 const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 const CSS_STATE_ACTIVE = 'stwid--state-active';
-const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselectDropdownButton';
-const CSS_VISIBILITY_CHIP = 'stwid--visibilityChip';
+const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselect-dropdown__button';
+const CSS_VISIBILITY_CHIP = 'stwid--visibility-chip';
 const TAB_IDS = Object.freeze({
   SETTINGS: 'settings',
   LOREBOOKS: 'lorebooks',
@@ -29,7 +29,7 @@ const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked) => {
 
 const closeOpenMultiselectDropdownMenus = (excludeMenu = null) => {
   for (const menu of document.querySelectorAll(
-    `.stwid--multiselectDropdownMenu.${CSS_STATE_ACTIVE}`,
+    `.stwid--multiselect-dropdown__menu.${CSS_STATE_ACTIVE}`,
   )) {
     if (menu === excludeMenu) continue;
     const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
@@ -52,7 +52,7 @@ const ensureValidBookVisibilityMode = (listPanelState) => {
 const createTabButton = ({ tab, onClick }) => {
   const button = document.createElement('button');
   button.type = 'button';
-  button.classList.add('stwid--iconTabButton');
+  button.classList.add('stwid--icon-tab__button');
   button.dataset.tabId = tab.id;
   button.setAttribute('role', 'tab');
   button.setAttribute('aria-selected', 'false');
@@ -72,7 +72,7 @@ const createTabButton = ({ tab, onClick }) => {
 
 const createTabPanel = ({ tabId }) => {
   const content = document.createElement('div');
-  content.classList.add('stwid--iconTabContent');
+  content.classList.add('stwid--icon-tab__content');
   content.dataset.tabId = tabId;
   content.setAttribute('role', 'tabpanel');
   return content;
@@ -106,9 +106,9 @@ const mountRuntimeTabContent = ({
 
 const buildIconTabBar = (runtimeState, visibilityRow, sortingRow, searchRow) => {
   const iconTab = document.createElement('div');
-  iconTab.classList.add('stwid--iconTab');
+  iconTab.classList.add('stwid--icon-tab');
   const iconTabBar = document.createElement('div');
-  iconTabBar.classList.add('stwid--iconTabBar');
+  iconTabBar.classList.add('stwid--icon-tab__bar');
   iconTabBar.setAttribute('role', 'tablist');
   iconTabBar.setAttribute('aria-label', 'List panel tabs');
   const panelTabs = [
@@ -227,7 +227,7 @@ const createFilterBarSlice = ({
     {
       const { searchRow } = createSearchRow(listPanelState, runtime, updateFolderActiveToggles);
       const visibilityRow = document.createElement('div');
-      visibilityRow.classList.add('stwid--browserRow');
+      visibilityRow.classList.add('stwid--browser-row');
       const sortingRow =
         runtime?.dom?.sortingRow instanceof HTMLElement
           ? runtime.dom.sortingRow

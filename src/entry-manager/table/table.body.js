@@ -1,9 +1,13 @@
 import { setTooltip, formatCharacterFilter } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 
 const TEXT_POLE_CLASS = 'text_pole';
 const STATE_FILTERED_CLASS = 'stwid--state-filtered';
-const ORDER_INPUT_TIGHT_CLASS = 'stwid--orderInputTight';
+const ORDER_INPUT_TIGHT_CLASS = 'stwid--order-input';
+// Rows are heavy (~30 nodes, ~20 listeners each), so yield more often than
+// BULK_APPLY_BATCH_SIZE to keep each chunk well under a frame-budget freeze.
+const ROW_BUILD_BATCH_SIZE = 50;
 
 function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
   const inFlightByBook = new Map();
@@ -37,7 +41,7 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
 function buildNumberInputCell({ col, name, tooltip, max = '99999', getValue, onSave }) {
   const td = document.createElement('td');
   td.setAttribute('data-col', col);
-  td.classList.add('stwid--orderTable--NumberColumns');
+  td.classList.add('stwid--order-table--number-columns');
   const inputEl = document.createElement('input');
   inputEl.classList.add('stwid--input', TEXT_POLE_CLASS);
   inputEl.name = name;
@@ -83,7 +87,7 @@ function getEntryEditTemplates() {
 function buildMoveButton({ iconClass, tooltipText }) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.classList.add('stwid--orderMoveButton');
+  button.classList.add('stwid--order-move-button');
   setTooltip(button, tooltipText);
   const icon = document.createElement('i');
   icon.classList.add('fa-solid', 'fa-fw', iconClass);
@@ -251,7 +255,7 @@ function buildRecursionOptionRow({
   applyEntryManagerRecursionFilterToRow,
 }) {
   const row = document.createElement('label');
-  row.classList.add('stwid--small-check-row');
+  row.classList.add('stwid--option-check-row');
   const input = document.createElement('input');
   input.type = 'checkbox';
   input.classList.add('checkbox');
@@ -317,7 +321,7 @@ function buildEntryManagerRow({
   const select = document.createElement('td');
   select.setAttribute('data-col', 'select');
   const selectButton = document.createElement('div');
-  selectButton.classList.add('stwid--orderSelect', 'fa-solid', 'fa-fw');
+  selectButton.classList.add('stwid--order-select', 'fa-solid', 'fa-fw');
   setTooltip(selectButton, 'Include/exclude this row from Apply Order');
   const selectIcon = document.createElement('i');
   selectIcon.classList.add('fa-solid', 'fa-fw', 'stwid--icon');
@@ -333,7 +337,7 @@ function buildEntryManagerRow({
   const handle = document.createElement('td');
   handle.setAttribute('data-col', 'drag');
   const controls = document.createElement('div');
-  controls.classList.add('stwid--orderMove');
+  controls.classList.add('stwid--order-move');
   const upButton = createMoveButton({
     row: tr,
     direction: 'up',
@@ -355,7 +359,7 @@ function buildEntryManagerRow({
     updateCustomOrderFromDom,
   });
   const dragHandle = document.createElement('div');
-  dragHandle.classList.add('stwid--sortableHandle', 'fa-solid', 'fa-fw', 'fa-grip-lines');
+  dragHandle.classList.add('stwid--sortable-handle', 'fa-solid', 'fa-fw', 'fa-grip-lines');
   setTooltip(dragHandle, 'Drag to reorder rows');
   controls.append(upButton, dragHandle, downButton);
   handle.append(controls);
@@ -400,7 +404,7 @@ function buildEntryManagerRow({
   bookLabel.append(bookText);
   entryCellWrap.append(bookLabel);
   const commentLink = document.createElement('a');
-  commentLink.classList.add('stwid--comment', 'stwid--commentLink');
+  commentLink.classList.add('stwid--comment', 'stwid--comment-link');
   commentLink.href = `#world_entry/${encodeURIComponent(entryRow.data.uid)}`;
   commentLink.textContent = entryRow.data.comment ?? '';
   commentLink.addEventListener('click', (evt) => {
@@ -418,7 +422,7 @@ function buildEntryManagerRow({
   const strategy = document.createElement('td');
   strategy.setAttribute('data-col', 'strategy');
   const strategySelect = strategyTemplate.cloneNode(true);
-  strategySelect.classList.add('stwid--strategy', 'stwid--smallSelectTextPole');
+  strategySelect.classList.add('stwid--strategy', 'stwid--sort-select');
   setTooltip(strategySelect, 'Entry strategy');
   strategySelect.value = entryState(entryRow.data);
   strategySelect.addEventListener('change', async () => {
@@ -449,7 +453,7 @@ function buildEntryManagerRow({
   const position = document.createElement('td');
   position.setAttribute('data-col', 'position');
   cache[entryRow.book].dom.entry[entryRow.data.uid].position = positionSelect;
-  positionSelect.classList.add('stwid--position', 'stwid--smallSelectTextPole');
+  positionSelect.classList.add('stwid--position', 'stwid--sort-select');
   setTooltip(positionSelect, 'Where this entry is inserted');
   positionSelect.value = entryRow.data.position;
   positionSelect.addEventListener('change', async () => {
@@ -513,7 +517,7 @@ function buildEntryManagerRow({
   const group = document.createElement('td');
   group.setAttribute('data-col', 'group');
   const groupWrap = document.createElement('div');
-  groupWrap.classList.add('stwid--colwrap', 'stwid--outlet', 'stwid--recursionOptions');
+  groupWrap.classList.add('stwid--colwrap', 'stwid--outlet', 'stwid--recursion-options');
   const groupInput = buildTextInput({
     name: 'group',
     tooltip: 'Inclusion group name',
@@ -530,7 +534,7 @@ function buildEntryManagerRow({
   });
   groupWrap.append(groupInput, document.createElement('br'));
   const prioritizeRow = document.createElement('label');
-  prioritizeRow.classList.add('stwid--small-check-row');
+  prioritizeRow.classList.add('stwid--option-check-row');
   const prioritizeInput = document.createElement('input');
   prioritizeInput.type = 'checkbox';
   prioritizeInput.classList.add('checkbox');
@@ -598,7 +602,7 @@ function buildEntryManagerRow({
 
   const automationId = document.createElement('td');
   automationId.setAttribute('data-col', 'automationId');
-  automationId.classList.add('stwid--orderTable--NumberColumns');
+  automationId.classList.add('stwid--order-table--number-columns');
   const automationIdInput = buildTextInput({
     name: 'automationId',
     tooltip: 'Automation ID',
@@ -636,7 +640,7 @@ function buildEntryManagerRow({
   const recursion = document.createElement('td');
   recursion.setAttribute('data-col', 'recursion');
   const recursionWrap = document.createElement('div');
-  recursionWrap.classList.add('stwid--recursionOptions');
+  recursionWrap.classList.add('stwid--recursion-options');
   for (const { value, label } of ENTRY_MANAGER_RECURSION_OPTIONS) {
     recursionWrap.append(
       buildRecursionOptionRow({
@@ -656,9 +660,9 @@ function buildEntryManagerRow({
   const budget = document.createElement('td');
   budget.setAttribute('data-col', 'budget');
   const budgetWrap = document.createElement('div');
-  budgetWrap.classList.add('stwid--recursionOptions');
+  budgetWrap.classList.add('stwid--recursion-options');
   const budgetRow = document.createElement('label');
-  budgetRow.classList.add('stwid--small-check-row');
+  budgetRow.classList.add('stwid--option-check-row');
   const budgetInput = document.createElement('input');
   budgetInput.type = 'checkbox';
   budgetInput.classList.add('checkbox');
@@ -678,14 +682,14 @@ function buildEntryManagerRow({
   const characterFilter = document.createElement('td');
   characterFilter.setAttribute('data-col', 'characterFilter');
   const characterFilterWrap = document.createElement('div');
-  characterFilterWrap.classList.add('stwid--colwrap', 'stwid--characterFilterOptions');
+  characterFilterWrap.classList.add('stwid--colwrap', 'stwid--character-filter-options');
   const lines = formatCharacterFilter(entryRow.data);
   if (!lines.length) {
     characterFilterWrap.textContent = '';
   } else {
     for (const line of lines) {
       const row = document.createElement('div');
-      row.classList.add('stwid--characterFilterRow', `stwid--characterFilterRow--${line.mode}`);
+      row.classList.add('stwid--character-filter-row', `stwid--character-filter-row--${line.mode}`);
       const icon = document.createElement('i');
       icon.classList.add('fa-solid', 'fa-fw', line.icon);
       const text = document.createElement('span');
@@ -701,7 +705,7 @@ function buildEntryManagerRow({
   return tr;
 }
 
-export function buildTableBody({
+export async function buildTableBody({
   entries,
   dom,
   cache,
@@ -753,7 +757,8 @@ export function buildTableBody({
     getEntryManagerRows,
   });
 
-  for (const entryRow of entries) {
+  for (let i = 0; i < entries.length; i++) {
+    const entryRow = entries[i];
     tbody.append(
       buildEntryManagerRow({
         entryRow,
@@ -786,6 +791,10 @@ export function buildTableBody({
         updateCustomOrderFromDom,
       }),
     );
+    await maybeYieldToEventLoop(i, ROW_BUILD_BATCH_SIZE);
+    // A newer render may have replaced dom.order.tbody during the yield;
+    // abandon this stale build so we don't repopulate outdated state.
+    if (dom.order.tbody !== tbody) return tbody;
   }
 
   applyEntryManagerStrategyFilters();

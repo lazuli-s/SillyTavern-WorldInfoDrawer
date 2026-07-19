@@ -4,6 +4,7 @@ const CORE_UI_ACTION_SELECTORS = Object.freeze({
   renameBook: Object.freeze(['#world_popup_name_button']),
 });
 
+/** Default timeout (ms) for DOM-wait operations. Callers can override via the `timeoutMs` option for context-specific needs. */
 const DEFAULT_DOM_WAIT_TIMEOUT_MS = 5000;
 
 const waitForDom = (condition, { timeoutMs = DEFAULT_DOM_WAIT_TIMEOUT_MS, root = document } = {}) =>
@@ -54,9 +55,6 @@ const setSelectedBookInCoreUi = async (
 
   worldEditorSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
-  await delay(50);
-  if (worldEditorSelect.value !== matchedBookOption.value) return false;
-
   if (waitForWorldInfoUpdate) {
     await Promise.race([waitForWorldInfoUpdate(), delay(800)]);
     return true;
@@ -73,9 +71,12 @@ const clickCoreUiAction = async (
   const findButton = () =>
     selectors.map((sel) => document.querySelector(sel)).find((el) => el instanceof HTMLElement);
 
-  const ok = await waitForDom(() => Boolean(findButton()), { timeoutMs });
+  let actionButton;
+  const ok = await waitForDom(() => {
+    actionButton = findButton();
+    return Boolean(actionButton);
+  }, { timeoutMs });
   if (!ok) return false;
-  const actionButton = findButton();
   actionButton.click();
   return true;
 };

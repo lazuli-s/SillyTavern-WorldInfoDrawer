@@ -116,7 +116,7 @@ const createActivationSettingsController = ({
 
 const createFocusControls = ({ createFocusToggleButton, dom }) => {
   const appendUnfocusButton = () => {
-    const unfocus = createFocusToggleButton('stwid--unfocusToggle', 'fa-compress', 'Unfocus');
+    const unfocus = createFocusToggleButton('stwid--unfocus-toggle', 'fa-compress', 'Unfocus');
     dom.editor.append(unfocus);
   };
 
@@ -125,7 +125,7 @@ const createFocusControls = ({ createFocusToggleButton, dom }) => {
       entryEditorDom.querySelector('label[for="content"] > small > span > span') ??
       entryEditorDom.querySelector('label[for="content "] > small > span > span');
     if (!focusContainer) return;
-    const focusToggleButton = createFocusToggleButton('stwid--focusToggle', 'fa-expand', 'Focus');
+    const focusToggleButton = createFocusToggleButton('stwid--focus-toggle', 'fa-expand', 'Focus');
     focusContainer.append(focusToggleButton);
   };
 
@@ -228,12 +228,21 @@ const fetchEntryHeaderElement = async (renderTemplateAsync, isTokenCurrent) => {
 };
 
 const fixTextpoleHeights = (entryEditorDom) => {
-  entryEditorDom
-    .querySelectorAll('.keyprimarytextpole, .keysecondarytextpole')
-    .forEach((textpoleTextarea) => {
-      textpoleTextarea.style.height = '0px';
-      textpoleTextarea.style.height = `${textpoleTextarea.scrollHeight + 3}px`;
-    });
+  // Separate the write/read/write phases so the browser only reflows once
+  // instead of once per textarea (PERF-W4-06): reset both heights, then read
+  // both scrollHeights, then apply both final heights.
+  const textpoleTextareas = [
+    ...entryEditorDom.querySelectorAll('.keyprimarytextpole, .keysecondarytextpole'),
+  ];
+  for (const textpoleTextarea of textpoleTextareas) {
+    textpoleTextarea.style.height = '0px';
+  }
+  const finalHeights = textpoleTextareas.map(
+    (textpoleTextarea) => textpoleTextarea.scrollHeight + 3,
+  );
+  textpoleTextareas.forEach((textpoleTextarea, index) => {
+    textpoleTextarea.style.height = `${finalHeights[index]}px`;
+  });
 };
 
 const createDirtyTracker = ({ dom }) => {

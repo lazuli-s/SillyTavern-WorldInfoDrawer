@@ -117,7 +117,7 @@ const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveTo
   searchRow.append(search);
 
   const searchEntriesLabel = document.createElement('label');
-  searchEntriesLabel.classList.add('stwid--searchEntries');
+  searchEntriesLabel.classList.add('stwid--search-entries');
   searchEntriesLabel.title = 'Search through entries as well (Title/Memo/Keys)';
   const searchEntriesCheckbox = document.createElement('input');
   listPanelState.searchEntriesInput = searchEntriesCheckbox;
@@ -134,7 +134,7 @@ const buildSearchRow = (searchRow, listPanelState, runtime, updateFolderActiveTo
 
 export const createSearchRow = (listPanelState, runtime, updateFolderActiveToggles) => {
   const searchRow = document.createElement('div');
-  searchRow.classList.add('stwid--browserRow');
+  searchRow.classList.add('stwid--browser-row');
   const { search, searchEntriesCheckbox } = buildSearchRow(
     searchRow,
     listPanelState,

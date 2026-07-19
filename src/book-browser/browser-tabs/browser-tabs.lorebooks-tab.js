@@ -1,9 +1,19 @@
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
+
 const CREATE_BOOK_LABEL = 'Create New Book';
 const IMPORT_BOOK_LABEL = 'Import Book';
 
+// Yield to the browser after this many books so "Expand/Collapse All" does not
+// freeze the tab in one synchronous burst (PERF-W5-02).
+const COLLAPSE_ALL_BATCH_SIZE = 3;
+
+// Bumped on every "Collapse/Expand All" click so a newer click supersedes an
+// older in-flight loop instead of two loops writing the DOM at the same time.
+let collapseAllGeneration = 0;
+
 function createLorebooksGroupLabel() {
   const lorebooksGroupLabel = document.createElement('span');
-  lorebooksGroupLabel.classList.add('stwid--thinContainerLabel');
+  lorebooksGroupLabel.classList.add('stwid--field-group__label');
   lorebooksGroupLabel.textContent = 'Lorebooks';
 
   const lorebooksGroupHint = document.createElement('i');
@@ -11,7 +21,7 @@ function createLorebooksGroupLabel() {
     'fa-solid',
     'fa-fw',
     'fa-circle-question',
-    'stwid--thinContainerLabelHint',
+    'stwid--field-group__label-hint',
   );
   lorebooksGroupHint.title = 'Create, import, or collapse lorebooks';
 
@@ -81,12 +91,22 @@ function createCollapseAllToggle({ dom, cache, getListPanelApi }) {
   const collapseBooksIcon = document.createElement('i');
   collapseBooksIcon.classList.add('fa-solid', 'fa-fw');
   collapseAllToggle.append(collapseBooksIcon);
-  collapseAllToggle.addEventListener('click', () => {
+  collapseAllToggle.addEventListener('click', async () => {
+    const myGeneration = ++collapseAllGeneration;
     const listPanelApi = getListPanelApi();
     const shouldCollapse = listPanelApi.hasExpandedBooks();
-    for (const name of Object.keys(cache)) {
+    // Snapshot the names up front: the loop now yields, so cache could gain or
+    // lose books mid-pass; we iterate the set as it was when the click landed.
+    const bookNames = Object.keys(cache);
+    for (let i = 0; i < bookNames.length; i++) {
+      // A newer click has taken over — stop so we don't fight it.
+      if (myGeneration !== collapseAllGeneration) return;
+      const name = bookNames[i];
+      if (!cache[name]) continue; // book removed during a yield
       listPanelApi.setBookCollapsed(name, shouldCollapse);
+      await maybeYieldToEventLoop(i, COLLAPSE_ALL_BATCH_SIZE);
     }
+    if (myGeneration !== collapseAllGeneration) return;
     listPanelApi.updateCollapseAllToggle();
   });
 
@@ -103,10 +123,10 @@ export const createLorebooksTabContent = ({
   getListPanelApi,
 }) => {
   const root = document.createElement('div');
-  root.classList.add('stwid--browserRow');
+  root.classList.add('stwid--browser-row');
 
   const lorebooksGroup = document.createElement('div');
-  lorebooksGroup.classList.add('stwid--thinContainer');
+  lorebooksGroup.classList.add('stwid--field-group');
   lorebooksGroup.append(createLorebooksGroupLabel());
   lorebooksGroup.append(
     createCreateBookButton({

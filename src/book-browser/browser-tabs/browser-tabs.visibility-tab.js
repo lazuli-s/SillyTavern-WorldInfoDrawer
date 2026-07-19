@@ -38,10 +38,10 @@ const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
 
 const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 const CSS_STATE_ACTIVE = 'stwid--state-active';
-const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselectDropdownButton';
-const CSS_MULTISELECT_DROPDOWN_OPTION = 'stwid--multiselectDropdownOption';
-const CSS_MULTISELECT_DROPDOWN_OPTION_CHECKBOX = 'stwid--multiselectDropdownOptionCheckbox';
-const DEFAULT_CSS_VISIBILITY_CHIP = 'stwid--visibilityChip';
+const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselect-dropdown__button';
+const CSS_MULTISELECT_DROPDOWN_OPTION = 'stwid--multiselect-dropdown__option';
+const CSS_MULTISELECT_DROPDOWN_OPTION_CHECKBOX = 'stwid--multiselect-dropdown__option-checkbox';
+const DEFAULT_CSS_VISIBILITY_CHIP = 'stwid--visibility-chip';
 
 const normalizeBookSourceLinks = (links) => ({
   character: Boolean(links?.character),
@@ -77,7 +77,7 @@ const buildVisibilityMenuOptions = ({
     const optionTooltip = BOOK_VISIBILITY_OPTION_TOOLTIPS[option.mode] ?? option.label;
     const optionButton = document.createElement('button');
     optionButton.type = 'button';
-    optionButton.classList.add(CSS_MULTISELECT_DROPDOWN_OPTION, 'stwid--menuItem');
+    optionButton.classList.add(CSS_MULTISELECT_DROPDOWN_OPTION, 'stwid--menu-item');
     optionButton.setAttribute('data-mode', option.mode);
     optionButton.setAttribute('aria-pressed', 'false');
     optionButton.title = optionTooltip;
@@ -92,7 +92,7 @@ const buildVisibilityMenuOptions = ({
       setMultiselectDropdownOptionCheckboxState(optionCheckbox, false);
       optionButton.append(optionCheckbox);
     }
-    optionButton.append(createBookVisibilityIcon(option, 'stwid--multiselectDropdownOptionIcon'));
+    optionButton.append(createBookVisibilityIcon(option, 'stwid--multiselect-dropdown__option-icon'));
     const optionLabel = document.createElement('span');
     optionLabel.textContent = option.label;
     optionButton.append(optionLabel);
@@ -310,16 +310,16 @@ const buildVisibilityDropdownSection = ({
   setMultiselectDropdownOptionCheckboxState,
 }) => {
   const visibilityContainer = document.createElement('div');
-  visibilityContainer.classList.add('stwid--thinContainer', 'stwid--visibilityFilters');
+  visibilityContainer.classList.add('stwid--field-group', 'stwid--visibilityFilters');
   const visibilityContainerLabel = document.createElement('span');
-  visibilityContainerLabel.classList.add('stwid--thinContainerLabel');
+  visibilityContainerLabel.classList.add('stwid--field-group__label');
   visibilityContainerLabel.textContent = 'Visibility';
   const visibilityContainerHint = document.createElement('i');
   visibilityContainerHint.classList.add(
     'fa-solid',
     'fa-fw',
     'fa-circle-question',
-    'stwid--thinContainerLabelHint',
+    'stwid--field-group__label-hint',
   );
   visibilityContainerHint.title =
     'Pick which sources are visible and review the active filter chips.';
@@ -327,16 +327,16 @@ const buildVisibilityDropdownSection = ({
   visibilityContainer.append(visibilityContainerLabel);
 
   const visibilityDropdownContainer = document.createElement('div');
-  visibilityDropdownContainer.classList.add('stwid--multiselectDropdownWrap');
+  visibilityDropdownContainer.classList.add('stwid--multiselect-dropdown__wrap');
 
   const visibilityMenuButton = createVisibilityMenuButton();
   visibilityDropdownContainer.append(visibilityMenuButton);
 
   const bookVisibilityMenuEl = document.createElement('div');
   bookVisibilityMenuEl.classList.add(
-    'stwid--multiselectDropdownMenu',
-    'stwid--bookVisibilityMenu',
-    'stwid--small-multiselect',
+    'stwid--multiselect-dropdown__menu',
+    'stwid--book-visibility-menu',
+    'stwid--inline-multiselect',
     'stwid--menu',
   );
   listPanelState.bookVisibilityMenu = bookVisibilityMenuEl;
@@ -362,7 +362,7 @@ const buildVisibilityDropdownSection = ({
   bookVisibilityMenuEl[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = wrappedClose;
   visibilityMenuButton.addEventListener('click', onVisibilityMenuButtonClick);
   const chips = document.createElement('div');
-  chips.classList.add('stwid--visibilityChips');
+  chips.classList.add('stwid--visibility-chips');
   listPanelState.bookVisibilityChips = chips;
   visibilityContainer.append(visibilityDropdownContainer, chips);
 

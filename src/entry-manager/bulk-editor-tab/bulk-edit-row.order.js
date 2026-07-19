@@ -1,4 +1,5 @@
 import { setTooltip } from '../entry-manager.utils.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 import {
   BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
@@ -6,7 +7,6 @@ import {
   createApplyButton,
   buildDirectionRadio,
   buildPersistedNumberInput,
-  maybeYieldToEventLoop,
   getSafeTbodyRows,
   getBulkTargets,
   saveUpdatedBooks,
@@ -68,7 +68,7 @@ function createRunApplyOrder({
 
 function buildOrderStartSpacingControls({ dom, applyOrder }) {
   const startSpacingPair = document.createElement('div');
-  startSpacingPair.classList.add('stwid--orderStartSpacingPair');
+  startSpacingPair.classList.add('stwid--order-start-spacing-pair');
 
   const markApplyButtonDirty = () => applyOrder.classList.add(APPLY_DIRTY_CLASS);
   const { label: startLabel, inputEl: startInputEl } = buildPersistedNumberInput({
@@ -98,7 +98,7 @@ function buildOrderStartSpacingControls({ dom, applyOrder }) {
 
 function buildOrderDirectionControls({ dom, applyOrder }) {
   const directionGroup = document.createElement('div');
-  directionGroup.classList.add('stwid--inputWrap');
+  directionGroup.classList.add('stwid--input-wrap');
   setTooltip(directionGroup, 'Direction used when applying Order values');
   directionGroup.append('Direction: ');
 

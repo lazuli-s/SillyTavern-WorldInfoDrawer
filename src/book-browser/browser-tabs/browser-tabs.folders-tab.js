@@ -2,9 +2,9 @@ const MENU_BUTTON_CLASS = 'menu_button';
 
 export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getListPanelApi }) => {
   const root = document.createElement('div');
-  root.classList.add('stwid--browserRow');
+  root.classList.add('stwid--browser-row');
   const foldersGroup = document.createElement('div');
-  foldersGroup.classList.add('stwid--thinContainer', 'stwid--foldersGroup');
+  foldersGroup.classList.add('stwid--field-group', 'stwid--foldersGroup');
   dom.folderControls.group = foldersGroup;
   function createFolderActionButton({ controlKey, iconClass, title, onClick }) {
     const button = document.createElement('div');
@@ -23,14 +23,14 @@ export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getLis
     return button;
   }
   const foldersGroupLabel = document.createElement('span');
-  foldersGroupLabel.classList.add('stwid--thinContainerLabel');
+  foldersGroupLabel.classList.add('stwid--field-group__label');
   foldersGroupLabel.textContent = 'Folders';
   const foldersGroupHint = document.createElement('i');
   foldersGroupHint.classList.add(
     'fa-solid',
     'fa-fw',
     'fa-circle-question',
-    'stwid--thinContainerLabelHint',
+    'stwid--field-group__label-hint',
   );
   foldersGroupHint.title = 'Create, import, or collapse folders';
   foldersGroupLabel.append(foldersGroupHint);

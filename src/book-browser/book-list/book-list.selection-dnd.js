@@ -1,5 +1,7 @@
 import { resetSelectionMemory } from '../book-browser.state.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 
+const ENTRY_TRANSFER_BATCH_SIZE = 200;
 const ENTRY_SELECTION_ICON_SELECTOR = '.stwid--selector > .stwid--icon';
 const UNSELECTED_ENTRY_ICON_CLASS = 'fa-square';
 const DROP_TARGET_CLASS = 'stwid--state-target';
@@ -128,7 +130,14 @@ const transferSelectedEntries = async (
     hasSrcChanges: false,
   };
 
-  for (const uid of selectedUids) {
+  for (let index = 0; index < selectedUids.length; index += 1) {
+    // Yield a real macrotask every batch so a large copy/move does not freeze
+    // the tab (PERF-W4-03). The concurrent-update guard below re-runs right
+    // after each yield, so a save that lands during the pause is still caught
+    // before any further mutation. UID assignment stays with ST's
+    // createWorldInfoEntry (ST owns UID generation).
+    await maybeYieldToEventLoop(index, ENTRY_TRANSFER_BATCH_SIZE);
+    const uid = selectedUids[index];
     if (hasConcurrentBookUpdate()) {
       throw new Error('Lorebook changed while moving entries. Please retry.');
     }
@@ -203,7 +212,10 @@ const finalizeEntryTransfer = async (
         restoreBookSnapshot(dstBook, previousDstBook);
         await saveBook(targetBookName, previousDstBook, 'destination rollback');
       } catch (rollbackError) {
-        console.warn('[STWID] Failed to roll back destination lorebook after source save failure.', rollbackError);
+        console.warn(
+          '[STWID] Failed to roll back destination lorebook after source save failure.',
+          rollbackError,
+        );
       }
     } else if (previousDstBook) {
       restoreBookSnapshot(dstBook, previousDstBook);
@@ -350,13 +362,13 @@ const createBookDropHandlers = ({
 
   const onRootDropTargetDragOver = (evt) => {
     if (!listPanelState.dragBookName) return;
-    if (evt.target.closest('.stwid--folderHeader')) return;
+    if (evt.target.closest('.stwid--folder-header')) return;
     evt.preventDefault();
   };
 
   const onRootDropTargetDrop = async (evt) => {
     if (!listPanelState.dragBookName) return;
-    if (evt.target.closest('.stwid--folderHeader')) return;
+    if (evt.target.closest('.stwid--folder-header')) return;
     evt.preventDefault();
     const draggedName = listPanelState.dragBookName;
     listPanelState.dragBookName = null;

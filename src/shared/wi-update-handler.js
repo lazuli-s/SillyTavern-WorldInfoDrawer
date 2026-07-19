@@ -47,6 +47,30 @@ const renderMissingBooks = async ({ cache, worldNames, loadWorldInfoForBook, lis
   }
 };
 
+// Cheap equality check for a single entry field. Array fields (key,
+// keysecondary, triggers) are the common case and are compared element by
+// element instead of via JSON.stringify (PERF-W4-01); only genuine non-array
+// objects (e.g. characterFilter) fall back to JSON serialization.
+const areEntryFieldValuesEqual = (oldValue, newValue) => {
+  if (oldValue === newValue) return true;
+  if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+    if (oldValue.length !== newValue.length) return false;
+    for (let index = 0; index < oldValue.length; index += 1) {
+      if (oldValue[index] !== newValue[index]) return false;
+    }
+    return true;
+  }
+  if (
+    typeof oldValue === 'object' &&
+    oldValue !== null &&
+    typeof newValue === 'object' &&
+    newValue !== null
+  ) {
+    return JSON.stringify(oldValue) === JSON.stringify(newValue);
+  }
+  return false;
+};
+
 const applyEntryFieldDiff = ({
   bookName,
   entryUid,
@@ -63,9 +87,7 @@ const applyEntryFieldDiff = ({
   for (const fieldName of new Set([...Object.keys(oldEntry), ...Object.keys(updatedEntry)])) {
     const oldValue = oldEntry[fieldName];
     const newValue = updatedEntry[fieldName];
-    if (oldValue === newValue) continue;
-    if (typeof oldValue === 'object' && JSON.stringify(oldValue) === JSON.stringify(newValue))
-      continue;
+    if (areEntryFieldValuesEqual(oldValue, newValue)) continue;
 
     hasChange = true;
     switch (fieldName) {
@@ -186,22 +208,43 @@ const syncBookEntriesAndDom = async ({
     }
   }
 
-  const alreadyAdded = [];
-  for (const entryUid of Object.keys(world.entries)) {
-    if (cache[bookName].entries[entryUid]) continue;
-    const entryToInsert = world.entries[entryUid];
+  const newEntries = Object.keys(world.entries)
+    .filter((entryUid) => !cache[bookName].entries[entryUid])
+    .map((entryUid) => world.entries[entryUid]);
+
+  if (newEntries.length > 0) {
+    // Sort the merged list (existing + all new entries) ONCE instead of
+    // re-sorting the whole book per new entry (PERF-W4-02). Then, in a single
+    // right-to-left pass, record each position's insert anchor: the nearest
+    // entry to its right that already has a rendered DOM node (i.e. an existing
+    // entry — new entries have none yet). Inserting new entries left-to-right
+    // before that anchor reproduces the same fully-sorted order the old
+    // per-entry re-sort produced, without the O(k * n log n) cost.
+    const newEntrySet = new Set(newEntries);
     const sorted = sortEntries(
-      [...Object.values(cache[bookName].entries), ...alreadyAdded, entryToInsert],
+      [...Object.values(cache[bookName].entries), ...newEntries],
       sortChoice.sort,
       sortChoice.direction,
     );
-    const before = sorted.find((it, idx) => idx > sorted.indexOf(entryToInsert));
-    await renderEntry(
-      entryToInsert,
-      bookName,
-      before ? cache[bookName].dom.entry[before.uid].root : null,
-    );
-    alreadyAdded.push(entryToInsert);
+
+    const anchorEntries = new Array(sorted.length);
+    let nextAnchorEntry = null;
+    for (let index = sorted.length - 1; index >= 0; index -= 1) {
+      anchorEntries[index] = nextAnchorEntry;
+      if (cache[bookName].dom.entry[sorted[index].uid]) nextAnchorEntry = sorted[index];
+    }
+
+    for (let index = 0; index < sorted.length; index += 1) {
+      const entryToInsert = sorted[index];
+      if (!newEntrySet.has(entryToInsert)) continue;
+      // Resolve the anchor's DOM node freshly at insert time so a node that has
+      // gone away degrades to an append (null) instead of throwing.
+      const anchorEntry = anchorEntries[index];
+      const beforeRoot = anchorEntry
+        ? (cache[bookName].dom.entry[anchorEntry.uid]?.root ?? null)
+        : null;
+      await renderEntry(entryToInsert, bookName, beforeRoot);
+    }
   }
 
   let hasUpdate = false;
@@ -332,10 +375,12 @@ const registerWorldInfoListeners = ({
 
   eventBus.on(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
   eventBus.on(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
+  eventBus.on(eventTypes.CHAT_CHANGED, onWorldInfoSettingsUpdated);
 
   return () => {
     eventBus.removeListener(eventTypes.WORLDINFO_UPDATED, onWorldInfoUpdated);
     eventBus.removeListener(eventTypes.WORLDINFO_SETTINGS_UPDATED, onWorldInfoSettingsUpdated);
+    eventBus.removeListener(eventTypes.CHAT_CHANGED, onWorldInfoSettingsUpdated);
   };
 };
 

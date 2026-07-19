@@ -1,4 +1,4 @@
-import { getCharaFilename } from '../../../../../../utils.js';
+import { debounce, getCharaFilename } from '../../../../../../utils.js';
 
 import { METADATA_KEY, world_info, world_names } from '../../../../../../world-info.js';
 
@@ -104,9 +104,9 @@ const buildSourceLinksSignature = (linksByBook) => {
   const signatureEntries = [];
   for (const bookName of Object.keys(linksByBook).sort()) {
     const links = linksByBook[bookName] ?? EMPTY_BOOK_SOURCE_LINKS;
-    const characterNames = Array.isArray(links.characterNames)
-      ? [...links.characterNames].sort((a, b) => String(a).localeCompare(String(b)))
-      : [];
+    // characterNames is already alphabetized at construction time in
+    // buildLorebookSourceLinks, so no re-sort is needed here (PERF-W4-05).
+    const characterNames = Array.isArray(links.characterNames) ? links.characterNames : [];
     const personaName = typeof links.personaName === 'string' ? links.personaName : '';
     signatureEntries.push(
       [
@@ -278,17 +278,23 @@ export const initBookSourceLinks = ({ getListPanelApi }) => {
     return true;
   };
 
+  // The high-frequency event paths below (broad ST events + a document-wide
+  // `change` listener) are debounced so bursts collapse into a single rebuild
+  // (PERF-W4-04). The returned refreshBookSourceLinks stays immediate so the
+  // one-time init call in drawer.js paints source icons without delay.
+  const refreshBookSourceLinksDebounced = debounce(refreshBookSourceLinks);
+
   const onSourceSelectorChange = (changeEvent) => {
     const changeTarget = changeEvent.target instanceof HTMLElement ? changeEvent.target : null;
     if (!changeTarget) return;
     if (!changeTarget.matches('.chat_world_info_selector, .persona_world_info_selector')) return;
-    refreshBookSourceLinks('lorebook_source_selector_change');
+    refreshBookSourceLinksDebounced('lorebook_source_selector_change');
   };
 
   subscribeToSourceLinkRefreshEvents(
     eventSource,
     eventTypes,
-    refreshBookSourceLinks,
+    refreshBookSourceLinksDebounced,
     eventSubscriptions,
     onSourceSelectorChange,
   );

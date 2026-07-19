@@ -10,7 +10,7 @@ function getIsEditorDirty(getCurrentEditor, getEditorPanelApi) {
 
 function createSettingsGroupLabel() {
   const settingsGroupLabel = document.createElement('span');
-  settingsGroupLabel.classList.add('stwid--thinContainerLabel');
+  settingsGroupLabel.classList.add('stwid--field-group__label');
   settingsGroupLabel.textContent = 'Settings';
 
   const settingsGroupHint = document.createElement('i');
@@ -18,7 +18,7 @@ function createSettingsGroupLabel() {
     'fa-solid',
     'fa-fw',
     'fa-circle-question',
-    'stwid--thinContainerLabelHint',
+    'stwid--field-group__label-hint',
   );
   settingsGroupHint.title = 'Open activation settings or refresh the list';
   settingsGroupLabel.append(settingsGroupHint);
@@ -113,10 +113,10 @@ export const createSettingsTabContent = ({
   getCurrentEditor,
 }) => {
   const root = document.createElement('div');
-  root.classList.add('stwid--browserRow');
+  root.classList.add('stwid--browser-row');
 
   const settingsGroup = document.createElement('div');
-  settingsGroup.classList.add('stwid--thinContainer');
+  settingsGroup.classList.add('stwid--field-group');
   settingsGroup.append(createSettingsGroupLabel());
 
   const activationSettingsButton = createActivationSettingsButton({

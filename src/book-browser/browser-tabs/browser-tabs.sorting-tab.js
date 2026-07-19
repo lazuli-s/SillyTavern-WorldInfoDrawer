@@ -1,9 +1,19 @@
 import { Settings } from '../../shared/settings.js';
-import { appendSortOptions } from '../../shared/utils.js';
+import { appendSortOptions, maybeYieldToEventLoop } from '../../shared/utils.js';
+
+// Yield to the browser after this many books so re-sorting a large collection
+// does not freeze the tab in one synchronous burst (PERF-W5-01).
+const SORT_ALL_BATCH_SIZE = 5;
+
+// Bumped on every re-sort request (global dropdown change or per-book toggle) so
+// a newer request supersedes an older in-flight loop. This guarantees the final
+// full pass uses the latest settings, rather than leaving early books sorted by
+// an old setting and later books by a new one.
+let sortAllGeneration = 0;
 
 function createThinContainerLabel(labelText, hintTitle) {
   const thinContainerLabel = document.createElement('span');
-  thinContainerLabel.classList.add('stwid--thinContainerLabel');
+  thinContainerLabel.classList.add('stwid--field-group__label');
   thinContainerLabel.textContent = labelText;
 
   const thinContainerHint = document.createElement('i');
@@ -11,7 +21,7 @@ function createThinContainerLabel(labelText, hintTitle) {
     'fa-solid',
     'fa-fw',
     'fa-circle-question',
-    'stwid--thinContainerLabelHint',
+    'stwid--field-group__label-hint',
   );
   thinContainerHint.title = hintTitle;
   thinContainerLabel.append(thinContainerHint);
@@ -19,16 +29,25 @@ function createThinContainerLabel(labelText, hintTitle) {
   return thinContainerLabel;
 }
 
-function sortAllCachedBooks(cache, getListPanelApi) {
+async function sortAllCachedBooks(cache, getListPanelApi) {
+  const myGeneration = ++sortAllGeneration;
   const listPanelApi = getListPanelApi();
-  for (const bookName of Object.keys(cache)) {
+  // Snapshot the names up front: the loop now yields, so cache could change
+  // mid-pass; iterate the set as it was when the sort was requested.
+  const bookNames = Object.keys(cache);
+  for (let i = 0; i < bookNames.length; i++) {
+    // A newer sort request has taken over — stop and let it do the full pass.
+    if (myGeneration !== sortAllGeneration) return;
+    const bookName = bookNames[i];
+    if (!cache[bookName]) continue; // book removed during a yield
     listPanelApi.sortEntriesIfNeeded(bookName);
+    await maybeYieldToEventLoop(i, SORT_ALL_BATCH_SIZE);
   }
 }
 
 function createGlobalSortingSection({ cache, getListPanelApi }) {
   const globalSortingWrapper = document.createElement('div');
-  globalSortingWrapper.classList.add('stwid--thinContainer');
+  globalSortingWrapper.classList.add('stwid--field-group');
   globalSortingWrapper.append(
     createThinContainerLabel(
       'Global Sorting',
@@ -37,10 +56,10 @@ function createGlobalSortingSection({ cache, getListPanelApi }) {
   );
 
   const globalSortingGroup = document.createElement('div');
-  globalSortingGroup.classList.add('stwid--globalSorting');
+  globalSortingGroup.classList.add('stwid--global-sorting');
 
   const globalSortSelect = document.createElement('select');
-  globalSortSelect.classList.add('text_pole', 'stwid--smallSelectTextPole');
+  globalSortSelect.classList.add('text_pole', 'stwid--sort-select');
   globalSortSelect.title = 'Global entry sort for the book browser';
   globalSortSelect.setAttribute('aria-label', 'Global entry sort');
   globalSortSelect.addEventListener('change', () => {
@@ -59,7 +78,7 @@ function createGlobalSortingSection({ cache, getListPanelApi }) {
 
 function createPerBookSortingSection({ cache, getListPanelApi }) {
   const perBookSortingWrapper = document.createElement('div');
-  perBookSortingWrapper.classList.add('stwid--thinContainer');
+  perBookSortingWrapper.classList.add('stwid--field-group');
   perBookSortingWrapper.append(
     createThinContainerLabel(
       'Per-book Sorting',
@@ -68,14 +87,14 @@ function createPerBookSortingSection({ cache, getListPanelApi }) {
   );
 
   const perBookSortingGroup = document.createElement('div');
-  perBookSortingGroup.classList.add('stwid--individualSorting');
+  perBookSortingGroup.classList.add('stwid--individual-sorting');
 
   const perBookButtons = document.createElement('div');
-  perBookButtons.classList.add('stwid--perBookSortButtons');
+  perBookButtons.classList.add('stwid--per-book-sort-buttons');
 
   const bookSortToggle = document.createElement('button');
   bookSortToggle.type = 'button';
-  bookSortToggle.classList.add('menu_button', 'stwid--bookSortToggle');
+  bookSortToggle.classList.add('menu_button', 'stwid--book-sort-toggle');
 
   const toggleIcon = document.createElement('i');
   toggleIcon.classList.add('fa-solid', 'fa-fw');
@@ -101,7 +120,7 @@ function createPerBookSortingSection({ cache, getListPanelApi }) {
 
   const clearBookSorts = document.createElement('button');
   clearBookSorts.type = 'button';
-  clearBookSorts.classList.add('menu_button', 'stwid--clearBookSorts');
+  clearBookSorts.classList.add('menu_button', 'stwid--clear-book-sorts');
 
   const clearIcon = document.createElement('i');
   clearIcon.classList.add('fa-solid', 'fa-fw', 'fa-broom');
@@ -127,7 +146,7 @@ function createPerBookSortingSection({ cache, getListPanelApi }) {
 
 export const createSortingTabContent = ({ cache, getListPanelApi }) => {
   const sortingRow = document.createElement('div');
-  sortingRow.classList.add('stwid--browserRow');
+  sortingRow.classList.add('stwid--browser-row');
 
   const globalSortingSection = createGlobalSortingSection({
     cache,

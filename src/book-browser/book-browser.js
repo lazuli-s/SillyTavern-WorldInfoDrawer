@@ -16,6 +16,7 @@ import {
   clearEntrySearchCache,
   hydrateFolderCollapseStates,
   listPanelState,
+  persistFolderCollapseStates,
   resetBookVisibilityState,
 } from './book-browser.state.js';
 import {
@@ -167,7 +168,7 @@ const renderBookSourceLinks = (sourceLinksContainer, links = null) => {
 
   for (const child of Array.from(sourceLinksContainer.children)) {
     if (!(child instanceof HTMLElement)) continue;
-    if (!child.classList.contains('stwid--sourceIcon')) continue;
+    if (!child.classList.contains('stwid--source-icon')) continue;
     const sourceKey =
       child.dataset.source ||
       SOURCE_ICON_DEFINITIONS.find((def) => child.classList.contains(def.icon))?.key;
@@ -190,7 +191,7 @@ const renderBookSourceLinks = (sourceLinksContainer, links = null) => {
     const def = nextDefs[i];
     const icon = existingIconsByKey.get(def.key) ?? document.createElement('i');
     icon.dataset.source = def.key;
-    icon.className = `stwid--sourceIcon fa-solid fa-fw ${def.icon}`;
+    icon.className = `stwid--source-icon fa-solid fa-fw ${def.icon}`;
     const tooltip = getSourceIconTooltip(def.key, def.label, details);
     if (icon.title !== tooltip) {
       icon.title = tooltip;
@@ -361,19 +362,26 @@ const setBookSortPreference = async (name, sort = null, direction = null) => {
 
 const clearBookSortPreferences = async () => {
   const failedBooks = [];
-  for (const [name, data] of Object.entries(state.cache)) {
-    const hasSortPreference = Boolean(
-      data.metadata?.[state.METADATA_NAMESPACE]?.[state.METADATA_SORT_KEY],
+  const booksWithSort = Object.entries(state.cache).filter(
+    ([, data]) => data.metadata?.[state.METADATA_NAMESPACE]?.[state.METADATA_SORT_KEY],
+  );
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < booksWithSort.length; i += BATCH_SIZE) {
+    const batch = booksWithSort.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(([name]) => setBookSortPreference(name, null, null)),
     );
-    if (!hasSortPreference) continue;
-    try {
-      const result = await setBookSortPreference(name, null, null);
-      if (!result.ok) {
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j];
+      const name = batch[j][0];
+      if (result.status === 'fulfilled') {
+        if (!result.value.ok) {
+          failedBooks.push(name);
+        }
+      } else {
+        console.warn(`[STWID] Failed to clear sort preference for "${name}".`, result.reason);
         failedBooks.push(name);
       }
-    } catch (error) {
-      console.warn(`[STWID] Failed to clear sort preference for "${name}".`, error);
-      failedBooks.push(name);
     }
   }
   if (failedBooks.length) {
@@ -600,6 +608,7 @@ const createBooksViewSliceConfig = () => ({
   setCacheMetadata,
   updateBookSourceLinks,
   updateCollapseAllToggle,
+  persistFolderCollapseStates,
 });
 
 const wireSlices = () => {
@@ -656,7 +665,7 @@ const initBookBrowser = (options) => {
     );
     teardownListPanel();
   }
-  state = options;
+  state = { ...options };
   wireSlices();
   resetBookVisibilityState(BOOK_VISIBILITY_MODES);
   clearEntrySearchCache();

@@ -28,9 +28,9 @@ export const createMultiselectDropdownCheckbox = (checked = false) => {
   const input = document.createElement('input');
   input.type = 'checkbox';
   input.tabIndex = -1;
-  input.classList.add('stwid--multiselectDropdownOptionInput');
+  input.classList.add('stwid--multiselect-dropdown__option-input');
   const checkbox = document.createElement('i');
-  checkbox.classList.add('fa-solid', 'fa-fw', 'stwid--multiselectDropdownOptionCheckbox');
+  checkbox.classList.add('fa-solid', 'fa-fw', 'stwid--multiselect-dropdown__option-checkbox');
   const setChecked = (isChecked) => {
     input.checked = Boolean(isChecked);
     setMultiselectDropdownOptionCheckboxState(checkbox, input.checked);
@@ -48,7 +48,7 @@ export const createMultiselectDropdownCheckbox = (checked = false) => {
 
 export const closeOpenMultiselectDropdownMenus = (excludeMenu = null) => {
   for (const menu of document.querySelectorAll(
-    `.stwid--multiselectDropdownMenu.${CSS_STATE_ACTIVE}`,
+    `.stwid--multiselect-dropdown__menu.${CSS_STATE_ACTIVE}`,
   )) {
     if (menu === excludeMenu) continue;
     const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
@@ -57,19 +57,19 @@ export const closeOpenMultiselectDropdownMenus = (excludeMenu = null) => {
       continue;
     }
     menu.classList.remove(CSS_STATE_ACTIVE);
-    const trigger = menu.parentElement?.querySelector('.stwid--multiselectDropdownButton');
+    const trigger = menu.parentElement?.querySelector('.stwid--multiselect-dropdown__button');
     trigger?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
   }
 
   for (const blocker of document.querySelectorAll('.stwid--blocker')) {
-    const menu = blocker.querySelector('.stwid--listDropdownMenu');
+    const menu = blocker.querySelector('.stwid--list-dropdown__menu');
     const closeMenu = menu?.[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
     if (typeof closeMenu === 'function') {
       closeMenu();
       continue;
     }
     const trigger = document.querySelector(
-      `.stwid--listDropdownTrigger[${ARIA_EXPANDED_ATTR}="true"]`,
+      `.stwid--list-dropdown__trigger[${ARIA_EXPANDED_ATTR}="true"]`,
     );
     blocker.remove();
     trigger?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
@@ -199,7 +199,7 @@ export const wireCollapseRow = (
 
 export function wrapRowContent(row) {
   const contentWrap = document.createElement('div');
-  contentWrap.classList.add('stwid--rowContentWrap');
+  contentWrap.classList.add('stwid--row-content-wrap');
   while (row.firstChild) {
     contentWrap.append(row.firstChild);
   }

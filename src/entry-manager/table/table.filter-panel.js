@@ -1,6 +1,9 @@
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
+
 const ROW_FILTER_KEY_SCRIPT = 'stwidFilterScript';
 const FILTER_STORAGE_KEY = 'stwid--order-filter';
 const DEFAULT_FILTER_SCRIPT = '{{var::entry}}';
+const SCRIPT_FILTER_BATCH_SIZE = 100;
 
 function getEntryManagerRow(dom, entryRef) {
   return dom.order.entries?.[entryRef.book]?.[entryRef.data.uid] ?? null;
@@ -119,16 +122,17 @@ function attachFilterScriptHandlers({
       const entries = getEntryManagerEntries(entryManagerState.book, true);
       setAllRowsVisible(entries, dom, setEntryManagerRowFilterState);
 
-      for (const entryRef of entries) {
+      for (let i = 0; i < entries.length; i++) {
         if (!isActive()) return;
         if (!isLatestFilterRun(filterStack, closure)) return;
         await applyScriptResultToRow({
           closure,
-          entryRef,
+          entryRef: entries[i],
           dom,
           setEntryManagerRowFilterState,
           isTrueBoolean,
         });
+        await maybeYieldToEventLoop(i, SCRIPT_FILTER_BATCH_SIZE);
       }
 
       showFilterError(null);

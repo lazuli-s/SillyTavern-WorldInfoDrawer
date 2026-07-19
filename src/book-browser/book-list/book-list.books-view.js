@@ -1,5 +1,10 @@
 import { cloneMetadata } from '../../shared/sort-helpers.js';
+import { maybeYieldToEventLoop, yieldToUi } from '../../shared/utils.js';
 
+// Yield to the browser every N entries while building a book's rows so a large
+// single book (≥1,000 entries) cannot freeze the tab. Mirrors table.body.js's
+// ROW_BUILD_BATCH_SIZE precedent.
+const ENTRY_RENDER_BATCH_SIZE = 50;
 const BOOK_COLLAPSE_TOOLTIP = 'Collapse/expand this book';
 const UNSAVED_ENTRY_RETRY_MESSAGE =
   'Entry was not saved. Keep this editor open and save again when ready.';
@@ -19,9 +24,9 @@ const createBooksViewSlice = ({
   setCacheMetadata,
   updateBookSourceLinks,
   updateCollapseAllToggle,
+  persistFolderCollapseStates,
 }) => {
   const isFolderGroupingEnabled = () => Boolean(runtime?.Settings?.instance?.featureFolderGrouping);
-  const yieldToUi = () => new Promise((resolve) => setTimeout(resolve, 0));
   const compareCaseInsensitiveNames = (leftName, rightName) =>
     leftName.toLowerCase().localeCompare(rightName.toLowerCase());
   const toggleBookCollapsedState = (bookName, entryList) => {
@@ -146,7 +151,7 @@ const createBooksViewSlice = ({
 
     const sourceLinks = document.createElement('div');
     worldState.dom.sourceLinks = sourceLinks;
-    sourceLinks.classList.add('stwid--sourceLinks', 'stwid--state-empty');
+    sourceLinks.classList.add('stwid--source-links', 'stwid--state-empty');
     actions.append(sourceLinks);
 
     const active = document.createElement('input');
@@ -160,15 +165,18 @@ const createBooksViewSlice = ({
     active.checked = selected.includes(bookName);
     active.addEventListener('click', async () => {
       active.disabled = true;
-      const select = document.querySelector(coreUiSelectors.worldInfoSelect);
-      const option = select
-        ? [...select.options].find((opt) => opt.textContent === bookName)
-        : null;
-      if (option && select) {
-        option.selected = active.checked;
-        runtime.onWorldInfoChange('__notSlashCommand__');
+      try {
+        const select = document.querySelector(coreUiSelectors.worldInfoSelect);
+        const option = select
+          ? [...select.options].find((opt) => opt.textContent === bookName)
+          : null;
+        if (option && select) {
+          option.selected = active.checked;
+          runtime.onWorldInfoChange('__notSlashCommand__');
+        }
+      } finally {
+        active.disabled = false;
       }
-      active.disabled = false;
     });
     actions.append(active);
 
@@ -236,22 +244,8 @@ const createBooksViewSlice = ({
   };
 
   const insertBookInAlphabeticalOrder = (bookName, bookElement, targetParent, beforeElement) => {
-    let insertBefore =
-      beforeElement && beforeElement.parentElement === targetParent ? beforeElement : null;
-    if (!insertBefore) {
-      const normalizedName = bookName.toLowerCase();
-      for (const child of targetParent.children) {
-        if (!child.classList.contains('stwid--book')) continue;
-        const childName = child.querySelector('.stwid--title')?.textContent?.toLowerCase() ?? '';
-        if (childName.localeCompare(normalizedName) > 0) {
-          insertBefore = child;
-          break;
-        }
-      }
-    }
-
-    if (insertBefore) {
-      insertBefore.insertAdjacentElement('beforebegin', bookElement);
+    if (beforeElement && beforeElement.parentElement === targetParent) {
+      beforeElement.insertAdjacentElement('beforebegin', bookElement);
       return;
     }
     targetParent.append(bookElement);
@@ -347,15 +341,23 @@ const createBooksViewSlice = ({
 
     const entryList = document.createElement('div');
     world.dom.entryList = entryList;
-    entryList.classList.add('stwid--entryList');
+    entryList.classList.add('stwid--entry-list');
     entryList.classList.add('stwid--state-collapsed');
 
     const head = buildBookHeader(name, world, entryList);
     book.append(head);
 
     const { sort, direction } = getBookSortChoice(name);
-    for (const entry of runtime.sortEntries(Object.values(world.entries), sort, direction)) {
-      await runtime.renderEntry(entry, name);
+    const sortedEntries = runtime.sortEntries(Object.values(world.entries), sort, direction);
+    for (let i = 0; i < sortedEntries.length; i++) {
+      await runtime.renderEntry(sortedEntries[i], name);
+      await maybeYieldToEventLoop(i, ENTRY_RENDER_BATCH_SIZE);
+      // A WORLDINFO_UPDATED event can land while we were yielded and replace or
+      // remove this book's cache entry. Our detached `world`/`book` is now stale,
+      // so abort the render and let the fresh pass rebuild it.
+      if (runtime.cache[name] !== world) {
+        return null;
+      }
     }
     const initialCollapsed =
       listPanelState.getCollapseState(name) ??
@@ -376,6 +378,18 @@ const createBooksViewSlice = ({
     const sortedNames = runtime.safeToSorted(worldNames ?? [], compareCaseInsensitiveNames);
     const books = await loadValidBooksWithYield(sortedNames);
     const { folderGroups, rootBooks, sortedFolders } = groupBooksByFolder(books);
+
+    // Prune collapse state for books/folders that no longer exist so these maps
+    // don't grow unbounded across a long session. `sortedNames` and
+    // `sortedFolders` are the authoritative live-name sets for this load. An
+    // empty book library is valid and must still drop stale book state.
+    listPanelState.pruneCollapseStatesStaleBooks(sortedNames);
+    const removedFolderCollapseKeys =
+      listPanelState.pruneFolderCollapseStatesStaleFolders(sortedFolders);
+    if (removedFolderCollapseKeys > 0) {
+      persistFolderCollapseStates();
+    }
+
     await renderGroupedBooks(sortedFolders, folderGroups, rootBooks);
     runtime.applyActiveFilter?.();
     updateCollapseAllToggle();

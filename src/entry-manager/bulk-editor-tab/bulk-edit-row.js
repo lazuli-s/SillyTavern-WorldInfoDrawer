@@ -17,7 +17,7 @@ import { buildBulkUidSection } from './bulk-edit-row.uid.js';
 
 function createBulkEditRowRoot() {
   const row = document.createElement('div');
-  row.classList.add('stwid--bulkEditRow');
+  row.classList.add('stwid--bulk-edit-row');
   return row;
 }
 
@@ -61,6 +61,7 @@ function appendBulkEditSections(
     filterIndicatorRefs,
     applyEntryManagerRecursionFilterToRow,
     applyRegistry,
+    debounce,
   },
 ) {
   const appendBulkSection = (buildSection, extraArgs = {}) => {
@@ -96,6 +97,7 @@ function appendBulkEditSections(
     syncEntryManagerOutletFilters,
     filterIndicatorRefs,
     applyRegistry,
+    debounce,
   });
   row.append(positionContainer, depthContainer, outletContainer);
 
@@ -138,6 +140,7 @@ export function buildBulkEditRow({
   syncEntryManagerOutletFilters,
   filterIndicatorRefs,
   applyEntryManagerRecursionFilterToRow,
+  debounce,
 }) {
   const row = createBulkEditRowRoot();
   const refreshSelectionCount = appendBulkSelectSection(row, {
@@ -165,6 +168,7 @@ export function buildBulkEditRow({
     filterIndicatorRefs,
     applyEntryManagerRecursionFilterToRow,
     applyRegistry,
+    debounce,
   });
 
   return finalizeBulkEditRow(row, applyRegistry, refreshSelectionCount, cleanup);

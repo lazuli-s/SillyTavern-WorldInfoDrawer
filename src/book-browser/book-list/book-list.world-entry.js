@@ -1,5 +1,28 @@
 ﻿let context = null;
 
+// Lazily memoized `#entry_edit_template` child nodes. The template markup is
+// static and host-provided, so we clone from these cached references instead of
+// re-querying `document` on every entry render. Only successful lookups are
+// cached (`??=` leaves the variable null on a miss), so an early lookup before
+// ST has rendered the template is retried on the next entry rather than
+// permanently caching a broken null.
+let killSwitchTemplateNode = null;
+let stateSelectorTemplateNode = null;
+
+const getKillSwitchTemplateNode = () => {
+  killSwitchTemplateNode ??= document.querySelector(
+    '#entry_edit_template [name="entryKillSwitch"]',
+  );
+  return killSwitchTemplateNode;
+};
+
+const getStateSelectorTemplateNode = () => {
+  stateSelectorTemplateNode ??= document.querySelector(
+    '#entry_edit_template [name="entryStateSelector"]',
+  );
+  return stateSelectorTemplateNode;
+};
+
 export const setWorldEntryContext = (value) => {
   context = value;
 };
@@ -16,7 +39,7 @@ export const entryState = function (entry) {
 
 function buildSelectionHelpToast() {
   const help = document.createElement('ul');
-  help.classList.add('stwid--helpToast');
+  help.classList.add('stwid--help-toast');
   const lines = [
     'Hold [SHIFT] while clicking to select a range of entries',
     'Drag the selected entries onto another book to move them to that book',
@@ -130,7 +153,7 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
       ? context.enqueueEntryStateSave(entryName)
       : context.saveWorldInfo(entryName, context.buildSavePayload(entryName), true);
 
-  const isEnabledTemplate = document.querySelector('#entry_edit_template [name="entryKillSwitch"]');
+  const isEnabledTemplate = getKillSwitchTemplateNode();
   const isEnabled = isEnabledTemplate?.cloneNode(true);
   if (isEnabled) {
     world.dom.entry[worldEntry.uid].isEnabled = isEnabled;
@@ -168,9 +191,7 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
     status.append(isEnabled);
   }
 
-  const strategyTemplate = document.querySelector(
-    '#entry_edit_template [name="entryStateSelector"]',
-  );
+  const strategyTemplate = getStateSelectorTemplateNode();
   const strategySelect = strategyTemplate?.cloneNode(true);
   if (strategySelect) {
     world.dom.entry[worldEntry.uid].strategy = strategySelect;

@@ -64,7 +64,7 @@ const createBookMenuActionItem = ({
   attributes = {},
 }) => {
   const item = document.createElement('div');
-  item.classList.add('stwid--listDropdownItem', 'stwid--menuItem', itemClass);
+  item.classList.add('stwid--list-dropdown__item', 'stwid--menu-item', itemClass);
   for (const [key, value] of Object.entries(attributes)) {
     if (value !== undefined && value !== null) {
       item.setAttribute(key, value);
@@ -346,7 +346,7 @@ const createMoveBookDialogHelpers = ({
     popupBody.classList.add('popup-body');
 
     const popupContent = document.createElement('div');
-    popupContent.classList.add('popup-content', 'stwid--moveBookContent');
+    popupContent.classList.add('popup-content', 'stwid--move-book-content');
 
     const title = document.createElement('h3');
     title.textContent = `Move "${cleanName}" to folder`;
@@ -394,7 +394,7 @@ const createMoveBookDialogHelpers = ({
 
   const buildMoveBookSelectionRow = ({ folderNames, currentFolder, name, modal }) => {
     const row = document.createElement('div');
-    row.classList.add('stwid--listDropdownItem', 'stwid--menuItem', 'stwid--moveBookRow');
+    row.classList.add('stwid--list-dropdown__item', 'stwid--menu-item', 'stwid--move-book-row');
 
     const select = document.createElement('select');
     select.classList.add('text_pole');
@@ -417,7 +417,7 @@ const createMoveBookDialogHelpers = ({
     row.append(select);
 
     const buttonRow = document.createElement('div');
-    buttonRow.classList.add('stwid--moveBookQuickActions');
+    buttonRow.classList.add('stwid--move-book-quick-actions');
 
     const createFolderButton = document.createElement('button');
     createFolderButton.classList.add('menu_button', 'interactable');
@@ -530,7 +530,7 @@ const createBookMenuTriggerButton = () => {
   const menuTrigger = document.createElement('div');
   menuTrigger.classList.add(
     'stwid--action',
-    'stwid--listDropdownTrigger',
+    'stwid--list-dropdown__trigger',
     'fa-solid',
     'fa-fw',
     'fa-ellipsis-vertical',
@@ -544,7 +544,7 @@ const createBookMenuTriggerButton = () => {
 };
 
 const createBookMenuOverlay = (menuTrigger) => {
-  menuTrigger.style.anchorName = '--stwid--ctxAnchor';
+  menuTrigger.style.anchorName = '--stwid--ctx-anchor';
   const blocker = document.createElement('div');
   blocker.classList.add('stwid--blocker');
   for (const eventName of ['mousedown', 'pointerdown', 'touchstart']) {
@@ -563,7 +563,7 @@ const createBookMenuOverlay = (menuTrigger) => {
     closeMenu();
   });
   const menu = document.createElement('div');
-  menu.classList.add('stwid--listDropdownMenu', 'stwid--menu');
+  menu.classList.add('stwid--list-dropdown__menu', 'stwid--menu');
   menu.setAttribute('role', 'menu');
   menuTrigger.setAttribute('aria-expanded', 'true');
   return { blocker, menu, closeMenu };
@@ -634,7 +634,7 @@ const buildBookSortSelect = (
 
 const buildBookSortMenuRow = (name, closeMenu, deps) => {
   const bookSort = document.createElement('div');
-  bookSort.classList.add('stwid--listDropdownItem', 'stwid--menuItem', 'stwid--bookSort');
+  bookSort.classList.add('stwid--list-dropdown__item', 'stwid--menu-item', 'stwid--book-sort');
   bookSort.addEventListener('click', (evt) => evt.stopPropagation());
 
   const sortIcon = document.createElement('i');
@@ -652,7 +652,7 @@ const buildBookSortMenuRow = (name, closeMenu, deps) => {
 
 const buildEntryManagerMenuItem = (name, closeMenu, { state }) =>
   createBookMenuActionItem({
-    itemClass: 'stwid--entryManager',
+    itemClass: 'stwid--entry-manager',
     iconClass: 'fa-arrow-down-wide-short',
     labelText: 'Entry Manager',
     onClick: () => {

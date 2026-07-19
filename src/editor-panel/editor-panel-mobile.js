@@ -13,7 +13,7 @@ const shouldUseMobileEditorLayout = () => {
 
 const createMobileHeaderLabel = (text) => {
   const label = document.createElement('small');
-  label.classList.add('textAlignCenter', 'stwid--editorHeaderLabel');
+  label.classList.add('textAlignCenter', 'stwid--editor-header-label');
   label.textContent = text.replace(/:\s*$/, '');
   return label;
 };
@@ -28,7 +28,7 @@ const normalizeMobileHeaderControl = (control) => {
     'probabilityContainer',
   );
   const existingLabel = control.querySelector('.WIEntryHeaderTitleMobile');
-  if (!existingLabel || control.querySelector('.stwid--editorHeaderLabel')) return control;
+  if (!existingLabel || control.querySelector('.stwid--editor-header-label')) return control;
 
   const label = createMobileHeaderLabel(existingLabel.textContent ?? '');
   existingLabel.remove();
@@ -54,16 +54,16 @@ const moveMobileContextualHeaderControls = (editDom) => {
     !positionControl ||
     !depthControl ||
     !outletControl ||
-    header.querySelector('.stwid--editorHeaderContextRow')
+    header.querySelector('.stwid--editor-header-context-row')
   )
     return;
 
   const contextRow = document.createElement('div');
-  contextRow.classList.add('stwid--editorHeaderContextRow');
+  contextRow.classList.add('stwid--editor-header-context-row');
 
-  positionControl.classList.add('stwid--editorHeaderContextPosition');
-  depthControl.classList.add('stwid--editorHeaderContextDepth');
-  outletControl.classList.add('stwid--editorHeaderContextOutlet');
+  positionControl.classList.add('stwid--editor-header-context-position');
+  depthControl.classList.add('stwid--editor-header-context-depth');
+  outletControl.classList.add('stwid--editor-header-context-outlet');
   contextRow.append(positionControl, depthControl, outletControl);
 
   const firstHeaderButton = header.querySelector(':scope > .menu_button');
@@ -79,13 +79,13 @@ const moveMobileHeaderActions = (editDom) => {
   const header = editDom.querySelector(
     '.world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header',
   );
-  if (!header || header.querySelector('.stwid--editorActionsRow')) return;
+  if (!header || header.querySelector('.stwid--editor-actions-row')) return;
 
   const actionButtons = Array.from(header.querySelectorAll(':scope > .menu_button'));
   if (!actionButtons.length) return;
 
   const actionsRow = document.createElement('div');
-  actionsRow.classList.add('stwid--editorActionsRow');
+  actionsRow.classList.add('stwid--editor-actions-row');
   actionsRow.append(...actionButtons);
   header.append(actionsRow);
 };
@@ -107,7 +107,7 @@ const moveMobileContentFlags = (editDom) => {
     return;
 
   const flagsRow = document.createElement('div');
-  flagsRow.classList.add(FLAGS_ROW_CLASS, 'stwid--editorContentFlagsSection');
+  flagsRow.classList.add(FLAGS_ROW_CLASS, 'stwid--editor-content-flags-section');
   flagsRow.append(...Array.from(flagsContainer.children));
   flagsContainer.remove();
   contentTextarea.insertAdjacentElement('afterend', flagsRow);
@@ -121,29 +121,29 @@ const annotateMobileContentSections = (editDom) => {
   const contentTextarea = contentControl?.querySelector("textarea[name='content']");
   if (!contentControl || !contentHeaderRow || !contentTextarea) return;
 
-  contentHeaderRow.classList.add('stwid--editorContentHeaderRow');
+  contentHeaderRow.classList.add('stwid--editor-content-header-row');
 
-  if (!contentControl.querySelector('.stwid--editorContentBodySection')) {
+  if (!contentControl.querySelector('.stwid--editor-content-body-section')) {
     const contentBodySection = document.createElement('div');
-    contentBodySection.classList.add('stwid--editorContentBodySection');
+    contentBodySection.classList.add('stwid--editor-content-body-section');
     contentTextarea.insertAdjacentElement('beforebegin', contentBodySection);
     contentBodySection.append(contentTextarea);
   }
 
   contentControl
     .querySelector(`.${FLAGS_ROW_CLASS}`)
-    ?.classList.add('stwid--editorContentFlagsSection');
+    ?.classList.add('stwid--editor-content-flags-section');
 };
 
 const ensureMobileContentSettingsSection = (editDom) => {
   const contentBlock = editDom.querySelector("[name='contentAndCharFilterBlock']");
   if (!contentBlock) return null;
 
-  const existingSection = editDom.querySelector('.stwid--editorContentSettingsSection');
+  const existingSection = editDom.querySelector('.stwid--editor-content-settings-section');
   if (existingSection) return existingSection;
 
   const settingsSection = document.createElement('div');
-  settingsSection.classList.add('stwid--editorContentSettingsSection');
+  settingsSection.classList.add('stwid--editor-content-settings-section');
   contentBlock.insertAdjacentElement('afterend', settingsSection);
   return settingsSection;
 };
@@ -159,24 +159,24 @@ const moveMobileRecursionControls = (editDom) => {
     !contentSettingsSection ||
     !recursionLevelControl ||
     !delayUntilRecursionToggle ||
-    contentSettingsSection.querySelector('.stwid--editorRecursionSection')
+    contentSettingsSection.querySelector('.stwid--editor-recursion-section')
   )
     return;
 
   const recursionSection = document.createElement('div');
   recursionSection.classList.add(
-    'stwid--editorRecursionSection',
+    'stwid--editor-recursion-section',
     'stwid--editorRecursionSettingsSection',
   );
 
   const recursionDelayRow = document.createElement('div');
-  recursionDelayRow.classList.add('stwid--editorRecursionDelayRow');
+  recursionDelayRow.classList.add('stwid--editor-recursion-delay-row');
 
   const recursionToggleRow = document.createElement('div');
-  recursionToggleRow.classList.add('stwid--editorRecursionToggleRow');
+  recursionToggleRow.classList.add('stwid--editor-recursion-toggle-row');
   recursionToggleRow.append(delayUntilRecursionToggle);
 
-  recursionLevelControl.classList.add('stwid--editorRecursionLevelControl');
+  recursionLevelControl.classList.add('stwid--editor-recursion-level-control');
   recursionDelayRow.append(recursionToggleRow, recursionLevelControl);
   recursionSection.append(recursionDelayRow);
   contentSettingsSection.append(recursionSection);
@@ -184,19 +184,19 @@ const moveMobileRecursionControls = (editDom) => {
 
 const moveMobileRecursionGuardControls = (editDom) => {
   const contentSettingsSection = ensureMobileContentSettingsSection(editDom);
-  const recursionSection = contentSettingsSection?.querySelector('.stwid--editorRecursionSection');
+  const recursionSection = contentSettingsSection?.querySelector('.stwid--editor-recursion-section');
   const excludeRecursionToggle = findToggleByName(editDom, 'excludeRecursion');
   const preventRecursionToggle = findToggleByName(editDom, 'preventRecursion');
   if (
     !recursionSection ||
     !excludeRecursionToggle ||
     !preventRecursionToggle ||
-    recursionSection.querySelector('.stwid--editorRecursionGuardsRow')
+    recursionSection.querySelector('.stwid--editor-recursion-guards-row')
   )
     return;
 
   const guardsRow = document.createElement('div');
-  guardsRow.classList.add('stwid--editorRecursionGuardsRow');
+  guardsRow.classList.add('stwid--editor-recursion-guards-row');
   guardsRow.append(excludeRecursionToggle, preventRecursionToggle);
   recursionSection.prepend(guardsRow);
 };
@@ -207,12 +207,12 @@ const moveMobileBudgetControl = (editDom) => {
   if (
     !contentSettingsSection ||
     !ignoreBudgetToggle ||
-    contentSettingsSection.querySelector('.stwid--editorBudgetRow')
+    contentSettingsSection.querySelector('.stwid--editor-budget-row')
   )
     return;
 
   const budgetRow = document.createElement('div');
-  budgetRow.classList.add('stwid--editorBudgetRow');
+  budgetRow.classList.add('stwid--editor-budget-row');
   budgetRow.append(ignoreBudgetToggle);
   contentSettingsSection.prepend(budgetRow);
 };
@@ -232,7 +232,7 @@ const cleanupMobileContentFlags = (editDom) => {
 
 const moveMobileRecursionMetaControls = (editDom) => {
   const overridesBlock = editDom.querySelector("[name='perEntryOverridesBlock']");
-  if (!overridesBlock || overridesBlock.querySelector('.stwid--editorRecursionMetaRow')) return;
+  if (!overridesBlock || overridesBlock.querySelector('.stwid--editor-recursion-meta-row')) return;
 
   const scanDepthControl = overridesBlock.querySelector(
     ":scope > .world_entry_form_control:has([name='scanDepth'])",
@@ -252,7 +252,7 @@ const moveMobileRecursionMetaControls = (editDom) => {
   if (!recursionMetaControls.length) return;
 
   const recursionMetaRow = document.createElement('div');
-  recursionMetaRow.classList.add('stwid--editorRecursionMetaRow');
+  recursionMetaRow.classList.add('stwid--editor-recursion-meta-row');
   recursionMetaRow.append(...recursionMetaControls);
 
   if (automationIdControl) {
@@ -275,19 +275,19 @@ const moveMobileGroupControls = (editDom) => {
     !inclusionGroupControl ||
     !groupWeightControl ||
     !groupScoringControl ||
-    groupRow.querySelector('.stwid--editorGroupSection')
+    groupRow.querySelector('.stwid--editor-group-section')
   )
     return;
 
   const groupSection = document.createElement('div');
-  groupSection.classList.add('stwid--editorGroupSection');
+  groupSection.classList.add('stwid--editor-group-section');
 
   const primaryRow = document.createElement('div');
-  primaryRow.classList.add('stwid--editorGroupSectionPrimary');
+  primaryRow.classList.add('stwid--editor-group-section-primary');
   primaryRow.append(inclusionGroupControl);
 
   const secondaryRow = document.createElement('div');
-  secondaryRow.classList.add('stwid--editorGroupSectionSecondary');
+  secondaryRow.classList.add('stwid--editor-group-section-secondary');
   secondaryRow.append(groupWeightControl, groupScoringControl);
 
   groupSection.append(primaryRow, secondaryRow);
@@ -296,7 +296,7 @@ const moveMobileGroupControls = (editDom) => {
 
 const moveMobileTimingControls = (editDom) => {
   const groupRow = editDom.querySelector(GROUP_ROW_SELECTOR);
-  if (!groupRow || groupRow.querySelector('.stwid--editorTimingRow')) return;
+  if (!groupRow || groupRow.querySelector('.stwid--editor-timing-row')) return;
 
   const stickyControl = groupRow.querySelector(":scope > :has([name='sticky'])");
   const cooldownControl = groupRow.querySelector(":scope > :has([name='cooldown'])");
@@ -305,14 +305,14 @@ const moveMobileTimingControls = (editDom) => {
   if (!timingControls.length) return;
 
   const timingRow = document.createElement('div');
-  timingRow.classList.add('stwid--editorTimingRow');
+  timingRow.classList.add('stwid--editor-timing-row');
   timingRow.append(...timingControls);
   groupRow.append(timingRow);
 };
 
 const annotateMobileKeywordsAndFiltersSection = (editDom) => {
   const keywordsAndFiltersSection = editDom.querySelector("[name='keywordsAndLogicBlock']");
-  keywordsAndFiltersSection?.classList.add('stwid--editorKeywordsAndFiltersSection');
+  keywordsAndFiltersSection?.classList.add('stwid--editor-keywords-and-filters-section');
 };
 
 const annotateMobileFilterSections = (editDom) => {
@@ -324,8 +324,8 @@ const annotateMobileFilterSections = (editDom) => {
   );
   const triggerFilterSection = filtersRow?.querySelector(":scope > :has([name='triggers'])");
 
-  characterTagFilterSection?.classList.add('stwid--editorCharacterTagFilterSection');
-  triggerFilterSection?.classList.add('stwid--editorTriggerFilterSection');
+  characterTagFilterSection?.classList.add('stwid--editor-character-tag-filter-section');
+  triggerFilterSection?.classList.add('stwid--editor-trigger-filter-section');
 };
 
 const buildMobileEditorTitleBar = (
@@ -336,24 +336,24 @@ const buildMobileEditorTitleBar = (
   killSwitch,
 ) => {
   const topRow = document.createElement('div');
-  topRow.classList.add('stwid--editorTitleRow');
+  topRow.classList.add('stwid--editor-title-row');
 
   const toggleSlot = document.createElement('div');
-  toggleSlot.classList.add('stwid--editorHeaderToggleSlot');
+  toggleSlot.classList.add('stwid--editor-header-toggle-slot');
   toggleSlot.append(killSwitch);
 
   const titleControl = document.createElement('div');
-  titleControl.classList.add('world_entry_form_control', 'stwid--editorHeaderTitleControl');
+  titleControl.classList.add('world_entry_form_control', 'stwid--editor-header-title-control');
   titleTextarea.rows = 2;
   titleControl.append(createMobileHeaderLabel('Title/Memo'), titleTextarea);
 
   topRow.append(toggleSlot, titleControl);
 
   const strategyControl = document.createElement('div');
-  strategyControl.classList.add('world_entry_form_control', 'stwid--editorHeaderStrategy');
+  strategyControl.classList.add('world_entry_form_control', 'stwid--editor-header-strategy');
   strategyControl.append(createMobileHeaderLabel('Strategy'), strategySelect);
 
-  headerControls.classList.add('stwid--editorMainSettingsRow');
+  headerControls.classList.add('stwid--editor-main-settings-row');
   headerControls.prepend(strategyControl);
   Array.from(headerControls.children)
     .filter(
@@ -385,7 +385,7 @@ export const applyMobileHeaderLayout = (editDom) => {
     !killSwitch
   )
     return;
-  if (thinControls.querySelector('.stwid--editorTitleRow')) return;
+  if (thinControls.querySelector('.stwid--editor-title-row')) return;
 
   titleAndStatus.remove();
   buildMobileEditorTitleBar(

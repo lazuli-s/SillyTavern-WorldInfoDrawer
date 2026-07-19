@@ -3,7 +3,9 @@ import {
   closeOpenMultiselectDropdownMenus,
   setTooltip,
 } from '../entry-manager.utils.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 import {
+  BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
   createLabeledBulkContainer,
   createApplyButton,
@@ -33,9 +35,10 @@ function runBulkApplyForSelectedEntries({
     if (!rows) return;
     const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
     const books = new Set();
-    for (const target of targets) {
-      books.add(target.bookName);
-      perTargetUpdate(target);
+    for (let i = 0; i < targets.length; i++) {
+      books.add(targets[i].bookName);
+      perTargetUpdate(targets[i]);
+      await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
     }
     afterTargetsUpdate?.(targets);
     await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
@@ -60,7 +63,7 @@ function buildBulkPositionControls({
   );
 
   const positionSelect = document.createElement('select');
-  positionSelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
+  positionSelect.classList.add('stwid--input', 'text_pole', 'stwid--sort-select');
   setTooltip(positionSelect, 'Position to apply to selected entries');
   for (const positionOption of getPositionOptions()) {
     const option = document.createElement('option');
@@ -134,7 +137,7 @@ function buildBulkDepthControls({
   );
 
   const depthInput = document.createElement('input');
-  depthInput.classList.add('stwid-compactInput', 'text_pole');
+  depthInput.classList.add('stwid--cell-input', 'text_pole');
   depthInput.type = 'number';
   depthInput.min = '0';
   depthInput.max = '99999';
@@ -204,6 +207,7 @@ function buildBulkOutletControls({
   syncEntryManagerOutletFilters,
   filterIndicatorRefs,
   applyRegistry,
+  debounce,
 }) {
   const outletContainer = createLabeledBulkContainer(
     'outlet',
@@ -212,7 +216,7 @@ function buildBulkOutletControls({
   );
 
   const outletDropdownWrap = document.createElement('div');
-  outletDropdownWrap.classList.add('stwid--multiselectDropdownWrap');
+  outletDropdownWrap.classList.add('stwid--multiselect-dropdown__wrap');
 
   const outletInput = document.createElement('input');
   outletInput.classList.add('stwid--input', 'text_pole');
@@ -223,7 +227,7 @@ function buildBulkOutletControls({
   if (storedOutlet !== null) outletInput.value = storedOutlet;
 
   const outletMenu = document.createElement('div');
-  outletMenu.classList.add('stwid--multiselectDropdownMenu', 'stwid--menu');
+  outletMenu.classList.add('stwid--multiselect-dropdown__menu', 'stwid--menu');
 
   const closeOutletMenu = () => {
     if (!outletMenu.classList.contains(STATE_ACTIVE_CLASS)) return;
@@ -247,9 +251,10 @@ function buildBulkOutletControls({
     const visible = filter
       ? allOptions.filter((option) => option.value.toLowerCase().includes(filter))
       : allOptions;
+    const fragment = document.createDocumentFragment();
     for (const option of visible) {
       const optEl = document.createElement('div');
-      optEl.classList.add('stwid--multiselectDropdownOption', 'stwid--menuItem');
+      optEl.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
       optEl.textContent = option.value;
       if (option.value === outletInput.value) optEl.classList.add(STATE_ACTIVE_CLASS);
       optEl.addEventListener('mousedown', (event) => {
@@ -258,10 +263,23 @@ function buildBulkOutletControls({
         localStorage.setItem(STORAGE_KEY_BULK_OUTLET, outletInput.value);
         closeOutletMenu();
       });
-      outletMenu.append(optEl);
+      fragment.append(optEl);
     }
+    outletMenu.append(fragment);
   };
+  let outletMenuDisposed = false;
+  const refreshOutletMenu = () => {
+    if (outletMenuDisposed) return;
+    buildOutletMenuOptions();
+    if (outletMenu.children.length === 0) closeOutletMenu();
+    else openOutletMenu();
+  };
+  // Debounced so rapid typing rebuilds the option list once per pause, not per
+  // keystroke. ST's debounce has no cancel, so refreshOutletMenu bails if the
+  // row was torn down before a pending rebuild fires.
+  const refreshOutletMenuDebounced = debounce(refreshOutletMenu, 150);
   const cleanup = () => {
+    outletMenuDisposed = true;
     closeOutletMenu();
     document.removeEventListener('click', handleOutletOutsideClick);
   };
@@ -273,10 +291,8 @@ function buildBulkOutletControls({
     if (outletMenu.children.length > 0) openOutletMenu();
   });
   outletInput.addEventListener('input', () => {
-    buildOutletMenuOptions();
-    if (outletMenu.children.length === 0) closeOutletMenu();
-    else openOutletMenu();
     localStorage.setItem(STORAGE_KEY_BULK_OUTLET, outletInput.value);
+    refreshOutletMenuDebounced();
   });
   outletInput.addEventListener('change', () => {
     localStorage.setItem(STORAGE_KEY_BULK_OUTLET, outletInput.value);
@@ -350,6 +366,7 @@ export function buildBulkPositionSection({
   syncEntryManagerOutletFilters,
   filterIndicatorRefs,
   applyRegistry,
+  debounce,
 }) {
   const { positionContainer, positionSelect } = buildBulkPositionControls({
     dom,
@@ -383,6 +400,7 @@ export function buildBulkPositionSection({
     syncEntryManagerOutletFilters,
     filterIndicatorRefs,
     applyRegistry,
+    debounce,
   });
 
   return { positionContainer, depthContainer, outletContainer, cleanup };

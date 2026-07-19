@@ -77,8 +77,8 @@ const persistCustomSortOrderIfNeeded = async ({
 
 const buildEntryManagerRootEl = ({ entryManagerState, applyEntryManagerColumnVisibility }) => {
   const entryManagerRootEl = document.createElement('div');
-  entryManagerRootEl.classList.add('stwid--entryManager');
-  entryManagerRootEl.classList.toggle('stwid--hideKeys', entryManagerState.hideKeys);
+  entryManagerRootEl.classList.add('stwid--entry-manager');
+  entryManagerRootEl.classList.toggle('stwid--hide-keys', entryManagerState.hideKeys);
   applyEntryManagerColumnVisibility(entryManagerRootEl);
   return entryManagerRootEl;
 };
@@ -130,6 +130,7 @@ const buildEntryManagerTopRows = ({
   syncEntryManagerOutletFilters,
   applyEntryManagerRecursionFilterToRow,
   cleanupBulkEditRowRef,
+  debounce,
 }) => {
   const filterIndicatorRefs = {};
 
@@ -195,6 +196,7 @@ const buildEntryManagerTopRows = ({
     syncEntryManagerOutletFilters,
     filterIndicatorRefs,
     applyEntryManagerRecursionFilterToRow,
+    debounce,
   });
   cleanupBulkEditRowRef.current = cleanup;
 
@@ -225,10 +227,10 @@ const buildEntryManagerTabs = ({ displayToolbarEl, bulkEditRowEl }) => {
   ];
 
   const iconTab = document.createElement('div');
-  iconTab.classList.add('stwid--iconTab');
+  iconTab.classList.add('stwid--icon-tab');
 
   const iconTabBar = document.createElement('div');
-  iconTabBar.classList.add('stwid--iconTabBar');
+  iconTabBar.classList.add('stwid--icon-tab__bar');
   iconTabBar.setAttribute('role', 'tablist');
   iconTabBar.setAttribute('aria-label', 'Entry Manager tabs');
 
@@ -239,7 +241,7 @@ const buildEntryManagerTabs = ({ displayToolbarEl, bulkEditRowEl }) => {
   for (const tab of panelTabs) {
     const tabButtonEl = document.createElement('button');
     tabButtonEl.type = 'button';
-    tabButtonEl.classList.add('stwid--iconTabButton');
+    tabButtonEl.classList.add('stwid--icon-tab__button');
     tabButtonEl.dataset.tabId = tab.id;
     tabButtonEl.setAttribute('role', 'tab');
     tabButtonEl.setAttribute('aria-selected', 'false');
@@ -257,7 +259,7 @@ const buildEntryManagerTabs = ({ displayToolbarEl, bulkEditRowEl }) => {
     iconTabBar.append(tabButtonEl);
 
     const tabPanelEl = document.createElement('div');
-    tabPanelEl.classList.add('stwid--iconTabContent');
+    tabPanelEl.classList.add('stwid--icon-tab__content');
     tabPanelEl.dataset.tabId = tab.id;
     tabPanelEl.setAttribute('role', 'tabpanel');
     tabPanels.push(tabPanelEl);
@@ -298,7 +300,7 @@ const buildEntryManagerFilterPanel = ({
     isTrueBoolean,
   });
 
-const buildEntryManagerTable = ({
+const buildEntryManagerTable = async ({
   entries,
   entryManagerState,
   dom,
@@ -394,7 +396,7 @@ const buildEntryManagerTable = ({
   filterIndicatorRefs.automationId = refreshAutomationIdFilterIndicator;
   filterIndicatorRefs.group = refreshGroupFilterIndicator;
 
-  const tbody = buildTableBody({
+  const tbody = await buildTableBody({
     entries,
     entryManagerState,
     dom,
@@ -433,11 +435,11 @@ const buildEntryManagerTable = ({
   });
 
   const orderTableEl = document.createElement('table');
-  orderTableEl.classList.add('stwid--orderTable');
+  orderTableEl.classList.add('stwid--order-table');
   orderTableEl.append(thead, tbody);
 
   const orderTableWrapEl = document.createElement('div');
-  orderTableWrapEl.classList.add('stwid--orderTableWrap');
+  orderTableWrapEl.classList.add('stwid--order-table-wrap');
   orderTableWrapEl.append(orderTableEl);
 
   return orderTableWrapEl;
@@ -593,6 +595,7 @@ const renderEntryManager = async ({
     syncEntryManagerOutletFilters,
     applyEntryManagerRecursionFilterToRow,
     cleanupBulkEditRowRef,
+    debounce,
   });
 
   const entryManagerTabs = buildEntryManagerTabs({ displayToolbarEl, bulkEditRowEl });
@@ -606,7 +609,7 @@ const renderEntryManager = async ({
     hljs,
     isTrueBoolean,
   });
-  const orderTableWrapEl = buildEntryManagerTable({
+  const orderTableWrapEl = await buildEntryManagerTable({
     entries,
     entryManagerState,
     dom,
@@ -658,6 +661,11 @@ const renderEntryManager = async ({
     refreshDisplayToolbar,
     filterIndicatorRefs,
   });
+
+  // The table build yields to the browser between row batches; if a newer
+  // render took over during a yield, dom.order.tbody no longer belongs to
+  // this render — drop this stale result instead of appending a second root.
+  if (!dom.order.tbody || !orderTableWrapEl.contains(dom.order.tbody)) return;
 
   refreshDisplayToolbar();
   refreshSelectionCount();

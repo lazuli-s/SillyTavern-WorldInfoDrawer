@@ -86,7 +86,7 @@ const mountSettingsPanel = async () => {
 
   featureSettingsRoot?.remove();
   const wrapper = document.createElement('div');
-  wrapper.id = 'stwid-settings-panel';
+  wrapper.classList.add('stwid--settings-panel');
   wrapper.innerHTML = await renderSettingsTemplateHtml(context);
   settingsContainer.append(wrapper);
   featureSettingsRoot = wrapper;

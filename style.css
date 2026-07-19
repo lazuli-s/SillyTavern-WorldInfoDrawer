@@ -181,6 +181,23 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   overflow: auto;
 }
 
+/* Flex-column fill shell - grows to fill parent, scrolls internally */
+.stwid--entry-manager {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--order-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* 2) Splitter                                                                */
@@ -232,7 +249,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   align-items: stretch;
 }
 
-.stwid--thinContainer {
+.stwid--field-group {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -242,8 +259,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   position: relative;
 }
 
-.stwid--thinContainerLabel,
-.stwid--bulkEditLabel {
+.stwid--field-group__label,
+.stwid--bulk-edit-label {
   position: absolute;
   top: -0.6em;
   left: 0.4em;
@@ -254,36 +271,19 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   white-space: nowrap;
 }
 
-.stwid--thinContainerLabelHint {
+.stwid--field-group__label-hint {
   font-size: 0.95em;
   opacity: 0.8;
   cursor: help;
   padding-left: 0.5em;
 }
 
-.stwid--thinContainerSmallTitle {
-  font-size: 0.78em;
-  opacity: 0.75;
-  white-space: nowrap;
-}
-
-.stwid--thinContainerSectionTitle {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.25em;
-}
-
-.stwid--thinContainerSectionTitle > i {
-  font-size: 0.78em;
-  opacity: 0.75;
-}
-
-.stwid--thinContainer.stwid--state-disabled {
+.stwid--field-group.stwid--state-disabled {
   opacity: 0.4;
   pointer-events: none;
 }
 
-.stwid--browserRow {
+.stwid--browser-row {
   /* --stwid-control-height: 2.35em; */
   display: flex;
   gap: 1em;
@@ -294,8 +294,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   justify-content: center;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
-.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--field-group,
+.stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row .stwid--field-group {
   gap: 1.1em;
   flex-wrap: nowrap;
   row-gap: 0.55em;
@@ -306,39 +306,32 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   justify-content: space-around;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting,
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--global-sorting,
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--individual-sorting {
   display: flex;
   align-items: flex-start;
   gap: 0.5em;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--globalSorting {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--global-sorting {
   align-items: center;
   flex-direction: column;
   gap: 0;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--individualSorting {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--individual-sorting {
   flex-flow: column wrap;
   align-items: center;
   gap: 0;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting']
-  .stwid--browserRow
-  .stwid--individualSorting
-  > .stwid--thinContainerSectionTitle {
-  flex: 0 0 100%;
-}
-
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--per-book-sort-buttons {
   display: flex;
   gap: 0.5em;
 }
 
 /* override: vanilla text_pole uses fit-content height and inline display; compact controls row needs fixed height, tighter padding, and flex vertical alignment */
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .text_pole {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .text_pole {
   height: var(--stwid-control-height);
   padding: 0.35em;
   display: inline-flex;
@@ -346,17 +339,17 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   box-sizing: border-box;
 }
 
-.stwid--smallSelectTextPole {
+.stwid--sort-select {
   max-width: 9em;
   font-size: 0.9em;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--smallSelectTextPole {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--sort-select {
   width: 9em;
 }
 
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
-.stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--book-sort-toggle,
+.stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--clear-book-sorts {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -378,40 +371,40 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   align-items: stretch;
 }
 
-.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
+.stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row {
   /* padding-top: 0.1em; */
 }
 
-.stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
+.stwid--icon-tab__content[data-tab-id='search'] .stwid--browser-row .stwid--search {
   flex: 1 1 12em;
   min-width: 8em;
   font-size: 0.9em;
 }
 
-.stwid--searchEntries {
+.stwid--search-entries {
   display: flex;
   gap: 0.5em;
   align-items: center;
   font-size: 0.9em;
 }
 
-.stwid--iconTab {
+.stwid--icon-tab {
   padding-top: 0.6em;
   margin-bottom: 0.8em;
 }
 
-.stwid--entryManager .stwid--iconTab {
+.stwid--entry-manager .stwid--icon-tab {
   background-color: var(--SmartThemeBlurTintColor);
 }
 
-.stwid--iconTabBar {
+.stwid--icon-tab__bar {
   display: flex;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--SmartThemeBorderColor);
   margin-bottom: 1.3em;
 }
 
-.stwid--iconTabButton {
+.stwid--icon-tab__button {
   flex: 1;
   display: flex;
   flex-direction: row;
@@ -434,51 +427,51 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     border-color 0.2s ease;
 }
 
-.stwid--iconTabButton:hover {
+.stwid--icon-tab__button:hover {
   opacity: 0.8;
 }
 
-.stwid--iconTabButton.active {
+.stwid--icon-tab__button.active {
   opacity: 1;
   border-bottom-color: var(--SmartThemeBodyColor);
 }
 
-.stwid--iconTabButton[hidden],
-.stwid--iconTabContent[hidden] {
+.stwid--icon-tab__button[hidden],
+.stwid--icon-tab__content[hidden] {
   display: none !important; /* override: tab button/content classes set display explicitly; hidden state must win */
 }
 
-#stwid-settings-panel .stwid--settingsCheckboxGrid {
+.stwid--settings-panel .stwid--settings-checkbox-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4em 0.6em;
   width: 100%;
 }
 
-#stwid-settings-panel .stwid--settingsCheckboxCell {
+.stwid--settings-panel .stwid--settings-checkbox-cell {
   min-width: 0;
 }
 
-#stwid-settings-panel .stwid--settingsCheckboxCell .menu_button {
+.stwid--settings-panel .stwid--settings-checkbox-cell .menu_button {
   width: 100%;
   box-sizing: border-box;
 }
 
 @media screen and (width <= 1000px) {
-  #stwid-settings-panel .stwid--settingsCheckboxGrid {
+  .stwid--settings-panel .stwid--settings-checkbox-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.stwid--iconTabContent {
+.stwid--icon-tab__content {
   display: none;
 }
 
-.stwid--iconTabContent.active {
+.stwid--icon-tab__content.active {
   display: block;
 }
 
-.stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
+.stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row {
   /* position: relative; */
 
   /* display: flex; */
@@ -497,21 +490,21 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   /* flex: 1 1 auto; */
 }
 
-.stwid--multiselectDropdownWrap {
+.stwid--multiselect-dropdown__wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
 }
 
-.stwid--multiselectDropdownButton {
+.stwid--multiselect-dropdown__button {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
 }
 
 /* override: higher specificity (2 classes) beats menu_button (1 class) for all visual properties */
-.menu_button.stwid--multiselectDropdownButton {
+.menu_button.stwid--multiselect-dropdown__button {
   background-color: var(
     --black30a
   ); /* override: menu_button uses BlurTintColor; match text_pole input look */
@@ -525,7 +518,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   max-width: 9em;
 }
 
-.stwid--listDropdownTrigger {
+.stwid--list-dropdown__trigger {
   border-radius: var(--stwid-radius-m);
 }
 
@@ -534,8 +527,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   flex-direction: column;
 }
 
-.stwid--multiselectDropdownMenu,
-.stwid--bookVisibilityMenu {
+.stwid--multiselect-dropdown__menu,
+.stwid--book-visibility-menu {
   position: absolute;
   top: calc(100% + 0.35em);
   left: 0;
@@ -550,8 +543,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   min-width: max-content;
 }
 
-.stwid--multiselectDropdownMenu.stwid--state-active,
-.stwid--bookVisibilityMenu.stwid--state-active {
+.stwid--multiselect-dropdown__menu.stwid--state-active,
+.stwid--book-visibility-menu.stwid--state-active {
   display: flex;
   width: max-content;
   opacity: 1 !important; /* override: ST menu styles set opacity:0 on hidden menus; force visible when state-active */
@@ -568,14 +561,14 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   text-shadow: 0 0 calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor);
 }
 
-.stwid--menuItem {
+.stwid--menu-item {
   display: flex;
   align-items: center;
   gap: 0.35em;
   border-radius: var(--stwid-radius-s);
 }
 
-.stwid--multiselectDropdownOption {
+.stwid--multiselect-dropdown__option {
   font-size: 1em;
   transition:
     color 150ms ease,
@@ -588,7 +581,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   text-align: left;
 }
 
-.stwid--multiselectDropdownOption:hover {
+.stwid--multiselect-dropdown__option:hover {
   color: var(
     --customThemeColor
   ) !important; /* override: ST menu_button hover styles may override color; force theme color on hover */
@@ -596,1681 +589,11 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent);
 }
 
-.stwid--multiselectDropdownOption.stwid--state-active {
+.stwid--multiselect-dropdown__option.stwid--state-active {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
-  color: var(--customThemeColor);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  width: 1em;
-}
-
-.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
-  width: 1em;
-  text-align: center;
-  color: var(--SmartThemeEmColor);
-}
-
-.stwid--multiselectDropdownOption.stwid--state-active .stwid--multiselectDropdownOptionCheckbox {
-  color: var(--SmartThemeQuoteColor);
-}
-
-/* note: no body.stwid-- scope guard - this selector is tightly scoped by the unique .stwid--multiselectDropdownOption class */
-.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--multiselectDropdownOptionInput {
-  position: absolute;
-  width: 0;
-  height: 0;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.stwid--small-multiselect {
-  overflow: hidden;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
-  background-color: var(--SmartThemeBlurTintColor);
-  backdrop-filter: blur(var(--SmartThemeBlurStrength));
-}
-
-.stwid--small-multiselect a {
-  color: var(--SmartThemeBodyColor);
-  padding: 2px 4px;
-  text-decoration: none;
-  display: flex;
-  column-gap: 4px;
-  cursor: pointer;
-  justify-content: center;
-  opacity: 0.5;
-  transition: opacity var(--animation-duration);
-}
-
-.stwid--small-multiselect a:hover,
-.stwid--small-multiselect a[data-selected='true'] {
-  opacity: 1;
-}
-
-.stwid--small-multiselect i {
-  width: 12px;
-  height: 12px;
-  font-size: 0.85em;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-  flex-shrink: 0;
-}
-
-.stwid--small-multiselect .multiselect-check {
-  color: var(--SmartThemeEmColor);
-}
-
-.stwid--small-multiselect a[data-selected='true'] .multiselect-check {
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--visibilityChips {
-  display: flex;
-  align-items: center;
-  align-content: flex-start;
-  gap: 0.2em;
-  flex-wrap: wrap;
-  flex: 1 1 auto;
-  min-width: 0;
-  align-self: center;
-}
-
-.stwid--visibilityChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 999px;
-  padding: 0.1em 0.45em;
-  font-size: 0.8em;
-  background-color: var(--SmartThemeBlurTintColor);
-}
-
-.stwid--visibilityChip .stwid--icon {
-  color: var(--SmartThemeQuoteColor);
-}
-
-/* Scrollable book list - see shared section 1.5 */
-
-/* Folders */
-.stwid--folder {
-  /* border-bottom: 2px solid var(--SmartThemeBorderColor); */
-
-  /* border-radius: 8px; */
-  margin: 0.5em 0;
-}
-
-.stwid--folder .stwid--folderHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  padding: 0.35em 0;
-  cursor: pointer;
-  background-color: color-mix(
-    in srgb,
-    rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor))) 65%,
-    var(--SmartThemeBorderColor) 35%
-  );
-  box-shadow:
-    inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 65%, transparent),
-    0 1px 3px rgb(0 0 0 / 16%);
-  transition:
-    background-color 150ms ease,
-    box-shadow 150ms ease,
-    opacity 150ms ease;
-  opacity: 0.92;
-  min-height: 2.2em;
-  line-height: 1;
-  margin-bottom: 0.5em;
-}
-
-.stwid--folder .stwid--folderHeader:hover {
-  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, transparent);
-  opacity: 1;
-  box-shadow:
-    inset 0 -1px 0 color-mix(in srgb, var(--SmartThemeBorderColor) 50%, transparent),
-    0 1px 3px rgb(0 0 0 / 10%);
-}
-
-.stwid--folder.stwid--state-target .stwid--folderHeader {
-  background-color: var(--stwid-state-target-bg);
-  box-shadow: var(--stwid-state-target-outline);
-}
-
-.stwid--folder .stwid--folderIcon {
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--folder:not(:has(.stwid--folderBooks.stwid--state-collapsed)) .stwid--folderIcon::before {
-  content: '\f07c';
-}
-
-.stwid--folder .stwid--folderLabel {
-  font-weight: bold;
-  font-size: 1em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.2;
-}
-
-.stwid--folder .stwid--folderCount {
-  opacity: 0.85;
-  background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 12%, transparent);
-  border-radius: 999px;
-  padding: 0.1em 0.45em;
-  font-size: 0.85em;
-  line-height: 1.2;
-}
-
-.stwid--folder .stwid--folderHeader .stwid--actions {
-  display: flex;
-  gap: 0.25em;
-  align-items: center;
-  margin-left: auto;
-}
-
-.stwid--folder .stwid--folderIcon,
-.stwid--folder .stwid--folderActiveToggle {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
-  vertical-align: middle;
-}
-
-.stwid--folder .stwid--folderActiveToggle {
-  cursor: pointer;
-}
-
-.stwid--folder .stwid--folderActiveToggle[data-state='partial']::before {
-  content: '';
-  transform: scale(1);
-  width: 0.65em;
-  height: 2px;
-  border-radius: 999px;
-  clip-path: none;
-  box-shadow: none;
-  background-color: var(--SmartThemeCheckboxTickColor);
-}
-
-/* Folder header buttons */
-.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
-  /* Folder actions also need zero padding (book actions do not) */
-  padding: 0;
-}
-
-.stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: var(--stwid-focus-ring-offset);
-  opacity: 1;
-}
-
-.stwid--folder .stwid--folderBooks.stwid--state-collapsed {
-  display: none;
-}
-
-/* Action icon affordance - dim until hovered */
-.stwid--folder .stwid--actions .stwid--action,
-.stwid--book .stwid--actions .stwid--action {
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 200ms ease;
-}
-
-.stwid--folder .stwid--actions .stwid--action:hover,
-.stwid--book .stwid--actions .stwid--action:hover {
-  opacity: 1;
-}
-
-/* Books */
-.stwid--books .stwid--book {
-  border-bottom: 2px solid var(--SmartThemeBorderColor);
-}
-
-.stwid--books .stwid--book.stwid--state-target,
-.stwid--books .stwid--book.stwid--state-target .stwid--head {
-  background-color: var(--stwid-state-selected-bg);
-}
-
-.stwid--books .stwid--book.stwid--filter-visibility,
-.stwid--books .stwid--book.stwid--filter-query {
-  display: none;
-}
-
-.stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--state-active) .stwid--head {
-  background-color: var(--white20a);
-}
-
-.stwid--books .stwid--book .stwid--head {
-  display: flex;
-  gap: 0.5em;
-  background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
-  transition: background-color 150ms ease;
-}
-
-.stwid--books .stwid--book .stwid--head:hover {
-  background-color: var(--stwid-state-hover-bg);
-}
-
-.stwid--books .stwid--book .stwid--head .stwid--title {
-  flex: 1 1 auto;
-  cursor: pointer;
-  font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stwid--books .stwid--book .stwid--head .stwid--actions {
-  display: flex;
-  gap: 0.25em;
-  align-items: center;
-}
-
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
-  /* opacity: 0.75; */
-  color: var(--SmartThemeQuoteColor);
-  margin-right: 0.2em;
-}
-
-.stwid--books .stwid--book .stwid--entryList.stwid--state-collapsed {
-  display: none;
-}
-
-.stwid--book .stwid--actions .stwid--sourceLinks {
-  display: inline-flex;
-  gap: 0.1em;
-  align-items: center;
-}
-
-.stwid--book .stwid--actions .stwid--sourceLinks.stwid--state-empty {
-  display: none;
-}
-
-/* Entries */
-.stwid--books .stwid--entry {
-  display: flex;
-  gap: 0.5em;
-  border-bottom: 2px solid var(--SmartThemeBorderColor);
-  margin-left: 0.25em;
-  overflow: hidden;
-  transition: background-color 200ms ease;
-}
-
-.stwid--books .stwid--entry:is(.stwid--state-dragging .stwid--entry:not(.stwid--state-selected)) {
-  pointer-events: none;
-}
-
-.stwid--books .stwid--entry.stwid--state-selected {
-  background-color: var(--stwid-state-selected-bg);
-  cursor: grab;
-}
-
-.stwid--books .stwid--entry.stwid--state-selected:hover,
-.stwid--books .stwid--entry.stwid--state-selected.stwid--state-active {
-  background-color: var(--stwid-state-selected-bg-strong);
-}
-
-.stwid--books .stwid--entry.stwid--state-selected *:not(:is(.stwid--selector)) {
-  pointer-events: none;
-}
-
-.stwid--books .stwid--entry.stwid--filter-query {
-  display: none;
-}
-
-.stwid--books .stwid--entry:hover,
-.stwid--books .stwid--entry.stwid--state-active {
-  background-color: var(--stwid-state-hover-bg);
-}
-
-.stwid--books .stwid--entry:hover .stwid--status,
-.stwid--books .stwid--entry.stwid--state-active .stwid--status {
-  opacity: 1;
-}
-
-.stwid--books .stwid--entry:has(.stwid--enabled.fa-toggle-off) {
-  opacity: var(--stwid-state-disabled-opacity);
-}
-
-.stwid--books .stwid--entry .stwid--selector {
-  display: flex;
-  align-items: center;
-  opacity: 0.25;
-  transition: opacity 200ms ease;
-  cursor: pointer;
-}
-
-.stwid--books .stwid--entry .stwid--selector:hover {
-  opacity: 1;
-}
-
-.stwid--books .stwid--entry .stwid--body {
-  flex: 1 1 auto;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.stwid--books .stwid--entry .stwid--status {
-  align-self: center;
-  display: flex;
-  gap: 0.5em;
-  align-items: baseline;
-  opacity: 0.5;
-  transition: opacity 200ms ease;
-}
-
-.stwid--books .stwid--entry .stwid--status .stwid--enabled {
-  color: var(--SmartThemeQuoteColor);
-  cursor: pointer;
-}
-
-/* Entry text truncation - one line, ellipsis if overflow */
-.stwid--entry .stwid--body .stwid--comment,
-.stwid--entry .stwid--body .stwid--key {
-  height: 1lh;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stwid--comment {
-  font-size: 1.03em;
-}
-
-.stwid--entry .stwid--body .stwid--key {
-  color: var(--SmartThemeEmColor);
-  font-size: smaller;
-  font-style: italic;
-}
-
-@media screen and (width <= 1000px) {
-  .stwid--list {
-    width: 100%;
-    max-width: none;
-    flex-basis: auto;
-    height: auto;
-  }
-
-  .stwid--iconTabBar {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
-  }
-
-  .stwid--browserRow,
-  .stwid--list .stwid--browserRow,
-  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
-    flex-wrap: wrap;
-  }
-
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow {
-    justify-content: flex-start;
-  }
-
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
-  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
-    min-width: 100%;
-  }
-
-  .stwid--multiselectDropdownMenu,
-  .stwid--bookVisibilityMenu {
-    max-width: calc(100vw - 2rem);
-  }
-}
-
-@media screen and (width <= 768px) {
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
-    width: 100%;
-  }
-
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
-    flex: 1 1 auto;
-  }
-
-  .stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
-    flex-basis: 100%;
-    min-width: 0;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 4) Editor Panel                                                            */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--editor:empty::after {
-  content: '\f558';
-  font-family: 'Font Awesome 6 Free', sans-serif;
-  font-size: 20em;
-  opacity: 0.125;
-  display: flex;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-}
-
-.stwid--editor #wiActivationSettings {
-  flex-wrap: nowrap;
-}
-
-/* override: vanilla #wiCheckboxes sets width:100%; unset here so it shrinks to content in the flex activation row */
-.stwid--editor #wiActivationSettings #wiCheckboxes {
-  flex: 0 0 auto;
-  width: unset;
-}
-
-/* focus mode: hides all WI entry controls except the content field and stwim-- micromenu elements */
-.stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
-.stwid--editor.stwid--focus
-  .world_entry
-  *:not(:has([name='content']), [name='content'], :has([class*='stwim--']), [class*='stwim--']) {
-  display: none;
-}
-
-.stwid--editor.stwid--focus .stwid--unfocusToggle {
-  display: flex;
-}
-
-.stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) {
-  justify-content: end;
-}
-
-.stwid--editor.stwid--focus :has(> .stwim--pickerTriggerWrap) .stwim--pickerTriggerWrap {
-  position: absolute;
-  top: -3em;
-  right: 0;
-}
-
-.stwid--editor .stwid--unfocusToggle {
-  display: none;
-}
-
-.stwid--editor .stwid--focusToggle {
-  /* margin-left: 1em; */
-}
-
-/* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
-.stwid--editor .world_entry,
-.stwid--editor .world_entry_form,
-.stwid--editor .inline-drawer {
-  /* height: 100%; */
-}
-
-/* override: vanilla inline-drawer uses block layout; drawer needs flex-column so the content area can scroll */
-.stwid--editor .inline-drawer {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-/* override: hide the vanilla drag handle and collapse toggle - the drawer provides no use for them */
-.stwid--editor .drag-handle,
-.stwid--editor .inline-drawer-toggle {
-  display: none;
-}
-
-/* override: !important required - vanilla sets display on .inline-drawer-content; flex-column needed for scrollable layout */
-.stwid--editor .inline-drawer-content {
-  flex: 1 1 auto;
-  display: flex !important;
-  flex-direction: column;
-  min-height: 0;
-}
-
-/* override: vanilla world_entry_edit has display:contents; replaced with flex-column so the entry form fills and scrolls inside the drawer */
-.stwid--editor .inline-drawer-content > .world_entry_edit {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-height: 0;
-}
-
-/* override: first child of world_entry_edit - the outer keywords/overrides/content wrapper; flex:1 lets it fill drawer height */
-.stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter {
-  flex: 1 1 auto;
-  flex-direction: column;
-  align-items: stretch;
-  min-height: 0;
-}
-
-/* AMS: show the header/toggle button (overrides the blanket inline-drawer-toggle hide) */
-.stwid--editor .stwid--ams > .inline-drawer-header.inline-drawer-toggle {
-  display: flex;
-  cursor: pointer;
-}
-
-/* AMS: opt out of main editor full-height drawer sizing rules */
-.stwid--editor .inline-drawer.stwid--ams {
-  height: auto;
-  min-height: initial;
-  flex: 0 0 auto;
-  display: block;
-  padding-top: 0.5em;
-}
-
-/* AMS: collapsed by default - overrides the flex !important on .inline-drawer-content */
-.stwid--editor .stwid--ams > .inline-drawer-content {
-  display: none !important;
-  flex: initial;
-  flex-direction: initial;
-  min-height: initial;
-}
-
-/* AMS: expanded state - toggled by JS adding stwid--ams-open */
-.stwid--editor .stwid--ams.stwid--ams-open > .inline-drawer-content {
-  display: flex !important;
-}
-
-/* AMS: feature disabled - hides the section entirely */
-body.stwid--ams-disabled .stwid--ams {
-  display: none !important;
-}
-
-/* AMS: fallback hide path when class wiring is not yet attached */
-body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerExpandable) {
-  display: none !important;
-}
-
-/* override: vanilla ST sets a conflicting flex value on [name='contentAndCharFilterBlock'];
-   flex:1 is required so the content textarea fills the remaining editor height */
-.stwid--editor [name='contentAndCharFilterBlock'] {
-  flex: 1 1 auto !important;
-
-  /* min-height: 0; */
-
-  /* min-width: 0; */
-}
-
-.stwid--editor [name='content'] {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.stwid--editor [name='WIEntryBottomControls'] {
-  display: none;
-}
-
-@media screen and (width <= 1000px) {
-  .stwid--editor {
-    width: 100%;
-    max-width: none;
-    flex: 1 1 auto;
-  }
-
-  .stwid--editor #wiActivationSettings {
-    flex-wrap: wrap;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 5) Entry Manager (actions, filter, table)                                  */
-
-/* -------------------------------------------------------------------------- */
-
-/* Root */
-
-/* Column toggles */
-.stwid--entryManager.stwid--hideKeys .stwid--key {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-strategy [data-col='strategy'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-position [data-col='position'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-depth [data-col='depth'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-outlet [data-col='outlet'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-group [data-col='group'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-order [data-col='order'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-sticky [data-col='sticky'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-cooldown [data-col='cooldown'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-delay [data-col='delay'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-automationId [data-col='automationId'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-trigger [data-col='trigger'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-recursion [data-col='recursion'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-budget [data-col='budget'] {
-  display: none;
-}
-
-.stwid--entryManager.stwid--hide-col-characterFilter [data-col='characterFilter'] {
-  display: none;
-}
-
-/* Visibility row and bulk edit row - shared base */
-.stwid--order-action-bar,
-.stwid--bulkEditRow {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 0.9em;
-  justify-content: flex-start;
-  align-items: center;
-
-  /* background-color: var(--SmartThemeBlurTintColor); */
-  padding: 0 0.5em;
-  margin-bottom: 1em;
-}
-
-.stwid--order-action-bar {
-  flex-wrap: wrap;
-  padding: 0.4em 0.5em;
-}
-
-.stwid--order-action-bar .stwid--actionsDivider {
-  align-self: stretch;
-  width: 1px;
-  background-color: var(--SmartThemeBorderColor);
-  opacity: 0.5;
-}
-
-.stwid--order-action-bar .stwid--table-sort,
-.stwid--order-action-bar .stwid--columnVisibility {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  color: var(--SmartThemeEmColor);
-}
-
-.stwid--order-action-bar .stwid--columnVisibility {
-  position: relative;
-}
-
-/* Display toolbar - right side */
-.stwid--displayToolbarInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.75em;
-  margin-left: auto;
-  flex-wrap: wrap;
-}
-
-.stwid--visibilityCount {
-  color: var(--SmartThemeEmColor);
-  font-size: smaller;
-  white-space: nowrap;
-}
-
-.stwid--activeFilters {
-  display: flex;
-  align-items: center;
-  gap: 0.35em;
-  flex-wrap: wrap;
-  font-size: smaller;
-  color: var(--SmartThemeEmColor);
-}
-
-/* Filter chips - same visual style as stwid--visibilityChip but scoped to Entry Manager */
-.stwid--filterChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: var(--stwid-radius-s, 4px);
-  padding: 0.1em 0.35em;
-  font-size: 0.85em;
-  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
-}
-
-.stwid--chipRemove {
-  background: none;
-  border: none;
-  padding: 0 0.1em;
-  cursor: pointer;
-  color: var(--SmartThemeQuoteColor);
-  line-height: 1;
-  font-size: 1em;
-}
-
-.stwid--chipRemove:hover {
-  color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
-}
-
-/* Bulk edit row */
-.stwid--bulkEditRow {
-  flex-wrap: wrap;
-  padding: 0.4em 0.5em;
-}
-
-.stwid--rowContentWrap {
-  flex: 0 0 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: inherit;
-}
-
-.stwid--bulkEditLabelHint {
-  padding-left: 0.5em;
-}
-
-.stwid--bulkEditLabel {
-  background-color: var(--SmartThemeBlurTintColor);
-}
-
-.stwid--bulkEditRow .stwid--inputWrap {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  color: var(--SmartThemeEmColor);
-  font-size: smaller;
-}
-
-.stwid--bulkEditRow .stwid--inputWrap .stwid--input {
-  width: 4em;
-}
-
-.stwid--entryManager .stwid--thinContainer .killSwitch.fa-toggle-on {
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--entryManager .stwid--thinContainer .killSwitch.fa-toggle-off {
-  color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
-}
-
-.stwid--entryManager .stwid--thinContainer.stwid--state-disabled {
-  opacity: var(--stwid-state-disabled-opacity);
-  pointer-events: none;
-}
-
-.stwid-compactInput {
-  min-height: 5px;
-  padding-inline: 5px;
-  font-size: 0.95em;
-  width: 3.5em;
-  margin: 0.2em;
-}
-
-.stwid--entryManager .stwid--thinContainer[data-field='outlet'] .stwid--input {
-  width: 8em;
-  font-size: 0.85em;
-}
-
-/* Feature 1: Order container - stack Start and Spacing vertically */
-.stwid--orderStartSpacingPair {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.stwid--entryManager .stwid--thinContainer[data-field='applyAll'] {
-  min-width: 5em;
-}
-
-/* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
-.stwid--entryManager .stwid--thinContainer .stwid--applyDirty {
-  color: var(--stwid-warning-color);
-}
-
-/* Filters */
-.stwid--orderTable .stwid--columnHeader {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.8em;
-}
-
-.stwid--orderTable .stwid--columnFilter {
-  display: flex;
-  align-items: center;
-}
-
-.stwid--orderTable .stwid--orderFilterButton {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
-  min-height: 0;
-  min-width: 0;
-  line-height: 1;
-  font-size: 0.85em;
-}
-
-.stwid--orderTable .stwid--orderFilterButton.stwid--state-active {
-  opacity: 1;
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--script-filter {
-  background-color: var(--SmartThemeBlurTintColor);
-  display: none;
-  gap: 1em;
-  height: 20vh;
-}
-
-.stwid--script-filter.stwid--state-active {
-  display: flex;
-}
-
-.stwid--script-filter .stwid--main {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-}
-
-.stwid--script-filter .stwid--main .stwid--hint {
-  color: var(--SmartThemeEmColor);
-  font-size: smaller;
-}
-
-.stwid--script-filter .stwid--main .stwid--hint code {
-  font-size: smaller;
-}
-
-.stwid--script-filter .stwid--main .stwid--script {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-}
-
-.stwid--script-filter .stwid--main .stwid--script .stwid--syntax,
-.stwid--script-filter .stwid--main .stwid--script .stwid--input {
-  grid-column: 1;
-  grid-row: 1;
-  height: 100%;
-  width: 100%;
-  font-family: var(--monoFontFamily, monospace);
-  padding: 0.75em;
-  margin: 0;
-  line-height: 1.2;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 5px;
-  white-space: pre;
-  resize: none;
-  tab-size: 4;
-  max-height: unset;
-}
-
-.stwid--script-filter .stwid--main .stwid--script .stwid--input {
-  caret-color: var(--ac-style-color-text);
-}
-
-.stwid--script-filter .stwid--main .stwid--script .stwid--input {
-  scrollbar-width: none; /* Firefox */
-}
-
-.stwid--script-filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-
-.stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
-  color: transparent;
-  background-color: rgba(108 171 251 / 0.25);
-}
-
-@supports (rgb(from var(--ac-style-color-matchedText) r g b / 0.25)) {
-  .stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
-    background-color: rgb(from var(--ac-style-color-matchedText) r g b / 0.25);
-  }
-}
-
-.stwid--script-filter .stwid--preview {
-  font-family: var(--monoFontFamily, monospace);
-  font-size: 0.6em;
-  white-space: pre;
-  max-width: 30%;
-  overflow: auto;
-  height: 100%;
-}
-
-/* Table wrapper - see shared section 1.5 */
-
-/* Table */
-.stwid--orderTable {
-  border: 0;
-  border-collapse: collapse;
-  border-spacing: 0;
-  text-align: left;
-  white-space: normal;
-  width: 100%;
-}
-
-.stwid--orderTable thead {
-  background-color: var(--SmartThemeBlurTintColor);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  font-size: smaller;
-}
-
-.stwid--orderTable tr {
-  border-bottom: 5px solid var(--SmartThemeBorderColor);
-  transition: background-color 200ms ease;
-  background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
-}
-
-.stwid--orderTable tr:hover {
-  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
-}
-
-.stwid--orderTable tbody tr.stwid--state-target {
-  background-color: var(--stwid-state-target-bg);
-  box-shadow: var(--stwid-state-target-outline);
-}
-
-.stwid--orderTable tbody tr.stwid--state-target:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--SmartThemeQuoteColor) 25%,
-    var(--stwid-state-target-bg)
-  );
-}
-
-.stwid--orderTable tbody tr.stwid--state-selected {
-  background-color: var(--stwid-state-selected-bg);
-}
-
-.stwid--orderTable tbody tr.stwid--state-selected:hover {
-  background-color: var(--stwid-state-selected-bg-strong);
-}
-
-.stwid--orderTable tr.stwid--state-filtered {
-  display: none;
-}
-
-.stwid--orderTable tbody tr:not(.stwid--applySelected) {
-  opacity: 0.6;
-}
-
-.stwid--orderTable tr th,
-.stwid--orderTable tr td {
-  text-align: left;
-  padding: 0 0.7em;
-  width: 0;
-}
-
-.stwid--orderTable thead th {
-  text-align: center;
-}
-
-.stwid--orderTable thead th[data-col='entry'] {
-  text-align: left;
-}
-
-/* Table column sizing */
-.stwid--orderTable tr th[data-col='select'] {
-  min-width: 1em;
-  text-align: center;
-}
-
-.stwid--orderTable tr th[data-col='drag'] {
-  min-width: 1.5em;
-  text-align: center;
-}
-
-.stwid--orderTable tr th[data-col='enabled'] {
-  min-width: 1em;
-  text-align: center;
-}
-
-.stwid--orderTable tr th[data-col='entry'] {
-  min-width: 16em;
-  padding-top: 1em;
-  padding-bottom: 1em;
-}
-
-.stwid--orderTable tr th[data-col='strategy'] {
-  min-width: 5em;
-}
-
-.stwid--orderTable tr th[data-col='position'] {
-  min-width: 7em;
-}
-
-.stwid--orderTable tr th[data-col='outlet'] {
-  min-width: 8em;
-}
-
-.stwid--orderTable .stwid--orderTable--NumberColumns {
-  min-width: 5em;
-}
-
-.stwid--orderTable tr th[data-col='recursion'] {
-  min-width: 14em;
-}
-
-.stwid--orderTable tr th[data-col='characterFilter'] {
-  min-width: 14em;
-}
-
-.stwid--orderTable tr th[data-col='budget'] {
-  min-width: 7em;
-}
-
-/* Row details */
-.stwid--recursionOptions,
-.stwid--characterFilterOptions {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.stwid--characterFilterRow,
-.stwid--small-check-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-}
-
-.stwid--small-check-row {
-  font-size: 0.85em;
-}
-
-.stwid--characterFilterRow--include {
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--characterFilterRow--exclude {
-  color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));
-}
-
-/* override: FA icon checkbox defaults are too large for the compact recursion options row */
-.stwid--small-check-row .checkbox {
-  width: 0.85em;
-  height: 0.85em;
-}
-
-.stwid--recursionOptions br {
-  display: none;
-}
-
-.stwid--orderTable tr td {
-  color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
-  font-size: small;
-}
-
-.stwid--orderTable tr td[data-col='select'] {
-  min-width: 1em;
-  text-align: center;
-}
-
-.stwid--orderTable tr td[data-col='drag'] {
-  min-width: 1.5em;
-  text-align: center;
-}
-
-.stwid--orderTable tr td[data-col='enabled'] {
-  min-width: 1em;
-  text-align: center;
-}
-
-.stwid--orderTable tr td[data-col='entry'] {
-  min-width: 16em;
-  padding-top: 1em;
-  padding-bottom: 1em;
-}
-
-.stwid--orderTable tr td[data-col='strategy'] {
-  min-width: 5em;
-}
-
-.stwid--orderTable tr td[data-col='position'] {
-  min-width: 7em;
-}
-
-.stwid--orderTable tr td[data-col='outlet'] {
-  min-width: 8em;
-}
-
-.stwid--orderTable tr td[data-col='recursion'] {
-  min-width: 14em;
-}
-
-.stwid--orderTable tr td[data-col='characterFilter'] {
-  min-width: 14em;
-}
-
-.stwid--orderTable tr td[data-col='budget'] {
-  min-width: 7em;
-}
-
-.stwid--orderTable tr td .stwid--sortableHandle {
-  cursor: pointer;
-  opacity: 0.5;
-  padding: 2px;
-  font-size: 0.85em;
-  transition: opacity 200ms ease;
-}
-
-.stwid--orderTable tr td .stwid--sortableHandle:hover {
-  opacity: 1;
-}
-
-.stwid--orderTable tr td .stwid--orderMove {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1em;
-}
-
-.stwid--orderTable tr td .stwid--orderMoveButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--SmartThemeQuoteColor);
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 150ms ease;
-}
-
-.stwid--orderTable tr td .stwid--orderMoveButton:hover {
-  opacity: 1;
-  color: var(--SmartThemeQuoteColor);
-  text-shadow: 0 0 6px color-mix(in srgb, var(--SmartThemeQuoteColor) 65%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent);
-  border-radius: 4px;
-}
-
-.stwid--orderTable tr td .stwid--orderMoveButton:focus-visible,
-.stwid--orderTable tr td .stwid--sortableHandle:focus-visible,
-.stwid--orderTable tr td .stwid--orderSelect:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: 1px;
-  opacity: 1;
-}
-
-.stwid--orderTable tr td .stwid--orderSelect {
-  color: var(--SmartThemeQuoteColor);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25em;
-  transition: opacity 200ms ease;
-}
-
-.stwid--orderTable tr td .stwid--orderSelect:hover {
-  opacity: 0.8;
-}
-
-.stwid--orderTable tr td .stwid--orderSelect .stwid--icon {
-  pointer-events: none;
-}
-
-.stwid--orderTable tr td [name='depth'] {
-  display: none;
-}
-
-.stwid--orderTable tr td:has([name='position'] > [value='4']:checked) + td > [name='depth'] {
-  display: inline-block;
-}
-
-.stwid--orderTable tr td:has(.stwid--entry) {
-  width: 100%;
-}
-
-.stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
-  color: var(--SmartThemeEmColor);
-  font-size: 0.8em;
-  line-height: 1;
-}
-
-.stwid--orderTable tr td:has(.stwid--entry) .stwid--commentLink {
-  color: inherit;
-}
-
-.stwid--orderTable tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
-  font-size: 1.03em;
-  font-weight: 500;
-}
-
-.stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
-  color: var(--SmartThemeEmColor);
-  font-size: 0.75em;
-  font-style: italic;
-  line-height: 1;
-}
-
-.stwid--orderTable tr td .stwid--outlet {
-  color: var(--SmartThemeBodyColor);
-  font-size: 0.85em;
-  min-width: 6em;
-}
-
-.stwid--orderTable tr td .stwid--outlet input[name='outletName'] {
-  width: 100%;
-  min-width: 7em;
-}
-
-.stwid--orderTable tr td .stwid--position {
-  font-size: 0.9em;
-}
-
-.stwid--orderTable tr td input[name='depth'],
-.stwid--orderTable tr td input[name='order'],
-.stwid--orderTable tr td input[name='selective_probability'] {
-  min-width: 4em;
-  font-size: 0.95em;
-}
-
-.stwid--orderTable tr td .stwid--enabled {
-  color: var(--SmartThemeQuoteColor);
-  cursor: pointer;
-}
-
-.stwid--orderInputTight,
-.stwid--orderTable
-  input:is(
-    [name='depth'],
-    [name='order'],
-    [name='sticky'],
-    [name='cooldown'],
-    [name='delay'],
-    [name='automationId'],
-    [name='selective_probability']
-  ) {
-  min-height: 5px;
-  padding-inline: 5px;
-  font-size: 0.95em;
-}
-
-@media screen and (width <= 1000px) {
-  .stwid--entryManager {
-    width: 100%;
-    max-width: none;
-  }
-
-  .stwid--script-filter {
-    flex-direction: column;
-    height: auto;
-    min-height: 20vh;
-  }
-
-  .stwid--script-filter .stwid--preview {
-    max-width: none;
-    width: 100%;
-    max-height: 16em;
-  }
-
-  .stwid--orderTableWrap {
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  .stwid--orderTable {
-    width: max-content;
-    min-width: 100%;
-  }
-}
-
-@media screen and (width <= 768px) {
-  .stwid--order-action-bar,
-  .stwid--bulkEditRow {
-    gap: 0.6em;
-    padding-inline: 0.35em;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 6) Shared UI Patterns (drawer-internal)                                   */
-
-/* Shared menu/item patterns
-   Keep selectors local to this extension and avoid changing layout/positioning.
-*/
-:is(
-  .stwid--action,
-  .stwid--folderAction,
-  .stwid--folderMenu,
-  .stwid--folderToggle,
-  .stwid--orderFilterButton
-) {
-  border-radius: var(--stwid-radius-m);
-}
-
-:is(
-  .stwid--action,
-  .stwid--folderAction,
-  .stwid--folderMenu,
-  .stwid--folderToggle,
-  .stwid--orderFilterButton
-):focus-visible,
-.stwid--multiselectDropdownOption:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: var(--stwid-focus-ring-offset);
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 5.5) Context Menu + Modals                                                 */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--blocker {
-  position: fixed;
-  inset: 0;
-  z-index: 30000;
-}
-
-.stwid--blocker .stwid--listDropdownItem:focus-visible {
-  /* outline: var(--stwid-focus-ring); */
-
-  /* outline-offset: var(--stwid-focus-ring-offset); */
-  color: var(--SmartThemeBodyColor);
-  padding: 2px 4px;
-  text-decoration: none;
-  display: flex;
-  column-gap: 4px;
-  cursor: pointer;
-  justify-content: center;
-  opacity: 0.5;
-  transition: opacity var(--animation-duration);
-}
-
-/* Move Book to Folder dialog layout */
-.stwid--moveBookContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.stwid--moveBookContent h3 {
-  align-self: stretch;
-  text-align: left;
-}
-
-.stwid--moveBookContent .stwid--moveBookRow {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-/* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside the drawer root */
-.stwid--moveBookContent .stwid--moveBookRow .text_pole {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.stwid--moveBookContent .stwid--moveBookQuickActions {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.35em;
-}
-
-/* override: vanilla menu_button uses block flex; inline-flex keeps buttons inline in the Move Book row */
-.stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
-  min-width: 2.35em; /* override: ensures icon-only buttons have a minimum click target */
-  display: inline-flex; /* override: vanilla is display:flex (block-level); inline here for compact row */
-}
-
-/* Context menu container */
-.stwid--blocker .stwid--listDropdownMenu {
-  /* --stwid-menu-item-height: 2.05em; */
-  position: fixed;
-  position-anchor: --stwid--ctxAnchor;
-  position-area: bottom right;
-  position-try-fallbacks: flip-block, flip-inline;
-  margin-top: -1lh;
-  filter: drop-shadow(1px 1px 2px var(--black50a));
-  z-index: 30000;
-  overflow: hidden;
-  border: 1px solid var(--SmartThemeBorderColor);
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  background-color: rgb(32 33 36 / 21%);
-  font-size: 0.9em;
-  padding: 0.9em;
-  backdrop-filter: blur(var(--SmartThemeBlurStrength));
-}
-
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
-  min-height: var(--stwid-menu-item-height);
-  height: var(--stwid-menu-item-height);
-
-  /* opacity: 1; */
-  color: var(--SmartThemeBodyColor);
-
-  /* background-color: var(--SmartThemeBlurTintColor); */
-  cursor: pointer;
-  transition: color 150ms ease;
-  flex-direction: row;
-  box-sizing: border-box;
-  padding: 0.4em;
-
-  /* border-radius: var(--stwid-radius-m); */
-  display: block;
-  overflow: hidden;
-
-  /* border: 1px solid var(--SmartThemeBorderColor); */
-
-  /* border-radius: 6px; */
-
-  /* background-color: var(--SmartThemeBlurTintColor); */
-
-  /* backdrop-filter: blur(var(--SmartThemeBlurStrength)); */
-
-  &:hover {
-    color: var(--customThemeColor);
-  }
-
-  & #lorebook_ordering_button {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.35em;
-  }
-
-  &.stwid--bookSort {
-    /* opacity: 1; */
-    cursor: default;
-  }
-
-  &.stwid--bookSort select {
-    width: 9em;
-    color: var(--SmartThemeBodyColor);
-    background-color: rgba(255, 255, 255, 0.05);
-    min-height: var(--stwid-menu-item-height);
-    height: 100%;
-    margin-left: 1em;
-    font-size: 1em;
-
-    /* padding: 0em 0em 0em 0em; */
-    margin-bottom: 0;
-    margin-top: 0;
-  }
-}
-
-.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
-  flex: 0 0 auto;
-  width: 1.05em;
-  color: inherit;
-  transition: color 150ms ease;
-  text-align: center;
-  padding: 0 1.8em 0 0;
-}
-
-.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
-  flex: 1 1 auto;
-  color: inherit;
-  transition: color 150ms ease;
-  min-width: fit-content;
-}
-
-@media screen and (width <= 1000px) {
-  .stwid--moveBookContent {
-    width: min(100%, 38rem);
-  }
-
-  .stwid--moveBookContent .stwid--moveBookRow {
-    flex-wrap: wrap;
-  }
-
-  .stwid--moveBookContent .stwid--moveBookQuickActions {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .stwid--blocker .stwid--listDropdownMenu {
-    /* Guarantee a readable width: the menu opens beside its trigger, and when
-       the trigger sits at the right edge the anchor leaves almost no room,
-       collapsing the menu to a sliver that breaks every word. A min-width
-       forces it to keep a usable width (flipping to the opposite side when
-       needed) while min() keeps it inside the viewport on tiny screens. */
-    min-width: min(14em, calc(100vw - 2rem));
-    max-width: calc(100vw - 2rem);
-  }
-
-  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-}
-
-@media screen and (width <= 768px) {
-  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
-    min-width: 2em;
-  }
-}
-
-/* Flex-column fill shell - grows to fill parent, scrolls internally */
-.stwid--entryManager {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
-.stwid--orderTableWrap {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 7) Misc                                                                    */
-
-/* -------------------------------------------------------------------------- */
-
-.stwid--helpToast {
-  margin: 0;
-  padding-left: 0.5em;
-  font-size: small;
-}
-
-@media screen and (width <= 1000px) {
-  .stwid--helpToast {
-    overflow-wrap: anywhere;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-
-/* 8) Accessibility                                                           */
-
-/* -------------------------------------------------------------------------- */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
-    animation-duration: 0.01ms !important; /* override: blanket motion kill for reduced-motion OS preference */
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stwid--books .stwid--book .stwid--head,
-  .stwid--folder .stwid--folderHeader {
-    transition: none;
-  }
-}
-
-.stwid--menuItem {
-  display: flex;
-  align-items: center;
-  gap: 0.35em;
-  border-radius: var(--stwid-radius-s);
-}
-
-.stwid--multiselectDropdownOption {
-  font-size: 1em;
-  transition:
-    color 150ms ease,
-    background-color 150ms ease;
-  padding: 2px 4px;
-  border: 0;
-
-  /* color: inherit; */
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-}
-
-.stwid--multiselectDropdownOption:hover {
-  color: var(
-    --customThemeColor
-  ) !important; /* override: ST menu_button hover styles may override color; force theme color on hover */
-
-  /* background-color: color-mix(in srgb, var(--customThemeColor) 20%, transparent); */
-}
-
-.stwid--multiselectDropdownOption.stwid--state-active {
-  /* color: var(--SmartThemeQuoteColor); */
-}
-
-.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionIcon {
+.stwid--multiselect-dropdown__option .stwid--multiselect-dropdown__option-icon {
   color: var(--customThemeColor);
   display: inline-flex;
   align-items: center;
@@ -2283,25 +606,25 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   /* padding-left: 0.5em; */
 }
 
-.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox {
+.stwid--multiselect-dropdown__option .stwid--multiselect-dropdown__option-checkbox {
   width: 1em;
   text-align: center;
   color: var(--SmartThemeEmColor);
 }
 
-.stwid--multiselectDropdownOption.stwid--state-active .stwid--multiselectDropdownOptionCheckbox {
+.stwid--multiselect-dropdown__option.stwid--state-active
+  .stwid--multiselect-dropdown__option-checkbox {
   color: var(--SmartThemeQuoteColor);
 }
 
-/* note: no body.stwid-- scope guard - this selector is tightly scoped by the unique .stwid--multiselectDropdownOption class */
-.stwid--multiselectDropdownOption .stwid--multiselectDropdownOptionCheckbox.fa-square-check {
+/* note: no body.stwid-- scope guard - this selector is tightly scoped by the unique .stwid--multiselect-dropdown__option class */
+.stwid--multiselect-dropdown__option .stwid--multiselect-dropdown__option-checkbox.fa-square-check {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--multiselectDropdownOptionInput {
+.stwid--multiselect-dropdown__option-input {
   position: absolute;
-
-  /* width: 0; */
+  width: 0;
   height: 0;
   margin: 0;
   opacity: 0;
@@ -2310,7 +633,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   /* margin-right: 2em; */
 }
 
-.stwid--small-multiselect {
+.stwid--inline-multiselect {
   overflow: hidden;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
@@ -2318,7 +641,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   backdrop-filter: blur(var(--SmartThemeBlurStrength));
 }
 
-.stwid--small-multiselect a {
+.stwid--inline-multiselect a {
   color: var(--SmartThemeBodyColor);
   padding: 2px 4px;
   text-decoration: none;
@@ -2330,12 +653,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   transition: opacity var(--animation-duration);
 }
 
-.stwid--small-multiselect a:hover,
-.stwid--small-multiselect a[data-selected='true'] {
+.stwid--inline-multiselect a:hover,
+.stwid--inline-multiselect a[data-selected='true'] {
   opacity: 1;
 }
 
-.stwid--small-multiselect i {
+.stwid--inline-multiselect i {
   width: 12px;
   height: 12px;
   margin: 0 0.2em 0 0;
@@ -2346,15 +669,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   flex-shrink: 0;
 }
 
-.stwid--small-multiselect .multiselect-check {
-  color: var(--SmartThemeEmColor);
-}
-
-.stwid--small-multiselect a[data-selected='true'] .multiselect-check {
-  color: var(--SmartThemeQuoteColor);
-}
-
-.stwid--visibilityChips {
+.stwid--visibility-chips {
   display: flex;
   align-items: center;
   align-content: flex-start;
@@ -2365,7 +680,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   align-self: center;
 }
 
-.stwid--visibilityChip {
+.stwid--visibility-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
@@ -2376,7 +691,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   background-color: var(--SmartThemeBlurTintColor);
 }
 
-.stwid--visibilityChip .stwid--icon {
+.stwid--visibility-chip .stwid--icon {
   color: var(--SmartThemeQuoteColor);
 }
 
@@ -2390,7 +705,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   margin: 0.5em 0;
 }
 
-.stwid--folder .stwid--folderHeader {
+.stwid--folder .stwid--folder-header {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -2414,7 +729,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   margin-bottom: 0.5em;
 }
 
-.stwid--folder .stwid--folderHeader:hover {
+.stwid--folder .stwid--folder-header:hover {
   background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, transparent);
   opacity: 1;
   box-shadow:
@@ -2422,20 +737,20 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     0 1px 3px rgb(0 0 0 / 10%);
 }
 
-.stwid--folder.stwid--state-target .stwid--folderHeader {
+.stwid--folder.stwid--state-target .stwid--folder-header {
   background-color: var(--stwid-state-target-bg);
   box-shadow: var(--stwid-state-target-outline);
 }
 
-.stwid--folder .stwid--folderIcon {
+.stwid--folder .stwid--folder-icon {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--folder:not(:has(.stwid--folderBooks.stwid--state-collapsed)) .stwid--folderIcon::before {
+.stwid--folder:not(:has(.stwid--folder-books.stwid--state-collapsed)) .stwid--folder-icon::before {
   content: '\f07c';
 }
 
-.stwid--folder .stwid--folderLabel {
+.stwid--folder .stwid--folder-label {
   font-weight: bold;
   font-size: 1em;
   overflow: hidden;
@@ -2444,7 +759,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   line-height: 1.2;
 }
 
-.stwid--folder .stwid--folderCount {
+.stwid--folder .stwid--folder-count {
   opacity: 0.85;
   background-color: color-mix(in srgb, var(--SmartThemeBodyColor) 12%, transparent);
   border-radius: 999px;
@@ -2453,26 +768,26 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   line-height: 1.2;
 }
 
-.stwid--folder .stwid--folderHeader .stwid--actions {
+.stwid--folder .stwid--folder-header .stwid--actions {
   display: flex;
   gap: 0.25em;
   align-items: center;
   margin-left: auto;
 }
 
-.stwid--folder .stwid--folderIcon,
-.stwid--folder .stwid--folderActiveToggle {
+.stwid--folder .stwid--folder-icon,
+.stwid--folder .stwid--folder-active-toggle {
   display: inline-flex;
   align-items: center;
   line-height: 1;
   vertical-align: middle;
 }
 
-.stwid--folder .stwid--folderActiveToggle {
+.stwid--folder .stwid--folder-active-toggle {
   cursor: pointer;
 }
 
-.stwid--folder .stwid--folderActiveToggle[data-state='partial']::before {
+.stwid--folder .stwid--folder-active-toggle[data-state='partial']::before {
   content: '';
   transform: scale(1);
   width: 0.65em;
@@ -2484,18 +799,18 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 /* Folder header buttons */
-.stwid--folder .stwid--folderHeader .stwid--actions .stwid--action {
+.stwid--folder .stwid--folder-header .stwid--actions .stwid--action {
   /* Folder actions also need zero padding (book actions do not) */
   padding: 0;
 }
 
-.stwid--folder :is(.stwid--folderActiveToggle, .stwid--action):focus-visible {
+.stwid--folder :is(.stwid--folder-active-toggle, .stwid--action):focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;
 }
 
-.stwid--folder .stwid--folderBooks.stwid--state-collapsed {
+.stwid--folder .stwid--folder-books.stwid--state-collapsed {
   display: none;
 }
 
@@ -2527,7 +842,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   display: none;
 }
 
-.stwid--books .stwid--book:has(.stwid--entryList .stwid--entry.stwid--state-active) .stwid--head {
+.stwid--books .stwid--book:has(.stwid--entry-list .stwid--entry.stwid--state-active) .stwid--head {
   background-color: var(--white20a);
 }
 
@@ -2557,23 +872,22 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   align-items: center;
 }
 
-.stwid--books .stwid--book .stwid--head .stwid--actions .stwid--sourceLinks .stwid--sourceIcon {
-  /* opacity: 0.75; */
+.stwid--book .stwid--source-icon {
   color: var(--SmartThemeQuoteColor);
   margin-right: 0.2em;
 }
 
-.stwid--books .stwid--book .stwid--entryList.stwid--state-collapsed {
+.stwid--books .stwid--book .stwid--entry-list.stwid--state-collapsed {
   display: none;
 }
 
-.stwid--book .stwid--actions .stwid--sourceLinks {
+.stwid--book .stwid--actions .stwid--source-links {
   display: inline-flex;
   gap: 0.1em;
   align-items: center;
 }
 
-.stwid--book .stwid--actions .stwid--sourceLinks.stwid--state-empty {
+.stwid--book .stwid--actions .stwid--source-links.stwid--state-empty {
   display: none;
 }
 
@@ -2682,7 +996,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     height: auto;
   }
 
-  .stwid--iconTabBar {
+  .stwid--icon-tab__bar {
     display: flex;
     flex-wrap: nowrap;
     position: sticky;
@@ -2691,53 +1005,60 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
   }
 
-  .stwid--iconTabButton {
+  .stwid--icon-tab__button {
     flex: 1 1 0;
     min-width: 0;
     justify-content: center;
   }
 
-  .stwid--browserRow,
-  .stwid--list .stwid--browserRow,
-  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow {
+  .stwid--browser-row,
+  .stwid--list .stwid--browser-row,
+  .stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row {
     flex-wrap: wrap;
   }
 
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow {
+  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row {
     justify-content: flex-start;
   }
 
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--thinContainer,
-  .stwid--iconTabContent[data-tab-id='visibility'] .stwid--browserRow .stwid--thinContainer {
+  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--field-group,
+  .stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row .stwid--field-group {
     min-width: 100%;
   }
 
-  .stwid--multiselectDropdownMenu,
-  .stwid--bookVisibilityMenu {
+  .stwid--multiselect-dropdown__menu,
+  .stwid--book-visibility-menu {
     max-width: calc(100vw - 2rem);
+  }
+
+  .stwid--list .stwid--filter,
+  .stwid--search-entries {
+    flex-wrap: wrap;
   }
 }
 
 @media screen and (width <= 768px) {
-  .stwid--iconTabButton > span {
+  .stwid--icon-tab__button > span {
     display: none;
   }
 
-  .stwid--iconTabButton {
+  .stwid--icon-tab__button {
     gap: 0;
     padding: 0.5em;
   }
 
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--perBookSortButtons {
+  .stwid--icon-tab__content[data-tab-id='sorting']
+    .stwid--browser-row
+    .stwid--per-book-sort-buttons {
     width: 100%;
   }
 
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--bookSortToggle,
-  .stwid--iconTabContent[data-tab-id='sorting'] .stwid--browserRow .stwid--clearBookSorts {
+  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--book-sort-toggle,
+  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--clear-book-sorts {
     flex: 1 1 auto;
   }
 
-  .stwid--iconTabContent[data-tab-id='search'] .stwid--browserRow .stwid--search {
+  .stwid--icon-tab__content[data-tab-id='search'] .stwid--browser-row .stwid--search {
     flex-basis: 100%;
     min-width: 0;
   }
@@ -2778,7 +1099,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   display: none;
 }
 
-.stwid--editor.stwid--focus .stwid--unfocusToggle {
+.stwid--editor.stwid--focus .stwid--unfocus-toggle {
   display: flex;
 }
 
@@ -2792,11 +1113,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   right: 0;
 }
 
-.stwid--editor .stwid--unfocusToggle {
+.stwid--editor .stwid--unfocus-toggle {
   display: none;
 }
 
-.stwid--editor .stwid--focusToggle {
+.stwid--editor .stwid--focus-toggle {
   /* margin-left: 1em; */
 
   /* margin: 0; */
@@ -2862,7 +1183,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   padding-top: 0.5em;
 }
 
-/* AMS: collapsed by default - overrides the flex !important on .inline-drawer-content */
+/* override: AMS is collapsed by default - must beat the flex !important on .inline-drawer-content */
 .stwid--editor .stwid--ams > .inline-drawer-content {
   display: none !important;
   flex: initial;
@@ -2870,17 +1191,17 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   min-height: initial;
 }
 
-/* AMS: expanded state - toggled by JS adding stwid--ams-open */
+/* override: AMS expanded state - must beat the collapsed display:none !important above; toggled by JS adding stwid--ams-open */
 .stwid--editor .stwid--ams.stwid--ams-open > .inline-drawer-content {
   display: flex !important;
 }
 
-/* AMS: feature disabled - hides the section entirely */
+/* override: AMS feature disabled - must beat both AMS display rules above to hide the section entirely */
 body.stwid--ams-disabled .stwid--ams {
   display: none !important;
 }
 
-/* AMS: fallback hide path when class wiring is not yet attached */
+/* override: AMS fallback hide path when class wiring is not yet attached - must beat vanilla inline-drawer display */
 body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerExpandable) {
   display: none !important;
 }
@@ -2908,7 +1229,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     max-width: none;
     flex: 1 1 auto;
     min-height: 0;
-    overflow: hidden auto !important;
+    overflow: hidden auto !important; /* override: make the editor column the single touch-scroll container on mobile */
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
   }
@@ -2970,10 +1291,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--editor .inline-drawer-content > .world_entry_edit > .flex-container.alignitemscenter,
   .stwid--editor [name='contentAndCharFilterBlock'],
   .stwid--editor [name='content'] {
-    flex: 0 0 auto !important;
+    flex: 0 0 auto !important; /* override: stop inner blocks from flex-filling so the editor column scrolls as one on mobile */
     min-height: auto;
   }
 
+  /* override: element qualifier required - ST reuses .flex-container on several
+     elements here; only the <small> one should go full width */
   .stwid--editor [name='keywordsAndLogicBlock'],
   .stwid--editor [name='perEntryOverridesBlock'],
   .stwid--editor [name='contentAndCharFilterBlock'],
@@ -2995,7 +1318,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--editor .world_entry_thin_controls,
   .stwid--editor .flex-container.wide100p.flexGap10,
-  .stwid--editor .stwid--editorContentHeaderRow,
+  .stwid--editor .stwid--editor-content-header-row,
   .stwid--editor
     [name='contentAndCharFilterBlock']
     > .world_entry_form_control
@@ -3006,21 +1329,20 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex-wrap: wrap;
   }
 
-  .stwid--editor .stwid--editorContentHeaderRow {
+  .stwid--editor .stwid--editor-content-header-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-inline: 1em;
   }
 
-  .stwid--editor .stwid--editorContentHeaderRow > span:nth-child(1) {
+  .stwid--editor .stwid--editor-content-header-row > span:nth-child(1) {
     flex: 1 1 auto;
     min-width: 0;
     gap: 1em;
   }
 
-  .stwid--editor .stwid--editorContentHeaderRow > span:nth-child(2) {
+  .stwid--editor .stwid--editor-content-header-row > span:nth-child(2) {
     flex: 0 0 auto;
     width: auto;
     white-space: nowrap;
@@ -3036,12 +1358,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
   }
 
-  .stwid--editor .stwid--editorContentBodySection {
+  .stwid--editor .stwid--editor-content-body-section {
     width: 100%;
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorContentBodySection > textarea[name='content'] {
+  .stwid--editor .stwid--editor-content-body-section > textarea[name='content'] {
     width: 100%;
     min-width: 0;
   }
@@ -3067,7 +1389,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
   }
 
-  .stwid--editor .stwid--editorHeaderContextRow {
+  .stwid--editor .stwid--editor-header-context-row {
     display: grid;
     grid-template-columns: minmax(5.75rem, 0.95fr) minmax(0, 1.05fr);
     align-items: stretch;
@@ -3077,9 +1399,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorHeaderContextRow > .world_entry_form_control,
+  .stwid--editor .stwid--editor-header-context-row > .world_entry_form_control,
   .stwid--editor
-    .stwid--editorHeaderContextRow
+    .stwid--editor-header-context-row
     > .world_entry_form_control.world_entry_form_horizontal {
     display: flex;
     flex-direction: column;
@@ -3087,34 +1409,34 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     align-items: stretch;
   }
 
-  .stwid--editor .stwid--editorHeaderContextRow input[name='depth'],
-  .stwid--editor .stwid--editorHeaderContextRow input[name='outletName'] {
+  .stwid--editor .stwid--editor-header-context-row input[name='depth'],
+  .stwid--editor .stwid--editor-header-context-row input[name='outletName'] {
     /* width: 100%; */
 
     /* min-width: 1rem; */
   }
 
-  .stwid--editor .stwid--editorHeaderContextPosition {
+  .stwid--editor .stwid--editor-header-context-position {
     grid-column: 1 / 2;
   }
 
-  .stwid--editor .stwid--editorHeaderContextDepth {
+  .stwid--editor .stwid--editor-header-context-depth {
     grid-column: 2 / 3;
   }
 
-  .stwid--editor .stwid--editorHeaderContextOutlet {
+  .stwid--editor .stwid--editor-header-context-outlet {
     grid-column: 2 / 3;
   }
 
   .stwid--editor
     .world_entry:not(:has(select[name='position'] option[value='4']:checked))
-    .stwid--editorHeaderContextDepth {
+    .stwid--editor-header-context-depth {
     display: none;
   }
 
   .stwid--editor
     .world_entry:not(:has(select[name='position'] option[value='7']:checked))
-    .stwid--editorHeaderContextOutlet {
+    .stwid--editor-header-context-outlet {
     display: none;
   }
 
@@ -3123,11 +1445,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
       :has(select[name='position'] option[value='4']:checked),
       :has(select[name='position'] option[value='7']:checked)
     )
-    .stwid--editorHeaderContextPosition {
+    .stwid--editor-header-context-position {
     grid-column: 1 / -1;
   }
 
-  .stwid--editor .stwid--editorTitleRow {
+  .stwid--editor .stwid--editor-title-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
@@ -3148,7 +1470,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorHeaderToggleSlot {
+  .stwid--editor .stwid--editor-header-toggle-slot {
     display: flex;
     align-self: center;
     min-width: 1rem;
@@ -3158,7 +1480,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex-wrap: nowrap;
   }
 
-  .stwid--editor .stwid--editorHeaderToggleSlot > .killSwitch {
+  .stwid--editor .stwid--editor-header-toggle-slot > .killSwitch {
     display: flex;
     flex: 0 0 auto;
     align-items: center;
@@ -3169,21 +1491,21 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     line-height: 1;
   }
 
-  .stwid--editor .stwid--editorHeaderToggleSlot > .killSwitch.fa-toggle-on {
+  .stwid--editor .stwid--editor-header-toggle-slot > .killSwitch.fa-toggle-on {
     color: var(--SmartThemeQuoteColor);
   }
 
-  .stwid--editor .stwid--editorHeaderTitleControl {
+  .stwid--editor .stwid--editor-header-title-control {
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorHeaderTitleControl textarea[name='comment'] {
+  .stwid--editor .stwid--editor-header-title-control textarea[name='comment'] {
     width: 100%;
     min-width: 0;
     min-height: calc(2lh + 0.75rem);
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow {
+  .stwid--editor .stwid--editor-main-settings-row {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3191,75 +1513,76 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     gap: 0.45rem;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control {
+  .stwid--editor .stwid--editor-main-settings-row > .world_entry_form_control {
     min-width: 0;
   }
 
   .stwid--editor
-    .stwid--editorMainSettingsRow
+    .stwid--editor-main-settings-row
     > .world_entry_form_control:has(input[name='depth']) {
     display: none;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control,
+  .stwid--editor .stwid--editor-main-settings-row > .world_entry_form_control,
   .stwid--editor
-    .stwid--editorMainSettingsRow
+    .stwid--editor-main-settings-row
     > .world_entry_form_control.world_entry_form_horizontal,
-  .stwid--editor .stwid--editorMainSettingsRow > .world_entry_form_control.world_entry_form_radios {
+  .stwid--editor
+    .stwid--editor-main-settings-row
+    > .world_entry_form_control.world_entry_form_radios {
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow > .wi-enter-footer-text {
+  .stwid--editor .stwid--editor-main-settings-row > .wi-enter-footer-text {
     font-size: inherit;
     color: inherit;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow .stwid--editorHeaderLabel {
+  .stwid--editor .stwid--editor-main-settings-row .stwid--editor-header-label {
     min-height: 1.2em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow select,
-  .stwid--editor .stwid--editorMainSettingsRow input {
+  .stwid--editor .stwid--editor-main-settings-row select,
+  .stwid--editor .stwid--editor-main-settings-row input {
     width: 100%;
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow input {
+  .stwid--editor .stwid--editor-main-settings-row input {
     text-align: center;
   }
 
-  .stwid--editor .stwid--editorHeaderStrategy select[name='entryStateSelector'] {
+  .stwid--editor .stwid--editor-header-strategy select[name='entryStateSelector'] {
     text-align: center;
     text-align-last: center;
-    padding-left: 0.75rem;
-    padding-right: 1.75rem;
+    padding-inline: 0.75rem 1.75rem;
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow .widthNatural {
-    width: 100% !important;
-    min-width: 0 !important;
+  .stwid--editor .stwid--editor-main-settings-row .widthNatural {
+    width: 100% !important; /* override: force full width over ST .widthNatural on mobile */
+    min-width: 0 !important; /* override: allow shrink below ST min-width on mobile */
   }
 
-  .stwid--editor .stwid--editorMainSettingsRow .wideMax100px {
+  .stwid--editor .stwid--editor-main-settings-row .wideMax100px {
     max-width: none;
   }
 
-  .stwid--editor .stwid--editorActionsRow {
+  .stwid--editor .stwid--editor-actions-row {
     display: flex;
 
     /* grid-template-columns: repeat(3, minmax(0, 1fr)); */
     gap: 1.1rem;
     width: 100%;
-    flex-flow: row nowrap;
+    flex-flow: row wrap;
     place-content: center center;
   }
 
-  .stwid--editor .stwid--editorActionsRow > .menu_button {
+  .stwid--editor .stwid--editor-actions-row > .menu_button {
     /* display: flex; */
 
     /* flex: 1 1 0; */
@@ -3271,11 +1594,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     /* min-height: 2.5rem; */
   }
 
-  .stwid--editor .stwid--editorKeywordsAndFiltersSection {
+  .stwid--editor .stwid--editor-keywords-and-filters-section {
     /* gap: 0.75rem; */
   }
 
-  .stwid--editor .stwid--editorKeywordsAndFiltersSection > .world_entry_form_control {
+  .stwid--editor .stwid--editor-keywords-and-filters-section > .world_entry_form_control {
     width: 100%;
     min-width: 0;
   }
@@ -3292,7 +1615,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorContentSettingsSection {
+  .stwid--editor .stwid--editor-content-settings-section {
     display: flex;
     flex-direction: column;
 
@@ -3311,7 +1634,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     /* background: var(--black30a); */
   }
 
-  .stwid--editor .stwid--editorContentSettingsSection > .stwid--editorRecursionSection {
+  .stwid--editor .stwid--editor-content-settings-section > .stwid--editor-recursion-section {
     display: flex;
     flex-direction: column;
 
@@ -3320,29 +1643,29 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorRecursionDelayRow {
+  .stwid--editor .stwid--editor-recursion-delay-row {
     display: flex;
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     gap: 0.75rem;
     width: 100%;
     min-width: 0;
-    flex-flow: row nowrap;
+    flex-flow: row wrap;
     align-items: center;
     align-content: center;
   }
 
-  .stwid--editor .stwid--editorRecursionToggleRow,
-  .stwid--editor .stwid--editorRecursionLevelControl {
+  .stwid--editor .stwid--editor-recursion-toggle-row,
+  .stwid--editor .stwid--editor-recursion-level-control {
     min-width: 0;
     display: flex;
     flex-direction: column;
   }
 
-  .stwid--editor .stwid--editorRecursionToggleRow > label {
+  .stwid--editor .stwid--editor-recursion-toggle-row > label {
     width: 100%;
   }
 
-  .stwid--editor .stwid--editorRecursionGuardsRow {
+  .stwid--editor .stwid--editor-recursion-guards-row {
     display: flex;
 
     /* gap: 0.5rem; */
@@ -3351,23 +1674,23 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     justify-content: center;
   }
 
-  .stwid--editor .stwid--editorRecursionGuardsRow > label {
+  .stwid--editor .stwid--editor-recursion-guards-row > label {
     min-width: 0;
 
     /* text-overflow: ellipsis; */
   }
 
-  .stwid--editor .stwid--editorBudgetRow {
+  .stwid--editor .stwid--editor-budget-row {
     width: 100%;
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorBudgetRow > label {
+  .stwid--editor .stwid--editor-budget-row > label {
     width: 100%;
     min-width: 0;
   }
 
-  .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editorRecursionMetaRow {
+  .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editor-recursion-meta-row {
     order: 3;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3376,7 +1699,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorRecursionMetaRow > * {
+  .stwid--editor .stwid--editor-recursion-meta-row > * {
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -3493,11 +1816,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
       order: 7;
     }
 
-    .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editorRecursionMetaRow {
+    .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editor-recursion-meta-row {
       gap: 1rem;
     }
 
-    .stwid--editor .stwid--editorRecursionDelayRow {
+    .stwid--editor .stwid--editor-recursion-delay-row {
       grid-template-columns: minmax(0, 1fr);
     }
   }
@@ -3530,7 +1853,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
   }
 
-  .stwid--editor .stwid--editorContentFlagsSection {
+  .stwid--editor .stwid--editor-content-flags-section {
     display: flex;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem 1rem;
@@ -3541,7 +1864,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex-direction: row;
   }
 
-  .stwid--editor .stwid--editorContentFlagsSection > .flex-container {
+  .stwid--editor .stwid--editor-content-flags-section > .flex-container {
     width: 100%;
     min-width: 0;
   }
@@ -3604,7 +1927,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     .inline-drawer-content
     > .world_entry_edit
     > .flex-container.wide100p.flexGap10:nth-child(2)
-    > .stwid--editorGroupSection {
+    > .stwid--editor-group-section {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
@@ -3612,14 +1935,14 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorGroupSectionPrimary {
+  .stwid--editor .stwid--editor-group-section-primary {
     display: flex;
     flex-direction: column;
     grid-column: span 2;
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorGroupSectionSecondary {
+  .stwid--editor .stwid--editor-group-section-secondary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.45rem 0.75rem;
@@ -3628,20 +1951,20 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorGroupSectionSecondary > * {
+  .stwid--editor .stwid--editor-group-section-secondary > * {
     display: flex;
     flex-direction: column;
     min-width: 0;
     width: 100%;
   }
 
-  .stwid--editor .stwid--editorGroupSectionSecondary input,
-  .stwid--editor .stwid--editorGroupSectionSecondary select {
+  .stwid--editor .stwid--editor-group-section-secondary input,
+  .stwid--editor .stwid--editor-group-section-secondary select {
     width: 100%;
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorTimingRow {
+  .stwid--editor .stwid--editor-timing-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
@@ -3649,7 +1972,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorTimingRow > * {
+  .stwid--editor .stwid--editor-timing-row > * {
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -3674,13 +1997,13 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editorCharacterTagFilterSection,
-  .stwid--editor .stwid--editorTriggerFilterSection {
+  .stwid--editor .stwid--editor-character-tag-filter-section,
+  .stwid--editor .stwid--editor-trigger-filter-section {
     min-width: 0;
   }
 
   .stwid--editor .stwid--ams > .inline-drawer-content {
-    display: grid !important;
+    display: grid !important; /* override: lay AMS settings out as a grid over the collapsed-flex base rule on mobile */
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem 1rem;
     align-items: start;
@@ -3737,9 +2060,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     .inline-drawer-content
     > .world_entry_edit
     > .flex-container.wide100p.flexGap10:nth-child(2)
-    > .stwid--editorGroupSection,
-  .stwid--editor .stwid--editorGroupSectionSecondary,
-  .stwid--editor .stwid--editorTimingRow {
+    > .stwid--editor-group-section,
+  .stwid--editor .stwid--editor-group-section-secondary,
+  .stwid--editor .stwid--editor-timing-row {
     gap: 0.5rem;
   }
 
@@ -3760,69 +2083,69 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 /* Root */
 
 /* Column toggles */
-.stwid--entryManager.stwid--hideKeys .stwid--key {
+.stwid--entry-manager.stwid--hide-keys .stwid--key {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-strategy [data-col='strategy'] {
+.stwid--entry-manager.stwid--hide-col-strategy [data-col='strategy'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-position [data-col='position'] {
+.stwid--entry-manager.stwid--hide-col-position [data-col='position'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-depth [data-col='depth'] {
+.stwid--entry-manager.stwid--hide-col-depth [data-col='depth'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-outlet [data-col='outlet'] {
+.stwid--entry-manager.stwid--hide-col-outlet [data-col='outlet'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-group [data-col='group'] {
+.stwid--entry-manager.stwid--hide-col-group [data-col='group'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-order [data-col='order'] {
+.stwid--entry-manager.stwid--hide-col-order [data-col='order'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-sticky [data-col='sticky'] {
+.stwid--entry-manager.stwid--hide-col-sticky [data-col='sticky'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-cooldown [data-col='cooldown'] {
+.stwid--entry-manager.stwid--hide-col-cooldown [data-col='cooldown'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-delay [data-col='delay'] {
+.stwid--entry-manager.stwid--hide-col-delay [data-col='delay'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-automationId [data-col='automationId'] {
+.stwid--entry-manager.stwid--hide-col-automationId [data-col='automationId'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-trigger [data-col='trigger'] {
+.stwid--entry-manager.stwid--hide-col-trigger [data-col='trigger'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-recursion [data-col='recursion'] {
+.stwid--entry-manager.stwid--hide-col-recursion [data-col='recursion'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-budget [data-col='budget'] {
+.stwid--entry-manager.stwid--hide-col-budget [data-col='budget'] {
   display: none;
 }
 
-.stwid--entryManager.stwid--hide-col-characterFilter [data-col='characterFilter'] {
+.stwid--entry-manager.stwid--hide-col-characterFilter [data-col='characterFilter'] {
   display: none;
 }
 
 /* Visibility row and bulk edit row - shared base */
 .stwid--order-action-bar,
-.stwid--bulkEditRow {
+.stwid--bulk-edit-row {
   flex: 0 0 auto;
   display: flex;
   gap: 0.9em;
@@ -3839,7 +2162,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   padding: 0.4em 0.5em;
 }
 
-.stwid--order-action-bar .stwid--actionsDivider {
+.stwid--order-action-bar .stwid--actions-divider {
   align-self: stretch;
   width: 1px;
   background-color: var(--SmartThemeBorderColor);
@@ -3847,19 +2170,19 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 .stwid--order-action-bar .stwid--table-sort,
-.stwid--order-action-bar .stwid--columnVisibility {
+.stwid--order-action-bar .stwid--column-visibility {
   display: flex;
   align-items: center;
   gap: 0.5em;
   color: var(--SmartThemeEmColor);
 }
 
-.stwid--order-action-bar .stwid--columnVisibility {
+.stwid--order-action-bar .stwid--column-visibility {
   position: relative;
 }
 
 /* Display toolbar - right side */
-.stwid--displayToolbarInfo {
+.stwid--display-toolbar-info {
   display: flex;
   align-items: center;
   gap: 0.75em;
@@ -3867,13 +2190,13 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   flex-wrap: wrap;
 }
 
-.stwid--visibilityCount {
+.stwid--visibility-count {
   color: var(--SmartThemeEmColor);
   font-size: smaller;
   white-space: nowrap;
 }
 
-.stwid--activeFilters {
+.stwid--active-filters {
   display: flex;
   align-items: center;
   gap: 0.35em;
@@ -3882,8 +2205,8 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   color: var(--SmartThemeEmColor);
 }
 
-/* Filter chips - same visual style as stwid--visibilityChip but scoped to Entry Manager */
-.stwid--filterChip {
+/* Filter chips - same visual style as stwid--visibility-chip but scoped to Entry Manager */
+.stwid--filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
@@ -3894,7 +2217,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, black 10%);
 }
 
-.stwid--chipRemove {
+.stwid--chip-remove {
   background: none;
   border: none;
   padding: 0 0.1em;
@@ -3904,32 +2227,32 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   font-size: 1em;
 }
 
-.stwid--chipRemove:hover {
+.stwid--chip-remove:hover {
   color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
 }
 
 /* Bulk edit row */
-.stwid--bulkEditRow {
+.stwid--bulk-edit-row {
   flex-wrap: wrap;
   padding: 0.4em 0.5em;
 }
 
-.stwid--rowContentWrap {
+.stwid--row-content-wrap {
   flex: 0 0 100%;
   display: flex;
   flex-wrap: wrap;
   gap: inherit;
 }
 
-.stwid--bulkEditLabelHint {
+.stwid--bulk-edit-label-hint {
   padding-left: 0.5em;
 }
 
-.stwid--bulkEditLabel {
+.stwid--bulk-edit-label {
   background-color: var(--SmartThemeBlurTintColor);
 }
 
-.stwid--bulkEditRow .stwid--inputWrap {
+.stwid--bulk-edit-row .stwid--input-wrap {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -3937,24 +2260,24 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   font-size: smaller;
 }
 
-.stwid--bulkEditRow .stwid--inputWrap .stwid--input {
+.stwid--bulk-edit-row .stwid--input-wrap .stwid--input {
   width: 4em;
 }
 
-.stwid--entryManager .stwid--thinContainer .killSwitch.fa-toggle-on {
+.stwid--entry-manager .stwid--field-group .killSwitch.fa-toggle-on {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--entryManager .stwid--thinContainer .killSwitch.fa-toggle-off {
+.stwid--entry-manager .stwid--field-group .killSwitch.fa-toggle-off {
   color: var(--SmartThemeDangerColor, var(--SmartThemeQuoteColor));
 }
 
-.stwid--entryManager .stwid--thinContainer.stwid--state-disabled {
+.stwid--entry-manager .stwid--field-group.stwid--state-disabled {
   opacity: var(--stwid-state-disabled-opacity);
   pointer-events: none;
 }
 
-.stwid-compactInput {
+.stwid--cell-input {
   min-height: 5px;
   padding-inline: 5px;
   font-size: 0.95em;
@@ -3962,41 +2285,41 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   margin: 0.2em;
 }
 
-.stwid--entryManager .stwid--thinContainer[data-field='outlet'] .stwid--input {
+.stwid--entry-manager .stwid--field-group[data-field='outlet'] .stwid--input {
   width: 8em;
   font-size: 0.85em;
 }
 
 /* Feature 1: Order container - stack Start and Spacing vertically */
-.stwid--orderStartSpacingPair {
+.stwid--order-start-spacing-pair {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-.stwid--entryManager .stwid--thinContainer[data-field='applyAll'] {
+.stwid--entry-manager .stwid--field-group[data-field='applyAll'] {
   min-width: 5em;
 }
 
 /* Feature 2: Dirty indicator - Apply button turns warm amber when inputs changed */
-.stwid--entryManager .stwid--thinContainer .stwid--applyDirty {
+.stwid--entry-manager .stwid--field-group .stwid--apply-dirty {
   color: var(--stwid-warning-color);
 }
 
 /* Filters */
-.stwid--orderTable .stwid--columnHeader {
+.stwid--order-table .stwid--column-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.8em;
 }
 
-.stwid--orderTable .stwid--columnFilter {
+.stwid--order-table .stwid--column-filter {
   display: flex;
   align-items: center;
 }
 
-.stwid--orderTable .stwid--orderFilterButton {
+.stwid--order-table .stwid--order-filter-button {
   border: none;
   background: transparent;
   box-shadow: none;
@@ -4007,7 +2330,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   font-size: 0.85em;
 }
 
-.stwid--orderTable .stwid--orderFilterButton.stwid--state-active {
+.stwid--order-table .stwid--order-filter-button.stwid--state-active {
   opacity: 1;
   color: var(--SmartThemeQuoteColor);
 }
@@ -4045,8 +2368,8 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   grid-template-rows: 1fr;
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--syntax,
-.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+.stwid--script-filter .stwid--script .stwid--syntax,
+.stwid--script-filter .stwid--script .stwid--input {
   grid-column: 1;
   grid-row: 1;
   height: 100%;
@@ -4063,25 +2386,25 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   max-height: unset;
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+.stwid--script-filter .stwid--script .stwid--input {
   caret-color: var(--ac-style-color-text);
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--input {
+.stwid--script-filter .stwid--script .stwid--input {
   scrollbar-width: none; /* Firefox */
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--input::-webkit-scrollbar {
+.stwid--script-filter .stwid--script .stwid--input::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
 
-.stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
+.stwid--script-filter .stwid--script .stwid--input::selection {
   color: transparent;
-  background-color: rgba(108 171 251 / 0.25);
+  background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 25%, transparent);
 }
 
 @supports (rgb(from var(--ac-style-color-matchedText) r g b / 0.25)) {
-  .stwid--script-filter .stwid--main .stwid--script .stwid--input::selection {
+  .stwid--script-filter .stwid--script .stwid--input::selection {
     background-color: rgb(from var(--ac-style-color-matchedText) r g b / 0.25);
   }
 }
@@ -4098,7 +2421,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 /* Table wrapper - see shared section 1.5 */
 
 /* Table */
-.stwid--orderTable {
+.stwid--order-table {
   border: 0;
   border-collapse: collapse;
   border-spacing: 0;
@@ -4107,7 +2430,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   width: 100%;
 }
 
-.stwid--orderTable thead {
+.stwid--order-table thead {
   background-color: var(--SmartThemeBlurTintColor);
   position: sticky;
   top: 0;
@@ -4115,22 +2438,22 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   font-size: smaller;
 }
 
-.stwid--orderTable tr {
+.stwid--order-table tr {
   border-bottom: 5px solid var(--SmartThemeBorderColor);
   transition: background-color 200ms ease;
   background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
 }
 
-.stwid--orderTable tr:hover {
+.stwid--order-table tr:hover {
   background-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent 50%);
 }
 
-.stwid--orderTable tbody tr.stwid--state-target {
+.stwid--order-table tbody tr.stwid--state-target {
   background-color: var(--stwid-state-target-bg);
   box-shadow: var(--stwid-state-target-outline);
 }
 
-.stwid--orderTable tbody tr.stwid--state-target:hover {
+.stwid--order-table tbody tr.stwid--state-target:hover {
   background-color: color-mix(
     in srgb,
     var(--SmartThemeQuoteColor) 25%,
@@ -4138,175 +2461,175 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   );
 }
 
-.stwid--orderTable tbody tr.stwid--state-selected {
+.stwid--order-table tbody tr.stwid--state-selected {
   background-color: var(--stwid-state-selected-bg);
 }
 
-.stwid--orderTable tbody tr.stwid--state-selected:hover {
+.stwid--order-table tbody tr.stwid--state-selected:hover {
   background-color: var(--stwid-state-selected-bg-strong);
 }
 
-.stwid--orderTable tr.stwid--state-filtered {
+.stwid--order-table tr.stwid--state-filtered {
   display: none;
 }
 
-.stwid--orderTable tbody tr:not(.stwid--applySelected) {
+.stwid--order-table tbody tr:not(.stwid--apply-selected) {
   opacity: 0.6;
 }
 
-.stwid--orderTable tr th,
-.stwid--orderTable tr td {
+.stwid--order-table tr th,
+.stwid--order-table tr td {
   text-align: left;
   padding: 0 0.7em;
   width: 0;
 }
 
-.stwid--orderTable thead th {
+.stwid--order-table thead th {
   text-align: center;
 }
 
-.stwid--orderTable thead th[data-col='entry'] {
+.stwid--order-table thead th[data-col='entry'] {
   text-align: left;
 }
 
 /* Table column sizing */
-.stwid--orderTable tr th[data-col='select'] {
+.stwid--order-table tr th[data-col='select'] {
   min-width: 1em;
   text-align: center;
 }
 
-.stwid--orderTable tr th[data-col='drag'] {
+.stwid--order-table tr th[data-col='drag'] {
   min-width: 1.5em;
   text-align: center;
 }
 
-.stwid--orderTable tr th[data-col='enabled'] {
+.stwid--order-table tr th[data-col='enabled'] {
   min-width: 1em;
   text-align: center;
 }
 
-.stwid--orderTable tr th[data-col='entry'] {
+.stwid--order-table tr th[data-col='entry'] {
   min-width: 16em;
   padding-top: 1em;
   padding-bottom: 1em;
 }
 
-.stwid--orderTable tr th[data-col='strategy'] {
+.stwid--order-table tr th[data-col='strategy'] {
   min-width: 5em;
 }
 
-.stwid--orderTable tr th[data-col='position'] {
+.stwid--order-table tr th[data-col='position'] {
   min-width: 7em;
 }
 
-.stwid--orderTable tr th[data-col='outlet'] {
+.stwid--order-table tr th[data-col='outlet'] {
   min-width: 8em;
 }
 
-.stwid--orderTable .stwid--orderTable--NumberColumns {
+.stwid--order-table .stwid--order-table--number-columns {
   min-width: 5em;
 }
 
-.stwid--orderTable tr th[data-col='recursion'] {
+.stwid--order-table tr th[data-col='recursion'] {
   min-width: 14em;
 }
 
-.stwid--orderTable tr th[data-col='characterFilter'] {
+.stwid--order-table tr th[data-col='characterFilter'] {
   min-width: 14em;
 }
 
-.stwid--orderTable tr th[data-col='budget'] {
+.stwid--order-table tr th[data-col='budget'] {
   min-width: 7em;
 }
 
 /* Row details */
-.stwid--recursionOptions,
-.stwid--characterFilterOptions {
+.stwid--recursion-options,
+.stwid--character-filter-options {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.stwid--characterFilterRow,
-.stwid--small-check-row {
+.stwid--character-filter-row,
+.stwid--option-check-row {
   display: flex;
   align-items: center;
   gap: 0.4em;
 }
 
-.stwid--small-check-row {
+.stwid--option-check-row {
   font-size: 0.85em;
 }
 
-.stwid--characterFilterRow--include {
+.stwid--character-filter-row--include {
   color: var(--SmartThemeQuoteColor);
 }
 
-.stwid--characterFilterRow--exclude {
+.stwid--character-filter-row--exclude {
   color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));
 }
 
 /* override: FA icon checkbox defaults are too large for the compact recursion options row */
-.stwid--small-check-row .checkbox {
+.stwid--option-check-row .checkbox {
   width: 0.85em;
   height: 0.85em;
 }
 
-.stwid--recursionOptions br {
+.stwid--recursion-options br {
   display: none;
 }
 
-.stwid--orderTable tr td {
+.stwid--order-table tr td {
   color: rgb(from var(--SmartThemeBodyColor) r g b / 0.75);
   font-size: small;
+
+  &[data-col='select'] {
+    min-width: 1em;
+    text-align: center;
+  }
+
+  &[data-col='drag'] {
+    min-width: 1.5em;
+    text-align: center;
+  }
+
+  &[data-col='enabled'] {
+    min-width: 1em;
+    text-align: center;
+  }
+
+  &[data-col='entry'] {
+    min-width: 16em;
+    padding-top: 1em;
+    padding-bottom: 1em;
+  }
+
+  &[data-col='strategy'] {
+    min-width: 5em;
+  }
+
+  &[data-col='position'] {
+    min-width: 7em;
+  }
+
+  &[data-col='outlet'] {
+    min-width: 8em;
+  }
+
+  &[data-col='recursion'] {
+    min-width: 14em;
+  }
+
+  &[data-col='characterFilter'] {
+    min-width: 14em;
+  }
+
+  &[data-col='budget'] {
+    min-width: 7em;
+  }
 }
 
-.stwid--orderTable tr td[data-col='select'] {
-  min-width: 1em;
-  text-align: center;
-}
-
-.stwid--orderTable tr td[data-col='drag'] {
-  min-width: 1.5em;
-  text-align: center;
-}
-
-.stwid--orderTable tr td[data-col='enabled'] {
-  min-width: 1em;
-  text-align: center;
-}
-
-.stwid--orderTable tr td[data-col='entry'] {
-  min-width: 16em;
-  padding-top: 1em;
-  padding-bottom: 1em;
-}
-
-.stwid--orderTable tr td[data-col='strategy'] {
-  min-width: 5em;
-}
-
-.stwid--orderTable tr td[data-col='position'] {
-  min-width: 7em;
-}
-
-.stwid--orderTable tr td[data-col='outlet'] {
-  min-width: 8em;
-}
-
-.stwid--orderTable tr td[data-col='recursion'] {
-  min-width: 14em;
-}
-
-.stwid--orderTable tr td[data-col='characterFilter'] {
-  min-width: 14em;
-}
-
-.stwid--orderTable tr td[data-col='budget'] {
-  min-width: 7em;
-}
-
-.stwid--orderTable tr td .stwid--sortableHandle {
+.stwid--order-table tr td .stwid--sortable-handle {
   cursor: pointer;
   opacity: 0.5;
   padding: 2px;
@@ -4314,18 +2637,18 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   transition: opacity 200ms ease;
 }
 
-.stwid--orderTable tr td .stwid--sortableHandle:hover {
+.stwid--order-table tr td .stwid--sortable-handle:hover {
   opacity: 1;
 }
 
-.stwid--orderTable tr td .stwid--orderMove {
+.stwid--order-table tr td .stwid--order-move {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.1em;
 }
 
-.stwid--orderTable tr td .stwid--orderMoveButton {
+.stwid--order-table tr td .stwid--order-move-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4338,7 +2661,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   transition: opacity 150ms ease;
 }
 
-.stwid--orderTable tr td .stwid--orderMoveButton:hover {
+.stwid--order-table tr td .stwid--order-move-button:hover {
   opacity: 1;
   color: var(--SmartThemeQuoteColor);
   text-shadow: 0 0 6px color-mix(in srgb, var(--SmartThemeQuoteColor) 65%, transparent);
@@ -4346,15 +2669,15 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   border-radius: 4px;
 }
 
-.stwid--orderTable tr td .stwid--orderMoveButton:focus-visible,
-.stwid--orderTable tr td .stwid--sortableHandle:focus-visible,
-.stwid--orderTable tr td .stwid--orderSelect:focus-visible {
+.stwid--order-table tr td .stwid--order-move-button:focus-visible,
+.stwid--order-table tr td .stwid--sortable-handle:focus-visible,
+.stwid--order-table tr td .stwid--order-select:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: 1px;
   opacity: 1;
 }
 
-.stwid--orderTable tr td .stwid--orderSelect {
+.stwid--order-table tr td .stwid--order-select {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
   display: flex;
@@ -4364,77 +2687,77 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   transition: opacity 200ms ease;
 }
 
-.stwid--orderTable tr td .stwid--orderSelect:hover {
+.stwid--order-table tr td .stwid--order-select:hover {
   opacity: 0.8;
 }
 
-.stwid--orderTable tr td .stwid--orderSelect .stwid--icon {
+.stwid--order-table tr td .stwid--order-select .stwid--icon {
   pointer-events: none;
 }
 
-.stwid--orderTable tr td [name='depth'] {
+.stwid--order-table tr td [name='depth'] {
   display: none;
 }
 
-.stwid--orderTable tr td:has([name='position'] > [value='4']:checked) + td > [name='depth'] {
+.stwid--order-table tr td:has([name='position'] > [value='4']:checked) + td > [name='depth'] {
   display: inline-block;
 }
 
-.stwid--orderTable tr td:has(.stwid--entry) {
+.stwid--order-table tr td:has(.stwid--entry) {
   width: 100%;
 }
 
-.stwid--orderTable tr td:has(.stwid--entry) .stwid--book {
+.stwid--order-table tr td:has(.stwid--entry) .stwid--book {
   color: var(--SmartThemeEmColor);
   font-size: 0.8em;
   line-height: 1;
 }
 
-.stwid--orderTable tr td:has(.stwid--entry) .stwid--commentLink {
+.stwid--order-table tr td:has(.stwid--entry) .stwid--comment-link {
   color: inherit;
 }
 
-.stwid--orderTable tr td:has(.stwid--entry) a.stwid--comment.stwid--commentLink {
+.stwid--order-table tr td:has(.stwid--entry) .stwid--comment.stwid--comment-link {
   font-size: 1.03em;
   font-weight: 500;
 }
 
-.stwid--orderTable tr td:has(.stwid--entry) .stwid--key {
+.stwid--order-table tr td:has(.stwid--entry) .stwid--key {
   color: var(--SmartThemeEmColor);
   font-size: 0.75em;
   font-style: italic;
   line-height: 1;
 }
 
-.stwid--orderTable tr td .stwid--outlet {
+.stwid--order-table tr td .stwid--outlet {
   color: var(--SmartThemeBodyColor);
   font-size: 0.85em;
   min-width: 6em;
 }
 
-.stwid--orderTable tr td .stwid--outlet input[name='outletName'] {
+.stwid--order-table tr td .stwid--outlet input[name='outletName'] {
   width: 100%;
   min-width: 7em;
 }
 
-.stwid--orderTable tr td .stwid--position {
+.stwid--order-table tr td .stwid--position {
   font-size: 0.9em;
 }
 
-.stwid--orderTable tr td input[name='depth'],
-.stwid--orderTable tr td input[name='order'],
-.stwid--orderTable tr td input[name='selective_probability'] {
+.stwid--order-table tr td input[name='depth'],
+.stwid--order-table tr td input[name='order'],
+.stwid--order-table tr td input[name='selective_probability'] {
   min-width: 4em;
   font-size: 0.95em;
 }
 
-.stwid--orderTable tr td .stwid--enabled {
+.stwid--order-table tr td .stwid--enabled {
   color: var(--SmartThemeQuoteColor);
   cursor: pointer;
 }
 
-.stwid--orderInputTight,
-.stwid--orderTable
+.stwid--order-input,
+.stwid--order-table
   input:is(
     [name='depth'],
     [name='order'],
@@ -4450,7 +2773,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 @media screen and (width <= 1000px) {
-  .stwid--entryManager {
+  .stwid--entry-manager {
     width: 100%;
     max-width: none;
   }
@@ -4467,17 +2790,17 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     max-height: 16em;
   }
 
-  .stwid--orderTableWrap {
+  .stwid--order-table-wrap {
     width: 100%;
     overflow-x: auto;
   }
 
-  .stwid--bulkEditRow {
+  .stwid--bulk-edit-row {
     overflow-x: hidden;
     flex-wrap: wrap;
   }
 
-  .stwid--orderTable {
+  .stwid--order-table {
     width: max-content;
     min-width: 100%;
   }
@@ -4485,7 +2808,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 @media screen and (width <= 768px) {
   .stwid--order-action-bar,
-  .stwid--bulkEditRow {
+  .stwid--bulk-edit-row {
     gap: 0.6em;
     padding-inline: 0.35em;
   }
@@ -4493,29 +2816,29 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 /* -------------------------------------------------------------------------- */
 
-/* 6) Shared UI Patterns (drawer-internal)                                   */
+/* 5.4) Shared UI Patterns (drawer-internal)                                 */
 
 /* Shared menu/item patterns
    Keep selectors local to this extension and avoid changing layout/positioning.
 */
 :is(
   .stwid--action,
-  .stwid--folderAction,
-  .stwid--folderMenu,
-  .stwid--folderToggle,
-  .stwid--orderFilterButton
+  .stwid--folder-action,
+  .stwid--folder-menu,
+  .stwid--folder-toggle,
+  .stwid--order-filter-button
 ) {
   border-radius: var(--stwid-radius-m);
 }
 
 :is(
   .stwid--action,
-  .stwid--folderAction,
-  .stwid--folderMenu,
-  .stwid--folderToggle,
-  .stwid--orderFilterButton
+  .stwid--folder-action,
+  .stwid--folder-menu,
+  .stwid--folder-toggle,
+  .stwid--order-filter-button
 ):focus-visible,
-.stwid--multiselectDropdownOption:focus-visible {
+.stwid--multiselect-dropdown__option:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }
@@ -4532,35 +2855,26 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   z-index: 30000;
 }
 
-.stwid--blocker .stwid--listDropdownItem:focus-visible {
-  /* outline: var(--stwid-focus-ring); */
-
-  /* outline-offset: var(--stwid-focus-ring-offset); */
-  color: var(--SmartThemeBodyColor);
-  padding: 2px 4px;
-  text-decoration: none;
-  display: flex;
-  column-gap: 4px;
-  cursor: pointer;
-  justify-content: center;
-  opacity: 0.5;
-  transition: opacity var(--animation-duration);
+.stwid--blocker .stwid--list-dropdown__item:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+  opacity: 1;
 }
 
 /* Move Book to Folder dialog layout */
-.stwid--moveBookContent {
+.stwid--move-book-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.stwid--moveBookContent h3 {
+.stwid--move-book-content h3 {
   align-self: stretch;
   text-align: left;
 }
 
-.stwid--moveBookContent .stwid--moveBookRow {
+.stwid--move-book-content .stwid--move-book-row {
   width: 100%;
   display: flex;
   align-items: center;
@@ -4568,12 +2882,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 /* override: vanilla text_pole has width:100%; flex:1 1 auto allows proper row sharing with quick-action buttons; no body.stwid-- scope guard because Move Book popup renders outside the drawer root */
-.stwid--moveBookContent .stwid--moveBookRow .text_pole {
+.stwid--move-book-content .stwid--move-book-row .text_pole {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.stwid--moveBookContent .stwid--moveBookQuickActions {
+.stwid--move-book-content .stwid--move-book-quick-actions {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -4582,16 +2896,16 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 /* override: vanilla menu_button uses block flex; inline-flex keeps buttons inline in the Move Book row */
-.stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+.stwid--move-book-content .stwid--move-book-quick-actions .menu_button {
   min-width: 2.35em; /* override: ensures icon-only buttons have a minimum click target */
   display: inline-flex; /* override: vanilla is display:flex (block-level); inline here for compact row */
 }
 
 /* Context menu container */
-.stwid--blocker .stwid--listDropdownMenu {
+.stwid--blocker .stwid--list-dropdown__menu {
   /* --stwid-menu-item-height: 2.05em; */
   position: fixed;
-  position-anchor: --stwid--ctxAnchor;
+  position-anchor: --stwid--ctx-anchor;
   position-area: bottom right;
   position-try-fallbacks: flip-block, flip-inline;
   margin-top: -1lh;
@@ -4602,13 +2916,13 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  background-color: rgb(32 33 36 / 21%);
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, black 15%);
   font-size: 0.9em;
   padding: 0.9em;
   backdrop-filter: blur(var(--SmartThemeBlurStrength));
 }
 
-.stwid--blocker .stwid--listDropdownMenu .stwid--listDropdownItem {
+.stwid--blocker .stwid--list-dropdown__menu .stwid--list-dropdown__item {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
 
@@ -4645,27 +2959,26 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     gap: 0.35em;
   }
 
-  &.stwid--bookSort {
+  &.stwid--book-sort {
     /* opacity: 1; */
     cursor: default;
   }
 
-  &.stwid--bookSort select {
+  &.stwid--book-sort select {
     width: 9em;
     color: var(--SmartThemeBodyColor);
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--white20a);
     min-height: var(--stwid-menu-item-height);
     height: 100%;
     margin-left: 1em;
     font-size: 1em;
 
     /* padding: 0em 0em 0em 0em; */
-    margin-bottom: 0;
-    margin-top: 0;
+    margin-block: 0;
   }
 }
 
-.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--icon {
+.stwid--list-dropdown__menu .stwid--list-dropdown__item .stwid--icon {
   flex: 0 0 auto;
   width: 1.05em;
   color: inherit;
@@ -4674,7 +2987,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   padding: 0 1.8em 0 0;
 }
 
-.stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+.stwid--list-dropdown__menu .stwid--list-dropdown__item .stwid--label {
   flex: 1 1 auto;
   color: inherit;
   transition: color 150ms ease;
@@ -4682,21 +2995,21 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 @media screen and (width <= 1000px) {
-  .stwid--moveBookContent {
+  .stwid--move-book-content {
     width: min(100%, 38rem);
   }
 
-  .stwid--moveBookContent .stwid--moveBookRow {
+  .stwid--move-book-content .stwid--move-book-row {
     flex-wrap: wrap;
   }
 
-  .stwid--moveBookContent .stwid--moveBookQuickActions {
+  .stwid--move-book-content .stwid--move-book-quick-actions {
     width: 100%;
     justify-content: flex-start;
     flex-wrap: wrap;
   }
 
-  .stwid--blocker .stwid--listDropdownMenu {
+  .stwid--blocker .stwid--list-dropdown__menu {
     /* Guarantee a readable width: the menu opens beside its trigger, and when
        the trigger sits at the right edge the anchor leaves almost no room,
        collapsing the menu to a sliver that breaks every word. A min-width
@@ -4706,33 +3019,16 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     max-width: calc(100vw - 2rem);
   }
 
-  .stwid--listDropdownMenu .stwid--listDropdownItem .stwid--label {
+  .stwid--list-dropdown__menu .stwid--list-dropdown__item .stwid--label {
     min-width: 0;
     overflow-wrap: anywhere;
   }
 }
 
 @media screen and (width <= 768px) {
-  .stwid--moveBookContent .stwid--moveBookQuickActions .menu_button {
+  .stwid--move-book-content .stwid--move-book-quick-actions .menu_button {
     min-width: 2em;
   }
-}
-
-/* Flex-column fill shell - grows to fill parent, scrolls internally */
-.stwid--entryManager {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
-.stwid--orderTableWrap {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -4741,14 +3037,14 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 /* -------------------------------------------------------------------------- */
 
-.stwid--helpToast {
+.stwid--help-toast {
   margin: 0;
   padding-left: 0.5em;
   font-size: small;
 }
 
 @media screen and (width <= 1000px) {
-  .stwid--helpToast {
+  .stwid--help-toast {
     overflow-wrap: anywhere;
   }
 }
@@ -4768,7 +3064,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   .stwid--books .stwid--book .stwid--head,
-  .stwid--folder .stwid--folderHeader {
+  .stwid--folder .stwid--folder-header {
     transition: none;
   }
 }

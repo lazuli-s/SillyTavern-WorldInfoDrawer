@@ -38,6 +38,7 @@ import {
   getSortFromMetadata,
   sortEntries,
 } from './shared/sort-helpers.js';
+import { maybeYieldToEventLoop } from './shared/utils.js';
 import {
   entryState,
   renderEntry,
@@ -159,6 +160,8 @@ const isSelectionVisible = (cache, bookName, selectedUids) => {
   return selectedUids.every((uid) => isEntryVisible(cache, bookName, uid));
 };
 
+const BULK_DELETE_BATCH_SIZE = 200;
+
 const deleteSelectedEntriesAndSave = async ({
   selectFrom,
   selectedUids,
@@ -171,11 +174,17 @@ const deleteSelectedEntriesAndSave = async ({
   const srcBook = await loadWorldInfo(selectFrom);
   if (!srcBook) return;
 
-  for (const uid of selectedUids) {
+  // deleteWorldInfoEntryRuntime resolves synchronously when silent:true, so the
+  // per-iteration await does NOT hand control back to the browser. Yield a real
+  // macrotask every batch so a large delete does not freeze the tab (PERF-W4-08).
+  // The loop only mutates the local srcBook copy; the save happens once, after.
+  for (let index = 0; index < selectedUids.length; index += 1) {
+    const uid = selectedUids[index];
     const deleted = await deleteWorldInfoEntryRuntime(srcBook, uid, { silent: true });
     if (deleted) {
       deleteWIOriginalDataValue(srcBook, uid);
     }
+    await maybeYieldToEventLoop(index, BULK_DELETE_BATCH_SIZE);
   }
 
   await saveWorldInfo(selectFrom, srcBook, true);

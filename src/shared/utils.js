@@ -36,6 +36,15 @@ const safeToSorted = (array, comparator) =>
     ? array.toSorted(comparator)
     : array.slice().sort(comparator);
 
+const yieldToUi = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+// setTimeout(0) rather than a microtask: only a macrotask lets the browser
+// paint and handle input between batches.
+const maybeYieldToEventLoop = async (index, batchSize) => {
+  if ((index + 1) % batchSize !== 0) return;
+  await yieldToUi();
+};
+
 const getSortLabel = (sort, direction) =>
   SORT_OPTIONS.find(
     ([, optionSort, optionDirection]) => optionSort === sort && optionDirection === direction,
@@ -122,6 +131,8 @@ export {
   getOutletPositionValue,
   getSortLabel,
   isOutletPosition,
+  maybeYieldToEventLoop,
   parseBooleanSetting,
   safeToSorted,
+  yieldToUi,
 };

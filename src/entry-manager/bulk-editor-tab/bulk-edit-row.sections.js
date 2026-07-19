@@ -1,5 +1,6 @@
 import { setTooltip } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
 import {
   BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
@@ -16,7 +17,7 @@ import {
   applyRecursionFlagsToRowInputs,
 } from './bulk-edit-row.helpers.js';
 
-const RECURSION_OPTIONS_CLASS = 'stwid--recursionOptions';
+const RECURSION_OPTIONS_CLASS = 'stwid--recursion-options';
 const TOGGLE_ON_CLASS = 'fa-toggle-on';
 const TOGGLE_OFF_CLASS = 'fa-toggle-off';
 const BULK_ACTIVE_STORAGE_KEY = 'stwid--bulk-active-value';
@@ -107,12 +108,6 @@ function syncActiveStateToggles({ tr, cache, bookName, uid, willDisable }) {
   }
 }
 
-async function maybeYieldAfterBatch(index) {
-  if ((index + 1) % BULK_APPLY_BATCH_SIZE === 0) {
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-}
-
 async function applyBulkActiveStateToTargets({ targets, cache, willDisable }) {
   const books = new Set();
   for (let i = 0; i < targets.length; i++) {
@@ -120,14 +115,14 @@ async function applyBulkActiveStateToTargets({ targets, cache, willDisable }) {
     books.add(bookName);
     entryData.disable = willDisable;
     syncActiveStateToggles({ tr, cache, bookName, uid, willDisable });
-    await maybeYieldAfterBatch(i);
+    await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
   }
   return books;
 }
 
 function buildBulkStrategySelect(getStrategyOptions) {
   const strategySelect = document.createElement('select');
-  strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--smallSelectTextPole');
+  strategySelect.classList.add('stwid--input', 'text_pole', 'stwid--sort-select');
   setTooltip(strategySelect, 'Strategy to apply to selected entries');
   for (const strategyOption of getStrategyOptions()) {
     const option = document.createElement('option');
@@ -171,18 +166,20 @@ async function applyBulkStrategyToTargets({
     books.add(bookName);
     applyStrategyToSingleTarget({ tr, cache, bookName, uid, entryData, value });
     applyEntryManagerStrategyFilterToRow(tr, entryData);
-    await maybeYieldAfterBatch(i);
+    await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
   }
   return books;
 }
 
 export async function applyBulkProbabilityToTargets({ targets, parsed }) {
   const books = new Set();
-  for (const { tr, bookName, entryData } of targets) {
+  for (let i = 0; i < targets.length; i++) {
+    const { tr, bookName, entryData } = targets[i];
     books.add(bookName);
     entryData.probability = parsed;
     const rowProbabilityInput = tr.querySelector('[name="selective_probability"]');
     if (rowProbabilityInput) rowProbabilityInput.value = String(parsed);
+    await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
   }
   return books;
 }
@@ -201,7 +198,7 @@ export function buildBulkSelectSection({
   );
 
   const selectionCountEl = document.createElement('span');
-  selectionCountEl.classList.add('stwid--visibilityCount');
+  selectionCountEl.classList.add('stwid--visibility-count');
   selectionCountEl.textContent = 'Selected 0 out of 0 entries';
 
   const refreshSelectionCount = () => {
@@ -219,13 +216,15 @@ export function buildBulkSelectSection({
   selectAll.classList.add('menu_button', 'interactable');
   selectAll.classList.add('fa-solid', 'fa-fw', 'fa-square-check', 'stwid--state-active');
   setTooltip(selectAll, 'Select/deselect all entries to be edited by Apply Order');
-  selectAll.addEventListener('click', () => {
-    const rows = getEntryManagerRows();
-    const shouldSelect =
-      !rows.length || rows.some((tableRow) => !isEntryManagerRowSelected(tableRow));
-    setAllEntryManagerRowSelected(shouldSelect);
-    updateEntryManagerSelectAllButton();
-    refreshSelectionCount();
+  selectAll.addEventListener('click', async () => {
+    await withApplyButtonLock(selectAll, async () => {
+      const rows = getEntryManagerRows();
+      const shouldSelect =
+        !rows.length || rows.some((tableRow) => !isEntryManagerRowSelected(tableRow));
+      await setAllEntryManagerRowSelected(shouldSelect, rows);
+      updateEntryManagerSelectAllButton(rows);
+      refreshSelectionCount();
+    });
   });
 
   selectContainer.append(selectAll, selectionCountEl);
@@ -283,22 +282,24 @@ export function buildBulkProbabilitySection({
   });
 
   const runApplyProbability = async () => {
-    const rawValue = probabilityInput.value.trim();
-    if (rawValue === '') {
-      toastr.warning('Enter a probability value (0–100).');
-      return;
-    }
-    const parsed = parseInt(rawValue, 10);
-    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
-      toastr.warning('Probability must be a whole number between 0 and 100.');
-      return;
-    }
-    const rows = getSafeTbodyRows(dom);
-    if (!rows) return;
-    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-    const books = await applyBulkProbabilityToTargets({ targets, parsed });
-    await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-    applyProbability.classList.remove(APPLY_DIRTY_CLASS);
+    await withApplyButtonLock(applyProbability, async () => {
+      const rawValue = probabilityInput.value.trim();
+      if (rawValue === '') {
+        toastr.warning('Enter a probability value (0–100).');
+        return;
+      }
+      const parsed = parseInt(rawValue, 10);
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+        toastr.warning('Probability must be a whole number between 0 and 100.');
+        return;
+      }
+      const rows = getSafeTbodyRows(dom);
+      if (!rows) return;
+      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
+      const books = await applyBulkProbabilityToTargets({ targets, parsed });
+      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      applyProbability.classList.remove(APPLY_DIRTY_CLASS);
+    });
   };
 
   const applyProbability = createApplyButton(
@@ -508,20 +509,24 @@ export function buildBulkRecursionSection({
   recursionContainer.append(recursionOptions);
 
   const runApplyRecursion = async () => {
-    const rows = getSafeTbodyRows(dom);
-    if (!rows) return;
-    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-    const books = new Set();
-    for (const { tr, bookName, entryData } of targets) {
-      books.add(bookName);
-      const domInputs = tr.querySelectorAll(
-        `[data-col="recursion"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
-      );
-      applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes);
-      applyEntryManagerRecursionFilterToRow(tr, entryData);
-    }
-    await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-    applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
+    await withApplyButtonLock(applyRecursion, async () => {
+      const rows = getSafeTbodyRows(dom);
+      if (!rows) return;
+      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
+      const books = new Set();
+      for (let i = 0; i < targets.length; i++) {
+        const { tr, bookName, entryData } = targets[i];
+        books.add(bookName);
+        const domInputs = tr.querySelectorAll(
+          `[data-col="recursion"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
+        );
+        applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes);
+        applyEntryManagerRecursionFilterToRow(tr, entryData);
+        await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
+      }
+      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
+    });
   };
 
   const applyRecursion = createApplyButton(
@@ -554,7 +559,7 @@ export function buildBulkBudgetSection({
   const budgetOptions = document.createElement('div');
   budgetOptions.classList.add(RECURSION_OPTIONS_CLASS);
   const budgetRow = document.createElement('label');
-  budgetRow.classList.add('stwid--small-check-row');
+  budgetRow.classList.add('stwid--option-check-row');
   const budgetIgnoreCheckboxInput = document.createElement('input');
   budgetIgnoreCheckboxInput.type = 'checkbox';
   budgetIgnoreCheckboxInput.classList.add('checkbox');
@@ -566,21 +571,25 @@ export function buildBulkBudgetSection({
   budgetContainer.append(budgetOptions);
 
   const runApplyBudget = async () => {
-    const checked = budgetIgnoreCheckbox.checked;
-    const rows = getSafeTbodyRows(dom);
-    if (!rows) return;
-    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-    const books = new Set();
-    for (const { tr, bookName, entryData } of targets) {
-      books.add(bookName);
-      entryData.ignoreBudget = checked;
-      const domInput = tr.querySelector(
-        `[data-col="budget"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
-      );
-      if (domInput) domInput.checked = checked;
-    }
-    await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-    applyBudget.classList.remove(APPLY_DIRTY_CLASS);
+    await withApplyButtonLock(applyBudget, async () => {
+      const checked = budgetIgnoreCheckbox.checked;
+      const rows = getSafeTbodyRows(dom);
+      if (!rows) return;
+      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
+      const books = new Set();
+      for (let i = 0; i < targets.length; i++) {
+        const { tr, bookName, entryData } = targets[i];
+        books.add(bookName);
+        entryData.ignoreBudget = checked;
+        const domInput = tr.querySelector(
+          `[data-col="budget"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
+        );
+        if (domInput) domInput.checked = checked;
+        await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
+      }
+      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      applyBudget.classList.remove(APPLY_DIRTY_CLASS);
+    });
   };
 
   const applyBudget = createApplyButton(
