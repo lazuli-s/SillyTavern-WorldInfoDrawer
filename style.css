@@ -50,6 +50,7 @@ body.stwid-- #WorldInfo {
 
   /* Semantic tokens */
   --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
+  --stwid-exclude-color: var(--SmartThemeErrorColor, var(--fullred));
 
   /* Layout */
   width: 100vw;
@@ -631,6 +632,57 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   pointer-events: none;
 
   /* margin-right: 2em; */
+}
+
+/* opt-in: type-to-filter search box, off unless the caller asks for it */
+.stwid--multiselect-dropdown__search {
+  display: flex;
+  padding-bottom: 0.15em;
+}
+
+.stwid--multiselect-dropdown__search-input {
+  width: 100%;
+  min-width: 8em;
+  height: var(--stwid-control-height);
+  box-sizing: border-box;
+  font-size: 0.9em;
+}
+
+.stwid--multiselect-dropdown__empty-state,
+.stwid--multiselect-dropdown__no-results {
+  padding: 2px 4px;
+  color: var(--SmartThemeEmColor);
+  font-size: 0.9em;
+  max-width: 16em;
+}
+
+/* two classes so this beats the single-class display rules on .stwid--menu-item.
+   The descendant form covers callers that filter their own option class. */
+.stwid--multiselect-dropdown__option.stwid--state-hidden,
+.stwid--multiselect-dropdown__search.stwid--state-hidden,
+.stwid--multiselect-dropdown__empty-state.stwid--state-hidden,
+.stwid--multiselect-dropdown__no-results.stwid--state-hidden,
+.stwid--multiselect-dropdown__menu .stwid--state-hidden {
+  display: none;
+}
+
+/* opt-in: in-cell mode. Fixed positioning is what keeps the menu out of the
+   entry table's scroll containers; JS sets left/top from the cell's rect. */
+.stwid--multiselect-dropdown__menu--in-cell {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  max-height: 60vh;
+  max-width: min(24em, calc(100vw - 1rem));
+  overflow: hidden auto;
+}
+
+@media screen and (width <= 1000px) {
+  .stwid--multiselect-dropdown__menu--in-cell {
+    max-height: 50vh;
+    max-width: calc(100vw - 1rem);
+  }
 }
 
 .stwid--inline-multiselect {
@@ -2565,8 +2617,46 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   color: var(--SmartThemeQuoteColor);
 }
 
+/* The per-line fa-user-plus / fa-user-slash icon carries the same meaning, so colour is never
+   the only signal (R6). The old --SmartThemeQuoteColor fallback made exclude identical to
+   include on every theme that does not define --SmartThemeErrorColor. */
 .stwid--character-filter-row--exclude {
-  color: var(--SmartThemeErrorColor, var(--SmartThemeQuoteColor));
+  color: var(--stwid-exclude-color);
+}
+
+.stwid--character-filter-row--inert {
+  color: var(--SmartThemeEmColor, var(--SmartThemeBodyColor));
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.stwid--character-filter-row--stale {
+  color: var(--stwid-warning-color);
+  text-decoration: line-through;
+}
+
+.stwid--character-filter-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stwid--character-filter-options--collapsed .stwid--character-filter-row--overflow {
+  display: none;
+}
+
+.stwid--character-filter-more {
+  align-self: flex-start;
+  padding: var(--stwid-hit-padding-y) var(--stwid-hit-padding-x);
+  border: none;
+  background: none;
+  color: var(--SmartThemeQuoteColor);
+  font-size: 0.85em;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.stwid--character-filter-more:hover {
+  opacity: 0.75;
 }
 
 /* override: FA icon checkbox defaults are too large for the compact recursion options row */
@@ -2838,7 +2928,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--folder-toggle,
   .stwid--order-filter-button
 ):focus-visible,
-.stwid--multiselect-dropdown__option:focus-visible {
+.stwid--multiselect-dropdown__option:focus-visible,
+/* .text_pole leaves the search box with no focus ring - see Issue__multiselect-dropdown-search-focus-on-open */
+.stwid--multiselect-dropdown__search-input:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
 }

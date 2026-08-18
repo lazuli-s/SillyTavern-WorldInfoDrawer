@@ -1,36 +1,27 @@
-import { extensionNames } from '../../../../extensions.js';
-
-import { renderTemplateAsync } from '../../../../templates.js';
-import {
-  debounce,
-  debounceAsync,
-  delay,
-  download,
-  getSortableDelay,
-  isTrueBoolean,
-} from '../../../../utils.js';
-
 import {
   createNewWorldInfo,
   createWorldInfoEntry,
+  debounce,
+  debounceAsync,
+  delay,
   deleteWIOriginalDataValue,
   deleteWorldInfo,
   deleteWorldInfoEntry,
+  download,
+  extensionNames,
   getFreeWorldName,
+  getSortableDelay,
   getWorldEntry,
+  isTrueBoolean,
   onWorldInfoChange,
+  renderTemplateAsync,
   selected_world_info,
   world_names,
-} from '../../../../world-info.js';
+} from './shared/st-host.js';
 import { Settings, SORT, SORT_DIRECTION } from './shared/settings.js';
 import { initSplitter } from './drawer.splitter.js';
 import { initEditorPanel } from './editor-panel/editor-panel.js';
 import { initBookBrowser } from './book-browser/book-browser.js';
-import { registerFolderName } from './book-browser/book-list/book-folders/book-folders.lorebook-folders.js';
-import { createLorebooksTabContent } from './book-browser/browser-tabs/browser-tabs.lorebooks-tab.js';
-import { createFoldersTabContent } from './book-browser/browser-tabs/browser-tabs.folders-tab.js';
-import { createSettingsTabContent } from './book-browser/browser-tabs/browser-tabs.settings-tab.js';
-import { createSortingTabContent } from './book-browser/browser-tabs/browser-tabs.sorting-tab.js';
 import { initEntryManager } from './entry-manager/entry-manager.js';
 import {
   METADATA_NAMESPACE,
@@ -38,7 +29,6 @@ import {
   getSortFromMetadata,
   sortEntries,
 } from './shared/sort-helpers.js';
-import { maybeYieldToEventLoop } from './shared/utils.js';
 import {
   entryState,
   renderEntry,
@@ -51,13 +41,11 @@ import {
   isOutletPosition,
   safeToSorted,
 } from './shared/utils.js';
+import { buildDrawerListContainer, buildDrawerEditorContainer } from './drawer.controls.js';
+import { installDrawerKeyboardShortcuts, installDrawerObservers } from './drawer.interactions.js';
 
-const FILTER_QUERY_CLASS = 'stwid--filter-query';
 const DRAWER_ACTIVE_CLASS = 'stwid--';
-const STYLE_ATTRIBUTE = 'style';
 const ENTRY_MANAGER_ACTIVE_CLASS = 'stwid--state-active';
-
-const getEventTargetElement = (evt) => (evt.target instanceof HTMLElement ? evt.target : null);
 
 const setHiddenIfElement = (el, hidden) => {
   if (el instanceof HTMLElement) {
@@ -132,66 +120,6 @@ const createDrawerRuntimeState = ({ saveWorldInfo, wiHandlerApi }) => {
   };
 };
 
-const shouldHandleDrawerKeydown = (evt) => {
-  const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-  if (!centerEl?.closest?.('.stwid--body')) return false;
-
-  const target = getEventTargetElement(evt);
-  const isTextEditing = Boolean(
-    target?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'),
-  );
-  return !isTextEditing;
-};
-
-const isEntryVisible = (cache, bookName, uid) => {
-  const entryRoot = cache[bookName]?.dom?.entry?.[uid]?.root;
-  return Boolean(entryRoot) && !entryRoot.classList.contains(FILTER_QUERY_CLASS);
-};
-
-const isSelectionVisible = (cache, bookName, selectedUids) => {
-  const bookRoot = cache[bookName]?.dom?.root;
-  if (!bookRoot) return false;
-  if (
-    bookRoot.classList.contains('stwid--filter-visibility') ||
-    bookRoot.classList.contains(FILTER_QUERY_CLASS)
-  ) {
-    return false;
-  }
-  return selectedUids.every((uid) => isEntryVisible(cache, bookName, uid));
-};
-
-const BULK_DELETE_BATCH_SIZE = 200;
-
-const deleteSelectedEntriesAndSave = async ({
-  selectFrom,
-  selectedUids,
-  loadWorldInfo,
-  deleteWorldInfoEntryRuntime,
-  saveWorldInfo,
-  wiHandlerApi,
-  listPanelApi,
-}) => {
-  const srcBook = await loadWorldInfo(selectFrom);
-  if (!srcBook) return;
-
-  // deleteWorldInfoEntryRuntime resolves synchronously when silent:true, so the
-  // per-iteration await does NOT hand control back to the browser. Yield a real
-  // macrotask every batch so a large delete does not freeze the tab (PERF-W4-08).
-  // The loop only mutates the local srcBook copy; the save happens once, after.
-  for (let index = 0; index < selectedUids.length; index += 1) {
-    const uid = selectedUids[index];
-    const deleted = await deleteWorldInfoEntryRuntime(srcBook, uid, { silent: true });
-    if (deleted) {
-      deleteWIOriginalDataValue(srcBook, uid);
-    }
-    await maybeYieldToEventLoop(index, BULK_DELETE_BATCH_SIZE);
-  }
-
-  await saveWorldInfo(selectFrom, srcBook, true);
-  wiHandlerApi.updateWIChange(selectFrom, srcBook);
-  listPanelApi.selectEnd();
-};
-
 const initDrawerEntryManager = ({
   dom,
   cache,
@@ -225,135 +153,6 @@ const initDrawerEntryManager = ({
     $,
   });
 
-const installDrawerKeyboardShortcuts = ({
-  cache,
-  Popup,
-  loadWorldInfo,
-  saveWorldInfo,
-  wiHandlerApi,
-  listPanelApi,
-  selectionState,
-  deleteWorldInfoEntryRuntime,
-}) => {
-  const onDrawerKeydown = async (evt) => {
-    if (!shouldHandleDrawerKeydown(evt)) return;
-    if (selectionState.selectFrom === null || !selectionState.selectList?.length) return;
-
-    console.log('[STWID]', evt.key);
-    switch (evt.key) {
-      case 'Delete': {
-        evt.preventDefault();
-        evt.stopPropagation();
-
-        const selectFrom = selectionState.selectFrom;
-        const selectedUids = [...(selectionState.selectList ?? [])];
-        if (selectFrom === null || !selectedUids.length) return;
-
-        if (!isSelectionVisible(cache, selectFrom, selectedUids)) {
-          const count = selectedUids.length;
-          const noun = count === 1 ? 'entry is' : 'entries are';
-          const confirmed = await Popup.show.confirm(
-            `${count} selected ${noun} currently hidden by filters. Delete anyway?`,
-          );
-          if (!confirmed) return;
-        }
-
-        await deleteSelectedEntriesAndSave({
-          selectFrom,
-          selectedUids,
-          loadWorldInfo,
-          deleteWorldInfoEntryRuntime,
-          saveWorldInfo,
-          wiHandlerApi,
-          listPanelApi,
-        });
-        break;
-      }
-    }
-  };
-
-  document.addEventListener('keydown', onDrawerKeydown);
-  return () => document.removeEventListener('keydown', onDrawerKeydown);
-};
-
-const buildDrawerListContainer = ({
-  dom,
-  cache,
-  Popup,
-  wiHandlerApi,
-  openEntryManager,
-  getListPanelApi,
-  getEditorPanelApi,
-  getCurrentEditor,
-}) => {
-  const list = document.createElement('div');
-  list.classList.add('stwid--list');
-
-  dom.lorebooksTabContent = createLorebooksTabContent({
-    dom,
-    cache,
-    getFreeWorldName,
-    createNewWorldInfo,
-    Popup,
-    wiHandlerApi,
-    getListPanelApi,
-  });
-  dom.foldersTabContent = createFoldersTabContent({
-    dom,
-    registerFolderName,
-    Popup,
-    getListPanelApi,
-  });
-
-  const { root: settingsTabRoot, setToggleVisible: setOrderToggleVisible } =
-    createSettingsTabContent({
-      dom,
-      openEntryManager,
-      getListPanelApi,
-      getEditorPanelApi,
-      getCurrentEditor,
-    });
-  dom.settingsTabContent = settingsTabRoot;
-  dom.setOrderToggleVisible = setOrderToggleVisible;
-
-  const controls = document.createElement('div');
-  controls.classList.add('stwid--controls');
-  dom.sortingRow = createSortingTabContent({ cache, getListPanelApi });
-  controls.append(dom.sortingRow);
-  list.append(controls);
-
-  return list;
-};
-
-const buildDrawerEditorContainer = ({ dom, wiHandlerApi }) => {
-  const editorPanel = document.createElement('div');
-  editorPanel.classList.add('stwid--editor-panel');
-
-  const mobileBackBtn = document.createElement('button');
-  mobileBackBtn.classList.add('stwid--mobile-back-btn', 'menu_button');
-  mobileBackBtn.type = 'button';
-  const backIcon = document.createElement('i');
-  backIcon.classList.add('fa-solid', 'fa-arrow-left');
-  mobileBackBtn.append(backIcon, document.createTextNode(' Back to Books'));
-  editorPanel.append(mobileBackBtn);
-
-  const editor = document.createElement('div');
-  dom.editor = editor;
-  editor.classList.add('stwid--editor');
-  editor.addEventListener(
-    'click',
-    (evt) => {
-      const target = getEventTargetElement(evt);
-      if (!target?.closest('.duplicate_entry_button')) return;
-      wiHandlerApi.queueEditorDuplicateRefresh();
-    },
-    true,
-  );
-  editorPanel.append(editor);
-
-  return { editorContainer: editorPanel, mobileBackBtn };
-};
-
 const buildAndAttachDrawerDom = ({
   dom,
   cache,
@@ -365,6 +164,7 @@ const buildAndAttachDrawerDom = ({
   setCurrentEditor,
   getRequestHeaders,
   Popup,
+  POPUP_RESULT,
   loadWorldInfo,
   saveWorldInfo,
   uuidv4,
@@ -448,6 +248,7 @@ const buildAndAttachDrawerDom = ({
     onBookVisibilityScopeChange: (scope) => refreshEntryManagerScope(scope),
     openEntryManager,
     Popup,
+    POPUP_RESULT,
     renderEntry,
     resetEditor: () => {
       editorPanelApi.clearEditor();
@@ -538,56 +339,6 @@ const buildAndAttachDrawerDom = ({
   };
 };
 
-const installDrawerObservers = ({
-  drawerContent,
-  cache,
-  getCurrentEditor,
-  getEditorPanelApi,
-  restoreSplitterForCurrentLayout,
-  wiHandlerApi,
-  onSelectObserverReady,
-}) => {
-  let moSel;
-  let moDrawer;
-
-  const moSelTarget = document.querySelector('#world_editor_select');
-  if (moSelTarget) {
-    moSel = new MutationObserver(() => wiHandlerApi.updateWIChangeDebounced());
-    moSel.observe(moSelTarget, { childList: true });
-  }
-
-  moDrawer = new MutationObserver(() => {
-    const drawerStyle = drawerContent.getAttribute(STYLE_ATTRIBUTE) ?? '';
-    if (drawerStyle.includes('display: none;')) return;
-
-    restoreSplitterForCurrentLayout();
-
-    const currentEditor = getCurrentEditor();
-    if (!currentEditor) return;
-
-    const isDirty = Boolean(getEditorPanelApi()?.isDirty?.(currentEditor.name, currentEditor.uid));
-    if (isDirty) {
-      console.debug('[STWID] Drawer reopen: editor is dirty; skipping auto-restore click.');
-      return;
-    }
-
-    if (cache[currentEditor.name]?.dom?.entry?.[currentEditor.uid]?.root) {
-      cache[currentEditor.name].dom.entry[currentEditor.uid].root.click();
-    }
-  });
-  moDrawer.observe(drawerContent, { attributes: true, attributeFilter: [STYLE_ATTRIBUTE] });
-
-  onSelectObserverReady?.(moSel);
-  return {
-    moSel,
-    moDrawer,
-    cleanup: () => {
-      moSel?.disconnect();
-      moDrawer?.disconnect();
-    },
-  };
-};
-
 const mountDrawerUI = ({
   cache,
   dom,
@@ -606,8 +357,15 @@ const mountDrawerUI = ({
   const editorPanelApiRef = { current: undefined };
   const selectionStateRef = { current: undefined };
 
-  const { Popup, SlashCommandParser, getRequestHeaders, loadWorldInfo, saveWorldInfo, uuidv4 } =
-    context;
+  const {
+    Popup,
+    POPUP_RESULT,
+    SlashCommandParser,
+    getRequestHeaders,
+    loadWorldInfo,
+    saveWorldInfo,
+    uuidv4,
+  } = context;
   const { openEntryManager, refreshEntryManagerScope } = initDrawerEntryManager({
     dom,
     cache,
@@ -637,6 +395,7 @@ const mountDrawerUI = ({
     setCurrentEditor,
     getRequestHeaders,
     Popup,
+    POPUP_RESULT,
     loadWorldInfo,
     saveWorldInfo,
     uuidv4,

@@ -1,6 +1,4 @@
-export const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
-const CSS_STATE_ACTIVE = 'stwid--state-active';
-const ARIA_EXPANDED_ATTR = 'aria-expanded';
+import { closeOpenMultiselectDropdownMenus } from '../shared/multiselect-dropdown.js';
 
 export const setTooltip = (element, text, { ariaLabel = null } = {}) => {
   if (!element) return;
@@ -16,134 +14,6 @@ export const setTooltip = (element, text, { ariaLabel = null } = {}) => {
   if (label) {
     element.setAttribute('aria-label', label);
   }
-};
-
-export const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked) => {
-  if (!checkbox) return;
-  checkbox.classList.toggle('fa-square-check', Boolean(isChecked));
-  checkbox.classList.toggle('fa-square', !isChecked);
-};
-
-export const createMultiselectDropdownCheckbox = (checked = false) => {
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.tabIndex = -1;
-  input.classList.add('stwid--multiselect-dropdown__option-input');
-  const checkbox = document.createElement('i');
-  checkbox.classList.add('fa-solid', 'fa-fw', 'stwid--multiselect-dropdown__option-checkbox');
-  const setChecked = (isChecked) => {
-    input.checked = Boolean(isChecked);
-    setMultiselectDropdownOptionCheckboxState(checkbox, input.checked);
-  };
-  input.addEventListener('change', () => {
-    setChecked(input.checked);
-  });
-  setChecked(checked);
-  return {
-    input,
-    checkbox,
-    setChecked,
-  };
-};
-
-export const closeOpenMultiselectDropdownMenus = (excludeMenu = null) => {
-  for (const menu of document.querySelectorAll(
-    `.stwid--multiselect-dropdown__menu.${CSS_STATE_ACTIVE}`,
-  )) {
-    if (menu === excludeMenu) continue;
-    const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
-    if (typeof closeMenu === 'function') {
-      closeMenu();
-      continue;
-    }
-    menu.classList.remove(CSS_STATE_ACTIVE);
-    const trigger = menu.parentElement?.querySelector('.stwid--multiselect-dropdown__button');
-    trigger?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
-  }
-
-  for (const blocker of document.querySelectorAll('.stwid--blocker')) {
-    const menu = blocker.querySelector('.stwid--list-dropdown__menu');
-    const closeMenu = menu?.[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
-    if (typeof closeMenu === 'function') {
-      closeMenu();
-      continue;
-    }
-    const trigger = document.querySelector(
-      `.stwid--list-dropdown__trigger[${ARIA_EXPANDED_ATTR}="true"]`,
-    );
-    blocker.remove();
-    trigger?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
-    trigger?.focus();
-  }
-};
-
-export const wireMultiselectDropdown = (menu, menuButton, menuWrap) => {
-  let removalObserver = null;
-
-  const removeDocumentListeners = () => {
-    document.removeEventListener('click', handleOutsideClick, true);
-    document.removeEventListener('keydown', handleEscapeKey);
-  };
-
-  const disconnectRemovalObserver = () => {
-    if (!removalObserver) return;
-    removalObserver.disconnect();
-    removalObserver = null;
-  };
-
-  const teardown = () => {
-    removeDocumentListeners();
-    disconnectRemovalObserver();
-  };
-
-  const observeMenuWrapRemoval = () => {
-    if (removalObserver) return;
-    const parentNode = menuWrap.parentNode;
-    if (!parentNode) return;
-
-    removalObserver = new MutationObserver(() => {
-      if (!menuWrap.isConnected) {
-        teardown();
-      }
-    });
-    removalObserver.observe(parentNode, { childList: true });
-  };
-
-  const handleOutsideClick = (event) => {
-    if (menuWrap.contains(event.target)) return;
-    closeMenu();
-  };
-  const handleEscapeKey = (event) => {
-    if (event.key === 'Escape') {
-      closeMenu();
-    }
-  };
-  const closeMenu = () => {
-    if (!menu.classList.contains(CSS_STATE_ACTIVE)) return;
-    teardown();
-    menu.classList.remove(CSS_STATE_ACTIVE);
-    menuButton?.setAttribute(ARIA_EXPANDED_ATTR, 'false');
-  };
-  const openMenu = () => {
-    if (menu.classList.contains(CSS_STATE_ACTIVE)) return;
-    closeOpenMultiselectDropdownMenus(menu);
-    menu.classList.add(CSS_STATE_ACTIVE);
-    menuButton?.setAttribute(ARIA_EXPANDED_ATTR, 'true');
-    observeMenuWrapRemoval();
-    document.addEventListener('click', handleOutsideClick, true);
-    document.addEventListener('keydown', handleEscapeKey);
-  };
-  menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeMenu;
-  menu.addEventListener('click', (event) => event.stopPropagation());
-  menuButton.addEventListener('click', (event) => {
-    event.stopPropagation();
-    if (menu.classList.contains(CSS_STATE_ACTIVE)) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-  });
-  return closeMenu;
 };
 
 const resetContentWrapAfterExpand = (contentWrap) => {
@@ -209,36 +79,147 @@ export function wrapRowContent(row) {
   return contentWrap;
 }
 
-export const formatCharacterFilter = (entry) => {
+/** Lines shown before the "+N more" affordance takes over (R5). */
+export const CHARACTER_FILTER_LINE_LIMIT = 3;
+
+export const INERT_FILTER_LABEL = 'exclude — nothing selected';
+
+const INERT_FILTER_TOOLTIP =
+  'Inert filter --- exclude is on but nothing is selected, so this entry is never gated by it. ' +
+  'The setting is left exactly as stored.';
+
+// The avatar filename with its extension stripped — what lorebook data stores (CONTEXT.md).
+// This mirrors the host's `getCharaFilename` (vendor utils.js:1342, same regex) rather than
+// calling it: that helper calls `getContext()` even when handed a manual avatar key, which
+// would drag this pure-logic module onto the host and through the st-host test stub. If the
+// host ever changes how it derives the key, this line must change with it or every stored
+// avatar key would be judged a stale value.
+const toAvatarKey = (character) => String(character?.avatar ?? '').replace(/\.[^/.]+$/, '');
+
+// Host lists can be injected for tests; otherwise they come from the live context.
+const resolveHostLists = (overrides) => {
+  const context = globalThis.SillyTavern?.getContext?.() ?? {};
+  const pick = (injected, fromContext) => {
+    if (Array.isArray(injected)) return injected;
+    return Array.isArray(fromContext) ? fromContext : [];
+  };
+  return {
+    characters: pick(overrides?.characters, context.characters),
+    tags: pick(overrides?.tags, context.tags),
+  };
+};
+
+const countDisplayNames = (characters) => {
+  const counts = new Map();
+  for (const character of characters) {
+    const displayName = typeof character?.name === 'string' ? character.name : '';
+    if (!displayName) continue;
+    counts.set(displayName, (counts.get(displayName) ?? 0) + 1);
+  }
+  return counts;
+};
+
+const buildCharacterLine = (storedName, { characters, displayNameCounts, mode, icon }) => {
+  const avatarKey = String(storedName);
+  const line = { kind: 'character', icon, mode, value: avatarKey, label: avatarKey, stale: false };
+
+  // E1/E2 — an unloaded host list must never mark anything stale.
+  if (!characters.length) {
+    line.tooltip = `Avatar key: ${avatarKey}`;
+    return line;
+  }
+
+  const match = characters.find((character) => toAvatarKey(character) === avatarKey);
+  if (!match) {
+    line.stale = true;
+    line.tooltip = `Stale value --- no character with the avatar key "${avatarKey}" exists any more. Nothing was changed.`;
+    return line;
+  }
+
+  const displayName = typeof match.name === 'string' && match.name ? match.name : avatarKey;
+  // E5 — disambiguate inline only when a collision actually exists.
+  const collides = (displayNameCounts.get(displayName) ?? 0) > 1;
+  line.label = collides ? `${displayName} (${avatarKey})` : displayName;
+  line.tooltip = `Avatar key: ${avatarKey}`;
+  return line;
+};
+
+const buildTagLine = (storedTag, { tags, mode }) => {
+  // R3b/E14 — tag IDs are strings; coerce first so a legacy numeric ID still resolves.
+  const tagId = String(storedTag);
+  const line = { kind: 'tag', icon: 'fa-tag', mode, value: tagId, label: tagId, stale: false };
+
+  if (!tags.length) {
+    line.tooltip = `Tag ID: ${tagId}`;
+    return line;
+  }
+
+  const match = tags.find((tag) => String(tag?.id) === tagId);
+  if (!match) {
+    line.stale = true;
+    line.tooltip = `Stale value --- no tag with the ID "${tagId}" exists any more. Nothing was changed.`;
+    return line;
+  }
+
+  line.label = typeof match.name === 'string' && match.name ? match.name : tagId;
+  line.tooltip = `Tag ID: ${tagId}`;
+  return line;
+};
+
+/**
+ * Turn a stored `characterFilter` into renderable lines. Read-only: nothing here writes.
+ * Every stored value produces a line (R3c/E15) — resolved, or flagged as a stale value.
+ *
+ * @param {object} entry Lorebook entry.
+ * @param {{characters?: Array, tags?: Array}} [hostLists] Overrides for the host lists.
+ */
+export const formatCharacterFilter = (entry, hostLists) => {
   const filter = entry?.characterFilter;
   if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return [];
+
+  const { characters, tags } = resolveHostLists(hostLists);
+  const mode = filter.isExclude ? 'exclude' : 'include';
+  const icon = filter.isExclude ? 'fa-user-slash' : 'fa-user-plus';
+  const displayNameCounts = countDisplayNames(characters);
   const lines = [];
-  if (Array.isArray(filter.names) && filter.names.length > 0) {
-    lines.push(
-      ...filter.names.map((name) => ({
-        icon: filter.isExclude ? 'fa-user-slash' : 'fa-user-plus',
-        mode: filter.isExclude ? 'exclude' : 'include',
-        label: name,
-      })),
-    );
-  }
-  if (Array.isArray(filter.tags) && filter.tags.length > 0) {
-    const tags = globalThis.SillyTavern?.getContext?.().tags ?? [];
-    const tagNames = tags.length
-      ? tags.filter((tag) => filter.tags.includes(tag.id)).map((tag) => tag.name)
-      : filter.tags.map((tag) => String(tag));
-    if (tagNames.length > 0) {
-      lines.push(
-        ...tagNames.map((tag) => ({
-          icon: 'fa-tag',
-          mode: filter.isExclude ? 'exclude' : 'include',
-          label: tag,
-        })),
-      );
+
+  if (Array.isArray(filter.names)) {
+    for (const storedName of filter.names) {
+      lines.push(buildCharacterLine(storedName, { characters, displayNameCounts, mode, icon }));
     }
   }
-  if (!lines.length) {
-    return [];
+  if (Array.isArray(filter.tags)) {
+    for (const storedTag of filter.tags) {
+      lines.push(buildTagLine(storedTag, { tags, mode }));
+    }
   }
+
+  // E4 — an inert filter gates nothing but still exists; show it, never rewrite it.
+  if (!lines.length) {
+    if (filter.isExclude !== true) return [];
+    return [
+      {
+        kind: 'inert',
+        icon: 'fa-ban',
+        mode: 'inert',
+        value: '',
+        label: INERT_FILTER_LABEL,
+        stale: false,
+        tooltip: INERT_FILTER_TOOLTIP,
+      },
+    ];
+  }
+
   return lines;
+};
+
+/**
+ * Split formatted lines into the first `limit` and the remainder (R5).
+ * Nothing is dropped — the caller renders both halves and toggles the overflow.
+ */
+export const truncateCharacterFilterLines = (lines, limit = CHARACTER_FILTER_LINE_LIMIT) => {
+  const all = Array.isArray(lines) ? lines : [];
+  const visible = all.slice(0, limit);
+  const overflow = all.slice(limit);
+  return { visible, overflow, hiddenCount: overflow.length };
 };

@@ -1,4 +1,6 @@
-﻿let context = null;
+﻿import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
+
+let context = null;
 
 // Lazily memoized `#entry_edit_template` child nodes. The template markup is
 // static and host-provided, so we clone from these cached references instead of
@@ -174,6 +176,7 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
       const prevDisabled = cachedEntry.disable;
       const nextDisabled = !prevDisabled;
       cachedEntry.disable = nextDisabled;
+      mirrorEntryFieldsToOriginalData(context.cache[entryName], cachedEntry, ['disable']);
       applyEnabledIcon(nextDisabled);
       isSavingState = true;
       isEnabled.disabled = true;
@@ -181,6 +184,7 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
         await runEntryStateSave({ save: saveEntryState });
       } catch {
         cachedEntry.disable = prevDisabled;
+        mirrorEntryFieldsToOriginalData(context.cache[entryName], cachedEntry, ['disable']);
         applyEnabledIcon(prevDisabled);
         toastr.error('Failed to save entry state. Changes were not persisted.');
       } finally {
@@ -222,6 +226,10 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
           break;
         }
       }
+      mirrorEntryFieldsToOriginalData(context.cache[entryName], cachedEntry, [
+        'constant',
+        'vectorized',
+      ]);
       isSavingState = true;
       strategySelect.disabled = true;
       try {
@@ -229,6 +237,10 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
       } catch {
         cachedEntry.constant = prevConstant;
         cachedEntry.vectorized = prevVectorized;
+        mirrorEntryFieldsToOriginalData(context.cache[entryName], cachedEntry, [
+          'constant',
+          'vectorized',
+        ]);
         strategySelect.value = entryState({ constant: prevConstant, vectorized: prevVectorized });
         toastr.error('Failed to save entry strategy. Changes were not persisted.');
       } finally {

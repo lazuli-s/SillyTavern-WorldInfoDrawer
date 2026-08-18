@@ -53,6 +53,10 @@ export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getLis
           toastr.error('Folder names cannot include "/".');
           return;
         }
+        if (result.reason === 'duplicate') {
+          toastr.warning('A folder with that name already exists.');
+          return;
+        }
         toastr.warning('Folder name cannot be empty.');
         return;
       }

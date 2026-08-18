@@ -10,11 +10,12 @@ import {
   saveUpdatedBooks,
   withApplyButtonLock,
 } from './bulk-edit-row.helpers.js';
+import { remapEntryUidsInOriginalData } from '../../shared/original-data.js';
 
 const MAX_UID_INPUT = '100000';
 const UID_START_STORAGE_KEY = 'stwid--uid-start';
 
-function groupTargetsByBook(targets) {
+export function groupTargetsByBook(targets) {
   const byBook = new Map();
   for (const target of targets) {
     if (!byBook.has(target.bookName)) {
@@ -25,7 +26,7 @@ function groupTargetsByBook(targets) {
   return byBook;
 }
 
-function findUidCollisions(byBook, cache, startValue) {
+export function findUidCollisions(byBook, cache, startValue) {
   const collisions = [];
   for (const [bookName, bookTargets] of byBook) {
     const selectedOldUids = new Set(bookTargets.map((target) => target.uid));
@@ -46,7 +47,10 @@ function findUidCollisions(byBook, cache, startValue) {
   return collisions;
 }
 
-async function rebuildBookUids(byBook, cache, startValue) {
+// Exported for tests only — the UID write path is the one place where a wrong
+// key silently destroys an entry, so it is covered directly. Callers inside the
+// extension still go through createRunApplyUid(), which refuses on collisions.
+export async function rebuildBookUids(byBook, cache, startValue) {
   for (const [bookName, bookTargets] of byBook) {
     const selectedOldUids = new Set(bookTargets.map((target) => target.uid));
     const existingEntries = cache[bookName].entries;
@@ -56,14 +60,20 @@ async function rebuildBookUids(byBook, cache, startValue) {
         freshEntries[uid] = entryData;
       }
     }
+    // Collected rather than mirrored per entry: a renumber can move one
+    // selected entry onto another selected entry's old uid, so the shadow copy
+    // has to be repointed in one pass at the end, never entry by entry.
+    const uidMap = new Map();
     for (let i = 0; i < bookTargets.length; i++) {
       const { entryData } = bookTargets[i];
       const newUid = startValue + i;
+      uidMap.set(entryData.uid, newUid);
       entryData.uid = newUid;
       freshEntries[String(newUid)] = entryData;
       await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
     }
     cache[bookName].entries = freshEntries;
+    remapEntryUidsInOriginalData(cache[bookName], uidMap);
   }
 }
 
@@ -105,8 +115,13 @@ function createRunApplyUid({
       }
 
       await rebuildBookUids(byBook, cache, startValue);
-      await saveUpdatedBooks(new Set(byBook.keys()), saveWorldInfo, buildSavePayload);
-      applyButton.classList.remove(APPLY_DIRTY_CLASS);
+      const { failedBooks } = await saveUpdatedBooks(
+        new Set(byBook.keys()),
+        saveWorldInfo,
+        buildSavePayload,
+      );
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyButton.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 }

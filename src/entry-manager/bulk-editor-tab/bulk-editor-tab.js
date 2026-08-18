@@ -1,11 +1,13 @@
-import { buildDisplayToolbar } from '../display-tab/display-tab.display-toolbar.js';
-import { buildBulkEditRow } from './bulk-edit-row.js';
-import { buildFilterPanel } from '../table/table.filter-panel.js';
-import { buildTableHeader } from '../table/table.header.js';
-import { buildTableBody } from '../table/table.body.js';
-
-const TAB_ID_DISPLAY = 'display';
-const TAB_ID_BULK_EDITOR = 'bulk-editor';
+import {
+  buildEntryManagerRootEl,
+  buildEntryManagerTopRows,
+  buildEntryManagerTabs,
+  buildEntryManagerFilterPanel,
+  buildEntryManagerTable,
+} from './bulk-editor-tab.sections.js';
+import { registerBookReloadHooks } from '../../shared/book-reload.js';
+import { maybeYieldToEventLoop } from '../../shared/utils.js';
+import { BULK_APPLY_BATCH_SIZE } from './bulk-edit-row.helpers.js';
 
 const resetBulkEditRow = (cleanupBulkEditRowRef) => {
   if (typeof cleanupBulkEditRowRef.current === 'function') {
@@ -75,378 +77,13 @@ const persistCustomSortOrderIfNeeded = async ({
   }
 };
 
-const buildEntryManagerRootEl = ({ entryManagerState, applyEntryManagerColumnVisibility }) => {
-  const entryManagerRootEl = document.createElement('div');
-  entryManagerRootEl.classList.add('stwid--entry-manager');
-  entryManagerRootEl.classList.toggle('stwid--hide-keys', entryManagerState.hideKeys);
-  applyEntryManagerColumnVisibility(entryManagerRootEl);
-  return entryManagerRootEl;
-};
-
-const buildEntryManagerTopRows = ({
-  entryManagerRootEl,
-  entryManagerState,
-  dom,
-  cache,
-  ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
-  ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
-  ENTRY_MANAGER_DEFAULT_COLUMNS,
-  applyEntryManagerColumnVisibility,
-  clearEntryManagerScriptFilters,
-  setEntryManagerSort,
-  applyEntryManagerSortToDom,
-  ensureCustomDisplayIndex,
-  saveWorldInfo,
-  buildSavePayload,
-  appendSortOptions,
-  getEntryManagerEntries,
-  updateEntryManagerPreview,
-  SORT,
-  SORT_DIRECTION,
-  applyEntryManagerStrategyFilters,
-  applyEntryManagerPositionFilters,
-  applyEntryManagerRecursionFilters,
-  applyEntryManagerOutletFilters,
-  applyEntryManagerAutomationIdFilters,
-  applyEntryManagerGroupFilters,
-  getStrategyOptions,
-  getPositionOptions,
-  getOutletOptions,
-  getAutomationIdOptions,
-  getGroupOptions,
-  getStrategyValues,
-  getPositionValues,
-  getOutletValues,
-  getAutomationIdValues,
-  getGroupValues,
-  isEntryManagerRowSelected,
-  setAllEntryManagerRowSelected,
-  updateEntryManagerSelectAllButton,
-  getEntryManagerRows,
-  applyEntryManagerStrategyFilterToRow,
-  applyEntryManagerPositionFilterToRow,
-  isOutletPosition,
-  applyEntryManagerOutletFilterToRow,
-  syncEntryManagerOutletFilters,
-  applyEntryManagerRecursionFilterToRow,
-  cleanupBulkEditRowRef,
-  debounce,
-}) => {
-  const filterIndicatorRefs = {};
-
-  const { element: displayToolbarEl, refresh: refreshDisplayToolbar } = buildDisplayToolbar({
-    body: entryManagerRootEl,
-    entryManagerState,
-    dom,
-    ENTRY_MANAGER_HIDE_KEYS_STORAGE_KEY,
-    ENTRY_MANAGER_COLUMNS_STORAGE_KEY,
-    ENTRY_MANAGER_DEFAULT_COLUMNS,
-    applyEntryManagerColumnVisibility,
-    clearEntryManagerScriptFilters,
-    setEntryManagerSort,
-    applyEntryManagerSortToDom,
-    ensureCustomDisplayIndex,
-    saveWorldInfo,
-    buildSavePayload,
-    appendSortOptions,
-    getEntryManagerEntries,
-    updateEntryManagerPreview,
-    SORT,
-    SORT_DIRECTION,
-    applyEntryManagerStrategyFilters,
-    applyEntryManagerPositionFilters,
-    applyEntryManagerRecursionFilters,
-    applyEntryManagerOutletFilters,
-    applyEntryManagerAutomationIdFilters,
-    applyEntryManagerGroupFilters,
-    getStrategyOptions,
-    getPositionOptions,
-    getOutletOptions,
-    getAutomationIdOptions,
-    getGroupOptions,
-    getStrategyValues,
-    getPositionValues,
-    getOutletValues,
-    getAutomationIdValues,
-    getGroupValues,
-    filterIndicatorRefs,
-  });
-
-  const {
-    element: bulkEditRowEl,
-    refreshSelectionCount,
-    cleanup,
-  } = buildBulkEditRow({
-    dom,
-    entryManagerState,
-    cache,
-    saveWorldInfo,
-    buildSavePayload,
-    isEntryManagerRowSelected,
-    setAllEntryManagerRowSelected,
-    updateEntryManagerSelectAllButton,
-    getEntryManagerRows,
-    getStrategyOptions,
-    applyEntryManagerStrategyFilterToRow,
-    getPositionOptions,
-    applyEntryManagerPositionFilterToRow,
-    isOutletPosition,
-    getOutletOptions,
-    applyEntryManagerOutletFilterToRow,
-    syncEntryManagerOutletFilters,
-    filterIndicatorRefs,
-    applyEntryManagerRecursionFilterToRow,
-    debounce,
-  });
-  cleanupBulkEditRowRef.current = cleanup;
-
-  return {
-    displayToolbarEl,
-    bulkEditRowEl,
-    refreshDisplayToolbar,
-    refreshSelectionCount,
-    filterIndicatorRefs,
-  };
-};
-
-const setActiveEntryManagerTab = ({ tabButtons, tabPanels, tabId }) => {
-  for (const tabButtonEl of tabButtons) {
-    const isActive = tabButtonEl.dataset.tabId === tabId;
-    tabButtonEl.classList.toggle('active', isActive);
-    tabButtonEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
-  }
-  for (const tabPanelEl of tabPanels) {
-    tabPanelEl.classList.toggle('active', tabPanelEl.dataset.tabId === tabId);
-  }
-};
-
-const buildEntryManagerTabs = ({ displayToolbarEl, bulkEditRowEl }) => {
-  const panelTabs = [
-    { id: TAB_ID_DISPLAY, icon: 'fa-eye', label: 'Display' },
-    { id: TAB_ID_BULK_EDITOR, icon: 'fa-table-list', label: 'Bulk Editor' },
-  ];
-
-  const iconTab = document.createElement('div');
-  iconTab.classList.add('stwid--icon-tab');
-
-  const iconTabBar = document.createElement('div');
-  iconTabBar.classList.add('stwid--icon-tab__bar');
-  iconTabBar.setAttribute('role', 'tablist');
-  iconTabBar.setAttribute('aria-label', 'Entry Manager tabs');
-
-  const tabButtons = [];
-  const tabPanels = [];
-  const tabPanelsById = new Map();
-
-  for (const tab of panelTabs) {
-    const tabButtonEl = document.createElement('button');
-    tabButtonEl.type = 'button';
-    tabButtonEl.classList.add('stwid--icon-tab__button');
-    tabButtonEl.dataset.tabId = tab.id;
-    tabButtonEl.setAttribute('role', 'tab');
-    tabButtonEl.setAttribute('aria-selected', 'false');
-    tabButtonEl.title = `${tab.label} tab`;
-
-    const tabIconEl = document.createElement('i');
-    tabIconEl.classList.add('fa-solid', 'fa-fw', tab.icon);
-    tabButtonEl.append(tabIconEl);
-
-    const tabLabelEl = document.createElement('span');
-    tabLabelEl.textContent = tab.label;
-    tabButtonEl.append(tabLabelEl);
-
-    tabButtons.push(tabButtonEl);
-    iconTabBar.append(tabButtonEl);
-
-    const tabPanelEl = document.createElement('div');
-    tabPanelEl.classList.add('stwid--icon-tab__content');
-    tabPanelEl.dataset.tabId = tab.id;
-    tabPanelEl.setAttribute('role', 'tabpanel');
-    tabPanels.push(tabPanelEl);
-    tabPanelsById.set(tab.id, tabPanelEl);
-    iconTab.append(tabPanelEl);
-
-    tabButtonEl.addEventListener('click', () =>
-      setActiveEntryManagerTab({ tabButtons, tabPanels, tabId: tab.id }),
-    );
-  }
-
-  tabPanelsById.get(TAB_ID_DISPLAY)?.append(displayToolbarEl);
-  tabPanelsById.get(TAB_ID_BULK_EDITOR)?.append(bulkEditRowEl);
-
-  iconTab.prepend(iconTabBar);
-  setActiveEntryManagerTab({ tabButtons, tabPanels, tabId: TAB_ID_DISPLAY });
-  return iconTab;
-};
-
-const buildEntryManagerFilterPanel = ({
-  dom,
-  entryManagerState,
-  getEntryManagerEntries,
-  setEntryManagerRowFilterState,
-  SlashCommandParser,
-  debounce,
-  hljs,
-  isTrueBoolean,
-}) =>
-  buildFilterPanel({
-    dom,
-    entryManagerState,
-    getEntryManagerEntries,
-    setEntryManagerRowFilterState,
-    SlashCommandParser,
-    debounce,
-    hljs,
-    isTrueBoolean,
-  });
-
-const buildEntryManagerTable = async ({
-  entries,
-  entryManagerState,
-  dom,
-  cache,
-  isOutletPosition,
-  saveWorldInfo,
-  buildSavePayload,
-  focusWorldEntry,
-  isEntryManagerRowSelected,
-  setEntryManagerRowSelected,
-  updateEntryManagerSelectAllButton,
-  refreshSelectionCount,
-  setEntryManagerRowFilterState,
-  applyEntryManagerStrategyFilterToRow,
-  applyEntryManagerPositionFilterToRow,
-  applyEntryManagerRecursionFilterToRow,
-  applyEntryManagerStrategyFilters,
-  applyEntryManagerPositionFilters,
-  applyEntryManagerRecursionFilters,
-  applyEntryManagerOutletFilters,
-  applyEntryManagerAutomationIdFilters,
-  applyEntryManagerGroupFilters,
-  syncEntryManagerOutletFilters,
-  syncEntryManagerAutomationIdFilters,
-  syncEntryManagerGroupFilters,
-  getEditorPanelApi,
-  entryState,
-  getEntryManagerRows,
-  setEntryManagerSort,
-  SORT,
-  SORT_DIRECTION,
-  getSortableDelay,
-  $,
-  normalizeStrategyFilters,
-  normalizePositionFilters,
-  normalizeOutletFilters,
-  normalizeAutomationIdFilters,
-  normalizeGroupFilters,
-  getStrategyOptions,
-  getStrategyValues,
-  getPositionOptions,
-  getPositionValues,
-  getOutletOptions,
-  getOutletValues,
-  getAutomationIdOptions,
-  getAutomationIdValues,
-  getGroupOptions,
-  getGroupValues,
-  refreshDisplayToolbar,
-  filterIndicatorRefs,
-}) => {
-  const {
-    thead,
-    refreshStrategyFilterIndicator,
-    refreshPositionFilterIndicator,
-    refreshRecursionFilterIndicator,
-    refreshOutletFilterIndicator,
-    refreshAutomationIdFilterIndicator,
-    refreshGroupFilterIndicator,
-  } = buildTableHeader({
-    entryManagerState,
-    applyEntryManagerStrategyFilters,
-    applyEntryManagerPositionFilters,
-    applyEntryManagerRecursionFilters,
-    applyEntryManagerOutletFilters,
-    applyEntryManagerAutomationIdFilters,
-    applyEntryManagerGroupFilters,
-    normalizeStrategyFilters,
-    normalizePositionFilters,
-    normalizeOutletFilters,
-    normalizeAutomationIdFilters,
-    normalizeGroupFilters,
-    getStrategyOptions,
-    getStrategyValues,
-    getPositionOptions,
-    getPositionValues,
-    getOutletOptions,
-    getOutletValues,
-    getAutomationIdOptions,
-    getAutomationIdValues,
-    getGroupOptions,
-    getGroupValues,
-    onFilterChange: () => {
-      refreshDisplayToolbar();
-      refreshSelectionCount();
-    },
-  });
-
-  filterIndicatorRefs.strategy = refreshStrategyFilterIndicator;
-  filterIndicatorRefs.position = refreshPositionFilterIndicator;
-  filterIndicatorRefs.recursion = refreshRecursionFilterIndicator;
-  filterIndicatorRefs.outlet = refreshOutletFilterIndicator;
-  filterIndicatorRefs.automationId = refreshAutomationIdFilterIndicator;
-  filterIndicatorRefs.group = refreshGroupFilterIndicator;
-
-  const tbody = await buildTableBody({
-    entries,
-    entryManagerState,
-    dom,
-    cache,
-    refreshOutletFilterIndicator,
-    refreshAutomationIdFilterIndicator,
-    refreshGroupFilterIndicator,
-    isOutletPosition,
-    saveWorldInfo,
-    buildSavePayload,
-    focusWorldEntry,
-    isEntryManagerRowSelected,
-    setEntryManagerRowSelected,
-    updateEntryManagerSelectAllButton,
-    refreshSelectionCount,
-    setEntryManagerRowFilterState,
-    applyEntryManagerStrategyFilterToRow,
-    applyEntryManagerPositionFilterToRow,
-    applyEntryManagerRecursionFilterToRow,
-    applyEntryManagerStrategyFilters,
-    applyEntryManagerRecursionFilters,
-    applyEntryManagerOutletFilters,
-    applyEntryManagerAutomationIdFilters,
-    applyEntryManagerGroupFilters,
-    syncEntryManagerOutletFilters,
-    syncEntryManagerAutomationIdFilters,
-    syncEntryManagerGroupFilters,
-    getEditorPanelApi,
-    entryState,
-    getEntryManagerRows,
-    setEntryManagerSort,
-    SORT,
-    SORT_DIRECTION,
-    getSortableDelay,
-    $,
-  });
-
-  const orderTableEl = document.createElement('table');
-  orderTableEl.classList.add('stwid--order-table');
-  orderTableEl.append(thead, tbody);
-
-  const orderTableWrapEl = document.createElement('div');
-  orderTableWrapEl.classList.add('stwid--order-table-wrap');
-  orderTableWrapEl.append(orderTableEl);
-
-  return orderTableWrapEl;
-};
+/** Identifies a table row across a re-render (rows themselves are rebuilt). */
+const entryManagerRowKey = (row) =>
+  JSON.stringify([row.getAttribute('data-book'), row.getAttribute('data-uid')]);
 
 const renderEntryManager = async ({
   book = null,
+  selectedRowKeys = null,
   cleanupBulkEditRowRef,
   dom,
   cache,
@@ -668,6 +305,21 @@ const renderEntryManager = async ({
   if (!dom.order.tbody || !orderTableWrapEl.contains(dom.order.tbody)) return;
 
   refreshDisplayToolbar();
+
+  // A render selects every row. When the render is a forced refresh rather than
+  // a user opening the table (see registerBookReloadHooks below), restore what
+  // the user had picked — otherwise a failed bulk save would silently rearm the
+  // Apply buttons against every entry in every visible book.
+  if (selectedRowKeys) {
+    const rows = getEntryManagerRows();
+    for (let i = 0; i < rows.length; i++) {
+      setEntryManagerRowSelected(rows[i], selectedRowKeys.has(entryManagerRowKey(rows[i])));
+      // Same batching as setAllEntryManagerRowSelected: a scope of several
+      // thousand rows must not block the UI thread in one pass.
+      await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
+    }
+    updateEntryManagerSelectAllButton();
+  }
   refreshSelectionCount();
 
   entryManagerRootEl.append(entryManagerTabs, filterEl, orderTableWrapEl);
@@ -742,9 +394,10 @@ const createEntryManagerRenderer = ({
 }) => {
   const cleanupBulkEditRowRef = { current: null };
 
-  const renderEntryManagerForBook = async (book = null) =>
+  const renderEntryManagerForBook = async (book = null, { selectedRowKeys = null } = {}) =>
     renderEntryManager({
       book,
+      selectedRowKeys,
       cleanupBulkEditRowRef,
       dom,
       cache,
@@ -811,6 +464,27 @@ const createEntryManagerRenderer = ({
       $,
       getEditorPanelApi,
     });
+
+  // After a book is reloaded from disk (e.g. a bulk save that failed on it),
+  // the cache holds the saved truth while the table still shows the rejected
+  // change. Re-render from the cache so the user sees what is actually stored.
+  // Only when the table is on screen: `dom.order.tbody` is cleared on every
+  // render and set again once the table is built.
+  registerBookReloadHooks({
+    refreshEntryManager: async () => {
+      // `dom.order.tbody` is also undefined for the duration of any render, so
+      // a reload landing mid-render is skipped. Say so rather than leave the
+      // table silently showing values the reload just discarded.
+      if (!dom.order.tbody) {
+        console.warn('[STWID] Entry Manager not ready; skipped the post-reload table refresh.');
+        return;
+      }
+      const selectedRowKeys = new Set(
+        getEntryManagerRows().filter(isEntryManagerRowSelected).map(entryManagerRowKey),
+      );
+      await renderEntryManagerForBook(entryManagerState.book ?? null, { selectedRowKeys });
+    },
+  });
 
   return { renderEntryManager: renderEntryManagerForBook };
 };

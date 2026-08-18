@@ -1,10 +1,9 @@
+import { setTooltip, wrapRowContent } from '../entry-manager.utils.js';
 import {
   MULTISELECT_DROPDOWN_CLOSE_HANDLER,
-  setTooltip,
   createMultiselectDropdownCheckbox,
   wireMultiselectDropdown,
-  wrapRowContent,
-} from '../entry-manager.utils.js';
+} from '../../shared/multiselect-dropdown.js';
 import {
   ENTRY_MANAGER_TOGGLE_COLUMNS,
   ENTRY_MANAGER_RECURSION_OPTIONS,

@@ -1,3 +1,8 @@
+import {
+  MULTISELECT_DROPDOWN_CLOSE_HANDLER,
+  wireMultiselectDropdownKeyboardNavigation,
+} from '../../shared/multiselect-dropdown.js';
+
 const BOOK_VISIBILITY_MODES = Object.freeze({
   ALL_BOOKS: 'allBooks',
   ALL_ACTIVE: 'allActive',
@@ -36,7 +41,6 @@ const BOOK_VISIBILITY_MULTISELECT_MODES = Object.freeze([
   BOOK_VISIBILITY_MODES.CHARACTER,
 ]);
 
-const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
 const CSS_STATE_ACTIVE = 'stwid--state-active';
 const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselect-dropdown__button';
 const CSS_MULTISELECT_DROPDOWN_OPTION = 'stwid--multiselect-dropdown__option';
@@ -92,7 +96,9 @@ const buildVisibilityMenuOptions = ({
       setMultiselectDropdownOptionCheckboxState(optionCheckbox, false);
       optionButton.append(optionCheckbox);
     }
-    optionButton.append(createBookVisibilityIcon(option, 'stwid--multiselect-dropdown__option-icon'));
+    optionButton.append(
+      createBookVisibilityIcon(option, 'stwid--multiselect-dropdown__option-icon'),
+    );
     const optionLabel = document.createElement('span');
     optionLabel.textContent = option.label;
     optionButton.append(optionLabel);
@@ -132,8 +138,12 @@ const createVisibilityMenuCloseHandlers = ({
   };
   const wrappedClose = () => {
     if (!menuEl.classList.contains(CSS_STATE_ACTIVE)) return;
+    // Read before hiding: hiding the menu blurs whatever it holds, which would
+    // strand a keyboard user on <body>.
+    const hadFocusInside = menuEl.contains(document.activeElement);
     closeBookVisibilityMenu();
     removeListeners();
+    if (hadFocusInside) triggerButton?.focus?.({ preventScroll: true });
   };
   const onVisibilityMenuButtonClick = (evt) => {
     evt.preventDefault();
@@ -361,6 +371,39 @@ const buildVisibilityDropdownSection = ({
   });
   bookVisibilityMenuEl[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = wrappedClose;
   visibilityMenuButton.addEventListener('click', onVisibilityMenuButtonClick);
+
+  // This menu builds its own open/close rather than going through
+  // `wireMultiselectDropdown`, so its options need the shared keyboard
+  // navigation wired on explicitly (ticket 03b).
+  const visibilityKeyboardNav = wireMultiselectDropdownKeyboardNavigation(bookVisibilityMenuEl, {
+    isOpen: () => bookVisibilityMenuEl.classList.contains(CSS_STATE_ACTIVE),
+  });
+  /** Roles and the roving stop follow whichever way the menu was just toggled. */
+  const afterVisibilityMenuToggle = () => {
+    if (bookVisibilityMenuEl.classList.contains(CSS_STATE_ACTIVE)) visibilityKeyboardNav.sync();
+    else visibilityKeyboardNav.reset();
+  };
+  visibilityMenuButton.addEventListener('click', afterVisibilityMenuToggle);
+  visibilityMenuButton.addEventListener('keydown', (evt) => {
+    // Enter on this trigger fired TWICE before this guard, so the menu opened
+    // and immediately closed again: it is a native <button> (browser fires its
+    // own click on Enter) that also carries `.menu_button`, which the host's
+    // global Enter-to-click handler matches (vendor keyboard.js). Measured in
+    // the browser 17-08-2026 — Space, which the host ignores, opened it fine
+    // while Enter left it shut. Handling Enter here and stopping it from
+    // reaching the document leaves exactly one toggle.
+    if (evt.key === 'Enter') {
+      evt.preventDefault();
+      evt.stopPropagation();
+      onVisibilityMenuButtonClick(evt);
+      afterVisibilityMenuToggle();
+      return;
+    }
+    if (!bookVisibilityMenuEl.classList.contains(CSS_STATE_ACTIVE)) return;
+    if (evt.key !== 'Tab' || evt.shiftKey) return;
+    // Tabbing off the trigger would skip the whole open menu; step into it.
+    if (visibilityKeyboardNav.focusFirst()) evt.preventDefault();
+  });
   const chips = document.createElement('div');
   chips.classList.add('stwid--visibility-chips');
   listPanelState.bookVisibilityChips = chips;

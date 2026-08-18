@@ -1,9 +1,11 @@
+import { setTooltip } from '../entry-manager.utils.js';
 import {
   MULTISELECT_DROPDOWN_CLOSE_HANDLER,
   closeOpenMultiselectDropdownMenus,
-  setTooltip,
-} from '../entry-manager.utils.js';
+  wireMultiselectDropdownKeyboardNavigation,
+} from '../../shared/multiselect-dropdown.js';
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
+import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
 import {
   BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
@@ -41,8 +43,9 @@ function runBulkApplyForSelectedEntries({
       await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
     }
     afterTargetsUpdate?.(targets);
-    await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-    applyButton.classList.remove(APPLY_DIRTY_CLASS);
+    const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+    // Leave the row marked dirty when a book did not save, so the user can retry.
+    if (failedBooks.length === 0) applyButton.classList.remove(APPLY_DIRTY_CLASS);
   };
 }
 
@@ -103,6 +106,7 @@ function buildBulkPositionControls({
         applyButton: applyPosition,
         perTargetUpdate: ({ tr, bookName, uid, entryData }) => {
           entryData.position = nextPosition;
+          mirrorEntryFieldsToOriginalData(cache[bookName], entryData, ['position']);
           const domPos = cache?.[bookName]?.dom?.entry?.[uid]?.position;
           if (domPos) domPos.value = value;
           applyEntryManagerPositionFilterToRow(tr, entryData);
@@ -167,8 +171,9 @@ function buildBulkDepthControls({
         saveWorldInfo,
         buildSavePayload,
         applyButton: applyDepth,
-        perTargetUpdate: ({ tr, entryData }) => {
+        perTargetUpdate: ({ tr, bookName, entryData }) => {
           entryData.depth = parsedDepth;
+          mirrorEntryFieldsToOriginalData(cache[bookName], entryData, ['depth']);
           const rowDepth = tr.querySelector('[name="depth"]');
           if (rowDepth) rowDepth.value = parsedDepth !== undefined ? String(parsedDepth) : '';
         },
@@ -229,10 +234,23 @@ function buildBulkOutletControls({
   const outletMenu = document.createElement('div');
   outletMenu.classList.add('stwid--multiselect-dropdown__menu', 'stwid--menu');
 
+  // Focusing the input opens the menu. Returning focus to it after a keyboard
+  // pick would therefore reopen what the pick just closed.
+  let suppressNextFocusOpen = false;
   const closeOutletMenu = () => {
     if (!outletMenu.classList.contains(STATE_ACTIVE_CLASS)) return;
+    const hadFocusInside = outletMenu.contains(document.activeElement);
     outletMenu.classList.remove(STATE_ACTIVE_CLASS);
     document.removeEventListener('click', handleOutletOutsideClick);
+    if (hadFocusInside) {
+      suppressNextFocusOpen = true;
+      outletInput.focus({ preventScroll: true });
+    }
+  };
+  const selectOutletOption = (value) => {
+    outletInput.value = value;
+    localStorage.setItem(STORAGE_KEY_BULK_OUTLET, outletInput.value);
+    closeOutletMenu();
   };
   const handleOutletOutsideClick = (event) => {
     if (outletDropdownWrap.contains(event.target)) return;
@@ -243,6 +261,7 @@ function buildBulkOutletControls({
     closeOpenMultiselectDropdownMenus(outletMenu);
     outletMenu.classList.add(STATE_ACTIVE_CLASS);
     document.addEventListener('click', handleOutletOutsideClick);
+    outletKeyboardNav.reset();
   };
   const buildOutletMenuOptions = () => {
     outletMenu.innerHTML = '';
@@ -259,9 +278,12 @@ function buildBulkOutletControls({
       if (option.value === outletInput.value) optEl.classList.add(STATE_ACTIVE_CLASS);
       optEl.addEventListener('mousedown', (event) => {
         event.preventDefault();
-        outletInput.value = option.value;
-        localStorage.setItem(STORAGE_KEY_BULK_OUTLET, outletInput.value);
-        closeOutletMenu();
+        selectOutletOption(option.value);
+      });
+      // The keyboard path activates options with `.click()`. After a mouse
+      // pick the menu is already closed, so this never double-fires.
+      optEl.addEventListener('click', () => {
+        if (outletMenu.classList.contains(STATE_ACTIVE_CLASS)) selectOutletOption(option.value);
       });
       fragment.append(optEl);
     }
@@ -286,7 +308,23 @@ function buildBulkOutletControls({
   outletMenu[MULTISELECT_DROPDOWN_CLOSE_HANDLER] = closeOutletMenu;
   outletMenu.addEventListener('click', (event) => event.stopPropagation());
 
+  // This popup is a combobox, not a menu: it is anchored to a text input and
+  // opens on focus. So it gets the shared arrow-key navigation but neither the
+  // Tab trap (which would make the input impossible to Tab out of) nor the
+  // `menu`/`menuitemcheckbox` roles (which would misdescribe it). See 03b.
+  const outletKeyboardNav = wireMultiselectDropdownKeyboardNavigation(outletMenu, {
+    getSearchInput: () => outletInput,
+    isOpen: () => outletMenu.classList.contains(STATE_ACTIVE_CLASS),
+    trapTab: false,
+    applyRoles: false,
+  });
+  outletInput.addEventListener('keydown', outletKeyboardNav.handleKeydown);
+
   outletInput.addEventListener('focus', () => {
+    if (suppressNextFocusOpen) {
+      suppressNextFocusOpen = false;
+      return;
+    }
     buildOutletMenuOptions();
     if (outletMenu.children.length > 0) openOutletMenu();
   });
@@ -318,8 +356,9 @@ function buildBulkOutletControls({
         saveWorldInfo,
         buildSavePayload,
         applyButton: applyOutlet,
-        perTargetUpdate: ({ tr, entryData }) => {
+        perTargetUpdate: ({ tr, bookName, entryData }) => {
           entryData.outletName = value;
+          mirrorEntryFieldsToOriginalData(cache[bookName], entryData, ['outletName']);
           const rowOutlet = tr.querySelector('[name="outletName"]');
           if (rowOutlet) rowOutlet.value = value;
         },

@@ -47,8 +47,9 @@ const normalizeRegistry = (folders) => {
   for (const entry of folders) {
     const { normalized: folderName, isValid } = validateFolderName(entry);
     if (!isValid || !folderName) continue;
-    if (seen.has(folderName)) continue;
-    seen.add(folderName);
+    const seenKey = folderName.toLowerCase();
+    if (seen.has(seenKey)) continue;
+    seen.add(seenKey);
     normalized.push(folderName);
   }
   return normalized;
@@ -69,11 +70,13 @@ const registerFolderName = (folderName) => {
     return { ok: false, folder: null, reason: 'invalid' };
   }
   const registry = getFolderRegistry();
-  if (!registry.includes(normalized)) {
-    registry.push(normalized);
-    registry.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    saveFolderRegistry(registry);
+  const isDuplicate = registry.some((entry) => entry.toLowerCase() === normalized.toLowerCase());
+  if (isDuplicate) {
+    return { ok: false, folder: null, reason: 'duplicate' };
   }
+  registry.push(normalized);
+  registry.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  saveFolderRegistry(registry);
   return { ok: true, folder: normalized };
 };
 

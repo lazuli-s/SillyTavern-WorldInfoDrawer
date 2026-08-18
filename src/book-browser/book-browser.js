@@ -33,6 +33,9 @@ import { createBooksViewSlice } from './book-list/book-list.books-view.js';
 
 const EXPANDED_CHEVRON_CLASS = 'fa-chevron-up';
 const COLLAPSED_CHEVRON_CLASS = 'fa-chevron-down';
+// How many consecutive list refreshes `waitForListRefreshIdle` will sit through
+// before giving up. See the comment on that function for why giving up is safe.
+const MAX_LIST_REFRESH_WAITS = 5;
 
 const CORE_UI_SELECTORS = Object.freeze({
   importFileInput: '#world_import_file',
@@ -499,6 +502,48 @@ const refreshList = async () => {
   }
 };
 
+// Resolves once no full list refresh is running.
+//
+// A refresh is a two-step teardown/rebuild: `clearCacheBooks` empties
+// `state.cache` while every row is still on screen, then `loadList` clears the
+// root container and re-renders, yielding to the browser as it goes. Any other
+// render path that runs inside that window reads the emptied cache as "nothing
+// is rendered" and renders a second copy of each book — which is exactly what
+// the WORLDINFO_UPDATED handler's `renderMissingBooks` did (verified in the
+// browser 14-08-2026: one drag-into-folder logged `[UPDATE-WI]` 193ms before
+// loadList's clear and left 19 books rendered as 26 rows). Waiting here keeps
+// the two paths strictly sequential; by the time this resolves the cache has
+// been rebuilt from disk, so the incremental path finds nothing to do.
+//
+// Safe to await from the WORLDINFO_UPDATED handler: no refresh path waits on a
+// World Info update, so this cannot deadlock against one.
+//
+// It is also bounded, for the case deadlock analysis does not cover: refreshes
+// arriving back to back faster than they finish would otherwise hold the
+// handler here indefinitely, with `isWIUpdateInProgress` stuck true and
+// everything awaiting `updateWIChangeFinished` stuck with it. Giving up after
+// MAX_LIST_REFRESH_WAITS is safe because this is an ordering guarantee, not the
+// correctness guarantee — `renderBook` drops a book's previous row before
+// caching a new one, so a handler that runs anyway still cannot duplicate rows.
+const waitForListRefreshIdle = async () => {
+  for (let waits = 0; waits < MAX_LIST_REFRESH_WAITS; waits += 1) {
+    const pendingRefresh = refreshWorkerPromise;
+    if (!pendingRefresh) return;
+    try {
+      await pendingRefresh;
+    } catch {
+      // A failed refresh is its own caller's to report. All this waiter needs
+      // to know is that the list has stopped being rebuilt.
+    }
+    // `runRefreshWorker` clears the field in a `finally`, so normally it is
+    // already null or holds a newer refresh by now. If it still holds the one
+    // just awaited, the worker rejected before that `finally` could run and the
+    // field will never clear — stop rather than re-await a settled promise
+    // forever.
+    if (refreshWorkerPromise === pendingRefresh) return;
+  }
+};
+
 const isBookDomFilteredOut = (bookRoot) =>
   bookRoot.classList.contains('stwid--filter-query') ||
   bookRoot.classList.contains('stwid--filter-visibility');
@@ -675,6 +720,7 @@ const initBookBrowser = (options) => {
 
   listPanelState.folderMenuActions = {
     Popup: state.Popup,
+    POPUP_RESULT: state.POPUP_RESULT,
     buildSavePayload: state.buildSavePayload,
     cache: state.cache,
     createBookInFolder: (folderName) =>
@@ -710,4 +756,4 @@ const initBookBrowser = (options) => {
   return getListPanelApi();
 };
 
-export { initBookBrowser, refreshList };
+export { initBookBrowser, refreshList, waitForListRefreshIdle };

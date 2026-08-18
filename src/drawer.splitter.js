@@ -1,6 +1,6 @@
 // COMPAT-01 exception: SillyTavern.getContext() does not expose debounce, so this
-// module intentionally imports the host utility directly from the most specific path.
-import { debounce } from '../../../../utils.js';
+// module intentionally imports the host utility directly (via the shared adapter).
+import { debounce } from './shared/st-host.js';
 
 const DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--splitter-size';
 const LEGACY_DESKTOP_SPLITTER_STORAGE_KEY = 'stwid--list-width';

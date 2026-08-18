@@ -1,19 +1,82 @@
-import { debounce, delay } from '../../../../../utils.js';
 import {
+  debounce,
+  delay,
   loadWorldInfo,
   saveWorldInfo,
   selected_world_info,
   world_names,
-} from '../../../../../world-info.js';
+} from './st-host.js';
 import { Settings } from './settings.js';
-import { refreshList } from '../book-browser/book-browser.js';
+import { mirrorRawBookFieldsToOriginalData } from './original-data.js';
+import { registerBookReloadHooks } from './book-reload.js';
 import { cloneMetadata, getSortFromMetadata, sortEntries } from './sort-helpers.js';
-import { entryState, renderEntry } from '../book-browser/book-list/book-list.world-entry.js';
 import { createDeferred } from './utils.js';
 
 const LOG_PREFIX = '[STWID]';
 const EDITOR_ROOT_SELECTOR = '.stwid--editor';
 const EDITOR_DUPLICATE_REFRESH_TIMEOUT_MS = 15000;
+
+// wi-update-handler lives in src/shared/ and must not import feature modules
+// directly (that would invert the shared -> feature dependency direction and
+// risk circular imports). Instead, the Book Browser's `refreshList`/`renderEntry`
+// and the entry row's `entryState` are injected once at startup via
+// registerUiRefreshHooks(), called from index.js before any WORLDINFO_UPDATED
+// event can reach this module. Calls before registration warn and no-op instead
+// of throwing.
+let uiRefreshHooks = null;
+
+export const registerUiRefreshHooks = ({
+  refreshList,
+  renderEntry,
+  entryState,
+  waitForListRefreshIdle,
+}) => {
+  uiRefreshHooks = { refreshList, renderEntry, entryState, waitForListRefreshIdle };
+};
+
+const callRefreshList = async () => {
+  if (!uiRefreshHooks?.refreshList) {
+    console.warn(LOG_PREFIX, 'UI refresh hooks not registered yet; skipping refreshList().');
+    return;
+  }
+  await uiRefreshHooks.refreshList();
+};
+
+// Book-level reconciliation below decides "is this book on screen?" purely from
+// `cache`. A full list refresh empties that cache while the rows are still
+// attached, so reconciling inside one appends a duplicate row for every book.
+// Waiting the refresh out costs nothing: it rebuilds the cache from disk, which
+// is a superset of what this handler would have done.
+//
+// Without the hook the handler still runs — `renderBook` drops a book's
+// previous row before caching a new one, so the rows stay correct — but the
+// ordering guarantee is gone, so say so rather than degrade silently.
+const callWaitForListRefreshIdle = async () => {
+  if (!uiRefreshHooks?.waitForListRefreshIdle) {
+    console.warn(
+      LOG_PREFIX,
+      'UI refresh hooks not registered yet; reconciling without waiting for a list refresh.',
+    );
+    return;
+  }
+  await uiRefreshHooks.waitForListRefreshIdle();
+};
+
+const callRenderEntry = async (worldEntry, name, before) => {
+  if (!uiRefreshHooks?.renderEntry) {
+    console.warn(LOG_PREFIX, 'UI refresh hooks not registered yet; skipping renderEntry().');
+    return;
+  }
+  await uiRefreshHooks.renderEntry(worldEntry, name, before);
+};
+
+const callEntryState = (entry) => {
+  if (!uiRefreshHooks?.entryState) {
+    console.warn(LOG_PREFIX, 'UI refresh hooks not registered yet; skipping entryState().');
+    return 'normal';
+  }
+  return uiRefreshHooks.entryState(entry);
+};
 
 const maybeTriggerEditorRefreshForField = ({
   isCurrentEditor,
@@ -137,7 +200,7 @@ const applyEntryFieldDiff = ({
         if (hasChange && currentEntryIsOpen) {
           triggerEditorRefreshOnce();
         }
-        cache[bookName].dom.entry[entryUid].strategy.value = entryState(updatedEntry);
+        cache[bookName].dom.entry[entryUid].strategy.value = callEntryState(updatedEntry);
         break;
       }
       default: {
@@ -243,7 +306,7 @@ const syncBookEntriesAndDom = async ({
       const beforeRoot = anchorEntry
         ? (cache[bookName].dom.entry[anchorEntry.uid]?.root ?? null)
         : null;
-      await renderEntry(entryToInsert, bookName, beforeRoot);
+      await callRenderEntry(entryToInsert, bookName, beforeRoot);
     }
   }
 
@@ -439,6 +502,8 @@ export const initWIUpdateHandler = ({
     updateWIChangeStarted.resolve();
 
     try {
+      await callWaitForListRefreshIdle();
+
       const listPanelApi = getListPanelApi();
       const editorPanelApi = getEditorPanelApi();
 
@@ -475,6 +540,22 @@ export const initWIUpdateHandler = ({
 
   const updateWIChangeDebounced = debounce(updateWIChange);
 
+  // Reconciling a book read back from disk is exactly what updateWIChange does
+  // for a book the host reports as changed, so `book-reload.js` reuses it
+  // rather than growing a second cache-sync path. Undebounced on purpose: the
+  // caller awaits this before re-rendering the table and before telling the
+  // user what the table now shows, and the debounced variant would neither
+  // finish in time nor keep this book's data (last call wins).
+  //
+  // TRADE-OFF: a partly-failed bulk save emits WORLDINFO_UPDATED for the books
+  // that *did* save, so a debounced cycle can be in flight while this direct
+  // one runs; the two share `updateWIChangeFinished`/`updateWIChangeStarted`,
+  // so a `waitForWorldInfoUpdate` caller can resolve against the wrong cycle.
+  // Only reachable on the save-failure path, and preferable to a table that
+  // keeps showing unsaved values — but it is a real overlap, not a proof of
+  // safety.
+  registerBookReloadHooks({ reconcileBook: updateWIChange });
+
   const { waitForWorldInfoUpdate, waitForWorldInfoUpdateWithTimeout } = createWorldInfoUpdateWaiter(
     {
       waitDelay: delay,
@@ -495,7 +576,7 @@ export const initWIUpdateHandler = ({
 
   const { queueEditorDuplicateRefresh } = createEditorDuplicateRefreshWorker({
     getCurrentEditor,
-    refreshBookList: refreshList,
+    refreshBookList: callRefreshList,
     reopenEditorEntry,
     waitForWorldInfoUpdate,
     waitForWorldInfoUpdateWithTimeout,
@@ -515,6 +596,7 @@ export const initWIUpdateHandler = ({
         : [];
       if (keywords.length === 0) continue;
       entry.comment = keywords.join(', ');
+      mirrorRawBookFieldsToOriginalData(data, entry, ['comment']);
       hasUpdates = true;
     }
     if (!hasUpdates) return;

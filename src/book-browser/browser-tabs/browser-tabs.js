@@ -6,10 +6,11 @@ import {
 } from './browser-tabs.visibility-tab.js';
 import { mountSortingTabContent } from './browser-tabs.sorting-tab.js';
 import { Settings } from '../../shared/settings.js';
+import {
+  closeOpenMultiselectDropdownMenus,
+  setMultiselectDropdownOptionCheckboxState,
+} from '../../shared/multiselect-dropdown.js';
 
-const MULTISELECT_DROPDOWN_CLOSE_HANDLER = 'stwidCloseMultiselectDropdownMenu';
-const CSS_STATE_ACTIVE = 'stwid--state-active';
-const CSS_MULTISELECT_DROPDOWN_BUTTON = 'stwid--multiselect-dropdown__button';
 const CSS_VISIBILITY_CHIP = 'stwid--visibility-chip';
 const TAB_IDS = Object.freeze({
   SETTINGS: 'settings',
@@ -20,28 +21,6 @@ const TAB_IDS = Object.freeze({
   SEARCH: 'search',
 });
 const KNOWN_TAB_IDS = Object.freeze(Object.values(TAB_IDS));
-
-const setMultiselectDropdownOptionCheckboxState = (checkbox, isChecked) => {
-  if (!checkbox) return;
-  checkbox.classList.toggle('fa-square-check', Boolean(isChecked));
-  checkbox.classList.toggle('fa-square', !isChecked);
-};
-
-const closeOpenMultiselectDropdownMenus = (excludeMenu = null) => {
-  for (const menu of document.querySelectorAll(
-    `.stwid--multiselect-dropdown__menu.${CSS_STATE_ACTIVE}`,
-  )) {
-    if (menu === excludeMenu) continue;
-    const closeMenu = menu[MULTISELECT_DROPDOWN_CLOSE_HANDLER];
-    if (typeof closeMenu === 'function') {
-      closeMenu();
-      continue;
-    }
-    menu.classList.remove(CSS_STATE_ACTIVE);
-    const trigger = menu.parentElement?.querySelector(`.${CSS_MULTISELECT_DROPDOWN_BUTTON}`);
-    trigger?.setAttribute('aria-expanded', 'false');
-  }
-};
 
 const ensureValidBookVisibilityMode = (listPanelState) => {
   if (!Object.values(BOOK_VISIBILITY_MODES).includes(listPanelState.bookVisibilityMode)) {

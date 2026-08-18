@@ -39,6 +39,12 @@ export const SORT_DIRECTION = {
   DESCENDING: 'descending',
 };
 
+// R7 — the AND semantics and the group-chat caveat are not discoverable anywhere else.
+export const CHARACTER_FILTER_COLUMN_TOOLTIP =
+  'Characters and tags are two separate conditions and BOTH must pass. ' +
+  'Filtering to character Alice and tag Villain fires only when Alice is active AND Alice carries that tag. ' +
+  '--- The tag condition does not apply in group chats.';
+
 export const ENTRY_MANAGER_TOGGLE_COLUMNS = [
   { key: 'strategy', label: 'Strategy' },
   { key: ENTRY_FIELD_KEYS.POSITION, label: 'Position' },
@@ -53,7 +59,13 @@ export const ENTRY_MANAGER_TOGGLE_COLUMNS = [
   { key: ENTRY_FIELD_KEYS.TRIGGER, label: 'Trigger %' },
   { key: 'recursion', label: 'Recursion' },
   { key: 'budget', label: 'Budget' },
-  { key: 'characterFilter', label: 'Character Filter' },
+  // The key stays `characterFilter`: it is persisted in each user's column-visibility
+  // settings, so renaming it would reset everyone's toggles (R1).
+  {
+    key: 'characterFilter',
+    label: 'Filter to Characters or Tags',
+    tooltip: CHARACTER_FILTER_COLUMN_TOOLTIP,
+  },
 ];
 
 export const ENTRY_MANAGER_TABLE_COLUMNS = [

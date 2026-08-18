@@ -1,6 +1,10 @@
-import { debounce, getCharaFilename } from '../../../../../../utils.js';
-
-import { METADATA_KEY, world_info, world_names } from '../../../../../../world-info.js';
+import {
+  debounce,
+  getCharaFilename,
+  METADATA_KEY,
+  world_info,
+  world_names,
+} from '../../shared/st-host.js';
 
 const SOURCE_ICON_LOG_PREFIX = '[STWID][SOURCE_ICONS]';
 const EMPTY_BOOK_SOURCE_LINKS = Object.freeze({

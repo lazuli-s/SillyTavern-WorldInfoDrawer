@@ -1,5 +1,6 @@
 import { setTooltip } from '../entry-manager.utils.js';
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
+import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
 import {
   BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
@@ -53,6 +54,7 @@ function createRunApplyOrder({
         const { tr: entryRowEl, bookName, entryData } = targets[i];
         books.add(bookName);
         entryData.order = order;
+        mirrorEntryFieldsToOriginalData(cache[bookName], entryData, ['order']);
         const orderInput = entryRowEl.querySelector('[name="order"]');
         if (orderInput) {
           orderInput.value = order.toString();
@@ -60,8 +62,9 @@ function createRunApplyOrder({
         order += stepValue;
         await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
       }
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyButton.classList.remove(APPLY_DIRTY_CLASS);
+      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyButton.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 }

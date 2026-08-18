@@ -1,6 +1,8 @@
 import { setTooltip } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
+import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
+import { reloadBooksFromDisk } from '../../shared/book-reload.js';
 
 export const BULK_APPLY_BATCH_SIZE = 200;
 export const APPLY_DIRTY_CLASS = 'stwid--apply-dirty';
@@ -147,10 +149,72 @@ export function getBulkTargets(rows, cache, isEntryManagerRowSelected, { reverse
   return targets;
 }
 
-export async function saveUpdatedBooks(books, saveWorldInfo, buildSavePayload) {
+/**
+ * Writes every book a bulk edit touched, one at a time.
+ *
+ * A book that fails to save does not stop the others: all of them are
+ * attempted, the failures are named to the user through `toastr`, and each
+ * failed book is reloaded from disk so the table stops showing a change that
+ * never reached it. Books that saved keep their changes — there is no rollback.
+ *
+ * KNOWN LIMIT (host behaviour, read 15-08-2026 in
+ * vendor/SillyTavern/public/scripts/world-info.js `_save`): the host posts to
+ * /api/worldinfo/edit and never checks `response.ok`, so `saveWorldInfo` only
+ * rejects when the request itself fails (server unreachable, connection lost,
+ * request aborted). A save the server *answers* with 4xx/5xx resolves as if it
+ * had worked, and nothing below can see it. Catching that class of failure
+ * needs a decision this ticket does not own — re-reading each book after a save
+ * to confirm it, or a host change — so it is recorded here rather than papered
+ * over: a bulk save can still report success on a server-rejected write.
+ *
+ * @param {Iterable<string>} books - Book names to save.
+ * @param {Function} saveWorldInfo - The host's `saveWorldInfo`.
+ * @param {Function} buildSavePayload - Builds one book's save payload from the cache.
+ * @param {object} [deps] - Test seam; production callers pass nothing.
+ * @param {Function} [deps.reloadBooks] - Defaults to `reloadBooksFromDisk`.
+ * @returns {Promise<{failedBooks: string[]}>}
+ */
+export async function saveUpdatedBooks(
+  books,
+  saveWorldInfo,
+  buildSavePayload,
+  { reloadBooks = reloadBooksFromDisk } = {},
+) {
+  const failedBooks = [];
   for (const bookName of books) {
-    await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+    try {
+      await saveWorldInfo(bookName, buildSavePayload(bookName), true);
+    } catch (error) {
+      console.error(`STWID: failed to save book "${bookName}".`, error);
+      failedBooks.push(bookName);
+    }
   }
+
+  if (failedBooks.length > 0) {
+    // Reload first, then report what actually happened. Announcing "reloaded"
+    // before the reload would state the table is showing the truth even when
+    // the reload itself failed and it is still showing the rejected change.
+    let reloadedBooks = [];
+    try {
+      reloadedBooks = (await reloadBooks(failedBooks)) ?? [];
+    } catch (error) {
+      console.error('STWID: failed to reload books after a failed bulk save.', error);
+    }
+
+    const bookList = failedBooks.map((bookName) => `"${bookName}"`).join(', ');
+    const allReloaded = reloadedBooks.length === failedBooks.length;
+    toastr.error(
+      allReloaded
+        ? `Failed to save ${bookList}. Reloaded from disk — changes to ${
+            failedBooks.length === 1 ? 'that book' : 'those books'
+          } were lost.`
+        : `Failed to save ${bookList}, and could not reload ${
+            failedBooks.length === 1 ? 'it' : 'them'
+          } from disk. The table may still show changes that were never saved.`,
+    );
+  }
+
+  return { failedBooks };
 }
 
 function setApplyButtonBusy(button, isBusy) {
@@ -231,17 +295,15 @@ export async function runApplyNonNegativeIntegerField({
       const { tr, bookName, entryData } = targets[i];
       books.add(bookName);
       entryData[entryField] = parsedValue;
+      mirrorEntryFieldsToOriginalData(cache[bookName], entryData, [entryField]);
       const rowInput = tr.querySelector(`[name="${rowInputName}"]`);
       if (rowInput) rowInput.value = String(parsedValue);
       await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
     }
-    try {
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyButton.classList.remove(APPLY_DIRTY_CLASS);
-    } catch (error) {
-      console.error('Failed to save bulk non-negative integer field.', error);
-      toastr.error('Failed to save bulk changes.');
-    }
+    // saveUpdatedBooks reports and reloads its own failures; it does not throw.
+    const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+    // Leave the row marked dirty when a book did not save, so the user can retry.
+    if (failedBooks.length === 0) applyButton.classList.remove(APPLY_DIRTY_CLASS);
   });
 }
 
@@ -254,3 +316,6 @@ export function applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCh
     recursionInputIndex++;
   }
 }
+
+/** The camelCase entry fields `applyRecursionFlagsToRowInputs` writes. */
+export const RECURSION_ENTRY_FIELDS = ENTRY_MANAGER_RECURSION_OPTIONS.map((o) => o.value);

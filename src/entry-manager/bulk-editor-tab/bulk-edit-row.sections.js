@@ -1,6 +1,7 @@
 import { setTooltip } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
+import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
 import {
   BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
@@ -15,6 +16,7 @@ import {
   runApplyNonNegativeIntegerField,
   buildRecursionCheckboxRow,
   applyRecursionFlagsToRowInputs,
+  RECURSION_ENTRY_FIELDS,
 } from './bulk-edit-row.helpers.js';
 
 const RECURSION_OPTIONS_CLASS = 'stwid--recursion-options';
@@ -114,6 +116,7 @@ async function applyBulkActiveStateToTargets({ targets, cache, willDisable }) {
     const { tr, bookName, uid, entryData } = targets[i];
     books.add(bookName);
     entryData.disable = willDisable;
+    mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['disable']);
     syncActiveStateToggles({ tr, cache, bookName, uid, willDisable });
     await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
   }
@@ -148,6 +151,7 @@ function buildBulkStrategySelect(getStrategyOptions) {
 function applyStrategyToSingleTarget({ tr, cache, bookName, uid, entryData, value }) {
   entryData.constant = value === 'constant';
   entryData.vectorized = value === 'vectorized';
+  mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['constant', 'vectorized']);
   const rowStrategyInput = tr.querySelector('[name="entryStateSelector"]');
   if (rowStrategyInput) rowStrategyInput.value = value;
   const listStrategyInput = cache?.[bookName]?.dom?.entry?.[uid]?.strategy;
@@ -171,12 +175,13 @@ async function applyBulkStrategyToTargets({
   return books;
 }
 
-export async function applyBulkProbabilityToTargets({ targets, parsed }) {
+export async function applyBulkProbabilityToTargets({ targets, cache, parsed }) {
   const books = new Set();
   for (let i = 0; i < targets.length; i++) {
     const { tr, bookName, entryData } = targets[i];
     books.add(bookName);
     entryData.probability = parsed;
+    mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['probability']);
     const rowProbabilityInput = tr.querySelector('[name="selective_probability"]');
     if (rowProbabilityInput) rowProbabilityInput.value = String(parsed);
     await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
@@ -296,9 +301,10 @@ export function buildBulkProbabilitySection({
       const rows = getSafeTbodyRows(dom);
       if (!rows) return;
       const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-      const books = await applyBulkProbabilityToTargets({ targets, parsed });
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyProbability.classList.remove(APPLY_DIRTY_CLASS);
+      const books = await applyBulkProbabilityToTargets({ targets, cache, parsed });
+      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyProbability.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 
@@ -419,8 +425,9 @@ export function buildBulkStateSection({
       const willDisable = activeToggle.classList.contains(TOGGLE_OFF_CLASS);
       const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
       const books = await applyBulkActiveStateToTargets({ targets, cache, willDisable });
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyActiveState.classList.remove(APPLY_DIRTY_CLASS);
+      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyActiveState.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 
@@ -470,8 +477,9 @@ export function buildBulkStrategySection({
         value,
         applyEntryManagerStrategyFilterToRow,
       });
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyStrategy.classList.remove(APPLY_DIRTY_CLASS);
+      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyStrategy.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 
@@ -521,11 +529,13 @@ export function buildBulkRecursionSection({
           `[data-col="recursion"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
         );
         applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes);
+        mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, RECURSION_ENTRY_FIELDS);
         applyEntryManagerRecursionFilterToRow(tr, entryData);
         await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
       }
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
+      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 
@@ -581,14 +591,16 @@ export function buildBulkBudgetSection({
         const { tr, bookName, entryData } = targets[i];
         books.add(bookName);
         entryData.ignoreBudget = checked;
+        mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['ignoreBudget']);
         const domInput = tr.querySelector(
           `[data-col="budget"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
         );
         if (domInput) domInput.checked = checked;
         await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
       }
-      await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      applyBudget.classList.remove(APPLY_DIRTY_CLASS);
+      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+      // Leave the row marked dirty when a book did not save, so the user can retry.
+      if (failedBooks.length === 0) applyBudget.classList.remove(APPLY_DIRTY_CLASS);
     });
   };
 

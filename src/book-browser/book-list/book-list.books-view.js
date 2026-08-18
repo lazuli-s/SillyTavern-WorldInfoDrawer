@@ -59,6 +59,20 @@ const createBooksViewSlice = ({
       entryList: undefined,
       entry: {},
     };
+    // Assigning over the cache entry orphans whatever row the previous render
+    // of this book left on screen: `runtime.cache` is the only handle anything
+    // has on that node, so nothing would ever remove it and the book would show
+    // twice. Two render paths reach this line — `loadList` and the
+    // WORLDINFO_UPDATED handler's `renderMissingBooks` — and a full refresh
+    // empties the cache while the rows stay attached, so they genuinely do
+    // overlap (verified in the browser 14-08-2026: one drag-into-folder
+    // rendered 19 books as 26 rows).
+    //
+    // Hand the node back rather than removing it here: renderBook can still
+    // abort part-way (see its cache-identity guard) and must not leave the book
+    // with no row at all. The caller drops it at insert time instead, so the
+    // old row only ever goes away once a new one is ready to take its place.
+    const previousRoot = runtime.cache[bookName]?.dom?.root ?? null;
     runtime.cache[bookName] = world;
     setCacheMetadata(bookName, data.metadata);
 
@@ -71,7 +85,7 @@ const createBooksViewSlice = ({
       }
     }
 
-    return { world, targetParent };
+    return { previousRoot, world, targetParent };
   };
 
   const resolveFailedEntrySave = async (editorOpened, bookName, rollbackOptimisticEntry) => {
@@ -323,7 +337,7 @@ const createBooksViewSlice = ({
     if (!cachedBookState) {
       return null;
     }
-    const { world, targetParent } = cachedBookState;
+    const { previousRoot, world, targetParent } = cachedBookState;
     const book = document.createElement('div');
     world.dom.root = book;
     book.classList.add('stwid--book');
@@ -365,6 +379,11 @@ const createBooksViewSlice = ({
     setBookCollapsed(name, initialCollapsed);
     book.append(entryList);
 
+    // Swap, don't append: this render superseded whatever row the last one left
+    // behind, and that row is unreachable from the cache now. Removing it only
+    // here means every early return above leaves the old row on screen rather
+    // than leaving the book with none.
+    previousRoot?.remove();
     insertBookInAlphabeticalOrder(name, book, targetParent, before);
 
     return book;

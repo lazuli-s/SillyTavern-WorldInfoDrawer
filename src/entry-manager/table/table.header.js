@@ -1,12 +1,13 @@
 import {
   createMultiselectDropdownCheckbox,
   wireMultiselectDropdown,
-} from '../entry-manager.utils.js';
+} from '../../shared/multiselect-dropdown.js';
 import {
   ENTRY_MANAGER_TABLE_COLUMNS,
   ENTRY_MANAGER_NUMBER_COLUMN_KEYS,
   ENTRY_MANAGER_RECURSION_OPTIONS,
 } from '../../shared/constants.js';
+import { setTooltip } from '../entry-manager.utils.js';
 
 const ACTIVE_FILTER_CLASS = 'stwid--state-active';
 // Outlet/automationId/group option counts scale with the number of distinct
@@ -56,7 +57,7 @@ function applyFiltersAndNotify({ updateFilterIndicator, applyFilters, onFilterCh
   onFilterChange();
 }
 
-function createFilterMenuShell() {
+function createFilterMenuShell(columnLabel = '') {
   const menuWrap = document.createElement('div');
   menuWrap.classList.add('stwid--multiselect-dropdown__wrap');
 
@@ -69,6 +70,9 @@ function createFilterMenuShell() {
     'stwid--order-filter-button',
     'stwid--multiselect-dropdown__button',
   );
+  // Icon-only control: it has no text to name it (ACC-04).
+  const triggerName = columnLabel ? `Filter by ${columnLabel}` : 'Filter column';
+  menuButton.setAttribute('aria-label', triggerName);
   menuWrap.append(menuButton);
 
   const menu = document.createElement('div');
@@ -168,7 +172,12 @@ function buildShowAllOptionsButton({ hiddenCount, onShowAll }) {
   showAll.type = 'button';
   showAll.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
   const icon = document.createElement('i');
-  icon.classList.add('fa-solid', 'fa-fw', 'fa-ellipsis', 'stwid--multiselect-dropdown__option-icon');
+  icon.classList.add(
+    'fa-solid',
+    'fa-fw',
+    'fa-ellipsis',
+    'stwid--multiselect-dropdown__option-icon',
+  );
   const label = document.createElement('span');
   label.textContent = `Show all (${hiddenCount} more)`;
   showAll.append(icon, label);
@@ -233,8 +242,9 @@ function buildFilterMenu({
   onFilterChange,
   entryManagerState,
   capOptions,
+  columnLabel,
 }) {
-  const { menuWrap, menuButton, menu } = createFilterMenuShell();
+  const { menuWrap, menuButton, menu } = createFilterMenuShell(columnLabel);
   const { updateFilterIndicator, updateFilters } = createFilterMenuUpdaters({
     stateKey,
     stateValuesKey,
@@ -267,7 +277,11 @@ function buildFilterColumnHeader(label, menuConfig, entryManagerState) {
   header.append(headerTitle);
   const filterWrap = document.createElement('div');
   filterWrap.classList.add('stwid--column-filter');
-  const { menuWrap, updateFilterIndicator } = buildFilterMenu({ ...menuConfig, entryManagerState });
+  const { menuWrap, updateFilterIndicator } = buildFilterMenu({
+    ...menuConfig,
+    columnLabel: label,
+    entryManagerState,
+  });
   filterWrap.append(menuWrap);
   header.append(filterWrap);
   return { header, updateFilterIndicator };
@@ -372,6 +386,7 @@ export function buildTableHeader({
         } else {
           headerCell.textContent = col.label;
         }
+        if (col.tooltip) setTooltip(headerCell, col.tooltip);
         if (col.key) {
           headerCell.setAttribute('data-col', col.key);
           if (ENTRY_MANAGER_NUMBER_COLUMN_KEYS.has(col.key)) {

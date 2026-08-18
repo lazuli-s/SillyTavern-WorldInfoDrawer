@@ -265,12 +265,30 @@ const entryManagerFolderAction = ({ folderName, menuActions }) => {
 const deleteFolderAction = async ({ folderName, menuActions }) => {
   const Popup = menuActions?.Popup;
   if (!Popup) return;
-  const shouldDeleteBooks = await Popup.show.confirm(
+  // POPUP_RESULT comes from the SillyTavern context, threaded down alongside
+  // Popup. Without it we cannot tell the three answers apart, so fail safe and
+  // touch nothing rather than guess at the destructive branch.
+  const POPUP_RESULT = menuActions?.POPUP_RESULT;
+  if (!POPUP_RESULT) {
+    console.warn('[STWID] POPUP_RESULT is unavailable; aborting folder delete.');
+    return;
+  }
+  const confirmResult = await Popup.show.confirm(
     `Delete folder: ${folderName}?`,
     'Choose what to do with the books in this folder.',
-    'Delete books',
-    'Move books out',
+    {
+      okButton: 'Move books out',
+      cancelButton: 'Cancel',
+      defaultResult: POPUP_RESULT.AFFIRMATIVE,
+      customButtons: [
+        { text: 'Delete books', result: POPUP_RESULT.CUSTOM1, appendAtEnd: true },
+      ],
+    },
   );
+  const shouldDeleteBooks = confirmResult === POPUP_RESULT.CUSTOM1;
+  const shouldMoveBooksOut = confirmResult === POPUP_RESULT.AFFIRMATIVE;
+  // Cancel and dismiss both land here: no folder removed, no book written.
+  if (!shouldDeleteBooks && !shouldMoveBooksOut) return;
   const bookNames = getFolderBookNames(menuActions.cache, folderName);
   let failedBookNames = [];
   if (shouldDeleteBooks) {
