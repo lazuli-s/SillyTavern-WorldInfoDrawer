@@ -44,11 +44,14 @@ export const buildEntryManagerTopRows = ({
   applyEntryManagerOutletFilters,
   applyEntryManagerAutomationIdFilters,
   applyEntryManagerGroupFilters,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
   getStrategyOptions,
   getPositionOptions,
   getOutletOptions,
   getAutomationIdOptions,
   getGroupOptions,
+  getCharacterFilterPickerOptions,
   getStrategyValues,
   getPositionValues,
   getOutletValues,
@@ -94,11 +97,14 @@ export const buildEntryManagerTopRows = ({
     applyEntryManagerOutletFilters,
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
     getStrategyOptions,
     getPositionOptions,
     getOutletOptions,
     getAutomationIdOptions,
     getGroupOptions,
+    getCharacterFilterPickerOptions,
     getStrategyValues,
     getPositionValues,
     getOutletValues,
@@ -258,6 +264,8 @@ export const buildEntryManagerTable = async ({
   applyEntryManagerOutletFilters,
   applyEntryManagerAutomationIdFilters,
   applyEntryManagerGroupFilters,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
   syncEntryManagerOutletFilters,
   syncEntryManagerAutomationIdFilters,
   syncEntryManagerGroupFilters,
@@ -284,6 +292,7 @@ export const buildEntryManagerTable = async ({
   getAutomationIdValues,
   getGroupOptions,
   getGroupValues,
+  getCharacterFilterPickerOptions,
   refreshDisplayToolbar,
   filterIndicatorRefs,
 }) => {
@@ -295,6 +304,8 @@ export const buildEntryManagerTable = async ({
     refreshOutletFilterIndicator,
     refreshAutomationIdFilterIndicator,
     refreshGroupFilterIndicator,
+    refreshCharacterFilterPresenceIndicator,
+    refreshCharacterFilterValueIndicator,
   } = buildTableHeader({
     entryManagerState,
     applyEntryManagerStrategyFilters,
@@ -318,6 +329,9 @@ export const buildEntryManagerTable = async ({
     getAutomationIdValues,
     getGroupOptions,
     getGroupValues,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
+    getCharacterFilterPickerOptions,
     onFilterChange: () => {
       refreshDisplayToolbar();
       refreshSelectionCount();
@@ -330,6 +344,8 @@ export const buildEntryManagerTable = async ({
   filterIndicatorRefs.outlet = refreshOutletFilterIndicator;
   filterIndicatorRefs.automationId = refreshAutomationIdFilterIndicator;
   filterIndicatorRefs.group = refreshGroupFilterIndicator;
+  filterIndicatorRefs.characterFilterPresence = refreshCharacterFilterPresenceIndicator;
+  filterIndicatorRefs.characterFilterValue = refreshCharacterFilterValueIndicator;
 
   const tbody = await buildTableBody({
     entries,
@@ -356,6 +372,8 @@ export const buildEntryManagerTable = async ({
     applyEntryManagerOutletFilters,
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
     syncEntryManagerOutletFilters,
     syncEntryManagerAutomationIdFilters,
     syncEntryManagerGroupFilters,

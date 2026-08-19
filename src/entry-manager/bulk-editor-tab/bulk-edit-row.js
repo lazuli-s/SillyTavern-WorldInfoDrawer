@@ -11,6 +11,7 @@ import {
   buildBulkRecursionSection,
   buildBulkBudgetSection,
 } from './bulk-edit-row.sections.js';
+import { buildBulkCharacterFilterSection } from './bulk-edit-row.character-filter.js';
 import { buildBulkPositionSection } from './bulk-edit-row.position.js';
 import { buildBulkOrderSection } from './bulk-edit-row.order.js';
 import { buildBulkUidSection } from './bulk-edit-row.uid.js';
@@ -111,6 +112,7 @@ function appendBulkEditSections(
   appendBulkSection(buildBulkStickySection);
   appendBulkSection(buildBulkCooldownSection);
   appendBulkSection(buildBulkDelaySection);
+  appendBulkSection(buildBulkCharacterFilterSection);
 
   return cleanup;
 }

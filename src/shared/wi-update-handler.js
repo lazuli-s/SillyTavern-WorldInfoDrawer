@@ -78,6 +78,20 @@ const callEntryState = (entry) => {
   return uiRefreshHooks.entryState(entry);
 };
 
+// E8/E8b — the Entry Manager's inline character/tag filter dropdown must close
+// when *someone else* changes the entry it is editing, and must not close for
+// the extension's own saves. There is no origin tracking in the codebase, so
+// "external" is decided by value (D17): the diff below already compares the
+// cached value — which the cell updates before it saves — against what the host
+// just reported, so a save of our own produces no diff and no notification,
+// while a genuine outside edit produces both. Injected the same way as the UI
+// refresh hooks, to keep `shared/` free of feature-folder imports.
+let characterFilterChangeHook = null;
+
+export const registerCharacterFilterChangeHook = (onExternalChange) => {
+  characterFilterChangeHook = typeof onExternalChange === 'function' ? onExternalChange : null;
+};
+
 const maybeTriggerEditorRefreshForField = ({
   isCurrentEditor,
   selector,
@@ -153,6 +167,13 @@ const applyEntryFieldDiff = ({
     if (areEntryFieldValuesEqual(oldValue, newValue)) continue;
 
     hasChange = true;
+    // Only reached when the value actually differs, which is exactly the
+    // "external change" test the inline filter dropdown needs (E8b). Fired
+    // here rather than from a `case`, so the field keeps the default branch's
+    // editor-refresh behaviour without a copy of it.
+    if (fieldName === 'characterFilter') {
+      characterFilterChangeHook?.(bookName, entryUid, updatedEntry);
+    }
     switch (fieldName) {
       case 'content': {
         maybeTriggerEditorRefreshForField({

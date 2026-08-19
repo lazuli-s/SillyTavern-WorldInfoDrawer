@@ -1,4 +1,5 @@
 import {
+  CHARACTER_FILTER_PRESENCE_VALUES,
   ENTRY_MANAGER_RECURSION_OPTIONS,
   ENTRY_MANAGER_TOGGLE_COLUMNS,
 } from '../../shared/constants.js';
@@ -139,6 +140,13 @@ const buildInitialEntryManagerState = ({
       outlet: [],
       automationId: [],
       group: [],
+      // R21 — both sides ticked means the toggle is off, the same "all selected
+      // is inactive" convention every filter above follows.
+      characterFilterPresence: [...CHARACTER_FILTER_PRESENCE_VALUES],
+      // R22 — inverted on purpose: *nothing* picked means the filter is off.
+      // Picking a character out of a roster of hundreds must not require
+      // unticking the other hundreds first.
+      characterFilterValue: [],
     },
     strategyValues,
     positionValues,
@@ -146,6 +154,7 @@ const buildInitialEntryManagerState = ({
     outletValues: [],
     automationIdValues: [],
     groupValues: [],
+    characterFilterPresenceValues: [...CHARACTER_FILTER_PRESENCE_VALUES],
   };
 };
 

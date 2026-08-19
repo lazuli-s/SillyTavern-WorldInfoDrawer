@@ -1,4 +1,5 @@
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
+import { closeOpenCharacterFilterDropdown } from './table.body.character-filter.js';
 
 const ROW_FILTER_KEY_SCRIPT = 'stwidFilterScript';
 const FILTER_STORAGE_KEY = 'stwid--order-filter';
@@ -108,6 +109,13 @@ function attachFilterScriptHandlers({
 
   const updateList = async () => {
     if (!isActive()) return;
+
+    // R14b — a filter run can hide the row an inline character/tag filter
+    // dropdown is attached to, and this is the one filter path that never goes
+    // through a dropdown of its own (the column filter menus close it for free,
+    // since only one multiselect menu may be open at a time). Closing writes
+    // nothing.
+    closeOpenCharacterFilterDropdown();
 
     const closure = new (await SlashCommandParser.getScope())();
     filterStack.push(closure);

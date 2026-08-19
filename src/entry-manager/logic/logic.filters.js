@@ -1,3 +1,9 @@
+import {
+  entryMatchesCharacterFilterValues,
+  getCharacterFilterPresenceValue,
+} from '../entry-manager.utils.js';
+import { CHARACTER_FILTER_PRESENCE_VALUES } from '../../shared/constants.js';
+
 const FILTER_DATASET_KEYS = {
   strategy: 'stwidFilterStrategy',
   position: 'stwidFilterPosition',
@@ -6,6 +12,10 @@ const FILTER_DATASET_KEYS = {
   automationId: 'stwidFilterAutomationId',
   group: 'stwidFilterGroup',
   script: 'stwidFilterScript',
+  // Ticket 08 — the column's two filters: has/hasn't any character/tag filter
+  // (R21) and "filter to a specific character or tag" (R22).
+  characterFilterPresence: 'stwidFilterCharacterFilterPresence',
+  characterFilterValue: 'stwidFilterCharacterFilterValue',
 };
 
 const normalizeAllowedFilters = (filters, allowedValues) => {
@@ -19,6 +29,7 @@ const createFilterNormalizers = ({
   getOutletValues,
   getAutomationIdValues,
   getGroupValues,
+  getCharacterFilterValueKeys,
 }) => {
   const normalizeStrategyFilters = (filters) =>
     normalizeAllowedFilters(filters, getStrategyValues());
@@ -28,6 +39,8 @@ const createFilterNormalizers = ({
   const normalizeAutomationIdFilters = (filters) =>
     normalizeAllowedFilters(filters, getAutomationIdValues());
   const normalizeGroupFilters = (filters) => normalizeAllowedFilters(filters, getGroupValues());
+  const normalizeCharacterFilterValueFilters = (filters) =>
+    normalizeAllowedFilters(filters, getCharacterFilterValueKeys());
 
   const normalizeGroupValuesForFilter = (groupValues) => {
     if (Array.isArray(groupValues)) {
@@ -44,6 +57,7 @@ const createFilterNormalizers = ({
     normalizeOutletFilters,
     normalizeAutomationIdFilters,
     normalizeGroupFilters,
+    normalizeCharacterFilterValueFilters,
     normalizeGroupValuesForFilter,
   };
 };
@@ -58,6 +72,10 @@ const createRowFilterStateHelpers = () => {
     const automationIdFiltered = row.dataset[FILTER_DATASET_KEYS.automationId] === 'true';
     const groupFiltered = row.dataset[FILTER_DATASET_KEYS.group] === 'true';
     const scriptFiltered = row.dataset[FILTER_DATASET_KEYS.script] === 'true';
+    const characterFilterPresenceFiltered =
+      row.dataset[FILTER_DATASET_KEYS.characterFilterPresence] === 'true';
+    const characterFilterValueFiltered =
+      row.dataset[FILTER_DATASET_KEYS.characterFilterValue] === 'true';
     row.classList.toggle(
       'stwid--state-filtered',
       strategyFiltered ||
@@ -66,7 +84,9 @@ const createRowFilterStateHelpers = () => {
         outletFiltered ||
         automationIdFiltered ||
         groupFiltered ||
-        scriptFiltered,
+        scriptFiltered ||
+        characterFilterPresenceFiltered ||
+        characterFilterValueFiltered,
     );
   };
 
@@ -208,8 +228,42 @@ const createRowFilterAppliers = ({
     setEntryManagerRowFilterState(row, FILTER_DATASET_KEYS.group, !matches);
   };
 
+  // R21 — a fixed two-value set, so it follows the recursion filter's shape:
+  // every value ticked means the toggle is off and no row is hidden.
+  const applyEntryManagerCharacterFilterPresenceFilterToRow = (
+    row,
+    entryData,
+    precomputed = null,
+  ) => {
+    const selected =
+      precomputed?.selectedFilters ?? entryManagerState.filters.characterFilterPresence ?? [];
+    if (selected.length === CHARACTER_FILTER_PRESENCE_VALUES.length) {
+      setEntryManagerRowFilterState(row, FILTER_DATASET_KEYS.characterFilterPresence, false);
+      return;
+    }
+    const allowed = precomputed?.allowed ?? new Set(selected);
+    setEntryManagerRowFilterState(
+      row,
+      FILTER_DATASET_KEYS.characterFilterPresence,
+      !allowed.has(getCharacterFilterPresenceValue(entryData)),
+    );
+  };
+
+  // R22 — inverted convention (see logic.state.js): nothing picked means off.
+  const applyEntryManagerCharacterFilterValueFilterToRow = (row, entryData, precomputed = null) => {
+    const allowed =
+      precomputed?.allowed ?? new Set(entryManagerState.filters.characterFilterValue ?? []);
+    setEntryManagerRowFilterState(
+      row,
+      FILTER_DATASET_KEYS.characterFilterValue,
+      !entryMatchesCharacterFilterValues(entryData, allowed),
+    );
+  };
+
   return {
     applySimpleSetFilterToRow,
+    applyEntryManagerCharacterFilterPresenceFilterToRow,
+    applyEntryManagerCharacterFilterValueFilterToRow,
     applyEntryManagerStrategyFilterToRow,
     applyEntryManagerPositionFilterToRow,
     applyEntryManagerRecursionFilterToRow,
@@ -223,6 +277,8 @@ const createBookFilterAppliers = ({
   dom,
   entryManagerState,
   getEntryManagerEntries,
+  applyEntryManagerCharacterFilterPresenceFilterToRow,
+  applyEntryManagerCharacterFilterValueFilterToRow,
   getStrategyValues,
   getPositionValues,
   getOutletValues,
@@ -320,8 +376,25 @@ const createBookFilterAppliers = ({
     });
   };
 
+  const applyEntryManagerCharacterFilterPresenceFilters = () => {
+    const selectedFilters = entryManagerState.filters.characterFilterPresence ?? [];
+    const precomputed = { selectedFilters, allowed: new Set(selectedFilters) };
+    forEachEntryRowInBook(entryManagerState.book, ({ entry, row }) => {
+      applyEntryManagerCharacterFilterPresenceFilterToRow(row, entry.data, precomputed);
+    });
+  };
+
+  const applyEntryManagerCharacterFilterValueFilters = () => {
+    const precomputed = { allowed: new Set(entryManagerState.filters.characterFilterValue ?? []) };
+    forEachEntryRowInBook(entryManagerState.book, ({ entry, row }) => {
+      applyEntryManagerCharacterFilterValueFilterToRow(row, entry.data, precomputed);
+    });
+  };
+
   return {
     forEachEntryRowInBook,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
     applyEntryManagerStrategyFilters,
     applyEntryManagerPositionFilters,
     applyEntryManagerRecursionFilters,
@@ -345,6 +418,7 @@ const createFilterSyncHelpers = ({
   normalizeOutletFilters,
   normalizeAutomationIdFilters,
   normalizeGroupFilters,
+  normalizeCharacterFilterValueFilters,
   setEntryManagerRowFilterState,
 }) => {
   const syncSelectableFilters = ({
@@ -457,8 +531,21 @@ const createFilterSyncHelpers = ({
     });
   };
 
+  // R22 — the offered values change with the roster and with the loaded entries,
+  // so a pick that is no longer offered is dropped. Nothing is ever auto-picked:
+  // an empty selection is this filter's "off" state, not a missing default.
+  const syncEntryManagerCharacterFilterValueFilters = () => {
+    const selected = entryManagerState.filters.characterFilterValue ?? [];
+    if (!selected.length) {
+      entryManagerState.filters.characterFilterValue = [];
+      return;
+    }
+    entryManagerState.filters.characterFilterValue = normalizeCharacterFilterValueFilters(selected);
+  };
+
   return {
     clearEntryManagerScriptFilters,
+    syncEntryManagerCharacterFilterValueFilters,
     syncSelectableFilters,
     syncEntryManagerStrategyFilters,
     syncEntryManagerPositionFilters,
@@ -481,6 +568,7 @@ const createEntryManagerFilters = ({
   getAutomationIdValue,
   getGroupValues,
   getGroupValue,
+  getCharacterFilterValueKeys,
 }) => {
   const {
     normalizeStrategyFilters,
@@ -488,6 +576,7 @@ const createEntryManagerFilters = ({
     normalizeOutletFilters,
     normalizeAutomationIdFilters,
     normalizeGroupFilters,
+    normalizeCharacterFilterValueFilters,
     normalizeGroupValuesForFilter,
   } = createFilterNormalizers({
     getStrategyValues,
@@ -495,6 +584,7 @@ const createEntryManagerFilters = ({
     getOutletValues,
     getAutomationIdValues,
     getGroupValues,
+    getCharacterFilterValueKeys,
   });
 
   const { setEntryManagerRowFilterState } = createRowFilterStateHelpers();
@@ -506,6 +596,8 @@ const createEntryManagerFilters = ({
     applyEntryManagerOutletFilterToRow,
     applyEntryManagerAutomationIdFilterToRow,
     applyEntryManagerGroupFilterToRow,
+    applyEntryManagerCharacterFilterPresenceFilterToRow,
+    applyEntryManagerCharacterFilterValueFilterToRow,
   } = createRowFilterAppliers({
     entryManagerState,
     entryState,
@@ -528,10 +620,14 @@ const createEntryManagerFilters = ({
     applyEntryManagerOutletFilters,
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
   } = createBookFilterAppliers({
     dom,
     entryManagerState,
     getEntryManagerEntries,
+    applyEntryManagerCharacterFilterPresenceFilterToRow,
+    applyEntryManagerCharacterFilterValueFilterToRow,
     getStrategyValues,
     getPositionValues,
     getOutletValues,
@@ -552,6 +648,7 @@ const createEntryManagerFilters = ({
     syncEntryManagerOutletFilters,
     syncEntryManagerAutomationIdFilters,
     syncEntryManagerGroupFilters,
+    syncEntryManagerCharacterFilterValueFilters,
   } = createFilterSyncHelpers({
     dom,
     entryManagerState,
@@ -566,10 +663,17 @@ const createEntryManagerFilters = ({
     normalizeOutletFilters,
     normalizeAutomationIdFilters,
     normalizeGroupFilters,
+    normalizeCharacterFilterValueFilters,
     setEntryManagerRowFilterState,
   });
 
   return {
+    applyEntryManagerCharacterFilterPresenceFilterToRow,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilterToRow,
+    applyEntryManagerCharacterFilterValueFilters,
+    normalizeCharacterFilterValueFilters,
+    syncEntryManagerCharacterFilterValueFilters,
     applyEntryManagerRecursionFilterToRow,
     applyEntryManagerRecursionFilters,
     applyEntryManagerPositionFilterToRow,

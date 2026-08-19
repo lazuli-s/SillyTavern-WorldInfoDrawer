@@ -72,10 +72,13 @@ const clickCoreUiAction = async (
     selectors.map((sel) => document.querySelector(sel)).find((el) => el instanceof HTMLElement);
 
   let actionButton;
-  const ok = await waitForDom(() => {
-    actionButton = findButton();
-    return Boolean(actionButton);
-  }, { timeoutMs });
+  const ok = await waitForDom(
+    () => {
+      actionButton = findButton();
+      return Boolean(actionButton);
+    },
+    { timeoutMs },
+  );
   if (!ok) return false;
   actionButton.click();
   return true;

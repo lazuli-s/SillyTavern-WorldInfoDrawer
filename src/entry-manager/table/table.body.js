@@ -71,6 +71,8 @@ export async function buildTableBody({
   applyEntryManagerOutletFilters,
   applyEntryManagerAutomationIdFilters,
   applyEntryManagerGroupFilters,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
   syncEntryManagerOutletFilters,
   syncEntryManagerAutomationIdFilters,
   syncEntryManagerGroupFilters,
@@ -145,6 +147,8 @@ export async function buildTableBody({
   applyEntryManagerOutletFilters();
   applyEntryManagerAutomationIdFilters();
   applyEntryManagerGroupFilters();
+  applyEntryManagerCharacterFilterPresenceFilters();
+  applyEntryManagerCharacterFilterValueFilters();
   updateEntryManagerSelectAllButton();
 
   return tbody;

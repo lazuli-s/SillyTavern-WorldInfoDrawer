@@ -114,10 +114,21 @@ export function buildRecursionCheckboxRow(value, label, recursionCheckboxes) {
   return recursionRow;
 }
 
-export function getSafeTbodyRows(entryManagerDom) {
+/**
+ * The table's row elements, or `null` when the table is not built yet.
+ *
+ * @param {object} entryManagerDom
+ * @param {object} [options]
+ * @param {boolean} [options.warn] Tell the user the table is not ready. On by
+ *   default: an Apply that silently did nothing is worse than a toast. Off for a
+ *   read that is not the user asking for anything — populating a dropdown from
+ *   the current selection, say — where a toast would be noise.
+ * @returns {HTMLElement[]|null}
+ */
+export function getSafeTbodyRows(entryManagerDom, { warn = true } = {}) {
   const tbody = entryManagerDom.order?.tbody;
   if (!(tbody instanceof HTMLElement)) {
-    toastr.warning('Entry Manager table is not ready yet.');
+    if (warn) toastr.warning('Entry Manager table is not ready yet.');
     return null;
   }
   return [...tbody.children].filter((child) => child instanceof HTMLElement);

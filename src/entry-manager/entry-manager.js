@@ -13,6 +13,16 @@ import { createEntryManagerFilters } from './logic/logic.filters.js';
 import { createDynamicOptionAccessors } from './logic/logic.dynamic-options.js';
 import { mirrorEntryFieldsToOriginalData } from '../shared/original-data.js';
 import { createEntryManagerRenderer } from './bulk-editor-tab/bulk-editor-tab.js';
+import {
+  closeOpenCharacterFilterDropdown,
+  registerCharacterFilterRowFilterHook,
+} from './table/table.body.character-filter.js';
+import { registerCharacterFilterSortResolver } from '../shared/sort-helpers.js';
+import {
+  buildCharacterFilterPickerOptions,
+  formatCharacterFilter,
+  toCharacterFilterValueKeys,
+} from './entry-manager.utils.js';
 import { BULK_APPLY_BATCH_SIZE } from './bulk-editor-tab/bulk-edit-row.helpers.js';
 import { maybeYieldToEventLoop } from '../shared/utils.js';
 
@@ -356,6 +366,12 @@ export const initEntryManager = ({
   hljs,
   $,
 }) => {
+  // Ticket 07 — the character/tag filter sort key reuses ticket 04's label
+  // resolution, which lives in this feature folder. `shared/` stays free of
+  // feature-folder imports (ARCHITECTURE.md), so the formatter is handed to the
+  // sorter here rather than imported by it.
+  registerCharacterFilterSortResolver(formatCharacterFilter);
+
   const entryManagerState = createEntryManagerState({ SORT, SORT_DIRECTION });
   let scopedBookNames = null;
   const { normalizeScope, isSameScope } = createScopeHelpers();
@@ -376,6 +392,16 @@ export const initEntryManager = ({
   });
   const getEntryManagerEntries = (book = entryManagerState.book, includeDom = false) =>
     getBaseEntryManagerEntries(book, includeDom, dom);
+  // Ticket 08 — what the R22 picker offers: every character and tag, plus the
+  // stale values the loaded entries still reference (E6). Read from the
+  // unsorted source, like the other dynamic option lists.
+  const getCharacterFilterPickerOptions = () =>
+    buildCharacterFilterPickerOptions({
+      entries: getEntryManagerSourceEntries().map((entry) => entry.data),
+      selected: entryManagerState.filters.characterFilterValue,
+    });
+  const getCharacterFilterValueKeys = () =>
+    toCharacterFilterValueKeys(getCharacterFilterPickerOptions());
   const {
     getAutomationIdOptions,
     getAutomationIdValueForEntry,
@@ -404,6 +430,9 @@ export const initEntryManager = ({
 
   const applyEntryManagerSortToDom = () => {
     if (!dom.order.tbody) return;
+    // R14b — rows are about to move; an in-cell dropdown is positioned against
+    // the cell it belongs to, so it closes rather than following it.
+    closeOpenCharacterFilterDropdown();
     const entries = getEntryManagerEntries(entryManagerState.book, true);
     for (const entry of entries) {
       const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
@@ -444,6 +473,11 @@ export const initEntryManager = ({
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilterToRow,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilterToRow,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilterToRow,
+    applyEntryManagerCharacterFilterValueFilters,
+    syncEntryManagerCharacterFilterValueFilters,
     clearEntryManagerScriptFilters,
     normalizePositionFilters,
     normalizeStrategyFilters,
@@ -469,6 +503,15 @@ export const initEntryManager = ({
     getAutomationIdValue: getAutomationIdValueForEntry,
     getGroupValues,
     getGroupValue: getGroupValueForEntry,
+    getCharacterFilterValueKeys,
+  });
+
+  // Ticket 08 — an inline or bulk edit of this field changes which side of the
+  // two new filters its row falls on, so the row is re-judged right after the
+  // write, the way every other filterable cell does it.
+  registerCharacterFilterRowFilterHook((row, entryData) => {
+    applyEntryManagerCharacterFilterPresenceFilterToRow(row, entryData);
+    applyEntryManagerCharacterFilterValueFilterToRow(row, entryData);
   });
 
   const focusWorldEntry = (book, uid) => {
@@ -515,12 +558,15 @@ export const initEntryManager = ({
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilterToRow,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
     setEntryManagerRowFilterState,
     syncEntryManagerStrategyFilters,
     syncEntryManagerPositionFilters,
     syncEntryManagerOutletFilters,
     syncEntryManagerAutomationIdFilters,
     syncEntryManagerGroupFilters,
+    syncEntryManagerCharacterFilterValueFilters,
     focusWorldEntry,
     entryState,
     isOutletPosition,
@@ -534,6 +580,7 @@ export const initEntryManager = ({
     getAutomationIdValues,
     getGroupOptions,
     getGroupValues,
+    getCharacterFilterPickerOptions,
     normalizeStrategyFilters,
     normalizePositionFilters,
     normalizeOutletFilters,

@@ -1,67 +1,11 @@
-import {
-  setTooltip,
-  formatCharacterFilter,
-  truncateCharacterFilterLines,
-  CHARACTER_FILTER_LINE_LIMIT,
-} from '../entry-manager.utils.js';
+import { setTooltip } from '../entry-manager.utils.js';
 import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 import { createMoveButton } from './table.body.row-sorting.js';
 import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
+import { buildCharacterFilterCell } from './table.body.character-filter.js';
 
 const TEXT_POLE_CLASS = 'text_pole';
 const ORDER_INPUT_TIGHT_CLASS = 'stwid--order-input';
-const CHARACTER_FILTER_COLLAPSED_CLASS = 'stwid--character-filter-options--collapsed';
-
-function buildCharacterFilterLine(line, { overflow }) {
-  const row = document.createElement('div');
-  row.classList.add('stwid--character-filter-row', `stwid--character-filter-row--${line.mode}`);
-  if (line.stale) row.classList.add('stwid--character-filter-row--stale');
-  if (overflow) row.classList.add('stwid--character-filter-row--overflow');
-  const icon = document.createElement('i');
-  icon.classList.add('fa-solid', 'fa-fw', line.icon);
-  const text = document.createElement('span');
-  text.classList.add('stwid--character-filter-label');
-  text.textContent = line.label;
-  row.append(icon, text);
-  setTooltip(row, line.tooltip);
-  return row;
-}
-
-// R5 — in-place expand: every line is in the DOM, the overflow is collapsed by CSS.
-function buildCharacterFilterMoreButton(wrap, hiddenCount, totalCount) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.classList.add('stwid--character-filter-more', 'interactable');
-  const applyState = (expanded) => {
-    wrap.classList.toggle(CHARACTER_FILTER_COLLAPSED_CLASS, !expanded);
-    button.setAttribute('aria-expanded', String(expanded));
-    button.textContent = expanded ? 'Show less' : `+${hiddenCount} more`;
-    setTooltip(
-      button,
-      expanded
-        ? `Show only the first ${CHARACTER_FILTER_LINE_LIMIT} filter values`
-        : `Show all ${totalCount} filter values in this cell`,
-    );
-  };
-  button.addEventListener('click', (evt) => {
-    evt.stopPropagation();
-    applyState(button.getAttribute('aria-expanded') !== 'true');
-  });
-  applyState(false);
-  return button;
-}
-
-function renderCharacterFilterCell(wrap, entryData) {
-  wrap.textContent = '';
-  wrap.classList.remove(CHARACTER_FILTER_COLLAPSED_CLASS);
-  const lines = formatCharacterFilter(entryData);
-  if (!lines.length) return;
-
-  const { visible, overflow, hiddenCount } = truncateCharacterFilterLines(lines);
-  for (const line of visible) wrap.append(buildCharacterFilterLine(line, { overflow: false }));
-  for (const line of overflow) wrap.append(buildCharacterFilterLine(line, { overflow: true }));
-  if (hiddenCount > 0) wrap.append(buildCharacterFilterMoreButton(wrap, hiddenCount, lines.length));
-}
 
 export function buildNumberInputCell({ col, name, tooltip, max = '99999', getValue, onSave }) {
   const td = document.createElement('td');
@@ -561,13 +505,7 @@ export function buildEntryManagerRow({
   budget.append(budgetWrap);
   tr.append(budget);
 
-  const characterFilter = document.createElement('td');
-  characterFilter.setAttribute('data-col', 'characterFilter');
-  const characterFilterWrap = document.createElement('div');
-  characterFilterWrap.classList.add('stwid--colwrap', 'stwid--character-filter-options');
-  renderCharacterFilterCell(characterFilterWrap, entryRow.data);
-  characterFilter.append(characterFilterWrap);
-  tr.append(characterFilter);
+  tr.append(buildCharacterFilterCell({ entryRow, cache, enqueueSave }));
 
   setEntryManagerRowSelected(tr, true);
   return tr;

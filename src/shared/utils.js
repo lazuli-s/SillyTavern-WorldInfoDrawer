@@ -18,6 +18,9 @@ const SORT_OPTIONS = [
   ['Tokens ↘', SORT.LENGTH, SORT_DIRECTION.DESCENDING],
   ['Prompt ↗', SORT.PROMPT, SORT_DIRECTION.ASCENDING],
   ['Prompt ↘', SORT.PROMPT, SORT_DIRECTION.DESCENDING],
+  // Ticket 07 — by how many characters + tags the entry's filter stores.
+  ['Char/Tag Filter ↗', SORT.CHARACTER_FILTER, SORT_DIRECTION.ASCENDING],
+  ['Char/Tag Filter ↘', SORT.CHARACTER_FILTER, SORT_DIRECTION.DESCENDING],
 ];
 
 const createDeferred = () => {

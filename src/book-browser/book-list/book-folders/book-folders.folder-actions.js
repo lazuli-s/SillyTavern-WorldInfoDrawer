@@ -280,9 +280,7 @@ const deleteFolderAction = async ({ folderName, menuActions }) => {
       okButton: 'Move books out',
       cancelButton: 'Cancel',
       defaultResult: POPUP_RESULT.AFFIRMATIVE,
-      customButtons: [
-        { text: 'Delete books', result: POPUP_RESULT.CUSTOM1, appendAtEnd: true },
-      ],
+      customButtons: [{ text: 'Delete books', result: POPUP_RESULT.CUSTOM1, appendAtEnd: true }],
     },
   );
   const shouldDeleteBooks = confirmResult === POPUP_RESULT.CUSTOM1;

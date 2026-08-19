@@ -365,6 +365,12 @@ const activateMultiselectDropdownOption = (option) => {
  * @param {() => Iterable<Element>} [args.getOptions] all options, in DOM order;
  *   defaults to every `MULTISELECT_DROPDOWN_OPTION_SELECTOR` inside `menu`
  * @param {() => HTMLElement|null} [args.getSearchInput]
+ * @param {() => Iterable<Element>} [args.getExtraTabStops] controls inside the
+ *   menu that are not options and not the search box — a mode toggle in the
+ *   panel header, say. Without this they are unreachable: `trapTab` keeps Tab
+ *   inside the menu, and the ring is otherwise just the search box and the
+ *   roving option. They are placed at the front of the ring, matching the DOM
+ *   order of a header that sits above the search box.
  * @param {() => boolean} [args.isOpen]
  * @param {boolean} [args.trapTab] keep Tab inside the menu. Off for a popup
  *   that opens on focus of its own input — trapping there would make the input
@@ -386,6 +392,7 @@ export const wireMultiselectDropdownKeyboardNavigation = (
   {
     getOptions = () => menu.querySelectorAll(MULTISELECT_DROPDOWN_OPTION_SELECTOR),
     getSearchInput = () => null,
+    getExtraTabStops = () => [],
     isOpen = () => true,
     trapTab = true,
     applyRoles = true,
@@ -422,6 +429,9 @@ export const wireMultiselectDropdownKeyboardNavigation = (
   /** The elements Tab cycles between while the menu is open. */
   const tabRing = () => {
     const ring = [];
+    for (const stop of getExtraTabStops()) {
+      if (isMultiselectDropdownOptionNavigable(stop)) ring.push(stop);
+    }
     const searchInput = getSearchInput();
     if (searchInput && isMultiselectDropdownOptionNavigable(searchInput)) ring.push(searchInput);
     const navigable = getNavigableMultiselectDropdownOptions(getOptions());
@@ -533,6 +543,14 @@ export const wireMultiselectDropdownKeyboardNavigation = (
  * @param {boolean} [options.inCell] opt-in in-cell (viewport-positioned) mode
  * @param {string|null} [options.emptyStateText] message shown, in place of the
  *   list, when the caller supplied no options at all
+ * @param {() => Iterable<Element>} [options.getExtraTabStops] non-option controls
+ *   inside the menu that Tab must still reach while it is open
+ * @param {(() => void)|null} [options.onBeforeOpen] runs at the top of every
+ *   open, before the empty-state and search passes read the list. A caller whose
+ *   options depend on state that changes between opens — a cell menu rebuilt
+ *   from the entry it edits, say — repopulates `listContainer` here, so the two
+ *   passes see the list the user is about to be shown rather than the previous
+ *   one.
  * @returns {() => void} the menu's close function
  */
 export const wireMultiselectDropdown = (menu, menuButton, menuWrap, options = {}) => {
@@ -542,6 +560,8 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap, options = {}
     search = null,
     inCell = false,
     emptyStateText = null,
+    onBeforeOpen = null,
+    getExtraTabStops = () => [],
   } = options;
 
   const searchConfig = search
@@ -746,6 +766,7 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap, options = {}
   const openMenu = (moveFocusInside = false) => {
     if (menu.classList.contains(CSS_STATE_ACTIVE)) return;
     closeOpenMultiselectDropdownMenus(menu);
+    onBeforeOpen?.();
     if (searchInput) searchInput.value = '';
     const isEmpty = refreshEmptyState();
     runSearchFilter();
@@ -768,6 +789,7 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap, options = {}
     // user cannot see.
     getSearchInput: () =>
       searchWrap && !searchWrap.classList.contains(CSS_STATE_HIDDEN) ? searchInput : null,
+    getExtraTabStops,
     isOpen: () => menu.classList.contains(CSS_STATE_ACTIVE),
   });
 

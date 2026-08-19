@@ -498,6 +498,15 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   gap: 0.35em;
 }
 
+/* A dropdown whose mode has nothing to pick — the Bulk Editor's Clear all.
+   The existing .stwid--state-disabled rules only reach .stwid--field-group,
+   and disabling the whole group here would take the mode select and the Apply
+   button down with it. */
+.stwid--multiselect-dropdown__wrap.stwid--state-disabled {
+  opacity: var(--stwid-state-disabled-opacity);
+  pointer-events: none;
+}
+
 .stwid--multiselect-dropdown__button {
   display: inline-flex;
   align-items: center;
@@ -2369,6 +2378,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 .stwid--order-table .stwid--column-filter {
   display: flex;
   align-items: center;
+
+  /* The character/tag column carries two filter buttons (ticket 08); every other
+     column carries one, where the gap and the wrap have nothing to act on. */
+  flex-wrap: wrap;
+  gap: 0.15em;
 }
 
 .stwid--order-table .stwid--order-filter-button {
@@ -2659,6 +2673,91 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   opacity: 0.75;
 }
 
+/* Inline editing (ticket 05). The cell itself is the dropdown trigger; the menu
+   is the shared in-cell dropdown, so it needs no positioning context here. */
+.stwid--character-filter-cell {
+  min-width: 0;
+}
+
+.stwid--character-filter-trigger {
+  cursor: pointer;
+}
+
+.stwid--character-filter-row--placeholder {
+  color: var(--SmartThemeEmColor, var(--SmartThemeBodyColor));
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Wider than the default menu: character display names and tag names are long,
+   and the cell they hang off is only 14em. */
+.stwid--character-filter-menu {
+  min-width: min(20em, calc(100vw - 1rem));
+  gap: 0;
+}
+
+.stwid--character-filter-exclude {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+/* Sticky, not scrolled away with the list: the mode toggle and the search box
+   have to stay reachable in a menu holding a large roster. */
+.stwid--character-filter-menu__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  padding-bottom: 0.25em;
+  background-color: var(--SmartThemeBlurTintColor);
+  border-bottom: 1px solid var(--SmartThemeBorderColor);
+}
+
+.stwid--character-filter-menu__heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.stwid--character-filter-menu__heading {
+  font-weight: bold;
+}
+
+/* R22 — the "matches include and exclude alike" rule, stated in the panel itself. */
+.stwid--character-filter-menu__hint {
+  color: var(--SmartThemeEmColor);
+  font-size: smaller;
+  overflow-wrap: break-word;
+}
+
+.stwid--character-filter-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.stwid--character-filter-option--stale {
+  color: var(--stwid-warning-color);
+}
+
+.stwid--character-filter-option--stale .stwid--multiselect-dropdown__option-icon {
+  color: var(--stwid-warning-color);
+}
+
+/* Colour is not enough on its own here: --stwid-warning-color falls back to the
+   theme's quote colour, so the strike-through is what actually marks the option
+   as a stale value — same signal the cell's lines use. */
+.stwid--character-filter-option--stale .stwid--character-filter-label {
+  text-decoration: line-through;
+}
+
+/* No narrow-width block for the menu: the shared in-cell rules already clamp it
+   to the viewport under 1000px, and the header wraps on its own `gap`. */
+
 /* override: FA icon checkbox defaults are too large for the compact recursion options row */
 .stwid--option-check-row .checkbox {
   width: 0.85em;
@@ -2929,7 +3028,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--order-filter-button
 ):focus-visible,
 .stwid--multiselect-dropdown__option:focus-visible,
-/* .text_pole leaves the search box with no focus ring - see Issue__multiselect-dropdown-search-focus-on-open */
+/* .text_pole leaves the search box with no focus ring - see 16-08-2026_Issue_multiselect-dropdown-search-focus-on-open */
 .stwid--multiselect-dropdown__search-input:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);

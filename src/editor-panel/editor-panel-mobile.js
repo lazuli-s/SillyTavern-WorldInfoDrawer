@@ -184,7 +184,9 @@ const moveMobileRecursionControls = (editDom) => {
 
 const moveMobileRecursionGuardControls = (editDom) => {
   const contentSettingsSection = ensureMobileContentSettingsSection(editDom);
-  const recursionSection = contentSettingsSection?.querySelector('.stwid--editor-recursion-section');
+  const recursionSection = contentSettingsSection?.querySelector(
+    '.stwid--editor-recursion-section',
+  );
   const excludeRecursionToggle = findToggleByName(editDom, 'excludeRecursion');
   const preventRecursionToggle = findToggleByName(editDom, 'preventRecursion');
   if (

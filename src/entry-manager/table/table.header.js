@@ -3,11 +3,13 @@ import {
   wireMultiselectDropdown,
 } from '../../shared/multiselect-dropdown.js';
 import {
+  CHARACTER_FILTER_PRESENCE_OPTIONS,
   ENTRY_MANAGER_TABLE_COLUMNS,
   ENTRY_MANAGER_NUMBER_COLUMN_KEYS,
   ENTRY_MANAGER_RECURSION_OPTIONS,
 } from '../../shared/constants.js';
 import { setTooltip } from '../entry-manager.utils.js';
+import { buildCharacterFilterValueFilterMenu } from './table.header.character-filter.js';
 
 const ACTIVE_FILTER_CLASS = 'stwid--state-active';
 // Outlet/automationId/group option counts scale with the number of distinct
@@ -57,7 +59,7 @@ function applyFiltersAndNotify({ updateFilterIndicator, applyFilters, onFilterCh
   onFilterChange();
 }
 
-function createFilterMenuShell(columnLabel = '') {
+function createFilterMenuShell(columnLabel = '', triggerName = '') {
   const menuWrap = document.createElement('div');
   menuWrap.classList.add('stwid--multiselect-dropdown__wrap');
 
@@ -71,8 +73,8 @@ function createFilterMenuShell(columnLabel = '') {
     'stwid--multiselect-dropdown__button',
   );
   // Icon-only control: it has no text to name it (ACC-04).
-  const triggerName = columnLabel ? `Filter by ${columnLabel}` : 'Filter column';
-  menuButton.setAttribute('aria-label', triggerName);
+  const label = triggerName || (columnLabel ? `Filter by ${columnLabel}` : 'Filter column');
+  menuButton.setAttribute('aria-label', label);
   menuWrap.append(menuButton);
 
   const menu = document.createElement('div');
@@ -145,12 +147,24 @@ function toggleFilterValue({ stateKey, value, isChecked, entryManagerState }) {
   );
 }
 
-function buildFilterMenuOption({ optionData, stateKey, entryManagerState, updateFilters }) {
+/** The one rule for "is this value ticked", shared by the build and the resync. */
+function isFilterValueSelected({ stateKey, entryManagerState, value }) {
+  return (entryManagerState.filters[stateKey] ?? []).includes(value);
+}
+
+function buildFilterMenuOption({
+  optionData,
+  stateKey,
+  entryManagerState,
+  updateFilters,
+  optionControls,
+}) {
   const option = document.createElement('label');
   option.classList.add('stwid--multiselect-dropdown__option', 'stwid--menu-item');
   const inputControl = createMultiselectDropdownCheckbox(
-    entryManagerState.filters[stateKey].includes(optionData.value),
+    isFilterValueSelected({ stateKey, entryManagerState, value: optionData.value }),
   );
+  optionControls.set(optionData.value, inputControl);
   inputControl.input.addEventListener('change', () => {
     toggleFilterValue({
       stateKey,
@@ -192,6 +206,7 @@ function renderFilterMenuOptions({
   updateFilters,
   menu,
   capOptions = false,
+  optionControls,
 }) {
   if (!options.length) {
     menu.classList.add('stwid--empty');
@@ -202,7 +217,13 @@ function renderFilterMenuOptions({
     const fragment = document.createDocumentFragment();
     for (const optionData of optionList) {
       fragment.append(
-        buildFilterMenuOption({ optionData, stateKey, entryManagerState, updateFilters }),
+        buildFilterMenuOption({
+          optionData,
+          stateKey,
+          entryManagerState,
+          updateFilters,
+          optionControls,
+        }),
       );
     }
     menu.append(fragment);
@@ -224,15 +245,25 @@ function renderFilterMenuOptions({
   menu.append(showAllButton);
 }
 
-function finalizeFilterMenu({ menu, menuButton, menuWrap, updateFilterIndicator }) {
+function finalizeFilterMenu({
+  menu,
+  menuButton,
+  menuWrap,
+  updateFilterIndicator,
+  syncOptionCheckboxes,
+}) {
   updateFilterIndicator();
-  wireMultiselectDropdown(menu, menuButton, menuWrap);
+  // These options are built once, so nothing that changes the filter from
+  // outside the menu — clearing its chip in the *Active filters* strip — would
+  // otherwise reach their ticks. Re-read the state on every open.
+  wireMultiselectDropdown(menu, menuButton, menuWrap, { onBeforeOpen: syncOptionCheckboxes });
   menuWrap.append(menu);
 
   return { menuWrap, updateFilterIndicator };
 }
 
-function buildFilterMenu({
+/** Exported for unit cover of the on-open checkbox resync; built only here. */
+export function buildFilterMenu({
   stateKey,
   stateValuesKey,
   getOptions,
@@ -243,8 +274,9 @@ function buildFilterMenu({
   entryManagerState,
   capOptions,
   columnLabel,
+  triggerName,
 }) {
-  const { menuWrap, menuButton, menu } = createFilterMenuShell(columnLabel);
+  const { menuWrap, menuButton, menu } = createFilterMenuShell(columnLabel, triggerName);
   const { updateFilterIndicator, updateFilters } = createFilterMenuUpdaters({
     stateKey,
     stateValuesKey,
@@ -256,6 +288,7 @@ function buildFilterMenu({
     menuButton,
   });
 
+  const optionControls = new Map();
   const options = getOptions();
   renderFilterMenuOptions({
     options,
@@ -264,12 +297,25 @@ function buildFilterMenu({
     updateFilters,
     menu,
     capOptions,
+    optionControls,
   });
 
-  return finalizeFilterMenu({ menu, menuButton, menuWrap, updateFilterIndicator });
+  const syncOptionCheckboxes = () => {
+    for (const [value, control] of optionControls) {
+      control.setChecked(isFilterValueSelected({ stateKey, entryManagerState, value }));
+    }
+  };
+
+  return finalizeFilterMenu({
+    menu,
+    menuButton,
+    menuWrap,
+    updateFilterIndicator,
+    syncOptionCheckboxes,
+  });
 }
 
-function buildFilterColumnHeader(label, menuConfig, entryManagerState) {
+function buildColumnHeaderShell(label) {
   const header = document.createElement('div');
   header.classList.add('stwid--column-header');
   const headerTitle = document.createElement('div');
@@ -277,14 +323,64 @@ function buildFilterColumnHeader(label, menuConfig, entryManagerState) {
   header.append(headerTitle);
   const filterWrap = document.createElement('div');
   filterWrap.classList.add('stwid--column-filter');
+  header.append(filterWrap);
+  return { header, filterWrap };
+}
+
+function buildFilterColumnHeader(label, menuConfig, entryManagerState) {
+  const { header, filterWrap } = buildColumnHeaderShell(label);
   const { menuWrap, updateFilterIndicator } = buildFilterMenu({
     ...menuConfig,
     columnLabel: label,
     entryManagerState,
   });
   filterWrap.append(menuWrap);
-  header.append(filterWrap);
   return { header, updateFilterIndicator };
+}
+
+/**
+ * Ticket 08 — the character/tag column is the one header carrying **two**
+ * filters: the has/hasn't toggle (R21), which is an ordinary fixed-value filter
+ * menu, and the character/tag picker (R22), which is not. They are separate
+ * controls on purpose: each composes, chips and clears on its own.
+ */
+function buildCharacterFilterColumnHeader({
+  label,
+  entryManagerState,
+  applyPresenceFilters,
+  applyValueFilters,
+  getCharacterFilterPickerOptions,
+  onFilterChange,
+}) {
+  const { header, filterWrap } = buildColumnHeaderShell(label);
+
+  const presence = buildFilterMenu({
+    stateKey: 'characterFilterPresence',
+    stateValuesKey: 'characterFilterPresenceValues',
+    getOptions: () => CHARACTER_FILTER_PRESENCE_OPTIONS,
+    getValues: null,
+    normalizeFilters: null,
+    applyFilters: applyPresenceFilters,
+    onFilterChange,
+    entryManagerState,
+    columnLabel: label,
+    triggerName: 'Filter by whether the entry has a character or tag filter',
+  });
+  filterWrap.append(presence.menuWrap);
+
+  const value = buildCharacterFilterValueFilterMenu({
+    entryManagerState,
+    getOptions: getCharacterFilterPickerOptions,
+    applyFilters: applyValueFilters,
+    onFilterChange,
+  });
+  filterWrap.append(value.menuWrap);
+
+  return {
+    header,
+    refreshPresenceIndicator: presence.updateFilterIndicator,
+    refreshValueIndicator: value.updateFilterIndicator,
+  };
 }
 
 export function buildTableHeader({
@@ -310,6 +406,9 @@ export function buildTableHeader({
   getAutomationIdValues,
   getGroupOptions,
   getGroupValues,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
+  getCharacterFilterPickerOptions,
   onFilterChange = () => {},
 }) {
   const refreshFilterIndicators = {};
@@ -375,7 +474,20 @@ export function buildTableHeader({
       const headerCell = document.createElement('th');
       {
         const menuConfig = filterMenuConfigs[col.key];
-        if (menuConfig) {
+        if (col.key === 'characterFilter') {
+          const { header, refreshPresenceIndicator, refreshValueIndicator } =
+            buildCharacterFilterColumnHeader({
+              label: col.label,
+              entryManagerState,
+              applyPresenceFilters: applyEntryManagerCharacterFilterPresenceFilters,
+              applyValueFilters: applyEntryManagerCharacterFilterValueFilters,
+              getCharacterFilterPickerOptions,
+              onFilterChange,
+            });
+          headerCell.append(header);
+          refreshFilterIndicators.characterFilterPresence = refreshPresenceIndicator;
+          refreshFilterIndicators.characterFilterValue = refreshValueIndicator;
+        } else if (menuConfig) {
           const { header, updateFilterIndicator } = buildFilterColumnHeader(
             col.label,
             { ...menuConfig, onFilterChange },
@@ -407,5 +519,9 @@ export function buildTableHeader({
     refreshOutletFilterIndicator: refreshFilterIndicators.outlet ?? (() => {}),
     refreshAutomationIdFilterIndicator: refreshFilterIndicators.automationId ?? (() => {}),
     refreshGroupFilterIndicator: refreshFilterIndicators.group ?? (() => {}),
+    refreshCharacterFilterPresenceIndicator:
+      refreshFilterIndicators.characterFilterPresence ?? (() => {}),
+    refreshCharacterFilterValueIndicator:
+      refreshFilterIndicators.characterFilterValue ?? (() => {}),
   };
 }

@@ -1,4 +1,8 @@
 import { closeOpenMultiselectDropdownMenus } from '../shared/multiselect-dropdown.js';
+import {
+  CHARACTER_FILTER_PRESENCE_HAS,
+  CHARACTER_FILTER_PRESENCE_HASNT,
+} from '../shared/constants.js';
 
 export const setTooltip = (element, text, { ariaLabel = null } = {}) => {
   if (!element) return;
@@ -212,6 +216,314 @@ export const formatCharacterFilter = (entry, hostLists) => {
 
   return lines;
 };
+
+/* -------------------------------------------------------------------------- */
+/* Inline editing (ticket 05) — pure read/write semantics                     */
+/* -------------------------------------------------------------------------- */
+
+/** The two labels the dropdown heading flips between; both are the host's own wording. */
+export const CHARACTER_FILTER_INCLUDE_LABEL = 'Filter to Character(s)';
+export const CHARACTER_FILTER_EXCLUDE_LABEL = 'Exclude Character(s)';
+
+/** E3 — shown when neither host list has anything to pick. */
+export const CHARACTER_FILTER_EMPTY_STATE = 'No characters or tags available';
+
+/**
+ * Reads a stored `characterFilter` into the shape the dropdown edits.
+ *
+ * Values are coerced with `String()` for the same reason the formatter does it
+ * (R3b/E14): a tag ID left as a JSON number by an old version must still match
+ * the host's string IDs. A later write therefore stores it as a string — the
+ * shape SillyTavern itself writes — but only ever as part of an edit the user
+ * asked for.
+ *
+ * @param {object} entry Lorebook entry.
+ * @returns {{isExclude: boolean, names: string[], tags: string[]}}
+ */
+export const readCharacterFilterSelection = (entry) => {
+  const filter = entry?.characterFilter;
+  const isObject = Boolean(filter) && typeof filter === 'object' && !Array.isArray(filter);
+  return {
+    isExclude: isObject && filter.isExclude === true,
+    names: isObject && Array.isArray(filter.names) ? filter.names.map(String) : [],
+    tags: isObject && Array.isArray(filter.tags) ? filter.tags.map(String) : [],
+  };
+};
+
+/**
+ * The value a selection must be stored as — matching the host exactly (R12).
+ *
+ * `undefined` means "delete the key": an empty selection with exclude off is
+ * what SillyTavern deletes (`world-info.js:3144`) rather than leaving an empty
+ * object behind. Exclude on with an empty selection keeps the host's
+ * `{ isExclude: true, names: [], tags: [] }` shape (`world-info.js:3648`),
+ * which gates nothing but is a setting the user asked for.
+ *
+ * @param {{isExclude?: boolean, names?: Array, tags?: Array}} [selection]
+ * @returns {{isExclude: boolean, names: string[], tags: string[]}|undefined}
+ */
+export const computeCharacterFilterValue = ({ names = [], tags = [], isExclude = false } = {}) => {
+  const nextNames = Array.isArray(names) ? names.map(String) : [];
+  const nextTags = Array.isArray(tags) ? tags.map(String) : [];
+  if (!nextNames.length && !nextTags.length && isExclude !== true) return undefined;
+  // Key order matches the host's own object literal, so a round-trip through
+  // the file produces byte-identical JSON.
+  return { isExclude: isExclude === true, names: nextNames, tags: nextTags };
+};
+
+/**
+ * Puts a computed value on an entry — assigning it, or deleting the key when the
+ * value is `undefined`. The "absent key, never an empty object" half of R12 lives
+ * here alone, so every holder of an entry gets the same treatment.
+ *
+ * @param {object} entry Lorebook entry, mutated in place.
+ * @param {object|undefined} value Result of `computeCharacterFilterValue`.
+ */
+export const setCharacterFilterValue = (entry, value) => {
+  if (!entry) return;
+  if (value === undefined) delete entry.characterFilter;
+  else entry.characterFilter = value;
+};
+
+/**
+ * Writes a selection onto an entry, deleting the key when R12 says to.
+ *
+ * @param {object} entry Lorebook entry, mutated in place.
+ * @param {{isExclude?: boolean, names?: Array, tags?: Array}} selection
+ * @returns {object|undefined} the stored value, or `undefined` when the key was deleted.
+ */
+export const applyCharacterFilterSelection = (entry, selection) => {
+  const next = computeCharacterFilterValue(selection);
+  setCharacterFilterValue(entry, next);
+  return next;
+};
+
+const buildCharacterOption = (avatarKey, { label, searchText, stale, selected }) => ({
+  kind: 'character',
+  icon: 'fa-user',
+  value: avatarKey,
+  label,
+  searchText,
+  stale,
+  selected,
+});
+
+const buildTagOption = (tagId, { label, stale, selected }) => ({
+  kind: 'tag',
+  icon: 'fa-tag',
+  value: tagId,
+  label,
+  searchText: label === tagId ? tagId : `${label} ${tagId}`,
+  stale,
+  selected,
+});
+
+/**
+ * The pickable list behind the inline dropdown: every character, then every tag
+ * (R9), followed by any stored value the host lists no longer know about.
+ *
+ * Those trailing options are what makes a stale value removable **only** through
+ * the normal checkbox list (R13) — without them, a filter pointing at a deleted
+ * character could never be unticked. They are flagged `stale` only when the
+ * relevant host list is loaded and non-empty, judged per list (E1/E2).
+ *
+ * Characters match the search on both display name and avatar key (R10).
+ *
+ * @param {object} entry Lorebook entry.
+ * @param {{characters?: Array, tags?: Array}} [hostLists] Overrides for the host lists.
+ * @returns {Array<{kind: string, icon: string, value: string, label: string,
+ *   searchText: string, stale: boolean, selected: boolean}>}
+ */
+export const buildCharacterFilterOptions = (entry, hostLists) => {
+  const { characters, tags } = resolveHostLists(hostLists);
+  const selection = readCharacterFilterSelection(entry);
+  const selectedNames = new Set(selection.names);
+  const selectedTags = new Set(selection.tags);
+  const displayNameCounts = countDisplayNames(characters);
+
+  const options = [];
+  const seenAvatarKeys = new Set();
+  for (const character of characters) {
+    const avatarKey = toAvatarKey(character);
+    if (!avatarKey || seenAvatarKeys.has(avatarKey)) continue;
+    seenAvatarKeys.add(avatarKey);
+    const displayName =
+      typeof character?.name === 'string' && character.name ? character.name : avatarKey;
+    // E5 — disambiguate inline only when a collision actually exists.
+    const collides = (displayNameCounts.get(displayName) ?? 0) > 1;
+    options.push(
+      buildCharacterOption(avatarKey, {
+        label: collides ? `${displayName} (${avatarKey})` : displayName,
+        searchText: `${displayName} ${avatarKey}`,
+        stale: false,
+        selected: selectedNames.has(avatarKey),
+      }),
+    );
+  }
+  for (const avatarKey of selection.names) {
+    if (seenAvatarKeys.has(avatarKey)) continue;
+    seenAvatarKeys.add(avatarKey);
+    options.push(
+      buildCharacterOption(avatarKey, {
+        label: avatarKey,
+        searchText: avatarKey,
+        stale: characters.length > 0,
+        selected: true,
+      }),
+    );
+  }
+
+  const seenTagIds = new Set();
+  for (const tag of tags) {
+    const tagId = String(tag?.id ?? '');
+    if (!tagId || seenTagIds.has(tagId)) continue;
+    seenTagIds.add(tagId);
+    options.push(
+      buildTagOption(tagId, {
+        label: typeof tag?.name === 'string' && tag.name ? tag.name : tagId,
+        stale: false,
+        selected: selectedTags.has(tagId),
+      }),
+    );
+  }
+  for (const tagId of selection.tags) {
+    if (seenTagIds.has(tagId)) continue;
+    seenTagIds.add(tagId);
+    options.push(buildTagOption(tagId, { label: tagId, stale: tags.length > 0, selected: true }));
+  }
+
+  return options;
+};
+
+/**
+ * Every character/tag value the given entries reference, de-duplicated.
+ *
+ * Lives here — beside `readCharacterFilterSelection`, which it is a fold over —
+ * rather than in either of its two callers: the Bulk Editor's Remove specific
+ * picker (E7) and the Entry Manager's character/tag filter (E6) both need the
+ * stale values the loaded entries still point at, and a second copy would drift.
+ *
+ * @param {Array<object>} entries
+ * @returns {{names: string[], tags: string[]}}
+ */
+export const collectReferencedCharacterFilterValues = (entries) => {
+  const names = new Set();
+  const tags = new Set();
+  for (const entry of entries ?? []) {
+    const selection = readCharacterFilterSelection(entry);
+    for (const name of selection.names) names.add(name);
+    for (const tag of selection.tags) tags.add(tag);
+  }
+  return { names: [...names], tags: [...tags] };
+};
+
+/* -------------------------------------------------------------------------- */
+/* Entry Manager filters (ticket 08) — pure predicates                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Which side of the has/hasn't toggle one entry falls on (R21).
+ *
+ * E4 — an **inert filter** (`isExclude: true` with nothing selected) gates
+ * nothing at generation time, so it counts as **"hasn't"**, exactly as the
+ * column's sort key treats it. A missing key is "hasn't" for the same reason.
+ *
+ * @param {object} entry Lorebook entry, read only.
+ * @returns {string} one of `CHARACTER_FILTER_PRESENCE_VALUES`
+ */
+export const getCharacterFilterPresenceValue = (entry) => {
+  const { names, tags } = readCharacterFilterSelection(entry);
+  return names.length + tags.length > 0
+    ? CHARACTER_FILTER_PRESENCE_HAS
+    : CHARACTER_FILTER_PRESENCE_HASNT;
+};
+
+/**
+ * One pickable value of the "filter to a specific character or tag" control.
+ *
+ * Characters are keyed by avatar key and tags by tag ID, and the two namespaces
+ * can collide (nothing stops a tag from being named like an avatar file), so the
+ * kind is part of the key rather than assumed from the value.
+ *
+ * @param {string} kind `'character'` or `'tag'`
+ * @param {string} value avatar key or tag ID
+ * @returns {string}
+ */
+export const encodeCharacterFilterValueKey = (kind, value) => `${kind}:${String(value)}`;
+
+/**
+ * Every value key one entry references, whether its filter includes or excludes
+ * them (R22): the entry does reference that character either way.
+ *
+ * @param {object} entry Lorebook entry, read only.
+ * @returns {string[]}
+ */
+export const getEntryCharacterFilterValueKeys = (entry) => {
+  const { names, tags } = readCharacterFilterSelection(entry);
+  return [
+    ...names.map((name) => encodeCharacterFilterValueKey('character', name)),
+    ...tags.map((tag) => encodeCharacterFilterValueKey('tag', tag)),
+  ];
+};
+
+/**
+ * R22 — whether an entry survives the "filter to a specific character or tag".
+ *
+ * Nothing picked means the filter is off, so every entry passes. Otherwise the
+ * entry must reference at least one picked value — include-mode and
+ * exclude-mode filters alike. A stale value matches like any other: it is what
+ * the entry actually stores, and finding those entries is the point (E6).
+ *
+ * @param {object} entry Lorebook entry, read only.
+ * @param {Iterable<string>|Set<string>} selectedKeys keys from `encodeCharacterFilterValueKey`.
+ * @returns {boolean}
+ */
+export const entryMatchesCharacterFilterValues = (entry, selectedKeys) => {
+  const selected = selectedKeys instanceof Set ? selectedKeys : new Set(selectedKeys ?? []);
+  if (!selected.size) return true;
+  return getEntryCharacterFilterValueKeys(entry).some((key) => selected.has(key));
+};
+
+/**
+ * The pickable list behind the R22 picker: every existing character and tag,
+ * plus any value the loaded entries still reference that no host list knows
+ * about — marked stale, so an entry pointing at a deleted character stays
+ * findable (E6).
+ *
+ * Built on `buildCharacterFilterOptions`, so the display-name resolution,
+ * collision disambiguation and stale marking are the ones the column and the
+ * Bulk Editor already use.
+ *
+ * @param {object} args
+ * @param {Array<object>} [args.entries] the loaded entries.
+ * @param {Iterable<string>} [args.selected] currently picked value keys.
+ * @param {{characters?: Array, tags?: Array}} [args.hostLists] Test seam.
+ * @returns {Array<object>} options carrying an extra `filterValue` key.
+ */
+export const buildCharacterFilterPickerOptions = ({
+  entries = [],
+  selected = [],
+  hostLists,
+} = {}) => {
+  const referenced = collectReferencedCharacterFilterValues(entries);
+  const unionEntry = { characterFilter: { isExclude: false, ...referenced } };
+  const selectedKeys = new Set(selected ?? []);
+  return buildCharacterFilterOptions(unionEntry, hostLists).map((option) => {
+    const filterValue = encodeCharacterFilterValueKey(option.kind, option.value);
+    return { ...option, filterValue, selected: selectedKeys.has(filterValue) };
+  });
+};
+
+/**
+ * The value keys of a picker option list — what `filters.characterFilterValue`
+ * holds. One helper, so the Entry Manager and the filter-chip display cannot
+ * disagree about how a picked value is spelled.
+ *
+ * @param {Array<{filterValue: string}>} options
+ * @returns {string[]}
+ */
+export const toCharacterFilterValueKeys = (options) =>
+  (options ?? []).map((option) => option.filterValue);
 
 /**
  * Split formatted lines into the first `limit` and the remainder (R5).

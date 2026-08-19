@@ -5,9 +5,11 @@ import {
   wireMultiselectDropdown,
 } from '../../shared/multiselect-dropdown.js';
 import {
+  CHARACTER_FILTER_PRESENCE_OPTIONS,
   ENTRY_MANAGER_TOGGLE_COLUMNS,
   ENTRY_MANAGER_RECURSION_OPTIONS,
 } from '../../shared/constants.js';
+import { toCharacterFilterValueKeys } from '../entry-manager.utils.js';
 
 const COLUMN_VISIBILITY_HINT = 'Choose which columns are visible';
 const TABLE_SORT_HINT = 'Sort rows in the table';
@@ -37,6 +39,9 @@ function createActionThinContainer(labelText, hintText) {
 
 function makeClearFilterHandler(key, getAllValues, applyFn, stateRef, indicatorRef, refreshFn) {
   return () => {
+    // "Cleared" means "not filtering": every value ticked for the filters whose
+    // off state is a full selection, and none for the character/tag picker,
+    // whose off state is an empty one (R22/R23).
     stateRef.filters[key] = [...getAllValues()];
     applyFn();
     indicatorRef?.();
@@ -260,10 +265,12 @@ function renderActiveFilterChips({
   const filters = entryManagerState.filters;
   let hasActiveFilter = false;
 
-  for (const { key, allValues } of filterConfigs) {
+  for (const { key, allValues, isActive } of filterConfigs) {
     const selected = filters[key] ?? [];
-    if (!allValues.length) continue;
-    if (selected.length >= allValues.length) continue;
+    const active = isActive
+      ? isActive(selected, allValues)
+      : allValues.length > 0 && selected.length < allValues.length;
+    if (!active) continue;
     hasActiveFilter = true;
 
     chipContainer.append(
@@ -285,6 +292,7 @@ function buildFilterChipDisplay({
   getOutletValues,
   getAutomationIdValues,
   getGroupValues,
+  getCharacterFilterValueKeys,
   clearFilterHandlers,
   FILTER_KEY_LABELS,
   getFilterValueLabels,
@@ -331,6 +339,16 @@ function buildFilterChipDisplay({
         allValues: entryManagerState.groupValues.length
           ? entryManagerState.groupValues
           : getGroupValues(),
+      },
+      {
+        key: 'characterFilterPresence',
+        allValues: entryManagerState.characterFilterPresenceValues ?? [],
+      },
+      {
+        key: 'characterFilterValue',
+        allValues: getCharacterFilterValueKeys(),
+        // R22 — this one is off when *nothing* is picked, not when everything is.
+        isActive: (selected) => selected.length > 0,
       },
     ];
     renderActiveFilterChips({
@@ -401,10 +419,14 @@ function createFilterValueLabelHelpers({
   getOutletOptions,
   getAutomationIdOptions,
   getGroupOptions,
+  getCharacterFilterPickerOptions,
 }) {
-  const FILTER_KEY_LABELS = Object.fromEntries(
-    ENTRY_MANAGER_TOGGLE_COLUMNS.map((col) => [col.key, col.label]),
-  );
+  const FILTER_KEY_LABELS = {
+    ...Object.fromEntries(ENTRY_MANAGER_TOGGLE_COLUMNS.map((col) => [col.key, col.label])),
+    // Two filters share one column, so neither can be named after it alone.
+    characterFilterPresence: 'Char/Tag Filter',
+    characterFilterValue: 'Filtered to',
+  };
 
   const getFilterValueLabels = (filterKey, selectedValues) => {
     let options;
@@ -427,6 +449,18 @@ function createFilterValueLabelHelpers({
       case 'recursion':
         options = ENTRY_MANAGER_RECURSION_OPTIONS;
         break;
+      case 'characterFilterPresence':
+        options = CHARACTER_FILTER_PRESENCE_OPTIONS;
+        break;
+      case 'characterFilterValue':
+        // The picker's own option list, so a chip names the character rather
+        // than the avatar key stored behind it — and a stale value still reads
+        // as the raw value it is.
+        options = getCharacterFilterPickerOptions().map((option) => ({
+          value: option.filterValue,
+          label: option.label,
+        }));
+        break;
       default:
         return selectedValues.map(String);
     }
@@ -437,7 +471,8 @@ function createFilterValueLabelHelpers({
   return { FILTER_KEY_LABELS, getFilterValueLabels };
 }
 
-function buildClearFilterHandlers({
+/** Exported for unit cover of the late-bound indicator callbacks. */
+export function buildClearFilterHandlers({
   entryManagerState,
   filterIndicatorRefs,
   refresh,
@@ -455,6 +490,16 @@ function buildClearFilterHandlers({
       applyFn: applyFilters.automationId,
     },
     { key: 'group', getAllValues: getValues.group, applyFn: applyFilters.group },
+    {
+      key: 'characterFilterPresence',
+      getAllValues: getValues.characterFilterPresence,
+      applyFn: applyFilters.characterFilterPresence,
+    },
+    {
+      key: 'characterFilterValue',
+      getAllValues: getValues.characterFilterValue,
+      applyFn: applyFilters.characterFilterValue,
+    },
   ];
 
   return Object.fromEntries(
@@ -465,7 +510,11 @@ function buildClearFilterHandlers({
         getAllValues,
         applyFn,
         entryManagerState,
-        filterIndicatorRefs[key],
+        // Late-bound on purpose: the header fills `filterIndicatorRefs` only
+        // once the table is built, which happens *after* this toolbar. Reading
+        // the callback here would capture `undefined` forever, and the funnel
+        // icon would stay lit after a chip clear.
+        () => filterIndicatorRefs[key]?.(),
         refresh,
       ),
     ]),
@@ -496,11 +545,14 @@ export function buildDisplayToolbar({
   applyEntryManagerOutletFilters,
   applyEntryManagerAutomationIdFilters,
   applyEntryManagerGroupFilters,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
   getStrategyOptions,
   getPositionOptions,
   getOutletOptions,
   getAutomationIdOptions,
   getGroupOptions,
+  getCharacterFilterPickerOptions,
   getStrategyValues,
   getPositionValues,
   getOutletValues,
@@ -563,12 +615,16 @@ export function buildDisplayToolbar({
 
   displayToolbarRow.append(displayToolbarInfo);
 
+  const getCharacterFilterValueKeys = () =>
+    toCharacterFilterValueKeys(getCharacterFilterPickerOptions());
+
   const { FILTER_KEY_LABELS, getFilterValueLabels } = createFilterValueLabelHelpers({
     getStrategyOptions,
     getPositionOptions,
     getOutletOptions,
     getAutomationIdOptions,
     getGroupOptions,
+    getCharacterFilterPickerOptions,
   });
 
   let refresh = () => {};
@@ -595,6 +651,9 @@ export function buildDisplayToolbar({
           : getAutomationIdValues(),
       group: () =>
         entryManagerState.groupValues.length ? entryManagerState.groupValues : getGroupValues(),
+      characterFilterPresence: () => entryManagerState.characterFilterPresenceValues ?? [],
+      // R23 — clearing this filter means picking nothing, which is its off state.
+      characterFilterValue: () => [],
     },
     applyFilters: {
       strategy: applyEntryManagerStrategyFilters,
@@ -603,6 +662,8 @@ export function buildDisplayToolbar({
       outlet: applyEntryManagerOutletFilters,
       automationId: applyEntryManagerAutomationIdFilters,
       group: applyEntryManagerGroupFilters,
+      characterFilterPresence: applyEntryManagerCharacterFilterPresenceFilters,
+      characterFilterValue: applyEntryManagerCharacterFilterValueFilters,
     },
   });
 
@@ -613,6 +674,7 @@ export function buildDisplayToolbar({
     getOutletValues,
     getAutomationIdValues,
     getGroupValues,
+    getCharacterFilterValueKeys,
     clearFilterHandlers,
     FILTER_KEY_LABELS,
     getFilterValueLabels,

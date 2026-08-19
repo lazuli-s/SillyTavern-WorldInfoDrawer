@@ -6,6 +6,10 @@ import {
   buildEntryManagerTable,
 } from './bulk-editor-tab.sections.js';
 import { registerBookReloadHooks } from '../../shared/book-reload.js';
+import {
+  registerCharacterFilterUpdateHook,
+  resetCharacterFilterCells,
+} from '../table/table.body.character-filter.js';
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
 import { BULK_APPLY_BATCH_SIZE } from './bulk-edit-row.helpers.js';
 
@@ -25,15 +29,22 @@ const resetEntryManagerStateForRender = ({
   syncEntryManagerOutletFilters,
   syncEntryManagerAutomationIdFilters,
   syncEntryManagerGroupFilters,
+  syncEntryManagerCharacterFilterValueFilters,
   getEditorPanelApi,
 }) => {
   entryManagerState.book = book;
+
+  // R14b — the table is about to be rebuilt, so an open inline character/tag
+  // filter dropdown is closed without saving; it must never write into a row
+  // that no longer exists.
+  resetCharacterFilterCells();
 
   syncEntryManagerStrategyFilters();
   syncEntryManagerPositionFilters();
   syncEntryManagerOutletFilters();
   syncEntryManagerAutomationIdFilters();
   syncEntryManagerGroupFilters();
+  syncEntryManagerCharacterFilterValueFilters();
 
   const editorPanelApi = getEditorPanelApi();
   editorPanelApi.resetEditorState();
@@ -117,12 +128,15 @@ const renderEntryManager = async ({
   applyEntryManagerOutletFilterToRow,
   applyEntryManagerAutomationIdFilters,
   applyEntryManagerGroupFilters,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
   setEntryManagerRowFilterState,
   syncEntryManagerStrategyFilters,
   syncEntryManagerPositionFilters,
   syncEntryManagerOutletFilters,
   syncEntryManagerAutomationIdFilters,
   syncEntryManagerGroupFilters,
+  syncEntryManagerCharacterFilterValueFilters,
   focusWorldEntry,
   entryState,
   isOutletPosition,
@@ -136,6 +150,7 @@ const renderEntryManager = async ({
   getAutomationIdValues,
   getGroupOptions,
   getGroupValues,
+  getCharacterFilterPickerOptions,
   normalizeStrategyFilters,
   normalizePositionFilters,
   normalizeOutletFilters,
@@ -161,6 +176,7 @@ const renderEntryManager = async ({
     syncEntryManagerOutletFilters,
     syncEntryManagerAutomationIdFilters,
     syncEntryManagerGroupFilters,
+    syncEntryManagerCharacterFilterValueFilters,
     getEditorPanelApi,
   });
 
@@ -211,11 +227,14 @@ const renderEntryManager = async ({
     applyEntryManagerOutletFilters,
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
     getStrategyOptions,
     getPositionOptions,
     getOutletOptions,
     getAutomationIdOptions,
     getGroupOptions,
+    getCharacterFilterPickerOptions,
     getStrategyValues,
     getPositionValues,
     getOutletValues,
@@ -269,6 +288,8 @@ const renderEntryManager = async ({
     applyEntryManagerOutletFilters,
     applyEntryManagerAutomationIdFilters,
     applyEntryManagerGroupFilters,
+    applyEntryManagerCharacterFilterPresenceFilters,
+    applyEntryManagerCharacterFilterValueFilters,
     syncEntryManagerOutletFilters,
     syncEntryManagerAutomationIdFilters,
     syncEntryManagerGroupFilters,
@@ -295,6 +316,7 @@ const renderEntryManager = async ({
     getAutomationIdValues,
     getGroupOptions,
     getGroupValues,
+    getCharacterFilterPickerOptions,
     refreshDisplayToolbar,
     filterIndicatorRefs,
   });
@@ -359,12 +381,15 @@ const createEntryManagerRenderer = ({
   applyEntryManagerOutletFilterToRow,
   applyEntryManagerAutomationIdFilters,
   applyEntryManagerGroupFilters,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
   setEntryManagerRowFilterState,
   syncEntryManagerStrategyFilters,
   syncEntryManagerPositionFilters,
   syncEntryManagerOutletFilters,
   syncEntryManagerAutomationIdFilters,
   syncEntryManagerGroupFilters,
+  syncEntryManagerCharacterFilterValueFilters,
   focusWorldEntry,
   entryState,
   isOutletPosition,
@@ -378,6 +403,7 @@ const createEntryManagerRenderer = ({
   getAutomationIdValues,
   getGroupOptions,
   getGroupValues,
+  getCharacterFilterPickerOptions,
   normalizeStrategyFilters,
   normalizePositionFilters,
   normalizeOutletFilters,
@@ -393,6 +419,11 @@ const createEntryManagerRenderer = ({
   getEditorPanelApi,
 }) => {
   const cleanupBulkEditRowRef = { current: null };
+
+  // E8/E8b — hooks the existing World Info update path (no new listener) so an
+  // outside edit to the entry being edited closes its dropdown and re-renders
+  // the cell. Registered here, once, for the same reason as the reload hooks.
+  registerCharacterFilterUpdateHook();
 
   const renderEntryManagerForBook = async (book = null, { selectedRowKeys = null } = {}) =>
     renderEntryManager({
@@ -431,12 +462,15 @@ const createEntryManagerRenderer = ({
       applyEntryManagerOutletFilterToRow,
       applyEntryManagerAutomationIdFilters,
       applyEntryManagerGroupFilters,
+      applyEntryManagerCharacterFilterPresenceFilters,
+      applyEntryManagerCharacterFilterValueFilters,
       setEntryManagerRowFilterState,
       syncEntryManagerStrategyFilters,
       syncEntryManagerPositionFilters,
       syncEntryManagerOutletFilters,
       syncEntryManagerAutomationIdFilters,
       syncEntryManagerGroupFilters,
+      syncEntryManagerCharacterFilterValueFilters,
       focusWorldEntry,
       entryState,
       isOutletPosition,
@@ -450,6 +484,7 @@ const createEntryManagerRenderer = ({
       getAutomationIdValues,
       getGroupOptions,
       getGroupValues,
+      getCharacterFilterPickerOptions,
       normalizeStrategyFilters,
       normalizePositionFilters,
       normalizeOutletFilters,

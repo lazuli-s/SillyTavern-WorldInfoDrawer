@@ -31,6 +31,10 @@ export const SORT = {
   ALPHABETICAL: 'alphabetical',
 
   PROMPT: 'prompt',
+
+  // Ticket 07 — sorts by how many characters + tags the entry's filter stores.
+  // Shares the column's persisted key so both name the same thing.
+  CHARACTER_FILTER: 'characterFilter',
 };
 
 export const SORT_DIRECTION = {
@@ -85,6 +89,23 @@ export const ENTRY_MANAGER_NUMBER_COLUMN_KEYS = new Set([
   ENTRY_FIELD_KEYS.AUTOMATION_ID,
   ENTRY_FIELD_KEYS.TRIGGER,
 ]);
+
+/**
+ * R21 — the two values the character/tag column's has/hasn't filter offers.
+ * Beside `ENTRY_MANAGER_RECURSION_OPTIONS` because it is the same kind of thing:
+ * a small fixed option list for a filter menu, with no dynamic values behind it.
+ */
+export const CHARACTER_FILTER_PRESENCE_HAS = 'has';
+export const CHARACTER_FILTER_PRESENCE_HASNT = 'hasnt';
+
+export const CHARACTER_FILTER_PRESENCE_OPTIONS = Object.freeze([
+  Object.freeze({ value: CHARACTER_FILTER_PRESENCE_HAS, label: 'Has a filter' }),
+  Object.freeze({ value: CHARACTER_FILTER_PRESENCE_HASNT, label: 'No filter' }),
+]);
+
+export const CHARACTER_FILTER_PRESENCE_VALUES = Object.freeze(
+  CHARACTER_FILTER_PRESENCE_OPTIONS.map((option) => option.value),
+);
 
 export const ENTRY_MANAGER_RECURSION_OPTIONS = [
   { value: 'excludeRecursion', label: 'Non-recursable' },

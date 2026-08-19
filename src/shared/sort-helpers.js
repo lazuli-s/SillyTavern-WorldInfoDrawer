@@ -58,6 +58,90 @@ const createNumericSorter =
     });
   };
 
+/* -------------------------------------------------------------------------- */
+/* Character/tag filter sort (ticket 07)                                      */
+/* -------------------------------------------------------------------------- */
+
+// The sort key needs ticket 04's label resolution, which lives in the Entry
+// Manager feature folder. ARCHITECTURE.md keeps `shared/` free of feature-folder
+// dependencies, so the Entry Manager hands its formatter over at setup instead
+// (`registerCharacterFilterSortResolver`), the same way `wi-update-handler.js`
+// receives its UI callbacks. Until it does, every entry keys as 0 — a stable
+// order, never a crash.
+let characterFilterSortResolver = null;
+let warnedAboutMissingCharacterFilterResolver = false;
+
+// The one line kind that is a hint rather than a stored item. It is produced by
+// `formatCharacterFilter` in src/entry-manager/entry-manager.utils.js — the same
+// resolver registered below — for an inert filter (exclude on, nothing selected).
+const INERT_FILTER_LINE_KIND = 'inert';
+
+/**
+ * Registers the function that turns an entry into its rendered filter lines.
+ *
+ * @param {(entry: object) => Array<{kind: string, label: string}>} resolver
+ */
+const registerCharacterFilterSortResolver = (resolver) => {
+  characterFilterSortResolver = typeof resolver === 'function' ? resolver : null;
+};
+
+/**
+ * The sort key for the "Filter to Characters or Tags" column (R20).
+ *
+ * `count` is how many items the filter stores — characters plus tags. Stale
+ * values count: they are stored items, and sorting descending is how a user
+ * finds the entries that need cleaning up. An inert filter (exclude on, nothing
+ * selected) has no items, so it keys as 0 and sorts alongside an entry with no
+ * filter at all. `label` is the first rendered label, lower-cased, used only to
+ * break ties on equal counts.
+ *
+ * @param {object} entry Lorebook entry.
+ * @param {(entry: object) => Array} [resolver] Overrides the registered resolver (tests).
+ * @returns {{count: number, label: string}}
+ */
+const getCharacterFilterSortKey = (entry, resolver = characterFilterSortResolver) => {
+  const lines = typeof resolver === 'function' ? resolver(entry) : null;
+  if (!Array.isArray(lines)) return { count: 0, label: '' };
+  // The inert line is a hint, not a stored item — it must not count as one.
+  const items = lines.filter((line) => line?.kind !== INERT_FILTER_LINE_KIND);
+  return { count: items.length, label: normalizeString(items[0]?.label) };
+};
+
+const sortByCharacterFilter = (entries, defaultCompare, sortDirection) => {
+  // Without a resolver every entry keys 0 and the rows come out in title order —
+  // a stable result that looks exactly like a column with nothing in it. Say so
+  // once, so a registration that never happened is not read as real data.
+  if (!characterFilterSortResolver && !warnedAboutMissingCharacterFilterResolver) {
+    warnedAboutMissingCharacterFilterResolver = true;
+    console.warn(
+      '[STWID] Sorting by the character/tag filter before its label resolver was registered;',
+      'every entry counts as 0. Rows are in title order, not filter order.',
+    );
+  }
+  const direction = sortDirection === SORT_DIRECTION.DESCENDING ? -1 : 1;
+  // One key per entry: resolving labels walks the host character and tag lists,
+  // and a comparator is called O(n log n) times.
+  const keyCache = new Map();
+  const keyOf = (entry) => {
+    let key = keyCache.get(entry);
+    if (!key) {
+      key = getCharacterFilterSortKey(entry);
+      keyCache.set(entry, key);
+    }
+    return key;
+  };
+  return safeToSorted(entries, (a, b) => {
+    const aKey = keyOf(unwrapEntry(a));
+    const bKey = keyOf(unwrapEntry(b));
+    if (aKey.count !== bKey.count) return direction * (aKey.count - bKey.count);
+    // The tie-break stays alphabetical A-Z in both directions, as every other
+    // numeric sort here leaves its tie-break untouched by the direction.
+    const cmp = aKey.label.localeCompare(bKey.label);
+    if (cmp !== 0) return cmp;
+    return defaultCompare(a, b);
+  });
+};
+
 const getDisplayIndex = (entry) => {
   const displayIndex = Number(entry?.extensions?.display_index);
   return Number.isFinite(displayIndex) ? displayIndex : null;
@@ -173,6 +257,10 @@ const sortEntries = (entries, sortLogic = null, sortDirection = null) => {
       result = sortByCustom(entries, defaultCompare);
       break;
     }
+    case SORT.CHARACTER_FILTER: {
+      result = sortByCharacterFilter(entries, defaultCompare, sortDirection);
+      break;
+    }
     default: {
       shouldReverse = true;
       result = stringSort((entry) => getDefaultTitle(entry));
@@ -195,4 +283,12 @@ const getSortFromMetadata = (metadata) => {
   return { sort, direction };
 };
 
-export { cloneMetadata, METADATA_NAMESPACE, METADATA_SORT_KEY, getSortFromMetadata, sortEntries };
+export {
+  cloneMetadata,
+  METADATA_NAMESPACE,
+  METADATA_SORT_KEY,
+  getCharacterFilterSortKey,
+  getSortFromMetadata,
+  registerCharacterFilterSortResolver,
+  sortEntries,
+};
