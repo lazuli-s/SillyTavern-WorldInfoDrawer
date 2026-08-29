@@ -271,12 +271,100 @@ export function createPersistedBulkNumberInput({
   return input;
 }
 
-export async function runApplyNonNegativeIntegerField({
-  input,
+/**
+ * Shared apply skeleton for the bulk-edit sections whose per-entry work goes
+ * beyond writing one numeric field: locks the apply button, runs the caller's
+ * once-per-apply preparation, collects the target rows, applies each target
+ * through `applyToTarget`, saves every touched book, and clears the dirty
+ * marker only when no book failed.
+ *
+ * `prepare` runs inside the lock, where the hand-rolled validation of the
+ * sections this generalizes used to run; returning `false` aborts the apply
+ * before any entry is touched.
+ *
+ * @param {object} params
+ * @param {HTMLElement} params.applyButton - The section's apply button element.
+ * @param {object} params.dom - Entry Manager DOM map (`dom.order.tbody`).
+ * @param {object} cache - Book cache keyed by book name.
+ * @param {Function} params.isEntryManagerRowSelected - Row selection predicate.
+ * @param {Function} params.saveWorldInfo - The host's `saveWorldInfo`.
+ * @param {Function} params.buildSavePayload - Builds one book's save payload.
+ * @param {Function} [params.prepare] - Once-per-apply gate run inside the lock
+ *   before the table is read; return `false` to abort.
+ * @param {Function} params.applyToTarget - `(target, index)` => per-entry work.
+ */
+export async function runBulkTargetsApply({
+  applyButton,
+  dom: entryManagerDom,
+  cache,
+  isEntryManagerRowSelected,
+  saveWorldInfo,
+  buildSavePayload,
+  prepare,
+  applyToTarget,
+}) {
+  await withApplyButtonLock(applyButton, async () => {
+    if (typeof prepare === 'function') {
+      const prepared = await prepare();
+      if (prepared === false) return;
+    }
+
+    const rows = getSafeTbodyRows(entryManagerDom);
+    if (!rows) return;
+
+    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
+    // An apply that matched nothing must not clear the dirty marker: it would
+    // tell "Apply All Changes" this section was handled when nothing was written.
+    if (targets.length === 0) {
+      toastr.warning('No entries are selected. Select at least one entry first.');
+      return;
+    }
+    const books = new Set();
+    for (let i = 0; i < targets.length; i++) {
+      const target = targets[i];
+      books.add(target.bookName);
+      await applyToTarget(target, i);
+      await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
+    }
+    // saveUpdatedBooks reports and reloads its own failures; it does not throw.
+    const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
+    // Leave the row marked dirty when a book did not save, so the user can retry.
+    if (failedBooks.length === 0) applyButton.classList.remove(APPLY_DIRTY_CLASS);
+  });
+}
+
+/**
+ * Shared apply skeleton for the bulk-edit sections that write one numeric
+ * field: locks the apply button, collects the target rows, writes each target's
+ * value through `resolveValue`, mirrors it into the originalData shadow copy,
+ * updates the row's input, saves every touched book, and clears the dirty
+ * marker only when no book failed.
+ *
+ * Input parsing and validation stay in each caller, before this runner is
+ * called — so a caller's warnings fire even while another apply holds the
+ * button lock, where the busy-guard would otherwise swallow them silently.
+ *
+ * @param {object} params
+ * @param {Function} params.resolveValue - `(target, index)` => value to write.
+ *   Constant-value callers return the parsed input; the Order section computes
+ *   `startValue + index * stepValue`.
+ * @param {string} params.entryField - camelCase entry field to write.
+ * @param {string} params.rowInputName - `[name=…]` of the row input to update.
+ * @param {string} params.noTargetsWarning - Toast shown when no rows match.
+ * @param {boolean} [params.reverse] - Walk the table bottom-up (Order direction).
+ * @param {object} params.dom - Entry Manager DOM map (`dom.order.tbody`).
+ * @param {object} cache - Book cache keyed by book name.
+ * @param {Function} params.isEntryManagerRowSelected - Row selection predicate.
+ * @param {Function} params.saveWorldInfo - The host's `saveWorldInfo`.
+ * @param {Function} params.buildSavePayload - Builds one book's save payload.
+ * @param {HTMLElement} params.applyButton - The section's apply button element.
+ */
+export async function runBulkNumericFieldApply({
+  resolveValue,
   entryField,
   rowInputName,
-  emptyValueWarning,
-  invalidValueWarning,
+  noTargetsWarning,
+  reverse = false,
   dom: entryManagerDom,
   cache,
   isEntryManagerRowSelected,
@@ -284,31 +372,27 @@ export async function runApplyNonNegativeIntegerField({
   buildSavePayload,
   applyButton,
 }) {
-  const rawValue = input.value.trim();
-  if (rawValue === '') {
-    toastr.warning(emptyValueWarning);
-    return;
-  }
-
-  const parsedValue = parseInt(rawValue, 10);
-  if (!Number.isInteger(parsedValue) || parsedValue < 0) {
-    toastr.warning(invalidValueWarning);
-    return;
-  }
-
   await withApplyButtonLock(applyButton, async () => {
     const rows = getSafeTbodyRows(entryManagerDom);
     if (!rows) return;
 
-    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
+    const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected, { reverse });
+    // An apply that matched nothing must not clear the dirty marker: it would
+    // tell "Apply All Changes" this section was handled when nothing was written.
+    if (targets.length === 0) {
+      toastr.warning(noTargetsWarning);
+      return;
+    }
     const books = new Set();
     for (let i = 0; i < targets.length; i++) {
-      const { tr, bookName, entryData } = targets[i];
+      const target = targets[i];
+      const { tr, bookName, entryData } = target;
+      const value = resolveValue(target, i);
       books.add(bookName);
-      entryData[entryField] = parsedValue;
+      entryData[entryField] = value;
       mirrorEntryFieldsToOriginalData(cache[bookName], entryData, [entryField]);
       const rowInput = tr.querySelector(`[name="${rowInputName}"]`);
-      if (rowInput) rowInput.value = String(parsedValue);
+      if (rowInput) rowInput.value = String(value);
       await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
     }
     // saveUpdatedBooks reports and reloads its own failures; it does not throw.

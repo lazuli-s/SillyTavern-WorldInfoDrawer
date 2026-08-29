@@ -17,13 +17,13 @@
 import { CHARACTER_FILTER_EMPTY_STATE, setTooltip } from '../entry-manager.utils.js';
 import {
   buildCharacterFilterMenuShell,
-  buildCharacterFilterOptionRow,
+  repopulateCharacterFilterOptionList,
+  CHARACTER_FILTER_MENU_SEARCH_TEXTS,
   CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY,
 } from './table.body.character-filter.js';
 import {
   wireMultiselectDropdown,
   MULTISELECT_DROPDOWN_HIDDEN_CLASS,
-  MULTISELECT_DROPDOWN_OPTION_SELECTOR,
 } from '../../shared/multiselect-dropdown.js';
 
 const ACTIVE_FILTER_CLASS = 'stwid--state-active';
@@ -47,6 +47,40 @@ const optionTooltip = (option) =>
       ? `Avatar key: ${option.value}`
       : `Tag ID: ${option.value}`;
 
+// The picker's icon-only trigger button and its positioning wrap.
+const buildValueFilterTriggerButton = () => {
+  const menuWrap = document.createElement('div');
+  menuWrap.classList.add('stwid--multiselect-dropdown__wrap');
+
+  const menuButton = document.createElement('div');
+  menuButton.classList.add(
+    'menu_button',
+    'fa-solid',
+    'fa-fw',
+    'fa-user-tag',
+    'stwid--order-filter-button',
+    'stwid--multiselect-dropdown__button',
+  );
+  // Icon-only control: it has no text to name it (ACC-04).
+  setTooltip(menuButton, TRIGGER_TOOLTIP, { ariaLabel: 'Filter to a specific character or tag' });
+  menuWrap.append(menuButton);
+
+  return { menuWrap, menuButton };
+};
+
+// This picker chooses what to *look for*, not what to store, so the
+// include/exclude toggle would have nothing to act on — R22 matches both.
+// Hides that toggle, names the menu and appends the both-directions hint.
+const appendValueFilterMenuHeading = ({ header, heading, excludeRow }) => {
+  excludeRow.classList.add(MULTISELECT_DROPDOWN_HIDDEN_CLASS);
+  heading.textContent = MENU_HEADING;
+
+  const hint = document.createElement('div');
+  hint.classList.add('stwid--character-filter-menu__hint');
+  hint.textContent = CHARACTER_FILTER_VALUE_FILTER_HINT;
+  header.append(hint);
+};
+
 /**
  * Builds the column header's character/tag picker filter (R22).
  *
@@ -66,32 +100,10 @@ export function buildCharacterFilterValueFilterMenu({
   applyFilters,
   onFilterChange = () => {},
 }) {
-  const menuWrap = document.createElement('div');
-  menuWrap.classList.add('stwid--multiselect-dropdown__wrap');
-
-  const menuButton = document.createElement('div');
-  menuButton.classList.add(
-    'menu_button',
-    'fa-solid',
-    'fa-fw',
-    'fa-user-tag',
-    'stwid--order-filter-button',
-    'stwid--multiselect-dropdown__button',
-  );
-  // Icon-only control: it has no text to name it (ACC-04).
-  setTooltip(menuButton, TRIGGER_TOOLTIP, { ariaLabel: 'Filter to a specific character or tag' });
-  menuWrap.append(menuButton);
+  const { menuWrap, menuButton } = buildValueFilterTriggerButton();
 
   const { menu, header, list, heading, excludeRow } = buildCharacterFilterMenuShell();
-  // This picker chooses what to *look for*, not what to store, so the
-  // include/exclude toggle would have nothing to act on — R22 matches both.
-  excludeRow.classList.add(MULTISELECT_DROPDOWN_HIDDEN_CLASS);
-  heading.textContent = MENU_HEADING;
-
-  const hint = document.createElement('div');
-  hint.classList.add('stwid--character-filter-menu__hint');
-  hint.textContent = CHARACTER_FILTER_VALUE_FILTER_HINT;
-  header.append(hint);
+  appendValueFilterMenuHeading({ header, heading, excludeRow });
 
   const getSelected = () => entryManagerState.filters[FILTER_STATE_KEY] ?? [];
 
@@ -113,16 +125,8 @@ export function buildCharacterFilterValueFilterMenu({
     onFilterChange();
   };
 
-  const refreshMenu = () => {
-    for (const option of list.querySelectorAll(MULTISELECT_DROPDOWN_OPTION_SELECTOR)) {
-      option.remove();
-    }
-    const fragment = document.createDocumentFragment();
-    for (const option of getOptions()) {
-      fragment.append(buildCharacterFilterOptionRow(option, onToggleOption, optionTooltip));
-    }
-    list.append(fragment);
-  };
+  const refreshMenu = () =>
+    repopulateCharacterFilterOptionList(list, getOptions(), onToggleOption, optionTooltip);
 
   wireMultiselectDropdown(menu, menuButton, menuWrap, {
     listContainer: list,
@@ -133,9 +137,7 @@ export function buildCharacterFilterValueFilterMenu({
     onBeforeOpen: refreshMenu,
     emptyStateText: CHARACTER_FILTER_EMPTY_STATE,
     search: {
-      placeholder: 'Search characters and tags…',
-      ariaLabel: 'Search characters and tags',
-      noResultsText: 'No matching character or tag.',
+      ...CHARACTER_FILTER_MENU_SEARCH_TEXTS,
       container: header,
       getOptionSearchText: (option) =>
         option.dataset[CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY] ?? '',

@@ -6,7 +6,10 @@ import { buildEntryManagerRow } from './table.body.cells.js';
 // BULK_APPLY_BATCH_SIZE to keep each chunk well under a frame-budget freeze.
 const ROW_BUILD_BATCH_SIZE = 50;
 
-function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
+// Exported for tests only — a failed save is invisible to callers (enqueueSave
+// always resolves), so the failure path is covered directly. Everything inside
+// the extension still reaches this through buildTableBody().
+export function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
   const inFlightByBook = new Map();
 
   const pendingByBook = new Set();
@@ -18,6 +21,7 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
         await saveWorldInfo(bookName, buildSavePayload(bookName), true);
       } catch (err) {
         console.error('[WorldInfoDrawer] Entry Manager save failed for book:', bookName, err);
+        toastr.error(`Failed to save "${bookName}" — the last edit may not have been kept.`);
       }
     } while (pendingByBook.has(bookName));
     inFlightByBook.delete(bookName);
@@ -28,9 +32,9 @@ function createBookSaveSerializer(saveWorldInfo, buildSavePayload) {
       pendingByBook.add(bookName);
       await inFlightByBook.get(bookName);
     } else {
-      const p = runSave(bookName);
-      inFlightByBook.set(bookName, p);
-      await p;
+      const savePromise = runSave(bookName);
+      inFlightByBook.set(bookName, savePromise);
+      await savePromise;
     }
   };
 }

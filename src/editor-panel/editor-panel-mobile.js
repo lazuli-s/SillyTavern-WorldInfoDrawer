@@ -1,11 +1,25 @@
-const MOBILE_EDITOR_MEDIA_QUERY = '(max-width: 1000px)';
+export const MOBILE_EDITOR_MEDIA_QUERY = '(max-width: 1000px)';
 const FLAGS_ROW_CLASS = 'stwid--editorContentFlagsRow';
 const GROUP_ROW_SELECTOR =
   ".inline-drawer-content > .world_entry_edit > .flex-container.wide100p.flexGap10:has([name='group'])";
+const EDITOR_HEADER_SELECTOR =
+  '.world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header';
+const CONTENT_CONTROL_SELECTOR = "[name='contentAndCharFilterBlock'] > .world_entry_form_control";
+
+const getEditorHeader = (editDom) => editDom.querySelector(EDITOR_HEADER_SELECTOR);
 
 const findToggleByName = (editDom, name) =>
   editDom.querySelector(`.${FLAGS_ROW_CLASS} label:has(input[name='${name}'])`) ??
   editDom.querySelector(`label:has(input[name='${name}'])`);
+
+const resolveMobileContentControls = (editDom) => {
+  const contentControl = editDom.querySelector(CONTENT_CONTROL_SELECTOR);
+  return {
+    contentControl,
+    contentMetaRow: contentControl?.querySelector('label > small > span'),
+    contentTextarea: contentControl?.querySelector("textarea[name='content']"),
+  };
+};
 
 const shouldUseMobileEditorLayout = () => {
   return window.matchMedia?.(MOBILE_EDITOR_MEDIA_QUERY)?.matches ?? false;
@@ -37,9 +51,7 @@ const normalizeMobileHeaderControl = (control) => {
 };
 
 const moveMobileContextualHeaderControls = (editDom) => {
-  const header = editDom.querySelector(
-    '.world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header',
-  );
+  const header = getEditorHeader(editDom);
   const positionControl = editDom.querySelector(
     ".WIEnteryHeaderControls > .world_entry_form_control[name='PositionBlock']",
   );
@@ -76,9 +88,7 @@ const moveMobileContextualHeaderControls = (editDom) => {
 };
 
 const moveMobileHeaderActions = (editDom) => {
-  const header = editDom.querySelector(
-    '.world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header',
-  );
+  const header = getEditorHeader(editDom);
   if (!header || header.querySelector('.stwid--editor-actions-row')) return;
 
   const actionButtons = Array.from(header.querySelectorAll(':scope > .menu_button'));
@@ -91,15 +101,11 @@ const moveMobileHeaderActions = (editDom) => {
 };
 
 const moveMobileContentFlags = (editDom) => {
-  const contentControl = editDom.querySelector(
-    "[name='contentAndCharFilterBlock'] > .world_entry_form_control",
-  );
-  const contentMeta = contentControl?.querySelector('label > small > span');
-  const flagsContainer = contentMeta?.querySelector(':scope > .flex-container:last-child');
-  const contentTextarea = contentControl?.querySelector("textarea[name='content']");
+  const { contentControl, contentMetaRow, contentTextarea } = resolveMobileContentControls(editDom);
+  const flagsContainer = contentMetaRow?.querySelector(':scope > .flex-container:last-child');
   if (
     !contentControl ||
-    !contentMeta ||
+    !contentMetaRow ||
     !flagsContainer ||
     !contentTextarea ||
     contentControl.querySelector(`.${FLAGS_ROW_CLASS}`)
@@ -114,14 +120,10 @@ const moveMobileContentFlags = (editDom) => {
 };
 
 const annotateMobileContentSections = (editDom) => {
-  const contentControl = editDom.querySelector(
-    "[name='contentAndCharFilterBlock'] > .world_entry_form_control",
-  );
-  const contentHeaderRow = contentControl?.querySelector('label > small > span');
-  const contentTextarea = contentControl?.querySelector("textarea[name='content']");
-  if (!contentControl || !contentHeaderRow || !contentTextarea) return;
+  const { contentControl, contentMetaRow, contentTextarea } = resolveMobileContentControls(editDom);
+  if (!contentControl || !contentMetaRow || !contentTextarea) return;
 
-  contentHeaderRow.classList.add('stwid--editor-content-header-row');
+  contentMetaRow.classList.add('stwid--editor-content-header-row');
 
   if (!contentControl.querySelector('.stwid--editor-content-body-section')) {
     const contentBodySection = document.createElement('div');

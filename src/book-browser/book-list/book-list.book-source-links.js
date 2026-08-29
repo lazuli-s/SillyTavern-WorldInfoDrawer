@@ -19,6 +19,17 @@ const getTrimmedNonEmptyString = (value) => {
   return typeof value === 'string' && value.trim() ? value.trim() : '';
 };
 
+const findPersonaNameByLorebook = (personaMap, descriptors, currentLorebook) => {
+  if (!descriptors || typeof descriptors !== 'object') return '';
+  for (const [avatar, descriptor] of Object.entries(descriptors)) {
+    if (descriptor?.lorebook !== currentLorebook) continue;
+    const mappedName = personaMap[avatar];
+    const personaName = getTrimmedNonEmptyString(mappedName);
+    if (personaName) return personaName;
+  }
+  return '';
+};
+
 const getBookSourceRuntimeContext = () => {
   const context = globalThis.SillyTavern?.getContext?.() ?? null;
   const eventTypes =
@@ -90,15 +101,12 @@ const getActivePersonaName = ({ powerUserSettings, chatMetadata, name1 }) => {
 
   const currentLorebook = powerUserSettings?.persona_description_lorebook;
   if (typeof currentLorebook === 'string' && currentLorebook) {
-    const descriptors = powerUserSettings?.persona_descriptions;
-    if (descriptors && typeof descriptors === 'object') {
-      for (const [avatar, descriptor] of Object.entries(descriptors)) {
-        if (descriptor?.lorebook !== currentLorebook) continue;
-        const mappedName = personaMap[avatar];
-        const personaName = getTrimmedNonEmptyString(mappedName);
-        if (personaName) return personaName;
-      }
-    }
+    const personaName = findPersonaNameByLorebook(
+      personaMap,
+      powerUserSettings?.persona_descriptions,
+      currentLorebook,
+    );
+    if (personaName) return personaName;
   }
 
   return getTrimmedNonEmptyString(name1);
@@ -173,6 +181,19 @@ const indexCharactersByAvatarAndName = (characters) => {
   return { characterByAvatar, charactersByName };
 };
 
+const resolveGroupMemberCharacter = (member, characterByAvatar, charactersByName) => {
+  let character = characterByAvatar.get(member) ?? null;
+  if (!character) {
+    const matchingNameCharacters = charactersByName.get(member) ?? [];
+    if (matchingNameCharacters.length === 1) {
+      character = matchingNameCharacters[0];
+    } else if (matchingNameCharacters.length > 1) {
+      console.debug(SOURCE_ICON_LOG_PREFIX, 'skip_ambiguous_group_member', member);
+    }
+  }
+  return character;
+};
+
 const collectCharacterBooks = (runtime) => {
   const characterBooks = new Map();
   if (runtime.groupId) {
@@ -185,15 +206,7 @@ const collectCharacterBooks = (runtime) => {
     );
     for (const member of members) {
       if (typeof member !== 'string' || !member) continue;
-      let character = characterByAvatar.get(member) ?? null;
-      if (!character) {
-        const matchingNameCharacters = charactersByName.get(member) ?? [];
-        if (matchingNameCharacters.length === 1) {
-          character = matchingNameCharacters[0];
-        } else if (matchingNameCharacters.length > 1) {
-          console.debug(SOURCE_ICON_LOG_PREFIX, 'skip_ambiguous_group_member', member);
-        }
-      }
+      const character = resolveGroupMemberCharacter(member, characterByAvatar, charactersByName);
       addCharacterLinkedBooks(characterBooks, character);
     }
     return characterBooks;

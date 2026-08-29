@@ -8,12 +8,10 @@ import {
   NON_NEGATIVE_PLACEHOLDER,
   createLabeledBulkContainer,
   createApplyButton,
-  getSafeTbodyRows,
-  getBulkTargets,
-  saveUpdatedBooks,
+  runBulkTargetsApply,
   withApplyButtonLock,
   createPersistedBulkNumberInput,
-  runApplyNonNegativeIntegerField,
+  runBulkNumericFieldApply,
   buildRecursionCheckboxRow,
   applyRecursionFlagsToRowInputs,
   RECURSION_ENTRY_FIELDS,
@@ -51,12 +49,25 @@ function buildBulkNonNegativeIntegerSection({
   });
 
   const runApply = async () => {
-    await runApplyNonNegativeIntegerField({
-      input: persistedInput,
+    // Validation runs here, before the shared runner locks the apply button —
+    // the same placement `runApplyNonNegativeIntegerField` used internally.
+    const rawValue = persistedInput.value.trim();
+    if (rawValue === '') {
+      toastr.warning(emptyValueWarning);
+      return;
+    }
+
+    const parsedValue = parseInt(rawValue, 10);
+    if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+      toastr.warning(invalidValueWarning);
+      return;
+    }
+
+    await runBulkNumericFieldApply({
+      resolveValue: () => parsedValue,
       entryField,
       rowInputName,
-      emptyValueWarning,
-      invalidValueWarning,
+      noTargetsWarning: `No selected entries to apply ${label} to.`,
       dom,
       cache,
       isEntryManagerRowSelected,
@@ -110,17 +121,10 @@ function syncActiveStateToggles({ tr, cache, bookName, uid, willDisable }) {
   }
 }
 
-async function applyBulkActiveStateToTargets({ targets, cache, willDisable }) {
-  const books = new Set();
-  for (let i = 0; i < targets.length; i++) {
-    const { tr, bookName, uid, entryData } = targets[i];
-    books.add(bookName);
-    entryData.disable = willDisable;
-    mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['disable']);
-    syncActiveStateToggles({ tr, cache, bookName, uid, willDisable });
-    await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
-  }
-  return books;
+function applyBulkActiveStateToSingleTarget({ tr, bookName, uid, entryData, cache, willDisable }) {
+  entryData.disable = willDisable;
+  mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['disable']);
+  syncActiveStateToggles({ tr, cache, bookName, uid, willDisable });
 }
 
 function buildBulkStrategySelect(getStrategyOptions) {
@@ -158,32 +162,19 @@ function applyStrategyToSingleTarget({ tr, cache, bookName, uid, entryData, valu
   if (listStrategyInput) listStrategyInput.value = value;
 }
 
-async function applyBulkStrategyToTargets({
-  targets,
-  cache,
-  value,
-  applyEntryManagerStrategyFilterToRow,
-}) {
-  const books = new Set();
-  for (let i = 0; i < targets.length; i++) {
-    const { tr, bookName, uid, entryData } = targets[i];
-    books.add(bookName);
-    applyStrategyToSingleTarget({ tr, cache, bookName, uid, entryData, value });
-    applyEntryManagerStrategyFilterToRow(tr, entryData);
-    await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
-  }
-  return books;
+function applyBulkProbabilityToSingleTarget({ tr, bookName, entryData, cache, parsed }) {
+  entryData.probability = parsed;
+  mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['probability']);
+  const rowProbabilityInput = tr.querySelector('[name="selective_probability"]');
+  if (rowProbabilityInput) rowProbabilityInput.value = String(parsed);
 }
 
 export async function applyBulkProbabilityToTargets({ targets, cache, parsed }) {
   const books = new Set();
   for (let i = 0; i < targets.length; i++) {
-    const { tr, bookName, entryData } = targets[i];
-    books.add(bookName);
-    entryData.probability = parsed;
-    mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['probability']);
-    const rowProbabilityInput = tr.querySelector('[name="selective_probability"]');
-    if (rowProbabilityInput) rowProbabilityInput.value = String(parsed);
+    const target = targets[i];
+    books.add(target.bookName);
+    applyBulkProbabilityToSingleTarget({ ...target, cache, parsed });
     await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
   }
   return books;
@@ -253,8 +244,16 @@ export function buildApplyAllSection(applyRegistry) {
         toastr.info('No changes to apply.');
         return;
       }
+      // One broken section must not cancel the rest: attempt every dirty
+      // container, report every failure. A failed container keeps its
+      // APPLY_DIRTY_CLASS, so Apply All can simply be clicked again.
       for (const { runApply } of dirty) {
-        await runApply();
+        try {
+          await runApply();
+        } catch (error) {
+          console.error('STWID: a container failed to apply during Apply All.', error);
+          toastr.error('One or more sections failed to apply.');
+        }
       }
     });
   });
@@ -287,24 +286,30 @@ export function buildBulkProbabilitySection({
   });
 
   const runApplyProbability = async () => {
-    await withApplyButtonLock(applyProbability, async () => {
-      const rawValue = probabilityInput.value.trim();
-      if (rawValue === '') {
-        toastr.warning('Enter a probability value (0–100).');
-        return;
-      }
-      const parsed = parseInt(rawValue, 10);
-      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
-        toastr.warning('Probability must be a whole number between 0 and 100.');
-        return;
-      }
-      const rows = getSafeTbodyRows(dom);
-      if (!rows) return;
-      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-      const books = await applyBulkProbabilityToTargets({ targets, cache, parsed });
-      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      // Leave the row marked dirty when a book did not save, so the user can retry.
-      if (failedBooks.length === 0) applyProbability.classList.remove(APPLY_DIRTY_CLASS);
+    // Validation runs here, inside the runner's lock — the same placement the
+    // hand-rolled skeleton used before `runBulkTargetsApply` existed.
+    let parsed = null;
+    await runBulkTargetsApply({
+      applyButton: applyProbability,
+      dom,
+      cache,
+      isEntryManagerRowSelected,
+      saveWorldInfo,
+      buildSavePayload,
+      prepare: () => {
+        const rawValue = probabilityInput.value.trim();
+        if (rawValue === '') {
+          toastr.warning('Enter a probability value (0–100).');
+          return false;
+        }
+        parsed = parseInt(rawValue, 10);
+        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
+          toastr.warning('Probability must be a whole number between 0 and 100.');
+          return false;
+        }
+        return true;
+      },
+      applyToTarget: (target) => applyBulkProbabilityToSingleTarget({ ...target, cache, parsed }),
     });
   };
 
@@ -418,16 +423,21 @@ export function buildBulkStateSection({
   const activeToggle = buildBulkActiveToggle();
 
   const runApplyActiveState = async () => {
-    await withApplyButtonLock(applyActiveState, async () => {
-      const rows = getSafeTbodyRows(dom);
-      if (!rows) return;
-
-      const willDisable = activeToggle.classList.contains(TOGGLE_OFF_CLASS);
-      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-      const books = await applyBulkActiveStateToTargets({ targets, cache, willDisable });
-      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      // Leave the row marked dirty when a book did not save, so the user can retry.
-      if (failedBooks.length === 0) applyActiveState.classList.remove(APPLY_DIRTY_CLASS);
+    // The toggle is read once per apply, not once per entry — a click on it
+    // mid-apply must not mix two states into one run.
+    let willDisable = false;
+    await runBulkTargetsApply({
+      applyButton: applyActiveState,
+      dom,
+      cache,
+      isEntryManagerRowSelected,
+      saveWorldInfo,
+      buildSavePayload,
+      prepare: () => {
+        willDisable = activeToggle.classList.contains(TOGGLE_OFF_CLASS);
+      },
+      applyToTarget: (target) =>
+        applyBulkActiveStateToSingleTarget({ ...target, cache, willDisable }),
     });
   };
 
@@ -461,25 +471,26 @@ export function buildBulkStrategySection({
   strategyContainer.append(strategySelect);
 
   const runApplyStrategy = async () => {
-    await withApplyButtonLock(applyStrategy, async () => {
-      const value = strategySelect.value;
-      if (!value) {
-        toastr.warning('No strategy selected.');
-        return;
-      }
-      const rows = getSafeTbodyRows(dom);
-      if (!rows) return;
-
-      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-      const books = await applyBulkStrategyToTargets({
-        targets,
-        cache,
-        value,
-        applyEntryManagerStrategyFilterToRow,
-      });
-      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      // Leave the row marked dirty when a book did not save, so the user can retry.
-      if (failedBooks.length === 0) applyStrategy.classList.remove(APPLY_DIRTY_CLASS);
+    let value = '';
+    await runBulkTargetsApply({
+      applyButton: applyStrategy,
+      dom,
+      cache,
+      isEntryManagerRowSelected,
+      saveWorldInfo,
+      buildSavePayload,
+      prepare: () => {
+        value = strategySelect.value;
+        if (!value) {
+          toastr.warning('No strategy selected.');
+          return false;
+        }
+        return true;
+      },
+      applyToTarget: ({ tr, bookName, uid, entryData }) => {
+        applyStrategyToSingleTarget({ tr, cache, bookName, uid, entryData, value });
+        applyEntryManagerStrategyFilterToRow(tr, entryData);
+      },
     });
   };
 
@@ -517,25 +528,21 @@ export function buildBulkRecursionSection({
   recursionContainer.append(recursionOptions);
 
   const runApplyRecursion = async () => {
-    await withApplyButtonLock(applyRecursion, async () => {
-      const rows = getSafeTbodyRows(dom);
-      if (!rows) return;
-      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-      const books = new Set();
-      for (let i = 0; i < targets.length; i++) {
-        const { tr, bookName, entryData } = targets[i];
-        books.add(bookName);
+    await runBulkTargetsApply({
+      applyButton: applyRecursion,
+      dom,
+      cache,
+      isEntryManagerRowSelected,
+      saveWorldInfo,
+      buildSavePayload,
+      applyToTarget: ({ tr, bookName, entryData }) => {
         const domInputs = tr.querySelectorAll(
           `[data-col="recursion"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
         );
         applyRecursionFlagsToRowInputs(domInputs, entryData, recursionCheckboxes);
         mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, RECURSION_ENTRY_FIELDS);
         applyEntryManagerRecursionFilterToRow(tr, entryData);
-        await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
-      }
-      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      // Leave the row marked dirty when a book did not save, so the user can retry.
-      if (failedBooks.length === 0) applyRecursion.classList.remove(APPLY_DIRTY_CLASS);
+      },
     });
   };
 
@@ -565,42 +572,41 @@ export function buildBulkBudgetSection({
     'Set the Ignore Budget flag on all selected entries, overwriting existing values. When enabled, an entry bypasses the World Info token budget limit.',
   );
 
-  let budgetIgnoreCheckbox;
   const budgetOptions = document.createElement('div');
   budgetOptions.classList.add(RECURSION_OPTIONS_CLASS);
   const budgetRow = document.createElement('label');
   budgetRow.classList.add('stwid--option-check-row');
-  const budgetIgnoreCheckboxInput = document.createElement('input');
-  budgetIgnoreCheckboxInput.type = 'checkbox';
-  budgetIgnoreCheckboxInput.classList.add('checkbox');
-  setTooltip(budgetIgnoreCheckboxInput, 'Ignore World Info budget limit for this entry');
-  budgetIgnoreCheckbox = budgetIgnoreCheckboxInput;
-  budgetRow.append(budgetIgnoreCheckboxInput);
+  const budgetIgnoreCheckbox = document.createElement('input');
+  budgetIgnoreCheckbox.type = 'checkbox';
+  budgetIgnoreCheckbox.classList.add('checkbox');
+  setTooltip(budgetIgnoreCheckbox, 'Ignore World Info budget limit for this entry');
+  budgetRow.append(budgetIgnoreCheckbox);
   budgetRow.append('Ignore budget');
   budgetOptions.append(budgetRow);
   budgetContainer.append(budgetOptions);
 
   const runApplyBudget = async () => {
-    await withApplyButtonLock(applyBudget, async () => {
-      const checked = budgetIgnoreCheckbox.checked;
-      const rows = getSafeTbodyRows(dom);
-      if (!rows) return;
-      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected);
-      const books = new Set();
-      for (let i = 0; i < targets.length; i++) {
-        const { tr, bookName, entryData } = targets[i];
-        books.add(bookName);
+    // The checkbox is read once per apply, not once per entry — a click on it
+    // mid-apply must not mix two values into one run.
+    let checked = false;
+    await runBulkTargetsApply({
+      applyButton: applyBudget,
+      dom,
+      cache,
+      isEntryManagerRowSelected,
+      saveWorldInfo,
+      buildSavePayload,
+      prepare: () => {
+        checked = budgetIgnoreCheckbox.checked;
+      },
+      applyToTarget: ({ tr, bookName, entryData }) => {
         entryData.ignoreBudget = checked;
         mirrorEntryFieldsToOriginalData(cache?.[bookName], entryData, ['ignoreBudget']);
         const domInput = tr.querySelector(
           `[data-col="budget"] .${RECURSION_OPTIONS_CLASS} input[type="checkbox"]`,
         );
         if (domInput) domInput.checked = checked;
-        await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
-      }
-      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      // Leave the row marked dirty when a book did not save, so the user can retry.
-      if (failedBooks.length === 0) applyBudget.classList.remove(APPLY_DIRTY_CLASS);
+      },
     });
   };
 

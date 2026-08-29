@@ -76,22 +76,7 @@ function createGlobalSortingSection({ cache, getListPanelApi }) {
   return globalSortingWrapper;
 }
 
-function createPerBookSortingSection({ cache, getListPanelApi }) {
-  const perBookSortingWrapper = document.createElement('div');
-  perBookSortingWrapper.classList.add('stwid--field-group');
-  perBookSortingWrapper.append(
-    createThinContainerLabel(
-      'Per-book Sorting',
-      'Turn this on to let each lorebook use its own sorting preference. Turn it off to make every lorebook follow Global Sorting.',
-    ),
-  );
-
-  const perBookSortingGroup = document.createElement('div');
-  perBookSortingGroup.classList.add('stwid--individual-sorting');
-
-  const perBookButtons = document.createElement('div');
-  perBookButtons.classList.add('stwid--per-book-sort-buttons');
-
+function createPerBookSortToggleButton({ cache, getListPanelApi }) {
   const bookSortToggle = document.createElement('button');
   bookSortToggle.type = 'button';
   bookSortToggle.classList.add('menu_button', 'stwid--book-sort-toggle');
@@ -118,6 +103,10 @@ function createPerBookSortingSection({ cache, getListPanelApi }) {
     sortAllCachedBooks(cache, getListPanelApi);
   });
 
+  return bookSortToggle;
+}
+
+function createClearBookSortsButton({ getListPanelApi }) {
   const clearBookSorts = document.createElement('button');
   clearBookSorts.type = 'button';
   clearBookSorts.classList.add('menu_button', 'stwid--clear-book-sorts');
@@ -137,7 +126,29 @@ function createPerBookSortingSection({ cache, getListPanelApi }) {
     }
   });
 
-  perBookButtons.append(bookSortToggle, clearBookSorts);
+  return clearBookSorts;
+}
+
+function createPerBookSortingSection({ cache, getListPanelApi }) {
+  const perBookSortingWrapper = document.createElement('div');
+  perBookSortingWrapper.classList.add('stwid--field-group');
+  perBookSortingWrapper.append(
+    createThinContainerLabel(
+      'Per-book Sorting',
+      'Turn this on to let each lorebook use its own sorting preference. Turn it off to make every lorebook follow Global Sorting.',
+    ),
+  );
+
+  const perBookSortingGroup = document.createElement('div');
+  perBookSortingGroup.classList.add('stwid--individual-sorting');
+
+  const perBookButtons = document.createElement('div');
+  perBookButtons.classList.add('stwid--per-book-sort-buttons');
+
+  perBookButtons.append(
+    createPerBookSortToggleButton({ cache, getListPanelApi }),
+    createClearBookSortsButton({ getListPanelApi }),
+  );
   perBookSortingGroup.append(perBookButtons);
   perBookSortingWrapper.append(perBookSortingGroup);
 

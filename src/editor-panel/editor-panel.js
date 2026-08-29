@@ -1,4 +1,4 @@
-import { applyMobileHeaderLayout } from './editor-panel-mobile.js';
+import { applyMobileHeaderLayout, MOBILE_EDITOR_MEDIA_QUERY } from './editor-panel-mobile.js';
 
 const ACTIVE_STATE_CLASS = 'stwid--state-active';
 const FOCUS_CLASS = 'stwid--focus';
@@ -354,7 +354,7 @@ export const initEditorPanel = ({
   // Responsive lifecycle for the open entry editor. The mobile header transform only runs
   // once at open time, so without this the editor keeps a stale layout when the viewport
   // crosses the 1000px breakpoint (e.g. window resize, phone rotation, split-screen).
-  const editorLayoutMedia = window.matchMedia?.('(max-width: 1000px)');
+  const editorLayoutMedia = window.matchMedia?.(MOBILE_EDITOR_MEDIA_QUERY);
   let currentEntryEditorDom = null;
   let reopenCurrentEditor = null;
   let openEditorIsMobileLayout = false;

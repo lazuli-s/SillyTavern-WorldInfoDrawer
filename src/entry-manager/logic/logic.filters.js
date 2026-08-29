@@ -18,6 +18,10 @@ const FILTER_DATASET_KEYS = {
   characterFilterValue: 'stwidFilterCharacterFilterValue',
 };
 
+// Single source of truth for "which columns contribute to the filtered class":
+// every key here is tested when recomputing stwid--state-filtered.
+const FILTER_DATASET_KEY_LIST = Object.values(FILTER_DATASET_KEYS);
+
 const normalizeAllowedFilters = (filters, allowedValues) => {
   const allowed = new Set(allowedValues);
   return filters.filter((value) => allowed.has(value));
@@ -65,29 +69,8 @@ const createFilterNormalizers = ({
 const createRowFilterStateHelpers = () => {
   const updateEntryManagerRowFilterClass = (row) => {
     if (!row) return;
-    const strategyFiltered = row.dataset[FILTER_DATASET_KEYS.strategy] === 'true';
-    const positionFiltered = row.dataset[FILTER_DATASET_KEYS.position] === 'true';
-    const recursionFiltered = row.dataset[FILTER_DATASET_KEYS.recursion] === 'true';
-    const outletFiltered = row.dataset[FILTER_DATASET_KEYS.outlet] === 'true';
-    const automationIdFiltered = row.dataset[FILTER_DATASET_KEYS.automationId] === 'true';
-    const groupFiltered = row.dataset[FILTER_DATASET_KEYS.group] === 'true';
-    const scriptFiltered = row.dataset[FILTER_DATASET_KEYS.script] === 'true';
-    const characterFilterPresenceFiltered =
-      row.dataset[FILTER_DATASET_KEYS.characterFilterPresence] === 'true';
-    const characterFilterValueFiltered =
-      row.dataset[FILTER_DATASET_KEYS.characterFilterValue] === 'true';
-    row.classList.toggle(
-      'stwid--state-filtered',
-      strategyFiltered ||
-        positionFiltered ||
-        recursionFiltered ||
-        outletFiltered ||
-        automationIdFiltered ||
-        groupFiltered ||
-        scriptFiltered ||
-        characterFilterPresenceFiltered ||
-        characterFilterValueFiltered,
-    );
+    const isFiltered = FILTER_DATASET_KEY_LIST.some((key) => row.dataset[key] === 'true');
+    row.classList.toggle('stwid--state-filtered', isFiltered);
   };
 
   const setEntryManagerRowFilterState = (row, datasetFlagKey, filtered) => {
@@ -261,7 +244,6 @@ const createRowFilterAppliers = ({
   };
 
   return {
-    applySimpleSetFilterToRow,
     applyEntryManagerCharacterFilterPresenceFilterToRow,
     applyEntryManagerCharacterFilterValueFilterToRow,
     applyEntryManagerStrategyFilterToRow,
@@ -405,9 +387,8 @@ const createBookFilterAppliers = ({
 };
 
 const createFilterSyncHelpers = ({
-  dom,
   entryManagerState,
-  getEntryManagerEntries,
+  forEachEntryRowInBook,
   getStrategyValues,
   getPositionValues,
   getOutletValues,
@@ -449,11 +430,9 @@ const createFilterSyncHelpers = ({
   };
 
   const clearEntryManagerScriptFilters = () => {
-    const entries = getEntryManagerEntries(entryManagerState.book, true);
-    for (const entry of entries) {
-      const row = dom.order.entries?.[entry.book]?.[entry.data.uid];
+    forEachEntryRowInBook(entryManagerState.book, ({ row }) => {
       setEntryManagerRowFilterState(row, FILTER_DATASET_KEYS.script, false);
-    }
+    });
   };
 
   const syncEntryManagerStrategyFilters = () => {
@@ -546,7 +525,6 @@ const createFilterSyncHelpers = ({
   return {
     clearEntryManagerScriptFilters,
     syncEntryManagerCharacterFilterValueFilters,
-    syncSelectableFilters,
     syncEntryManagerStrategyFilters,
     syncEntryManagerPositionFilters,
     syncEntryManagerOutletFilters,
@@ -614,6 +592,7 @@ const createEntryManagerFilters = ({
   });
 
   const {
+    forEachEntryRowInBook,
     applyEntryManagerStrategyFilters,
     applyEntryManagerPositionFilters,
     applyEntryManagerRecursionFilters,
@@ -650,9 +629,8 @@ const createEntryManagerFilters = ({
     syncEntryManagerGroupFilters,
     syncEntryManagerCharacterFilterValueFilters,
   } = createFilterSyncHelpers({
-    dom,
     entryManagerState,
-    getEntryManagerEntries,
+    forEachEntryRowInBook,
     getStrategyValues,
     getPositionValues,
     getOutletValues,

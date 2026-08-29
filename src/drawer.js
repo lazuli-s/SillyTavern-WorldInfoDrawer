@@ -96,13 +96,21 @@ const createDrawerRuntimeState = ({ saveWorldInfo, wiHandlerApi }) => {
   };
 
   const activationBlock = document.querySelector('#wiActivationSettings');
+  if (!activationBlock) {
+    console.warn(
+      '[WorldInfoDrawer] Host activation settings block "#wiActivationSettings" was not found; embedded activation settings are unavailable.',
+    );
+  }
   const activationBlockParent = activationBlock?.parentElement;
   const entryStateSaveQueueByBook = new Map();
-  const enqueueEntryStateSave = (bookName) => {
+  // Every write to one book chains after the previous one — whatever it is —
+  // so two saves to the same book can never interleave.
+  const enqueueBookSave = (
+    bookName,
+    saveThunk = () => saveWorldInfo(bookName, wiHandlerApi.buildSavePayload(bookName), true),
+  ) => {
     const previousSave = entryStateSaveQueueByBook.get(bookName) ?? Promise.resolve();
-    const queuedSave = previousSave
-      .catch(() => {})
-      .then(() => saveWorldInfo(bookName, wiHandlerApi.buildSavePayload(bookName), true));
+    const queuedSave = previousSave.catch(() => {}).then(saveThunk);
     entryStateSaveQueueByBook.set(bookName, queuedSave);
     return queuedSave.finally(() => {
       if (entryStateSaveQueueByBook.get(bookName) === queuedSave) {
@@ -110,6 +118,7 @@ const createDrawerRuntimeState = ({ saveWorldInfo, wiHandlerApi }) => {
       }
     });
   };
+  const enqueueEntryStateSave = (bookName) => enqueueBookSave(bookName);
 
   return {
     dom,
@@ -117,6 +126,7 @@ const createDrawerRuntimeState = ({ saveWorldInfo, wiHandlerApi }) => {
     activationBlockParent,
     entryStateSaveQueueByBook,
     enqueueEntryStateSave,
+    enqueueBookSave,
   };
 };
 
@@ -153,6 +163,74 @@ const initDrawerEntryManager = ({
     $,
   });
 
+const wireMobileBackButton = ({ dom, editorPanelApi, mobileBackBtn }) => {
+  mobileBackBtn.addEventListener('click', () => {
+    if (dom.order.toggle?.classList?.contains(ENTRY_MANAGER_ACTIVE_CLASS)) {
+      dom.order.toggle.click();
+      return;
+    }
+
+    editorPanelApi.resetEditorState();
+  });
+};
+
+const SELECTION_CONTEXT_FIELDS = ['selectFrom', 'selectLast', 'selectList', 'selectToast'];
+
+// Object-literal accessors are enumerable and configurable; defineProperty
+// defaults both to false, so both are set explicitly to keep the semantics of
+// the hand-written pairs this replaces identical.
+const forwardSelectionField = (target, key, source) => {
+  Object.defineProperty(target, key, {
+    get: () => source[key],
+    set: (value) => {
+      source[key] = value;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+};
+
+const wireWorldEntrySelectionContext = ({
+  dom,
+  cache,
+  enqueueEntryStateSave,
+  wiHandlerApi,
+  saveWorldInfo,
+  uuidv4,
+  listPanelApi,
+  editorPanelApi,
+  selectionState,
+  getCurrentEditor,
+  setCurrentEditor,
+}) => {
+  // `renderTemplateAsync` and `getWorldEntry` are module imports, referenced
+  // directly rather than passed through so they do not shadow the upper scope.
+  const worldEntryContext = {
+    buildSavePayload: wiHandlerApi.buildSavePayload,
+    cache,
+    dom,
+    enqueueEntryStateSave,
+    getWorldEntry,
+    renderTemplateAsync,
+    saveWorldInfo,
+    selectAdd: listPanelApi.selectAdd,
+    selectEnd: listPanelApi.selectEnd,
+    selectRemove: listPanelApi.selectRemove,
+    uuidv4,
+    editorPanel: editorPanelApi,
+    get currentEditor() {
+      return getCurrentEditor();
+    },
+    set currentEditor(value) {
+      setCurrentEditor(value);
+    },
+  };
+  SELECTION_CONTEXT_FIELDS.forEach((key) =>
+    forwardSelectionField(worldEntryContext, key, selectionState),
+  );
+  setWorldEntryContext(worldEntryContext);
+};
+
 const buildAndAttachDrawerDom = ({
   dom,
   cache,
@@ -171,6 +249,7 @@ const buildAndAttachDrawerDom = ({
   openEntryManager,
   refreshEntryManagerScope,
   enqueueEntryStateSave,
+  enqueueBookSave,
   deleteWorldInfoEntryRuntime,
   updateWIChangeRuntime,
   setListPanelApi,
@@ -183,6 +262,11 @@ const buildAndAttachDrawerDom = ({
   dom.drawer.body = body;
   body.classList.add('stwid--body');
   body.classList.add('stwid--state-loading');
+  // `data-extension-src` records which copy of this extension built this body.
+  // It exists because a worktree checked out beside the main tree installs as a
+  // second extension, and the witness element alone cannot say which folder the
+  // page is running. See docs/agents/worktrees.md.
+  body.dataset.extensionSrc = import.meta.url;
 
   const list = buildDrawerListContainer({
     dom,
@@ -211,14 +295,7 @@ const buildAndAttachDrawerDom = ({
   });
   setEditorPanelApi.current = editorPanelApi;
 
-  mobileBackBtn.addEventListener('click', () => {
-    if (dom.order.toggle?.classList?.contains(ENTRY_MANAGER_ACTIVE_CLASS)) {
-      dom.order.toggle.click();
-      return;
-    }
-
-    editorPanelApi.resetEditorState();
-  });
+  wireMobileBackButton({ dom, editorPanelApi, mobileBackBtn });
 
   const listPanelApi = initBookBrowser({
     Settings,
@@ -235,6 +312,7 @@ const buildAndAttachDrawerDom = ({
     delay,
     dom,
     download,
+    enqueueBookSave,
     executeSlashCommand,
     extensionNames,
     fillEmptyTitlesWithKeywords: wiHandlerApi.fillEmptyTitlesWithKeywords,
@@ -277,49 +355,18 @@ const buildAndAttachDrawerDom = ({
 
   const selectionState = listPanelApi.getSelectionState();
   setSelectionState.current = selectionState;
-  setWorldEntryContext({
-    buildSavePayload: wiHandlerApi.buildSavePayload,
-    cache,
+  wireWorldEntrySelectionContext({
     dom,
+    cache,
     enqueueEntryStateSave,
-    getWorldEntry,
-    renderTemplateAsync,
+    wiHandlerApi,
     saveWorldInfo,
-    selectAdd: listPanelApi.selectAdd,
-    selectEnd: listPanelApi.selectEnd,
-    selectRemove: listPanelApi.selectRemove,
     uuidv4,
-    editorPanel: editorPanelApi,
-    get currentEditor() {
-      return getCurrentEditor();
-    },
-    set currentEditor(value) {
-      setCurrentEditor(value);
-    },
-    get selectFrom() {
-      return selectionState.selectFrom;
-    },
-    set selectFrom(value) {
-      selectionState.selectFrom = value;
-    },
-    get selectLast() {
-      return selectionState.selectLast;
-    },
-    set selectLast(value) {
-      selectionState.selectLast = value;
-    },
-    get selectList() {
-      return selectionState.selectList;
-    },
-    set selectList(value) {
-      selectionState.selectList = value;
-    },
-    get selectToast() {
-      return selectionState.selectToast;
-    },
-    set selectToast(value) {
-      selectionState.selectToast = value;
-    },
+    listPanelApi,
+    editorPanelApi,
+    selectionState,
+    getCurrentEditor,
+    setCurrentEditor,
   });
   listPanelApi.updateCollapseAllToggle();
   listPanelApi.updateCollapseAllFoldersToggle();
@@ -327,6 +374,11 @@ const buildAndAttachDrawerDom = ({
 
   restoreSplitterForCurrentLayout = initSplitter(body, list);
   body.append(editorContainer);
+  if (!drawerContent) {
+    console.warn(
+      '[WorldInfoDrawer] Host mount point "#WorldInfo" was not found; the drawer body will not be mounted.',
+    );
+  }
   drawerContent?.append(body);
   restoreSplitterForCurrentLayout();
 
@@ -339,12 +391,54 @@ const buildAndAttachDrawerDom = ({
   };
 };
 
+const wireCloseButton = ({ dom, drawerContent }) => {
+  // The host's own drawer-close control: the first h3 inside #WorldInfo and its
+  // sole direct-child span (the "Worlds/Lorebooks" title). The selector is
+  // positional by host design — see SILLYTAVERN_OWNERSHIP_BOUNDARY.md and the
+  // vendored reference markup in vendor/SillyTavern/public/index.html
+  // (Worlds/Lorebooks header, ~line 4699).
+  const closeButton = drawerContent?.querySelector('h3 > span');
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      const isDrawerActive = document.body.classList.toggle(DRAWER_ACTIVE_CLASS);
+      if (!isDrawerActive && dom.activationToggle?.classList?.contains('stwid--state-active')) {
+        dom.activationToggle.click();
+      }
+    });
+  } else {
+    console.warn(
+      '[WorldInfoDrawer] Close button anchor "h3 > span" inside #WorldInfo was not found; drawer close handling is disabled.',
+    );
+  }
+};
+
+const registerUnloadCleanup = ({
+  removeKeyboardShortcuts,
+  observerCleanup,
+  editorPanelApiRef,
+  wiHandlerApi,
+  bookSourceLinksApi,
+}) => {
+  globalThis.addEventListener?.(
+    'beforeunload',
+    () => {
+      removeKeyboardShortcuts();
+      observerCleanup.cleanup();
+      editorPanelApiRef.current?.cleanup?.();
+      wiHandlerApi.cleanup?.();
+      bookSourceLinksApi.cleanup();
+    },
+    { once: true },
+  );
+};
+
 const mountDrawerUI = ({
   cache,
   dom,
   activationBlock,
   activationBlockParent,
   enqueueEntryStateSave,
+  enqueueBookSave,
   getCurrentEditor,
   setCurrentEditor,
   wiHandlerApi,
@@ -402,6 +496,7 @@ const mountDrawerUI = ({
     openEntryManager,
     refreshEntryManagerScope,
     enqueueEntryStateSave,
+    enqueueBookSave,
     deleteWorldInfoEntryRuntime,
     updateWIChangeRuntime,
     setListPanelApi: listPanelApiRef,
@@ -420,15 +515,7 @@ const mountDrawerUI = ({
     deleteWorldInfoEntryRuntime,
   });
 
-  const closeButton = drawerContent?.querySelector('h3 > span');
-  if (closeButton) {
-    closeButton.addEventListener('click', () => {
-      const isDrawerActive = document.body.classList.toggle(DRAWER_ACTIVE_CLASS);
-      if (!isDrawerActive && dom.activationToggle?.classList?.contains('stwid--state-active')) {
-        dom.activationToggle.click();
-      }
-    });
-  }
+  wireCloseButton({ dom, drawerContent });
 
   const observerCleanup = installDrawerObservers({
     drawerContent,
@@ -439,17 +526,13 @@ const mountDrawerUI = ({
     wiHandlerApi,
   });
 
-  globalThis.addEventListener?.(
-    'beforeunload',
-    () => {
-      removeKeyboardShortcuts();
-      observerCleanup.cleanup();
-      editorPanelApiRef.current?.cleanup?.();
-      wiHandlerApi.cleanup?.();
-      bookSourceLinksApi.cleanup();
-    },
-    { once: true },
-  );
+  registerUnloadCleanup({
+    removeKeyboardShortcuts,
+    observerCleanup,
+    editorPanelApiRef,
+    wiHandlerApi,
+    bookSourceLinksApi,
+  });
 
   return {
     listPanelApi,
@@ -492,7 +575,7 @@ export const initDrawer = ({
   const updateWIChangeRuntime = (bookName, bookData) =>
     wiHandlerApi.updateWIChange(bookName, bookData);
 
-  const { dom, activationBlock, activationBlockParent, enqueueEntryStateSave } =
+  const { dom, activationBlock, activationBlockParent, enqueueEntryStateSave, enqueueBookSave } =
     createDrawerRuntimeState({ saveWorldInfo, wiHandlerApi });
 
   const { listPanelApi, editorPanelApi, selectionState } = mountDrawerUI({
@@ -501,6 +584,7 @@ export const initDrawer = ({
     activationBlock,
     activationBlockParent,
     enqueueEntryStateSave,
+    enqueueBookSave,
     getCurrentEditor,
     setCurrentEditor,
     wiHandlerApi,

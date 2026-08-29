@@ -11,6 +11,10 @@ const COLLAPSE_ALL_BATCH_SIZE = 3;
 // older in-flight loop instead of two loops writing the DOM at the same time.
 let collapseAllGeneration = 0;
 
+// True while a Create-Book flow is between the name dialog and the book
+// appearing in the list; extra clicks during that window are ignored.
+let createBookFlowInProgress = false;
+
 function createLorebooksGroupLabel() {
   const lorebooksGroupLabel = document.createElement('span');
   lorebooksGroupLabel.classList.add('stwid--field-group__label');
@@ -37,7 +41,11 @@ function createCreateBookButton({
   wiHandlerApi,
   getListPanelApi,
 }) {
-  const createBookButton = document.querySelector('#world_create_button').cloneNode(true);
+  const nativeCreateButton = document.querySelector('#world_create_button');
+  if (!nativeCreateButton) {
+    console.warn('[STWID] Native #world_create_button not found; using plain fallback button.');
+  }
+  const createBookButton = (nativeCreateButton ?? document.createElement('button')).cloneNode(true);
   createBookButton.removeAttribute('id');
   createBookButton.classList.add('stwid--addBook');
   createBookButton.title = CREATE_BOOK_LABEL;
@@ -51,20 +59,29 @@ function createCreateBookButton({
       tempName,
     );
     if (!finalName) return;
-    const waitForUpdate = wiHandlerApi.waitForWorldInfoUpdate();
-    const created = await createNewWorldInfo(finalName, { interactive: true });
-    if (!created) return;
-    await waitForUpdate;
-    await wiHandlerApi.getUpdateWIChangeFinished()?.promise;
-    getListPanelApi()?.setBookCollapsed?.(finalName, false);
-    if (!cache[finalName]?.dom?.root) {
-      console.warn(
-        '[STWID] New book created but not yet present in cache/DOM; forcing refresh.',
-        finalName,
-      );
-      await getListPanelApi()?.refreshList?.();
+    if (createBookFlowInProgress) return;
+    createBookFlowInProgress = true;
+    try {
+      const waitForUpdate = wiHandlerApi.waitForWorldInfoUpdate();
+      const created = await createNewWorldInfo(finalName, { interactive: true });
+      if (!created) return;
+      await waitForUpdate;
+      await wiHandlerApi.getUpdateWIChangeFinished()?.promise;
+      getListPanelApi()?.setBookCollapsed?.(finalName, false);
+      if (!cache[finalName]?.dom?.root) {
+        console.warn(
+          '[STWID] New book created but not yet present in cache/DOM; forcing refresh.',
+          finalName,
+        );
+        await getListPanelApi()?.refreshList?.();
+      }
+      cache[finalName]?.dom?.root?.scrollIntoView({ block: 'center', inline: 'center' });
+    } catch (error) {
+      console.error('[STWID] Failed to create new book:', finalName, error);
+      toastr.error(`Failed to create the new book "${finalName}".`);
+    } finally {
+      createBookFlowInProgress = false;
     }
-    cache[finalName]?.dom?.root?.scrollIntoView({ block: 'center', inline: 'center' });
   });
 
   return createBookButton;
@@ -76,7 +93,12 @@ function createImportBookButton() {
   importBookButton.title = IMPORT_BOOK_LABEL;
   importBookButton.setAttribute('aria-label', IMPORT_BOOK_LABEL);
   importBookButton.addEventListener('click', () => {
-    document.querySelector('#world_import_file').click();
+    const importFileInput = document.querySelector('#world_import_file');
+    if (!importFileInput) {
+      console.warn('[STWID] Native #world_import_file not found; import click ignored.');
+      return;
+    }
+    importFileInput.click();
   });
 
   return importBookButton;

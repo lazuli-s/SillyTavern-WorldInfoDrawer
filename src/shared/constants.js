@@ -9,6 +9,10 @@ const ENTRY_FIELD_KEYS = Object.freeze({
   AUTOMATION_ID: 'automationId',
 });
 
+// Key shared by the Char/Tag sort enum (`SORT.CHARACTER_FILTER`) and the persisted
+// Entry Manager toggle-column setting (R1) — both must name the same thing.
+const CHARACTER_FILTER_COLUMN_KEY = 'characterFilter';
+
 const EMPTY_TABLE_HEADER_LABEL = '';
 
 export const SORT = {
@@ -33,8 +37,7 @@ export const SORT = {
   PROMPT: 'prompt',
 
   // Ticket 07 — sorts by how many characters + tags the entry's filter stores.
-  // Shares the column's persisted key so both name the same thing.
-  CHARACTER_FILTER: 'characterFilter',
+  CHARACTER_FILTER: CHARACTER_FILTER_COLUMN_KEY,
 };
 
 export const SORT_DIRECTION = {
@@ -63,10 +66,10 @@ export const ENTRY_MANAGER_TOGGLE_COLUMNS = [
   { key: ENTRY_FIELD_KEYS.TRIGGER, label: 'Trigger %' },
   { key: 'recursion', label: 'Recursion' },
   { key: 'budget', label: 'Budget' },
-  // The key stays `characterFilter`: it is persisted in each user's column-visibility
-  // settings, so renaming it would reset everyone's toggles (R1).
+  // R1 — the string behind CHARACTER_FILTER_COLUMN_KEY is persisted in each user's
+  // column-visibility settings, so its value must never be renamed.
   {
-    key: 'characterFilter',
+    key: CHARACTER_FILTER_COLUMN_KEY,
     label: 'Filter to Characters or Tags',
     tooltip: CHARACTER_FILTER_COLUMN_TOOLTIP,
   },

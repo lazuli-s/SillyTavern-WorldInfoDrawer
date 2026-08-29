@@ -63,15 +63,16 @@ const appendSortOptions = (select, currentSort, currentDirection) => {
   }
 };
 
+// Only a successfully resolved constructor is cached: a failed attempt (host
+// still loading) must be retried on the next call instead of ending the
+// feature for the whole session.
 let slashCommandParserCtor = null;
-let slashCommandParserCtorResolved = false;
 const getSlashCommandParserCtor = async () => {
-  if (slashCommandParserCtorResolved) return slashCommandParserCtor;
+  if (typeof slashCommandParserCtor === 'function') return slashCommandParserCtor;
 
   const runtimeCtor = globalThis.SlashCommandParser;
   if (typeof runtimeCtor === 'function') {
     slashCommandParserCtor = runtimeCtor;
-    slashCommandParserCtorResolved = true;
     return slashCommandParserCtor;
   }
 
@@ -83,7 +84,6 @@ const getSlashCommandParserCtor = async () => {
     console.error('Failed to resolve SlashCommandParser', error);
     slashCommandParserCtor = null;
   }
-  slashCommandParserCtorResolved = true;
   return slashCommandParserCtor;
 };
 
@@ -117,9 +117,19 @@ const parseBooleanSetting = (value, defaultValue) => {
   return defaultValue;
 };
 
-const getOutletPositionValue = () =>
-  document.querySelector('#entry_edit_template [name="position"] option[data-i18n="Outlet"]')
-    ?.value;
+// Memoized because the option comes from SillyTavern's static page markup and
+// table builds read it once per entry. An unresolved lookup is never cached,
+// so a missing template keeps being re-queried.
+let outletPositionValue;
+const getOutletPositionValue = () => {
+  if (outletPositionValue !== undefined) return outletPositionValue;
+
+  const value = document.querySelector(
+    '#entry_edit_template [name="position"] option[data-i18n="Outlet"]',
+  )?.value;
+  if (value !== undefined) outletPositionValue = value;
+  return value;
+};
 
 const isOutletPosition = (position) => {
   const outletValue = getOutletPositionValue();

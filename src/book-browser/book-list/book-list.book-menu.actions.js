@@ -129,6 +129,8 @@ export const createMoveBookDialogHelpers = ({
         toastr.warning(
           'A folder with that name already exists. Select it from the dropdown instead.',
         );
+      } else if (folderRegistrationResult.reason === 'storage') {
+        toastr.error('Could not save the folder: browser storage refused the write.');
       } else {
         toastr.error('Folder names cannot include "/".');
       }

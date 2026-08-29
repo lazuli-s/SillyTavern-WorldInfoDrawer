@@ -33,6 +33,10 @@ import { createBooksViewSlice } from './book-list/book-list.books-view.js';
 
 const EXPANDED_CHEVRON_CLASS = 'fa-chevron-up';
 const COLLAPSED_CHEVRON_CLASS = 'fa-chevron-down';
+const COLLAPSED_STATE_CLASS = 'stwid--state-collapsed';
+const SOURCE_ICON_CLASS = 'stwid--source-icon';
+const LOADING_STATE_CLASS = 'stwid--state-loading';
+const BOOKS_CONTAINER_CLASS = 'stwid--books';
 // How many consecutive list refreshes `waitForListRefreshIdle` will sit through
 // before giving up. See the comment on that function for why giving up is safe.
 const MAX_LIST_REFRESH_WAITS = 5;
@@ -55,6 +59,9 @@ let booksRootDropHandler = null;
 let refreshRequestToken = 0;
 let refreshCompletedToken = 0;
 let refreshWorkerPromise = null;
+// Bumped by `teardownListPanel` so a worker suspended mid-teardown can tell it
+// has been orphaned and keep its hands off the shared refresh state.
+let refreshWorkerGeneration = 0;
 
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
   { key: 'character', icon: 'fa-user', label: 'Character' },
@@ -69,7 +76,7 @@ const setCollapseState = (name, isCollapsed) => {
 const hasExpandedBooks = () =>
   Object.values(state.cache).some((book) => {
     const entryList = book?.dom?.entryList;
-    return entryList && !entryList.classList.contains('stwid--state-collapsed');
+    return entryList && !entryList.classList.contains(COLLAPSED_STATE_CLASS);
   });
 
 const updateCollapseAllToggle = () => {
@@ -106,7 +113,7 @@ const applyCollapseState = (name) => {
     !world.dom.collapseToggle.isConnected
   )
     return;
-  world.dom.entryList.classList.toggle('stwid--state-collapsed', isCollapsed);
+  world.dom.entryList.classList.toggle(COLLAPSED_STATE_CLASS, isCollapsed);
   if (isCollapsed) {
     world.dom.collapseToggle.classList.remove(EXPANDED_CHEVRON_CLASS);
     world.dom.collapseToggle.classList.add(COLLAPSED_CHEVRON_CLASS);
@@ -171,7 +178,7 @@ const renderBookSourceLinks = (sourceLinksContainer, links = null) => {
 
   for (const child of Array.from(sourceLinksContainer.children)) {
     if (!(child instanceof HTMLElement)) continue;
-    if (!child.classList.contains('stwid--source-icon')) continue;
+    if (!child.classList.contains(SOURCE_ICON_CLASS)) continue;
     const sourceKey =
       child.dataset.source ||
       SOURCE_ICON_DEFINITIONS.find((def) => child.classList.contains(def.icon))?.key;
@@ -194,7 +201,7 @@ const renderBookSourceLinks = (sourceLinksContainer, links = null) => {
     const def = nextDefs[i];
     const icon = existingIconsByKey.get(def.key) ?? document.createElement('i');
     icon.dataset.source = def.key;
-    icon.className = `stwid--source-icon fa-solid fa-fw ${def.icon}`;
+    icon.className = `${SOURCE_ICON_CLASS} fa-solid fa-fw ${def.icon}`;
     const tooltip = getSourceIconTooltip(def.key, def.label, details);
     if (icon.title !== tooltip) {
       icon.title = tooltip;
@@ -236,16 +243,16 @@ const sortEntriesIfNeeded = (name) => {
   const sorted = state.sortEntries(Object.values(world.entries), sort, direction);
   let needsSort = false;
   let i = 0;
-  for (const e of sorted) {
-    if (world.dom.entryList.children[i] !== world.dom.entry[e.uid].root) {
+  for (const entry of sorted) {
+    if (world.dom.entryList.children[i] !== world.dom.entry[entry.uid].root) {
       needsSort = true;
       break;
     }
     i++;
   }
   if (needsSort) {
-    for (const e of sorted) {
-      world.dom.entryList.append(world.dom.entry[e.uid].root);
+    for (const entry of sorted) {
+      world.dom.entryList.append(world.dom.entry[entry.uid].root);
     }
   }
   return true;
@@ -266,38 +273,42 @@ const buildLatestBookSavePayload = (latest) => {
   };
 };
 
-const saveBookMetadataUpdate = async (name, updateMetadata, messages) => {
-  let latest;
-  try {
-    latest = await state.loadWorldInfo(name);
-  } catch (error) {
-    console.warn(messages.loadWarn, error);
-    toastr.error(messages.loadError);
-    return { ok: false, error: 'load_failed' };
-  }
-  if (!latest || typeof latest !== 'object') {
-    return { ok: false, error: 'book_missing' };
-  }
+// The whole load-modify-save rides the drawer's per-book save queue so a
+// metadata write can never interleave with (and overwrite) a concurrent entry
+// save to the same book.
+const saveBookMetadataUpdate = async (name, updateMetadata, messages) =>
+  state.enqueueBookSave(name, async () => {
+    let latest;
+    try {
+      latest = await state.loadWorldInfo(name);
+    } catch (error) {
+      console.warn(messages.loadWarn, error);
+      toastr.error(messages.loadError);
+      return { ok: false, error: 'load_failed' };
+    }
+    if (!latest || typeof latest !== 'object') {
+      return { ok: false, error: 'book_missing' };
+    }
 
-  const nextPayload = buildLatestBookSavePayload(latest);
-  const updateResult = updateMetadata(nextPayload.metadata);
-  if (updateResult?.ok === false) {
-    return updateResult;
-  }
+    const nextPayload = buildLatestBookSavePayload(latest);
+    const updateResult = updateMetadata(nextPayload.metadata);
+    if (updateResult?.ok === false) {
+      return updateResult;
+    }
 
-  try {
-    await state.saveWorldInfo(name, nextPayload, true);
-  } catch (error) {
-    console.warn(messages.saveWarn, error);
-    toastr.error(messages.saveError);
-    return { ok: false, error: 'save_failed' };
-  }
+    try {
+      await state.saveWorldInfo(name, nextPayload, true);
+    } catch (error) {
+      console.warn(messages.saveWarn, error);
+      toastr.error(messages.saveError);
+      return { ok: false, error: 'save_failed' };
+    }
 
-  if (state.cache[name]) {
-    setCacheMetadata(name, nextPayload.metadata);
-  }
-  return { ok: true, nextPayload, updateResult };
-};
+    if (state.cache[name]) {
+      setCacheMetadata(name, nextPayload.metadata);
+    }
+    return { ok: true, nextPayload, updateResult };
+  });
 
 const hasSortableBookDom = (name) => {
   const world = state.cache[name];
@@ -336,9 +347,6 @@ const setBookSortPreference = async (name, sort = null, direction = null) => {
       if (Object.keys(metadata[state.METADATA_NAMESPACE]).length === 0) {
         delete metadata[state.METADATA_NAMESPACE];
       }
-      if (Object.keys(metadata).length === 0) {
-        return { ok: true };
-      }
       return { ok: true };
     },
     {
@@ -366,7 +374,7 @@ const setBookSortPreference = async (name, sort = null, direction = null) => {
 const clearBookSortPreferences = async () => {
   const failedBooks = [];
   const booksWithSort = Object.entries(state.cache).filter(
-    ([, data]) => data.metadata?.[state.METADATA_NAMESPACE]?.[state.METADATA_SORT_KEY],
+    ([, bookData]) => bookData.metadata?.[state.METADATA_NAMESPACE]?.[state.METADATA_SORT_KEY],
   );
   const BATCH_SIZE = 3;
   for (let i = 0; i < booksWithSort.length; i += BATCH_SIZE) {
@@ -377,12 +385,12 @@ const clearBookSortPreferences = async () => {
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
       const name = batch[j][0];
-      if (result.status === 'fulfilled') {
-        if (!result.value.ok) {
-          failedBooks.push(name);
-        }
-      } else {
+      if (result.status === 'rejected') {
         console.warn(`[STWID] Failed to clear sort preference for "${name}".`, result.reason);
+        failedBooks.push(name);
+        continue;
+      }
+      if (!result.value.ok) {
         failedBooks.push(name);
       }
     }
@@ -476,20 +484,41 @@ const renderBook = async (...args) => booksViewSlice?.renderBook(...args);
 const loadList = async () => booksViewSlice?.loadList();
 
 const runRefreshWorker = async () => {
-  state.dom.drawer.body.classList.add('stwid--state-loading');
+  const generation = refreshWorkerGeneration;
+  state.dom.drawer.body.classList.add(LOADING_STATE_CLASS);
   try {
-    while (refreshCompletedToken < refreshRequestToken) {
-      const token = refreshRequestToken;
-      state.resetEditor?.();
-      captureBookCollapseStatesFromDom(state.cache, listPanelState.setCollapseState);
-      clearCacheBooks(state.cache, state.clearToast);
-      await listPanelState.loadListDebounced();
-      listPanelState.searchInput?.dispatchEvent(new Event('input'));
-      refreshCompletedToken = token;
+    try {
+      while (
+        generation === refreshWorkerGeneration &&
+        refreshCompletedToken < refreshRequestToken
+      ) {
+        const token = refreshRequestToken;
+        state.resetEditor?.();
+        captureBookCollapseStatesFromDom(state.cache, listPanelState.setCollapseState);
+        clearCacheBooks(state.cache, state.clearToast);
+        await listPanelState.loadListDebounced();
+        listPanelState.searchInput?.dispatchEvent(new Event('input'));
+        if (generation === refreshWorkerGeneration) {
+          refreshCompletedToken = token;
+        }
+      }
+    } catch (error) {
+      // The worker owns reporting: it sits on the one pipeline every refresh
+      // flows through, and its callers range from UI handlers to fire-and-forget
+      // waiters that would otherwise swallow the failure. The rethrow keeps
+      // every waiter's existing rejection semantics, and leaves
+      // `refreshCompletedToken` behind so the next refresh retries.
+      console.error('[STWID] List refresh failed.', error);
+      toastr.error('Could not refresh the book list.');
+      throw error;
     }
   } finally {
-    state.dom.drawer.body.classList.remove('stwid--state-loading');
-    refreshWorkerPromise = null;
+    // A superseded worker leaves the loading class and the worker promise for
+    // its live successor to manage.
+    if (generation === refreshWorkerGeneration) {
+      state.dom.drawer.body.classList.remove(LOADING_STATE_CLASS);
+      refreshWorkerPromise = null;
+    }
   }
 };
 
@@ -532,8 +561,8 @@ const waitForListRefreshIdle = async () => {
     try {
       await pendingRefresh;
     } catch {
-      // A failed refresh is its own caller's to report. All this waiter needs
-      // to know is that the list has stopped being rebuilt.
+      // The worker itself reports a failed refresh; this swallow only ends the
+      // idle wait once the list has stopped being rebuilt.
     }
     // `runRefreshWorker` clears the field in a `finally`, so normally it is
     // already null or holds a newer refresh by now. If it still holds the one
@@ -555,7 +584,7 @@ const setupBooks = (list) => {
   const booksContainer = document.createElement('div');
   {
     state.dom.books = booksContainer;
-    booksContainer.classList.add('stwid--books');
+    booksContainer.classList.add(BOOKS_CONTAINER_CLASS);
     booksRootDragOverHandler = (evt) => selectionDnDSlice?.onRootDropTargetDragOver(evt);
     booksRootDropHandler = async (evt) => selectionDnDSlice?.onRootDropTargetDrop(evt);
     booksContainer.addEventListener('dragover', booksRootDragOverHandler);
@@ -580,7 +609,7 @@ const teardownListPanel = () => {
   for (const filter of state.list?.querySelectorAll?.('.stwid--filter') ?? []) {
     filter.remove();
   }
-  for (const booksContainer of state.list?.querySelectorAll?.('.stwid--books') ?? []) {
+  for (const booksContainer of state.list?.querySelectorAll?.(BOOKS_CONTAINER_CLASS) ?? []) {
     booksContainer.remove();
   }
 
@@ -599,6 +628,7 @@ const teardownListPanel = () => {
   refreshRequestToken = 0;
   refreshCompletedToken = 0;
   refreshWorkerPromise = null;
+  refreshWorkerGeneration += 1;
   listPanelInitialized = false;
 };
 

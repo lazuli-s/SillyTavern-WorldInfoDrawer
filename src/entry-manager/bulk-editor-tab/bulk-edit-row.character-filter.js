@@ -29,14 +29,14 @@ import {
 } from '../entry-manager.utils.js';
 import {
   buildCharacterFilterMenuShell,
-  buildCharacterFilterOptionRow,
+  repopulateCharacterFilterOptionList,
   refreshCharacterFilterCell,
+  CHARACTER_FILTER_MENU_SEARCH_TEXTS,
   CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY,
 } from '../table/table.body.character-filter.js';
 import {
   wireMultiselectDropdown,
   MULTISELECT_DROPDOWN_HIDDEN_CLASS,
-  MULTISELECT_DROPDOWN_OPTION_SELECTOR,
 } from '../../shared/multiselect-dropdown.js';
 import { maybeYieldToEventLoop } from '../../shared/utils.js';
 import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
@@ -394,19 +394,14 @@ export function buildBulkCharacterFilterSection({
   // one open and the next.
   const refreshMenu = () => {
     excludeInput.checked = selection.isExclude;
-    for (const option of list.querySelectorAll(MULTISELECT_DROPDOWN_OPTION_SELECTOR)) {
-      option.remove();
-    }
+    // Building the option list does no DOM work, so computing it before the
+    // rebuild is a safe order flip.
     const options = buildBulkCharacterFilterOptionList({
       mode: modeSelect.value,
       entries: modeSelect.value === MODE_REMOVE ? getSelectedEntries() : [],
       selection,
     });
-    const fragment = document.createDocumentFragment();
-    for (const option of options) {
-      fragment.append(buildCharacterFilterOptionRow(option, onToggleOption, optionTooltip));
-    }
-    list.append(fragment);
+    repopulateCharacterFilterOptionList(list, options, onToggleOption, optionTooltip);
     refreshHeading();
   };
 
@@ -424,9 +419,7 @@ export function buildBulkCharacterFilterSection({
         : [],
     emptyStateText: CHARACTER_FILTER_EMPTY_STATE,
     search: {
-      placeholder: 'Search characters and tags…',
-      ariaLabel: 'Search characters and tags',
-      noResultsText: 'No matching character or tag.',
+      ...CHARACTER_FILTER_MENU_SEARCH_TEXTS,
       container: header,
       getOptionSearchText: (option) =>
         option.dataset[CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY] ?? '',

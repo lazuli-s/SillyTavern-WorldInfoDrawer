@@ -83,6 +83,75 @@ const mountRuntimeTabContent = ({
   mountSearchTabContent({ tabContentsById, searchRow });
 };
 
+const createIconTabStateController = ({
+  tabButtons,
+  tabContents,
+  tabButtonsById,
+  tabContentsById,
+}) => {
+  const setActivePlaceholderTab = (tabId) => {
+    for (const button of tabButtons) {
+      const isActive = button.dataset.tabId === tabId;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+    for (const content of tabContents) {
+      const isActive = content.dataset.tabId === tabId;
+      content.classList.toggle('active', isActive);
+    }
+  };
+
+  const applyTabHidden = (tabId, hidden) => {
+    const button = tabButtonsById.get(tabId);
+    const content = tabContentsById.get(tabId);
+    if (button) {
+      button.hidden = hidden;
+    }
+    if (content) {
+      content.hidden = hidden;
+    }
+    // Invariant: whenever any tab is visible, some visible tab is active. The
+    // check covers both directions of `hidden`, so hiding the active tab and
+    // restoring tabs into an otherwise dead strip both end with content shown.
+    // With every tab hidden, no visible button exists and the empty strip
+    // stays faithful to the setting.
+    const hasVisibleActiveTab = tabButtons.some(
+      (tabButton) => !tabButton.hidden && tabButton.classList.contains('active'),
+    );
+    if (!hasVisibleActiveTab) {
+      const firstVisibleButton = tabButtons.find((tabButton) => !tabButton.hidden);
+      if (firstVisibleButton) {
+        setActivePlaceholderTab(firstVisibleButton.dataset.tabId);
+      }
+    }
+  };
+
+  return { setActivePlaceholderTab, applyTabHidden };
+};
+
+const createIconTabElements = ({
+  panelTabs,
+  iconTabBar,
+  iconTab,
+  onClick,
+  tabButtons,
+  tabContents,
+  tabButtonsById,
+  tabContentsById,
+}) => {
+  for (const tab of panelTabs) {
+    const button = createTabButton({ tab, onClick });
+    tabButtons.push(button);
+    tabButtonsById.set(tab.id, button);
+    iconTabBar.append(button);
+
+    const content = createTabPanel({ tabId: tab.id });
+    tabContents.push(content);
+    tabContentsById.set(tab.id, content);
+    iconTab.append(content);
+  }
+};
+
 const buildIconTabBar = (runtimeState, visibilityRow, sortingRow, searchRow) => {
   const iconTab = document.createElement('div');
   iconTab.classList.add('stwid--icon-tab');
@@ -102,46 +171,23 @@ const buildIconTabBar = (runtimeState, visibilityRow, sortingRow, searchRow) => 
   const tabButtonsById = new Map();
   const tabContents = [];
   const tabContentsById = new Map();
-  const setActivePlaceholderTab = (tabId) => {
-    for (const button of tabButtons) {
-      const isActive = button.dataset.tabId === tabId;
-      button.classList.toggle('active', isActive);
-      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-    }
-    for (const content of tabContents) {
-      const isActive = content.dataset.tabId === tabId;
-      content.classList.toggle('active', isActive);
-    }
-  };
+  const { setActivePlaceholderTab, applyTabHidden } = createIconTabStateController({
+    tabButtons,
+    tabContents,
+    tabButtonsById,
+    tabContentsById,
+  });
 
-  for (const tab of panelTabs) {
-    const button = createTabButton({ tab, onClick: setActivePlaceholderTab });
-    tabButtons.push(button);
-    tabButtonsById.set(tab.id, button);
-    iconTabBar.append(button);
-
-    const content = createTabPanel({ tabId: tab.id });
-    tabContents.push(content);
-    tabContentsById.set(tab.id, content);
-    iconTab.append(content);
-  }
-
-  const applyTabHidden = (tabId, hidden) => {
-    const button = tabButtonsById.get(tabId);
-    const content = tabContentsById.get(tabId);
-    if (button) {
-      button.hidden = hidden;
-    }
-    if (content) {
-      content.hidden = hidden;
-    }
-    if (hidden && button?.classList.contains('active')) {
-      const firstVisibleButton = tabButtons.find((tabButton) => !tabButton.hidden);
-      if (firstVisibleButton) {
-        setActivePlaceholderTab(firstVisibleButton.dataset.tabId);
-      }
-    }
-  };
+  createIconTabElements({
+    panelTabs,
+    iconTabBar,
+    iconTab,
+    onClick: setActivePlaceholderTab,
+    tabButtons,
+    tabContents,
+    tabButtonsById,
+    tabContentsById,
+  });
 
   mountRuntimeTabContent({
     tabContentsById,

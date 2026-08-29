@@ -232,11 +232,17 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 /* -------------------------------------------------------------------------- */
 
+/* The width here is a safety net, not the live value: drawer.splitter.js writes an
+   inline width over it on every drawer open and drag. Without a width the panel is
+   `flex-basis: auto`, so it sizes to its content — a book with long keyword lines
+   then stretches it across the whole drawer and squeezes the editor panel to 0px.
+   34% matches the splitter's own default ratio, so the fallback and the JS agree. */
 .stwid--list {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 34%;
   min-width: 20vw;
   max-width: 100%;
   min-height: 0;
@@ -1176,12 +1182,13 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--editor .stwid--unfocus-toggle {
   display: none;
-}
 
-.stwid--editor .stwid--focus-toggle {
-  /* margin-left: 1em; */
-
-  /* margin: 0; */
+  /* align to the card's content column and force a square shape. The 0.33em
+     inset mirrors the host's .wi-card-entry padding (vanilla world-info.css:
+     padding: 0 5px) — equal at the default 15px main font size, and scales
+     with the theme. */
+  padding-inline-start: 0.33em;
+  aspect-ratio: 1;
 }
 
 /* override: vanilla sets no height; 100% forces these containers to fill the fixed-height drawer column */
@@ -2074,7 +2081,88 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
     min-width: 0;
   }
+
+  /* focus mode on mobile: the normal mobile rules above release the card chain
+     from fill-height and stop the inner blocks from flex-filling, so the editor
+     column scrolls as one touch container. In focus mode nothing else is on
+     screen and that release collapses the content box to its minimum. Restore
+     the desktop-style fill chain while the editor is in focus mode, without
+     touching the normal-layout rules. */
+  .stwid--editor.stwid--focus {
+    overflow: hidden !important; /* override: parent rule above sets overflow:hidden auto !important; in focus mode the card fills the column so the column itself should not scroll */
+  }
+
+  /* !important on the height chain: the mobile rules above (lines 1325-1355)
+     release the card chain to `height: auto` / `flex: 0 0 auto` so the column
+     scrolls as one for touch. Several of those selectors have HIGHER
+     specificity (e.g. `.stwid--editor .world_entry > .world_entry_form.wi-card-entry`
+     is 4 classes; my `.stwid--editor.stwid--focus .world_entry_form` is 3), so
+     a plain `height: 100%` would lose. `!important` here is the narrower
+     route's cost — the alternative was restructuring the mobile rules
+     themselves, which would silently change ticket 02's surface. */
+  .stwid--editor.stwid--focus .world_entry,
+  .stwid--editor.stwid--focus .world_entry_form,
+  .stwid--editor.stwid--focus .inline-drawer,
+  .stwid--editor.stwid--focus .inline-drawer-content,
+  .stwid--editor.stwid--focus .inline-drawer-content > .world_entry_edit,
+  .stwid--editor.stwid--focus
+    .inline-drawer-content
+    > .world_entry_edit
+    > .flex-container.alignitemscenter,
+  .stwid--editor.stwid--focus [name='contentAndCharFilterBlock'],
+  .stwid--editor.stwid--focus .stwid--editor-content-body-section {
+    height: 100% !important;
+    min-height: 0;
+  }
+
+  /* Flex-fill: the mobile release sets `flex: 0 0 auto` on the same chain
+     (lines 1340, 1352-1355) so the column scrolls as one for touch. In focus
+     mode we need the inner blocks to flex-fill their parent so the textarea
+     grows to fill the column. `!important` is required to beat the mobile
+     release, which uses `!important` on its own selectors. */
+  .stwid--editor.stwid--focus .inline-drawer,
+  .stwid--editor.stwid--focus .inline-drawer-content,
+  .stwid--editor.stwid--focus .inline-drawer-content > .world_entry_edit,
+  .stwid--editor.stwid--focus
+    .inline-drawer-content
+    > .world_entry_edit
+    > .flex-container.alignitemscenter,
+  .stwid--editor.stwid--focus [name='contentAndCharFilterBlock'],
+  .stwid--editor.stwid--focus .stwid--editor-content-body-section,
+  .stwid--editor.stwid--focus [name='content'] {
+    flex: 1 1 auto !important;
+    min-height: 0;
+  }
+
+  /* The body section is the WID-added wrapper around the content textarea
+     (created in editor-panel-mobile.js). It is a block element by default,
+     so the textarea's `flex: 1 1 auto` has nothing to flex against. Make it
+     a column flex container so the textarea can grow to fill it. */
+  .stwid--editor.stwid--focus .stwid--editor-content-body-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* In focus mode the card chain fills the column. The exit-focus button is a
+     static flex child of the column; prevent it from competing for the column's
+     height with the textarea. The cross axis is already controlled by the
+     button's own width (fa-fw + menu_button's min-content) so no align-self
+     override is needed. */
+  .stwid--editor.stwid--focus > .stwid--unfocus-toggle {
+    flex: 0 0 auto;
+  }
 }
+
+/* Note: the two focus-scoped selector lists above (height, then flex) are
+   hand-mirrored. The height list is missing the world_entry root, the
+   card's own `flex: 1 1 auto` (the worldEntry carries that via `display:
+   block` + `height: 100%`, which the card then resolves to 100% of), and
+   the `.inline-drawer` and `.inline-drawer-content` are in BOTH lists (the
+   height chain needs them to actually grow into the column, the flex chain
+   needs them to flex-distribute to their children). [name='content'] is
+   intentionally absent from the height list (textareas have their own
+   sizing) but present in the flex list. If you add a focus-mode depth to
+   the chain, add it to BOTH lists, or the focus fill chain silently breaks. */
 
 @media screen and (width <= 768px) {
   .stwid--editor
@@ -2819,15 +2907,30 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 .stwid--order-table tr td .stwid--sortable-handle {
-  cursor: pointer;
+  position: relative;
+  cursor: grab;
   opacity: 0.5;
   padding: 2px;
   font-size: 0.85em;
-  transition: opacity 200ms ease;
+  transition: opacity var(--animation-duration, 125ms) ease;
+}
+
+.stwid--order-table tr td .stwid--sortable-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translate(-50%, -50%);
 }
 
 .stwid--order-table tr td .stwid--sortable-handle:hover {
   opacity: 1;
+}
+
+.stwid--order-table tr td .stwid--sortable-handle:active {
+  cursor: grabbing;
 }
 
 .stwid--order-table tr td .stwid--order-move {
@@ -2838,6 +2941,8 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 .stwid--order-table tr td .stwid--order-move-button {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2965,6 +3070,8 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--entry-manager {
     width: 100%;
     max-width: none;
+    overflow: hidden auto; /* override: make the entry manager root the single touch-scroll container on mobile */
+    touch-action: pan-y;
   }
 
   .stwid--script-filter {
@@ -2981,7 +3088,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--order-table-wrap {
     width: 100%;
+    flex: 0 0 auto; /* override: no longer the flex-shrink target now the root scrolls; take natural content height instead of collapsing */
     overflow-x: auto;
+    touch-action: pan-x pan-y;
   }
 
   .stwid--bulk-edit-row {
@@ -2992,6 +3101,17 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--order-table {
     width: max-content;
     min-width: 100%;
+  }
+
+  .stwid--order-table tr :is(th, td)[data-col='drag'] {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
+  }
+
+  .stwid--order-table thead th[data-col='drag'] {
+    z-index: 3;
   }
 }
 

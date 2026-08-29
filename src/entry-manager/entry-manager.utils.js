@@ -1,4 +1,3 @@
-import { closeOpenMultiselectDropdownMenus } from '../shared/multiselect-dropdown.js';
 import {
   CHARACTER_FILTER_PRESENCE_HAS,
   CHARACTER_FILTER_PRESENCE_HASNT,
@@ -17,57 +16,6 @@ export const setTooltip = (element, text, { ariaLabel = null } = {}) => {
       .trim();
   if (label) {
     element.setAttribute('aria-label', label);
-  }
-};
-
-const resetContentWrapAfterExpand = (contentWrap) => {
-  contentWrap.style.overflow = '';
-  contentWrap.style.maxHeight = '';
-};
-
-export const wireCollapseRow = (
-  rowTitle,
-  row,
-  contentWrap,
-  chevron,
-  { initialCollapsed = false } = {},
-) => {
-  const applyCollapsedState = (collapsed) => {
-    row.dataset.collapsed = String(collapsed);
-    row.classList.toggle('stwid--collapsed', collapsed);
-    chevron.classList.toggle('fa-chevron-down', !collapsed);
-    chevron.classList.toggle('fa-chevron-right', collapsed);
-  };
-
-  rowTitle.addEventListener('click', () => {
-    const isCollapsed = row.dataset.collapsed === 'true';
-    if (isCollapsed) {
-      applyCollapsedState(false);
-      contentWrap.style.overflow = 'hidden';
-      contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
-      contentWrap.addEventListener(
-        'transitionend',
-        () => {
-          resetContentWrapAfterExpand(contentWrap);
-        },
-        { once: true },
-      );
-    } else {
-      closeOpenMultiselectDropdownMenus();
-      contentWrap.style.overflow = 'hidden';
-      contentWrap.style.maxHeight = contentWrap.scrollHeight + 'px';
-      void contentWrap.offsetHeight;
-      contentWrap.style.maxHeight = '0';
-      applyCollapsedState(true);
-    }
-  });
-
-  if (initialCollapsed) {
-    applyCollapsedState(true);
-    contentWrap.style.overflow = 'hidden';
-    contentWrap.style.maxHeight = '0';
-  } else {
-    applyCollapsedState(false);
   }
 };
 
@@ -123,6 +71,25 @@ const countDisplayNames = (characters) => {
   return counts;
 };
 
+/**
+ * The friendly display name of a host record, falling back to its stored key —
+ * one copy each for characters and tags, so the read-only cell and every pick
+ * list spell a value the same way.
+ */
+const resolveCharacterDisplayName = (character, avatarKey) =>
+  typeof character?.name === 'string' && character.name ? character.name : avatarKey;
+
+const resolveTagName = (tagRecord, tagId) =>
+  typeof tagRecord?.name === 'string' && tagRecord.name ? tagRecord.name : tagId;
+
+// E5 — disambiguate inline only when a collision actually exists.
+const resolveCharacterLabel = (character, avatarKey, displayNameCounts) => {
+  const displayName = resolveCharacterDisplayName(character, avatarKey);
+  return (displayNameCounts.get(displayName) ?? 0) > 1
+    ? `${displayName} (${avatarKey})`
+    : displayName;
+};
+
 const buildCharacterLine = (storedName, { characters, displayNameCounts, mode, icon }) => {
   const avatarKey = String(storedName);
   const line = { kind: 'character', icon, mode, value: avatarKey, label: avatarKey, stale: false };
@@ -140,10 +107,7 @@ const buildCharacterLine = (storedName, { characters, displayNameCounts, mode, i
     return line;
   }
 
-  const displayName = typeof match.name === 'string' && match.name ? match.name : avatarKey;
-  // E5 — disambiguate inline only when a collision actually exists.
-  const collides = (displayNameCounts.get(displayName) ?? 0) > 1;
-  line.label = collides ? `${displayName} (${avatarKey})` : displayName;
+  line.label = resolveCharacterLabel(match, avatarKey, displayNameCounts);
   line.tooltip = `Avatar key: ${avatarKey}`;
   return line;
 };
@@ -165,7 +129,7 @@ const buildTagLine = (storedTag, { tags, mode }) => {
     return line;
   }
 
-  line.label = typeof match.name === 'string' && match.name ? match.name : tagId;
+  line.label = resolveTagName(match, tagId);
   line.tooltip = `Tag ID: ${tagId}`;
   return line;
 };
@@ -334,26 +298,18 @@ const buildTagOption = (tagId, { label, stale, selected }) => ({
  * @returns {Array<{kind: string, icon: string, value: string, label: string,
  *   searchText: string, stale: boolean, selected: boolean}>}
  */
-export const buildCharacterFilterOptions = (entry, hostLists) => {
-  const { characters, tags } = resolveHostLists(hostLists);
-  const selection = readCharacterFilterSelection(entry);
+const buildHostCharacterOptions = (characters, selection, displayNameCounts) => {
   const selectedNames = new Set(selection.names);
-  const selectedTags = new Set(selection.tags);
-  const displayNameCounts = countDisplayNames(characters);
-
   const options = [];
   const seenAvatarKeys = new Set();
   for (const character of characters) {
     const avatarKey = toAvatarKey(character);
     if (!avatarKey || seenAvatarKeys.has(avatarKey)) continue;
     seenAvatarKeys.add(avatarKey);
-    const displayName =
-      typeof character?.name === 'string' && character.name ? character.name : avatarKey;
-    // E5 — disambiguate inline only when a collision actually exists.
-    const collides = (displayNameCounts.get(displayName) ?? 0) > 1;
+    const displayName = resolveCharacterDisplayName(character, avatarKey);
     options.push(
       buildCharacterOption(avatarKey, {
-        label: collides ? `${displayName} (${avatarKey})` : displayName,
+        label: resolveCharacterLabel(character, avatarKey, displayNameCounts),
         searchText: `${displayName} ${avatarKey}`,
         stale: false,
         selected: selectedNames.has(avatarKey),
@@ -372,7 +328,12 @@ export const buildCharacterFilterOptions = (entry, hostLists) => {
       }),
     );
   }
+  return options;
+};
 
+const buildHostTagOptions = (tags, selection) => {
+  const selectedTags = new Set(selection.tags);
+  const options = [];
   const seenTagIds = new Set();
   for (const tag of tags) {
     const tagId = String(tag?.id ?? '');
@@ -380,7 +341,7 @@ export const buildCharacterFilterOptions = (entry, hostLists) => {
     seenTagIds.add(tagId);
     options.push(
       buildTagOption(tagId, {
-        label: typeof tag?.name === 'string' && tag.name ? tag.name : tagId,
+        label: resolveTagName(tag, tagId),
         stale: false,
         selected: selectedTags.has(tagId),
       }),
@@ -391,8 +352,17 @@ export const buildCharacterFilterOptions = (entry, hostLists) => {
     seenTagIds.add(tagId);
     options.push(buildTagOption(tagId, { label: tagId, stale: tags.length > 0, selected: true }));
   }
-
   return options;
+};
+
+export const buildCharacterFilterOptions = (entry, hostLists) => {
+  const { characters, tags } = resolveHostLists(hostLists);
+  const selection = readCharacterFilterSelection(entry);
+  const displayNameCounts = countDisplayNames(characters);
+  return [
+    ...buildHostCharacterOptions(characters, selection, displayNameCounts),
+    ...buildHostTagOptions(tags, selection),
+  ];
 };
 
 /**

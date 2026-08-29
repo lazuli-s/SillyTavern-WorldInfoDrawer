@@ -8,6 +8,14 @@ function getIsEditorDirty(getCurrentEditor, getEditorPanelApi) {
   return Boolean(currentEditor && editorPanelApi?.isDirty?.(currentEditor.name, currentEditor.uid));
 }
 
+function warnIfUnsavedEdits(getCurrentEditor, getEditorPanelApi, message) {
+  if (getIsEditorDirty(getCurrentEditor, getEditorPanelApi)) {
+    toastr.warning(message);
+    return true;
+  }
+  return false;
+}
+
 function createSettingsGroupLabel() {
   const settingsGroupLabel = document.createElement('span');
   settingsGroupLabel.classList.add('stwid--field-group__label');
@@ -37,11 +45,14 @@ function createActivationSettingsButton({ dom, getCurrentEditor, getEditorPanelA
   activationSettingsButton.title = 'Global Activation Settings';
   activationSettingsButton.setAttribute('aria-label', 'Global Activation Settings');
   activationSettingsButton.addEventListener('click', () => {
-    const isDirty = getIsEditorDirty(getCurrentEditor, getEditorPanelApi);
-    if (isDirty && !activationSettingsButton.classList.contains(ACTIVE_STATE_CLASS)) {
-      toastr.warning(
+    if (
+      !activationSettingsButton.classList.contains(ACTIVE_STATE_CLASS) &&
+      warnIfUnsavedEdits(
+        getCurrentEditor,
+        getEditorPanelApi,
         'Unsaved edits detected. Save or discard changes before opening Activation Settings.',
-      );
+      )
+    ) {
       return;
     }
     getEditorPanelApi()?.toggleActivationSettings?.();
@@ -50,13 +61,27 @@ function createActivationSettingsButton({ dom, getCurrentEditor, getEditorPanelA
   return activationSettingsButton;
 }
 
-function createRefreshButton({ getListPanelApi }) {
+function createRefreshButton({ getListPanelApi, getCurrentEditor, getEditorPanelApi }) {
   const refreshButton = document.createElement('div');
   refreshButton.classList.add(...ICON_BUTTON_BASE_CLASSES, 'fa-arrows-rotate');
   refreshButton.title = 'Refresh';
   refreshButton.setAttribute('aria-label', 'Refresh');
   refreshButton.addEventListener('click', async () => {
-    await getListPanelApi()?.refreshList?.();
+    if (
+      warnIfUnsavedEdits(
+        getCurrentEditor,
+        getEditorPanelApi,
+        'Unsaved edits detected. Save or discard changes before refreshing the list.',
+      )
+    ) {
+      return;
+    }
+    try {
+      await getListPanelApi()?.refreshList?.();
+    } catch (error) {
+      console.warn('[STWID] Failed to refresh the book list.', error);
+      toastr.error('Failed to refresh the book list.');
+    }
   });
 
   return refreshButton;
@@ -77,20 +102,32 @@ function createEntryManagerToggleButton({
     'aria-label',
     'Open Entry Manager for current Book Visibility scope',
   );
-  entryManagerToggleButton.addEventListener('click', () => {
+  // While an open is still settling, every further click is ignored: the
+  // toggle reads active from the moment openEntryManager starts, so a
+  // mid-render click would otherwise take the close path and leave the drawer
+  // half-open once the suspended open re-applies its panel class.
+  let openInFlight = false;
+  entryManagerToggleButton.addEventListener('click', async () => {
+    if (openInFlight) return;
     const isActive = entryManagerToggleButton.classList.contains(ACTIVE_STATE_CLASS);
-    const isDirty = getIsEditorDirty(getCurrentEditor, getEditorPanelApi);
-    if (!isActive && isDirty) {
-      toastr.warning(
+    if (
+      !isActive &&
+      warnIfUnsavedEdits(
+        getCurrentEditor,
+        getEditorPanelApi,
         'Unsaved edits detected. Save or discard changes before opening Entry Manager.',
-      );
+      )
+    ) {
       return;
     }
     if (isActive) {
-      if (isDirty) {
-        toastr.warning(
+      if (
+        warnIfUnsavedEdits(
+          getCurrentEditor,
+          getEditorPanelApi,
           'Unsaved edits detected. Save or discard changes before closing Entry Manager.',
-        );
+        )
+      ) {
         return;
       }
       entryManagerToggleButton.classList.remove(ACTIVE_STATE_CLASS);
@@ -98,8 +135,13 @@ function createEntryManagerToggleButton({
       getEditorPanelApi()?.clearEditor?.();
       return;
     }
+    openInFlight = true;
     const visibilityScope = getListPanelApi()?.getBookVisibilityScope?.();
-    openEntryManager(null, visibilityScope);
+    try {
+      await openEntryManager(null, visibilityScope);
+    } finally {
+      openInFlight = false;
+    }
   });
 
   return entryManagerToggleButton;
@@ -126,7 +168,11 @@ export const createSettingsTabContent = ({
   });
   settingsGroup.append(activationSettingsButton);
 
-  const refreshButton = createRefreshButton({ getListPanelApi });
+  const refreshButton = createRefreshButton({
+    getListPanelApi,
+    getCurrentEditor,
+    getEditorPanelApi,
+  });
   settingsGroup.append(refreshButton);
 
   const entryManagerToggleButton = createEntryManagerToggleButton({

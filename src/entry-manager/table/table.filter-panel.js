@@ -44,7 +44,9 @@ function setAllRowsVisible(entries, dom, setEntryManagerRowFilterState) {
   for (const entryRef of entries) {
     const row = getEntryManagerRow(dom, entryRef);
     if (!row) continue;
-    setEntryManagerRowFilterState(row, ROW_FILTER_KEY_SCRIPT, true);
+    // Third parameter means "filtered out" (see setEntryManagerRowFilterState in
+    // logic.filters.js) — false here so a run that never reaches a row leaves it visible.
+    setEntryManagerRowFilterState(row, ROW_FILTER_KEY_SCRIPT, false);
   }
 }
 
@@ -117,13 +119,16 @@ function attachFilterScriptHandlers({
     // nothing.
     closeOpenCharacterFilterDropdown();
 
-    const closure = new (await SlashCommandParser.getScope())();
-    filterStack.push(closure);
-
-    const filterScriptSource = filterScriptTextarea.value;
-    const compiledScriptSource = `return async function entryManagerFilter(data) {${filterScriptSource}}();`;
+    let closure = null;
 
     try {
+      // Acquire first, push only on success — a failed acquisition must leave
+      // the stack untouched and surface through the catch below.
+      closure = new (await SlashCommandParser.getScope())();
+      filterStack.push(closure);
+
+      const filterScriptSource = filterScriptTextarea.value;
+      const compiledScriptSource = `return async function entryManagerFilter(data) {${filterScriptSource}}();`;
       await closure.compile(compiledScriptSource);
       if (!isActive()) return;
 
@@ -148,8 +153,10 @@ function attachFilterScriptHandlers({
       const msg = error instanceof Error ? error.message : String(error);
       showFilterError(`Filter error: ${msg}`);
     } finally {
-      const idx = filterStack.indexOf(closure);
-      if (idx !== -1) filterStack.splice(idx, 1);
+      if (closure) {
+        const idx = filterStack.indexOf(closure);
+        if (idx !== -1) filterStack.splice(idx, 1);
+      }
     }
   };
 

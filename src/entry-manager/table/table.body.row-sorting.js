@@ -157,6 +157,7 @@ export function setupEntryManagerSorting({
 
   $(tbody).sortable({
     delay: getSortableDelay(),
+    handle: '.stwid--sortable-handle',
     update: async () => {
       await updateCustomOrderFromDom();
     },

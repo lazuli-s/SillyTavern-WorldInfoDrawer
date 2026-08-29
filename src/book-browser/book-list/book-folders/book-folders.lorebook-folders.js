@@ -33,11 +33,13 @@ const loadFolderRegistry = () => {
 };
 
 const saveFolderRegistry = (folders) => {
-  if (typeof localStorage === 'undefined') return;
+  if (typeof localStorage === 'undefined') return false;
   try {
     localStorage.setItem(FOLDER_REGISTRY_STORAGE_KEY, JSON.stringify(folders));
+    return true;
   } catch (error) {
     console.warn('[STWID] Failed to save folder registry', error);
+    return false;
   }
 };
 
@@ -56,8 +58,13 @@ const normalizeRegistry = (folders) => {
 };
 
 const getFolderRegistry = () => {
-  const normalized = normalizeRegistry(loadFolderRegistry());
-  saveFolderRegistry(normalized);
+  const stored = loadFolderRegistry();
+  const normalized = normalizeRegistry(stored);
+  // Persist only real cleanup (dropped entries, merged case-variants, trims),
+  // not every read. Serialized comparison catches all of those at once.
+  if (JSON.stringify(normalized) !== JSON.stringify(stored)) {
+    saveFolderRegistry(normalized);
+  }
   return normalized;
 };
 
@@ -76,7 +83,9 @@ const registerFolderName = (folderName) => {
   }
   registry.push(normalized);
   registry.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-  saveFolderRegistry(registry);
+  if (!saveFolderRegistry(registry)) {
+    return { ok: false, folder: null, reason: 'storage' };
+  }
   return { ok: true, folder: normalized };
 };
 
@@ -115,7 +124,9 @@ const sanitizeFolderMetadata = (metadata) => {
 const getFolderBookNames = (cache, folderName) => {
   if (!cache || !folderName) return [];
   return Object.keys(cache).filter(
-    (name) => getFolderFromMetadata(cache[name]?.metadata) === folderName,
+    (name) =>
+      (getFolderFromMetadata(cache[name]?.metadata) ?? '').toLowerCase() ===
+      folderName.toLowerCase(),
   );
 };
 
@@ -156,7 +167,7 @@ const removeFolderName = (folderName) => {
   const normalized = normalizeFolderName(folderName);
   if (!normalized) return false;
   const registry = getFolderRegistry();
-  const nextRegistry = registry.filter((entry) => entry !== normalized);
+  const nextRegistry = registry.filter((entry) => entry.toLowerCase() !== normalized.toLowerCase());
   if (nextRegistry.length === registry.length) return false;
   saveFolderRegistry(nextRegistry);
   return true;

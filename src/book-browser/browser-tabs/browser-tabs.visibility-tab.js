@@ -132,9 +132,14 @@ const createVisibilityMenuCloseHandlers = ({
       wrappedClose();
     }
   };
+  let removalObserver = null;
   const removeListeners = () => {
     document.removeEventListener('click', handleOutsideClick, true);
     document.removeEventListener('keydown', handleEscapeKey);
+    if (removalObserver) {
+      removalObserver.disconnect();
+      removalObserver = null;
+    }
   };
   const wrappedClose = () => {
     if (!menuEl.classList.contains(CSS_STATE_ACTIVE)) return;
@@ -156,6 +161,16 @@ const createVisibilityMenuCloseHandlers = ({
       triggerButton.setAttribute('aria-expanded', 'true');
       document.addEventListener('click', handleOutsideClick, true);
       document.addEventListener('keydown', handleEscapeKey);
+      // Mirror the shared wiring's teardown (`observeMenuWrapRemoval`): if the
+      // section leaves the DOM while the menu is open, no close path would ever
+      // detach these document-level listeners.
+      const parentNode = menuWrap.parentNode;
+      if (parentNode && !removalObserver) {
+        removalObserver = new MutationObserver(() => {
+          if (!menuWrap.isConnected) removeListeners();
+        });
+        removalObserver.observe(parentNode, { childList: true });
+      }
     }
   };
 
@@ -283,7 +298,9 @@ const createApplyActiveFilter =
     const visibleBookLookup = new Set(visibleBookNames);
     const isAllBooks = isAllBooksVisibility();
     const isAllActive = isAllActiveVisibility();
-    for (const bookName of Object.keys(runtime.cache)) {
+    // Same contract as `getBookVisibilityScope`: an absent cache hides nothing
+    // instead of aborting the whole pass.
+    for (const bookName of Object.keys(runtime.cache ?? {})) {
       const hideByVisibilityFilter = !visibleBookLookup.has(bookName);
       runtime.cache[bookName].dom.root.classList.toggle(
         'stwid--filter-visibility',
@@ -308,19 +325,7 @@ const createApplyActiveFilter =
     updateFolderActiveToggles();
   };
 
-const buildVisibilityDropdownSection = ({
-  listPanelState,
-  applyActiveFilter,
-  closeBookVisibilityMenu,
-  createBookVisibilityIcon,
-  setAllBooksVisibility,
-  setAllActiveVisibility,
-  toggleVisibilitySelection,
-  closeOpenMultiselectDropdownMenus,
-  setMultiselectDropdownOptionCheckboxState,
-}) => {
-  const visibilityContainer = document.createElement('div');
-  visibilityContainer.classList.add('stwid--field-group', 'stwid--visibilityFilters');
+const buildVisibilityFieldGroupLabel = () => {
   const visibilityContainerLabel = document.createElement('span');
   visibilityContainerLabel.classList.add('stwid--field-group__label');
   visibilityContainerLabel.textContent = 'Visibility';
@@ -334,12 +339,52 @@ const buildVisibilityDropdownSection = ({
   visibilityContainerHint.title =
     'Pick which sources are visible and review the active filter chips.';
   visibilityContainerLabel.append(visibilityContainerHint);
-  visibilityContainer.append(visibilityContainerLabel);
+  return visibilityContainerLabel;
+};
+
+const handleVisibilityTriggerKeydown =
+  ({ menuEl, keyboardNav, onToggle, afterToggle }) =>
+  (evt) => {
+    // Enter on this trigger fired TWICE before this guard, so the menu opened
+    // and immediately closed again: it is a native <button> (browser fires its
+    // own click on Enter) that also carries `.menu_button`, which the host's
+    // global Enter-to-click handler matches (vendor keyboard.js). Measured in
+    // the browser 17-08-2026 — Space, which the host ignores, opened it fine
+    // while Enter left it shut. Handling Enter here and stopping it from
+    // reaching the document leaves exactly one toggle.
+    if (evt.key === 'Enter') {
+      evt.preventDefault();
+      evt.stopPropagation();
+      onToggle(evt);
+      afterToggle();
+      return;
+    }
+    if (!menuEl.classList.contains(CSS_STATE_ACTIVE)) return;
+    if (evt.key !== 'Tab' || evt.shiftKey) return;
+    // Tabbing off the trigger would skip the whole open menu; step into it.
+    if (keyboardNav.focusFirst()) evt.preventDefault();
+  };
+
+const buildVisibilityDropdownSection = ({
+  listPanelState,
+  applyActiveFilter,
+  closeBookVisibilityMenu,
+  createBookVisibilityIcon,
+  setAllBooksVisibility,
+  setAllActiveVisibility,
+  toggleVisibilitySelection,
+  closeOpenMultiselectDropdownMenus,
+  setMultiselectDropdownOptionCheckboxState,
+}) => {
+  const visibilityContainer = document.createElement('div');
+  visibilityContainer.classList.add('stwid--field-group', 'stwid--visibilityFilters');
+  visibilityContainer.append(buildVisibilityFieldGroupLabel());
 
   const visibilityDropdownContainer = document.createElement('div');
   visibilityDropdownContainer.classList.add('stwid--multiselect-dropdown__wrap');
 
   const visibilityMenuButton = createVisibilityMenuButton();
+  listPanelState.bookVisibilityTriggerButton = visibilityMenuButton;
   visibilityDropdownContainer.append(visibilityMenuButton);
 
   const bookVisibilityMenuEl = document.createElement('div');
@@ -384,26 +429,15 @@ const buildVisibilityDropdownSection = ({
     else visibilityKeyboardNav.reset();
   };
   visibilityMenuButton.addEventListener('click', afterVisibilityMenuToggle);
-  visibilityMenuButton.addEventListener('keydown', (evt) => {
-    // Enter on this trigger fired TWICE before this guard, so the menu opened
-    // and immediately closed again: it is a native <button> (browser fires its
-    // own click on Enter) that also carries `.menu_button`, which the host's
-    // global Enter-to-click handler matches (vendor keyboard.js). Measured in
-    // the browser 17-08-2026 — Space, which the host ignores, opened it fine
-    // while Enter left it shut. Handling Enter here and stopping it from
-    // reaching the document leaves exactly one toggle.
-    if (evt.key === 'Enter') {
-      evt.preventDefault();
-      evt.stopPropagation();
-      onVisibilityMenuButtonClick(evt);
-      afterVisibilityMenuToggle();
-      return;
-    }
-    if (!bookVisibilityMenuEl.classList.contains(CSS_STATE_ACTIVE)) return;
-    if (evt.key !== 'Tab' || evt.shiftKey) return;
-    // Tabbing off the trigger would skip the whole open menu; step into it.
-    if (visibilityKeyboardNav.focusFirst()) evt.preventDefault();
-  });
+  visibilityMenuButton.addEventListener(
+    'keydown',
+    handleVisibilityTriggerKeydown({
+      menuEl: bookVisibilityMenuEl,
+      keyboardNav: visibilityKeyboardNav,
+      onToggle: onVisibilityMenuButtonClick,
+      afterToggle: afterVisibilityMenuToggle,
+    }),
+  );
   const chips = document.createElement('div');
   chips.classList.add('stwid--visibility-chips');
   listPanelState.bookVisibilityChips = chips;
@@ -490,9 +524,13 @@ const createVisibilitySlice = ({
   const closeBookVisibilityMenu = () => {
     if (!listPanelState.bookVisibilityMenu) return;
     listPanelState.bookVisibilityMenu.classList.remove(CSS_STATE_ACTIVE);
-    const visibilityMenuButton = listPanelState.bookVisibilityMenu.parentElement?.querySelector(
-      `.${CSS_MULTISELECT_DROPDOWN_BUTTON}`,
-    );
+    // The trigger is captured when the section is built; the scoped query stays
+    // only as a fallback for a close arriving before that build ran.
+    const visibilityMenuButton =
+      listPanelState.bookVisibilityTriggerButton ??
+      listPanelState.bookVisibilityMenu.parentElement?.querySelector(
+        `.${CSS_MULTISELECT_DROPDOWN_BUTTON}`,
+      );
     visibilityMenuButton?.setAttribute('aria-expanded', 'false');
   };
 

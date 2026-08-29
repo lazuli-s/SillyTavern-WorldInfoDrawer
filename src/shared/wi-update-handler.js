@@ -105,7 +105,10 @@ const maybeTriggerEditorRefreshForField = ({
   }
 };
 
-const removeStaleCachedBooks = ({ cache, worldNames }) => {
+// Drops from the cache every book the host no longer lists, detaching its row
+// first so nothing later reads a book that is gone. Exported for the unit tests only
+// — production reaches it through updateWIChange.
+export const removeStaleCachedBooks = ({ cache, worldNames }) => {
   for (const [worldName, cachedWorld] of Object.entries(cache)) {
     if (worldNames.includes(worldName)) continue;
     cachedWorld.dom.root.remove();
@@ -113,7 +116,16 @@ const removeStaleCachedBooks = ({ cache, worldNames }) => {
   }
 };
 
-const renderMissingBooks = async ({ cache, worldNames, loadWorldInfoForBook, listPanelApi }) => {
+// Renders every book the host lists that the cache has not got yet, placing it
+// at the alphabetical position the already-cached rows define rather than
+// appending. Exported for the unit tests only — production reaches it through
+// updateWIChange.
+export const renderMissingBooks = async ({
+  cache,
+  worldNames,
+  loadWorldInfoForBook,
+  listPanelApi,
+}) => {
   for (const worldName of worldNames) {
     if (cache[worldName]) continue;
     const before = Object.keys(cache).find(
@@ -128,7 +140,8 @@ const renderMissingBooks = async ({ cache, worldNames, loadWorldInfoForBook, lis
 // keysecondary, triggers) are the common case and are compared element by
 // element instead of via JSON.stringify (PERF-W4-01); only genuine non-array
 // objects (e.g. characterFilter) fall back to JSON serialization.
-const areEntryFieldValuesEqual = (oldValue, newValue) => {
+// Exported for the unit tests only — no production caller outside this module.
+export const areEntryFieldValuesEqual = (oldValue, newValue) => {
   if (oldValue === newValue) return true;
   if (Array.isArray(oldValue) && Array.isArray(newValue)) {
     if (oldValue.length !== newValue.length) return false;
@@ -148,7 +161,11 @@ const areEntryFieldValuesEqual = (oldValue, newValue) => {
   return false;
 };
 
-const applyEntryFieldDiff = ({
+// Walks one changed entry field by field and decides what to touch: which row
+// nodes to update and whether the open editor may be refreshed. Exported for
+// the unit tests only — in production it is reached through
+// syncBookEntriesAndDom below.
+export const applyEntryFieldDiff = ({
   bookName,
   entryUid,
   oldEntry,
@@ -249,7 +266,10 @@ const applyEntryFieldDiff = ({
   return hasChange;
 };
 
-const syncBookEntriesAndDom = async ({
+// Syncs one book's incoming data into the cache and the on-screen rows,
+// including the per-entry once-only editor refresh guard. Exported for the
+// unit tests only — production reaches it through updateWIChange.
+export const syncBookEntriesAndDom = async ({
   bookName,
   cache,
   data,

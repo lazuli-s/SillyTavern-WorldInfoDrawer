@@ -93,38 +93,26 @@ function createFilterMenuUpdaters({
   entryManagerState,
   menuButton,
 }) {
-  let updateFilterIndicator;
+  const updateFilterIndicator = () => {
+    updateFilterIndicatorState({
+      stateKey,
+      stateValuesKey,
+      getValues,
+      normalizeFilters,
+      entryManagerState,
+      menuButton,
+    });
+  };
+
   let updateFilters;
 
   if (normalizeFilters === null) {
-    updateFilterIndicator = () => {
-      updateFilterIndicatorState({
-        stateKey,
-        stateValuesKey,
-        getValues,
-        normalizeFilters,
-        entryManagerState,
-        menuButton,
-      });
-    };
-
     updateFilters = () => {
       const allValues = entryManagerState[stateValuesKey] ?? [];
       ensureDefaultFiltersSelected({ stateKey, allValues, entryManagerState });
       applyFiltersAndNotify({ updateFilterIndicator, applyFilters, onFilterChange });
     };
   } else {
-    updateFilterIndicator = () => {
-      updateFilterIndicatorState({
-        stateKey,
-        stateValuesKey,
-        getValues,
-        normalizeFilters,
-        entryManagerState,
-        menuButton,
-      });
-    };
-
     updateFilters = () => {
       entryManagerState.filters[stateKey] = normalizeFilters(entryManagerState.filters[stateKey]);
       applyFiltersAndNotify({ updateFilterIndicator, applyFilters, onFilterChange });
@@ -383,37 +371,31 @@ function buildCharacterFilterColumnHeader({
   };
 }
 
-export function buildTableHeader({
-  entryManagerState,
-  applyEntryManagerStrategyFilters,
-  applyEntryManagerPositionFilters,
-  applyEntryManagerRecursionFilters,
-  applyEntryManagerOutletFilters,
-  applyEntryManagerAutomationIdFilters,
-  applyEntryManagerGroupFilters,
-  normalizeStrategyFilters,
-  normalizePositionFilters,
-  normalizeOutletFilters,
-  normalizeAutomationIdFilters,
-  normalizeGroupFilters,
+/** The per-column filter-menu wiring shared by all six fixed filter menus. */
+function createFilterMenuConfigs({
   getStrategyOptions,
   getStrategyValues,
+  normalizeStrategyFilters,
+  applyEntryManagerStrategyFilters,
   getPositionOptions,
   getPositionValues,
+  normalizePositionFilters,
+  applyEntryManagerPositionFilters,
+  applyEntryManagerRecursionFilters,
   getOutletOptions,
   getOutletValues,
+  normalizeOutletFilters,
+  applyEntryManagerOutletFilters,
   getAutomationIdOptions,
   getAutomationIdValues,
+  normalizeAutomationIdFilters,
+  applyEntryManagerAutomationIdFilters,
   getGroupOptions,
   getGroupValues,
-  applyEntryManagerCharacterFilterPresenceFilters,
-  applyEntryManagerCharacterFilterValueFilters,
-  getCharacterFilterPickerOptions,
-  onFilterChange = () => {},
+  normalizeGroupFilters,
+  applyEntryManagerGroupFilters,
 }) {
-  const refreshFilterIndicators = {};
-
-  const filterMenuConfigs = {
+  return {
     strategy: {
       stateKey: 'strategy',
       stateValuesKey: 'strategyValues',
@@ -466,50 +448,129 @@ export function buildTableHeader({
       capOptions: true,
     },
   };
+}
+
+/**
+ * Builds one `<th>` for the header row and routes it to the character-filter
+ * header, a filter-menu header, or a plain label; refresh indicators register
+ * into the caller's `refreshFilterIndicators` during cell building.
+ */
+function buildHeaderCell({
+  col,
+  menuConfig,
+  entryManagerState,
+  applyPresenceFilters,
+  applyValueFilters,
+  getCharacterFilterPickerOptions,
+  onFilterChange,
+  refreshFilterIndicators,
+}) {
+  const headerCell = document.createElement('th');
+  if (col.key === 'characterFilter') {
+    const { header, refreshPresenceIndicator, refreshValueIndicator } =
+      buildCharacterFilterColumnHeader({
+        label: col.label,
+        entryManagerState,
+        applyPresenceFilters,
+        applyValueFilters,
+        getCharacterFilterPickerOptions,
+        onFilterChange,
+      });
+    headerCell.append(header);
+    refreshFilterIndicators.characterFilterPresence = refreshPresenceIndicator;
+    refreshFilterIndicators.characterFilterValue = refreshValueIndicator;
+  } else if (menuConfig) {
+    const { header, updateFilterIndicator } = buildFilterColumnHeader(
+      col.label,
+      { ...menuConfig, onFilterChange },
+      entryManagerState,
+    );
+    headerCell.append(header);
+    refreshFilterIndicators[col.key] = updateFilterIndicator;
+  } else {
+    headerCell.textContent = col.label;
+  }
+  if (col.tooltip) setTooltip(headerCell, col.tooltip);
+  if (col.key) {
+    headerCell.setAttribute('data-col', col.key);
+    if (ENTRY_MANAGER_NUMBER_COLUMN_KEYS.has(col.key)) {
+      headerCell.classList.add('stwid--order-table--number-columns');
+    }
+  }
+  return headerCell;
+}
+
+export function buildTableHeader({
+  entryManagerState,
+  applyEntryManagerStrategyFilters,
+  applyEntryManagerPositionFilters,
+  applyEntryManagerRecursionFilters,
+  applyEntryManagerOutletFilters,
+  applyEntryManagerAutomationIdFilters,
+  applyEntryManagerGroupFilters,
+  normalizeStrategyFilters,
+  normalizePositionFilters,
+  normalizeOutletFilters,
+  normalizeAutomationIdFilters,
+  normalizeGroupFilters,
+  getStrategyOptions,
+  getStrategyValues,
+  getPositionOptions,
+  getPositionValues,
+  getOutletOptions,
+  getOutletValues,
+  getAutomationIdOptions,
+  getAutomationIdValues,
+  getGroupOptions,
+  getGroupValues,
+  applyEntryManagerCharacterFilterPresenceFilters,
+  applyEntryManagerCharacterFilterValueFilters,
+  getCharacterFilterPickerOptions,
+  onFilterChange = () => {},
+}) {
+  const refreshFilterIndicators = {};
+
+  const filterMenuConfigs = createFilterMenuConfigs({
+    getStrategyOptions,
+    getStrategyValues,
+    normalizeStrategyFilters,
+    applyEntryManagerStrategyFilters,
+    getPositionOptions,
+    getPositionValues,
+    normalizePositionFilters,
+    applyEntryManagerPositionFilters,
+    applyEntryManagerRecursionFilters,
+    getOutletOptions,
+    getOutletValues,
+    normalizeOutletFilters,
+    applyEntryManagerOutletFilters,
+    getAutomationIdOptions,
+    getAutomationIdValues,
+    normalizeAutomationIdFilters,
+    applyEntryManagerAutomationIdFilters,
+    getGroupOptions,
+    getGroupValues,
+    normalizeGroupFilters,
+    applyEntryManagerGroupFilters,
+  });
 
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
-  {
-    for (const col of ENTRY_MANAGER_TABLE_COLUMNS) {
-      const headerCell = document.createElement('th');
-      {
-        const menuConfig = filterMenuConfigs[col.key];
-        if (col.key === 'characterFilter') {
-          const { header, refreshPresenceIndicator, refreshValueIndicator } =
-            buildCharacterFilterColumnHeader({
-              label: col.label,
-              entryManagerState,
-              applyPresenceFilters: applyEntryManagerCharacterFilterPresenceFilters,
-              applyValueFilters: applyEntryManagerCharacterFilterValueFilters,
-              getCharacterFilterPickerOptions,
-              onFilterChange,
-            });
-          headerCell.append(header);
-          refreshFilterIndicators.characterFilterPresence = refreshPresenceIndicator;
-          refreshFilterIndicators.characterFilterValue = refreshValueIndicator;
-        } else if (menuConfig) {
-          const { header, updateFilterIndicator } = buildFilterColumnHeader(
-            col.label,
-            { ...menuConfig, onFilterChange },
-            entryManagerState,
-          );
-          headerCell.append(header);
-          refreshFilterIndicators[col.key] = updateFilterIndicator;
-        } else {
-          headerCell.textContent = col.label;
-        }
-        if (col.tooltip) setTooltip(headerCell, col.tooltip);
-        if (col.key) {
-          headerCell.setAttribute('data-col', col.key);
-          if (ENTRY_MANAGER_NUMBER_COLUMN_KEYS.has(col.key)) {
-            headerCell.classList.add('stwid--order-table--number-columns');
-          }
-        }
-        headerRow.append(headerCell);
-      }
-    }
-    thead.append(headerRow);
+  for (const col of ENTRY_MANAGER_TABLE_COLUMNS) {
+    headerRow.append(
+      buildHeaderCell({
+        col,
+        menuConfig: filterMenuConfigs[col.key],
+        entryManagerState,
+        applyPresenceFilters: applyEntryManagerCharacterFilterPresenceFilters,
+        applyValueFilters: applyEntryManagerCharacterFilterValueFilters,
+        getCharacterFilterPickerOptions,
+        onFilterChange,
+        refreshFilterIndicators,
+      }),
+    );
   }
+  thead.append(headerRow);
 
   return {
     thead,

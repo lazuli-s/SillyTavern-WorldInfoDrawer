@@ -12,6 +12,12 @@ const SPLITTER_THICKNESS_FALLBACK_PX = 6;
 const isMobileLayout = () => window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
+// The host keeps #WorldInfo hidden until the drawer opens, so panels inside it
+// measure 0px on every axis. Measuring or persisting sizes in that state writes
+// degenerate values over the user's saved width; the restore is re-run by the
+// drawer-open observer once real sizes exist.
+const isListRendered = (listEl) => listEl.getBoundingClientRect().width > 0;
+
 const getStoredSplitterSize = (primaryKey, legacyKey) => {
   const primaryValue = Number.parseInt(localStorage.getItem(primaryKey) ?? '', 10);
   if (!Number.isNaN(primaryValue)) return primaryValue;
@@ -37,57 +43,35 @@ function createSplitters(body) {
   return { desktopSplitter };
 }
 
-function getMaxListSizeForLayout(bodyEl, splitterEl, minListSize, minEditorSize, measureAxis) {
+function getMaxListSizeForLayout(bodyEl, splitterEl, minListSize, minEditorSize) {
   const splitterThickness =
-    splitterEl.getBoundingClientRect()[measureAxis] || SPLITTER_THICKNESS_FALLBACK_PX;
-  const bodySize = bodyEl.getBoundingClientRect()[measureAxis];
+    splitterEl.getBoundingClientRect().width || SPLITTER_THICKNESS_FALLBACK_PX;
+  const bodySize = bodyEl.getBoundingClientRect().width;
   const maxSize = bodySize - splitterThickness - minEditorSize;
   if (maxSize >= minListSize) return maxSize;
   return Math.max(0, maxSize);
 }
 
-function getDefaultListSizeForLayout(
-  bodyEl,
-  ratio,
-  fallbackPx,
-  minListSize,
-  getMaxListSize,
-  measureAxis,
-) {
-  const preferred = Math.round(bodyEl.getBoundingClientRect()[measureAxis] * ratio) || fallbackPx;
+function getDefaultListSizeForLayout(bodyEl, ratio, fallbackPx, minListSize, getMaxListSize) {
+  const preferred = Math.round(bodyEl.getBoundingClientRect().width * ratio) || fallbackPx;
   return clamp(preferred, minListSize, getMaxListSize());
 }
 
-function applyListSizeCss(value, minValue, axis, appliedValue, list) {
+function applyListSizeCss(value, minValue, appliedValue, list) {
   const clamped = Number.isFinite(value) ? value : minValue;
   const sizeValue = `${clamped}px`;
 
-  if (axis === 'width') {
-    if (
-      clamped === appliedValue &&
-      list.style.flexBasis === sizeValue &&
-      list.style.width === sizeValue &&
-      !list.style.height
-    ) {
-      return clamped;
-    }
-    if (list.style.height) list.style.height = '';
-    if (list.style.flexBasis !== sizeValue) list.style.flexBasis = sizeValue;
-    if (list.style.width !== sizeValue) list.style.width = sizeValue;
-    return clamped;
-  }
-
   if (
     clamped === appliedValue &&
-    list.style.height === sizeValue &&
-    !list.style.width &&
-    !list.style.flexBasis
+    list.style.flexBasis === sizeValue &&
+    list.style.width === sizeValue &&
+    !list.style.height
   ) {
     return clamped;
   }
-  if (list.style.width) list.style.width = '';
-  if (list.style.flexBasis) list.style.flexBasis = '';
-  if (list.style.height !== sizeValue) list.style.height = sizeValue;
+  if (list.style.height) list.style.height = '';
+  if (list.style.flexBasis !== sizeValue) list.style.flexBasis = sizeValue;
+  if (list.style.width !== sizeValue) list.style.width = sizeValue;
   return clamped;
 }
 
@@ -108,6 +92,74 @@ function applyListSizeWithBounds(value, minValue, getMaxSize, applyListSize, set
   return appliedValue;
 }
 
+// Tears down exactly the listeners one drag session registered. Split out of
+// the session helper so both stay under the 50-line guideline; the pending-frame
+// flush stays with the session because it mutates the shared `rafId`.
+function removeSplitterDragListeners(splitterEl, handlers, endEvt) {
+  try {
+    splitterEl.releasePointerCapture(endEvt.pointerId);
+  } catch {}
+
+  window.removeEventListener('pointermove', handlers.onMove);
+  window.removeEventListener('pointerup', handlers.onUp);
+  window.removeEventListener('pointercancel', handlers.onCancel);
+  splitterEl.removeEventListener('lostpointercapture', handlers.onLostCapture);
+}
+
+// One pointerdown starts one drag session: it owns the per-drag state
+// (`pendingSize`/`rafId`), the frame-scheduled apply, and removes exactly the
+// listeners it registers here.
+function beginSplitterDragSession({
+  splitterEl,
+  getStartCoord,
+  startCoord,
+  startSize,
+  minSize,
+  maxSize,
+  applyWithBounds,
+  saveAppliedSize,
+  setAppliedSize,
+}) {
+  let pendingSize = startSize;
+  let rafId = null;
+
+  const queueApply = (value) => {
+    pendingSize = value;
+    if (rafId !== null) return;
+
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      setAppliedSize(applyWithBounds(pendingSize));
+    });
+  };
+
+  const onMove = (moveEvt) => {
+    const delta = getStartCoord(moveEvt) - startCoord;
+    const nextSize = Math.min(Math.max(minSize, startSize + delta), maxSize);
+    queueApply(nextSize);
+  };
+
+  const cleanupSplitterDrag = (endEvt) => {
+    removeSplitterDragListeners(splitterEl, { onMove, onUp, onCancel, onLostCapture }, endEvt);
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+      setAppliedSize(applyWithBounds(pendingSize));
+    }
+
+    saveAppliedSize();
+  };
+
+  const onUp = (upEvt) => cleanupSplitterDrag(upEvt);
+  const onCancel = (cancelEvt) => cleanupSplitterDrag(cancelEvt);
+  const onLostCapture = (lostEvt) => cleanupSplitterDrag(lostEvt);
+
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onCancel);
+  splitterEl.addEventListener('lostpointercapture', onLostCapture);
+}
+
 function attachSplitterPointerDragHandlers({
   splitterEl,
   shouldHandleDrag,
@@ -125,57 +177,24 @@ function attachSplitterPointerDragHandlers({
       evt.preventDefault();
       splitterEl.setPointerCapture(evt.pointerId);
 
+      // The synchronous snapshot must precede delegation: a pointermove can
+      // fire between registration and the first scheduled frame.
       const startCoord = getStartCoord(evt);
       const startSize = getStartSize();
       setAppliedSize(startSize);
       const maxSize = getMaxSize();
 
-      let pendingSize = startSize;
-      let rafId = null;
-
-      const queueApply = (value) => {
-        pendingSize = value;
-        if (rafId !== null) return;
-
-        rafId = requestAnimationFrame(() => {
-          rafId = null;
-          setAppliedSize(applyWithBounds(pendingSize));
-        });
-      };
-
-      const onMove = (moveEvt) => {
-        const delta = getStartCoord(moveEvt) - startCoord;
-        const nextSize = Math.min(Math.max(minSize, startSize + delta), maxSize);
-        queueApply(nextSize);
-      };
-
-      const cleanupSplitterDrag = (endEvt) => {
-        try {
-          splitterEl.releasePointerCapture(endEvt.pointerId);
-        } catch {}
-
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-        window.removeEventListener('pointercancel', onCancel);
-        splitterEl.removeEventListener('lostpointercapture', onLostCapture);
-
-        if (rafId !== null) {
-          cancelAnimationFrame(rafId);
-          rafId = null;
-          setAppliedSize(applyWithBounds(pendingSize));
-        }
-
-        saveAppliedSize();
-      };
-
-      const onUp = (upEvt) => cleanupSplitterDrag(upEvt);
-      const onCancel = (cancelEvt) => cleanupSplitterDrag(cancelEvt);
-      const onLostCapture = (lostEvt) => cleanupSplitterDrag(lostEvt);
-
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-      window.addEventListener('pointercancel', onCancel);
-      splitterEl.addEventListener('lostpointercapture', onLostCapture);
+      beginSplitterDragSession({
+        splitterEl,
+        getStartCoord,
+        startCoord,
+        startSize,
+        minSize,
+        maxSize,
+        applyWithBounds,
+        saveAppliedSize,
+        setAppliedSize,
+      });
     };
 
   const pointerDownHandler = createPointerDownHandler();
@@ -240,13 +259,12 @@ function createSplitterSizingHelpers(body, list, desktopSplitter) {
   let appliedListWidth = MIN_LIST_WIDTH;
 
   const getDesktopMaxWidth = () =>
-    getMaxListSizeForLayout(body, desktopSplitter, MIN_LIST_WIDTH, MIN_EDITOR_WIDTH, 'width');
+    getMaxListSizeForLayout(body, desktopSplitter, MIN_LIST_WIDTH, MIN_EDITOR_WIDTH);
 
   const getDefaultDesktopWidth = () =>
-    getDefaultListSizeForLayout(body, 0.34, 300, MIN_LIST_WIDTH, getDesktopMaxWidth, 'width');
+    getDefaultListSizeForLayout(body, 0.34, 300, MIN_LIST_WIDTH, getDesktopMaxWidth);
 
-  const applyListWidth = (value) =>
-    applyListSizeCss(value, MIN_LIST_WIDTH, 'width', appliedListWidth, list);
+  const applyListWidth = (value) => applyListSizeCss(value, MIN_LIST_WIDTH, appliedListWidth, list);
 
   const setAppliedListWidth = (value) => {
     appliedListWidth = value;
@@ -272,6 +290,7 @@ function createSplitterSizingHelpers(body, list, desktopSplitter) {
 
   const reapplyBoundsForCurrentLayout = (mobileLayout) => {
     if (mobileLayout) return;
+    if (!isListRendered(list)) return;
 
     const previousWidth = appliedListWidth;
     const nextWidth = applyDesktopWidthWithBounds(previousWidth);
@@ -305,6 +324,7 @@ function createRestoreSplitterForCurrentLayout({
       clearListSizeCssForMobile(list);
       return;
     }
+    if (!isListRendered(list)) return;
 
     const storedWidth = getStoredSplitterSize(
       DESKTOP_SPLITTER_STORAGE_KEY,

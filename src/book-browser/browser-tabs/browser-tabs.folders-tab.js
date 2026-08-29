@@ -7,7 +7,8 @@ export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getLis
   foldersGroup.classList.add('stwid--field-group', 'stwid--foldersGroup');
   dom.folderControls.group = foldersGroup;
   function createFolderActionButton({ controlKey, iconClass, title, onClick }) {
-    const button = document.createElement('div');
+    const button = document.createElement('button');
+    button.type = 'button';
     dom.folderControls[controlKey] = button;
     button.classList.add(
       MENU_BUTTON_CLASS,
@@ -41,26 +42,45 @@ export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getLis
     iconClass: 'fa-folder-plus',
     title: 'New Folder',
     onClick: async () => {
-      const folderName = await Popup.show.input(
-        'Create a new folder',
-        'Enter a name for the new folder:',
-        'New Folder',
-      );
-      if (!folderName) return;
-      const result = registerFolderName(folderName);
-      if (!result.ok) {
-        if (result.reason === 'invalid') {
-          toastr.error('Folder names cannot include "/".');
+      try {
+        const folderName = await Popup.show.input(
+          'Create a new folder',
+          'Enter a name for the new folder:',
+          'New Folder',
+        );
+        // Cancel-only guard: the popup resolves a confirmed empty input as '',
+        // which must reach `registerFolderName` so its 'empty' branch can warn.
+        if (folderName === null || folderName === undefined) return;
+        const result = registerFolderName(folderName);
+        if (!result.ok) {
+          if (result.reason === 'invalid') {
+            toastr.error('Folder names cannot include "/".');
+            return;
+          }
+          if (result.reason === 'duplicate') {
+            toastr.warning('A folder with that name already exists.');
+            return;
+          }
+          if (result.reason === 'storage') {
+            toastr.error('Could not save the folder: browser storage refused the write.');
+            return;
+          }
+          toastr.warning('Folder name cannot be empty.');
           return;
         }
-        if (result.reason === 'duplicate') {
-          toastr.warning('A folder with that name already exists.');
-          return;
-        }
-        toastr.warning('Folder name cannot be empty.');
+      } catch (error) {
+        console.error('[STWID] Failed to create folder', error);
+        toastr.error('Could not create the folder. Please try again.');
         return;
       }
-      await getListPanelApi()?.refreshList?.();
+      // Separate guard: past this point the folder IS persisted, so the
+      // message must not claim creation failed.
+      try {
+        await getListPanelApi()?.refreshList?.();
+      } catch (error) {
+        console.error('[STWID] Folder created but list refresh failed', error);
+        toastr.error('Folder created, but refreshing the book list failed.');
+      }
     },
   });
 

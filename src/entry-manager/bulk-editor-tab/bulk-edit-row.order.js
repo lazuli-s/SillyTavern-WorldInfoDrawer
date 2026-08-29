@@ -1,17 +1,11 @@
 import { setTooltip } from '../entry-manager.utils.js';
-import { maybeYieldToEventLoop } from '../../shared/utils.js';
-import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
 import {
-  BULK_APPLY_BATCH_SIZE,
   APPLY_DIRTY_CLASS,
   createLabeledBulkContainer,
   createApplyButton,
   buildDirectionRadio,
   buildPersistedNumberInput,
-  getSafeTbodyRows,
-  getBulkTargets,
-  saveUpdatedBooks,
-  withApplyButtonLock,
+  runBulkNumericFieldApply,
 } from './bulk-edit-row.helpers.js';
 
 const MAX_ORDER_INPUT = '10000';
@@ -19,7 +13,9 @@ const ORDER_DIRECTION_GROUP = 'stwid--order-direction';
 const ORDER_START_STORAGE_KEY = 'stwid--order-start';
 const ORDER_STEP_STORAGE_KEY = 'stwid--order-step';
 
-function createRunApplyOrder({
+// Exported for tests: the factory takes every dependency as an argument, so a
+// unit test can drive `runApplyOrder` with fakes.
+export function createRunApplyOrder({
   dom,
   cache,
   isEntryManagerRowSelected,
@@ -29,51 +25,51 @@ function createRunApplyOrder({
 }) {
   return async function runApplyOrder() {
     const applyButton = typeof applyOrder === 'function' ? applyOrder() : applyOrder;
-    await withApplyButtonLock(applyButton, async () => {
-      const startValue = Number.parseInt(dom.order.start.value, 10);
-      const stepValue = Number.parseInt(dom.order.step.value, 10);
-      if (!Number.isInteger(startValue) || startValue <= 0) {
-        toastr.warning('Start must be a positive whole number.');
-        return;
-      }
-      if (!Number.isInteger(stepValue) || stepValue <= 0) {
-        toastr.warning('Spacing must be a positive whole number.');
-        return;
-      }
+    // Validation stays outside the button lock, matching the shared runner's
+    // other callers; these warnings therefore surface even while another apply
+    // holds the lock, where the busy-guard used to swallow them silently.
+    const startValue = Number.parseInt(dom.order.start.value, 10);
+    const stepValue = Number.parseInt(dom.order.step.value, 10);
+    if (!Number.isInteger(startValue) || startValue <= 0) {
+      toastr.warning('Start must be a positive whole number.');
+      return;
+    }
+    if (!Number.isInteger(stepValue) || stepValue <= 0) {
+      toastr.warning('Spacing must be a positive whole number.');
+      return;
+    }
+    // Enforce the same ceiling the inputs' `max` attribute advertises; HTML
+    // min/max do not block typed or pasted values.
+    if (startValue > Number(MAX_ORDER_INPUT)) {
+      toastr.warning(`Start must be ${MAX_ORDER_INPUT} or less.`);
+      return;
+    }
+    if (stepValue > Number(MAX_ORDER_INPUT)) {
+      toastr.warning(`Spacing must be ${MAX_ORDER_INPUT} or less.`);
+      return;
+    }
 
-      const rows = getSafeTbodyRows(dom);
-      if (!rows) return;
-
-      const shouldReverseTargets = dom.order.direction.up.checked;
-      const targets = getBulkTargets(rows, cache, isEntryManagerRowSelected, {
-        reverse: shouldReverseTargets,
-      });
-      let order = startValue;
-      const books = new Set();
-      for (let i = 0; i < targets.length; i++) {
-        const { tr: entryRowEl, bookName, entryData } = targets[i];
-        books.add(bookName);
-        entryData.order = order;
-        mirrorEntryFieldsToOriginalData(cache[bookName], entryData, ['order']);
-        const orderInput = entryRowEl.querySelector('[name="order"]');
-        if (orderInput) {
-          orderInput.value = order.toString();
-        }
-        order += stepValue;
-        await maybeYieldToEventLoop(i, BULK_APPLY_BATCH_SIZE);
-      }
-      const { failedBooks } = await saveUpdatedBooks(books, saveWorldInfo, buildSavePayload);
-      // Leave the row marked dirty when a book did not save, so the user can retry.
-      if (failedBooks.length === 0) applyButton.classList.remove(APPLY_DIRTY_CLASS);
+    await runBulkNumericFieldApply({
+      resolveValue: (_target, index) => startValue + index * stepValue,
+      entryField: 'order',
+      rowInputName: 'order',
+      noTargetsWarning: 'No selected entries to apply Order to.',
+      reverse: dom.order.direction.up.checked,
+      dom,
+      cache,
+      isEntryManagerRowSelected,
+      saveWorldInfo,
+      buildSavePayload,
+      applyButton,
     });
   };
 }
 
-function buildOrderStartSpacingControls({ dom, applyOrder }) {
+function buildOrderStartSpacingControls({ dom, applyButtonEl }) {
   const startSpacingPair = document.createElement('div');
   startSpacingPair.classList.add('stwid--order-start-spacing-pair');
 
-  const markApplyButtonDirty = () => applyOrder.classList.add(APPLY_DIRTY_CLASS);
+  const markApplyButtonDirty = () => applyButtonEl.classList.add(APPLY_DIRTY_CLASS);
   const { label: startLabel, inputEl: startInputEl } = buildPersistedNumberInput({
     labelText: 'Start',
     tooltipText: 'Starting Order value',
@@ -99,7 +95,7 @@ function buildOrderStartSpacingControls({ dom, applyOrder }) {
   return startSpacingPair;
 }
 
-function buildOrderDirectionControls({ dom, applyOrder }) {
+function buildOrderDirectionControls({ dom, applyButtonEl }) {
   const directionGroup = document.createElement('div');
   directionGroup.classList.add('stwid--input-wrap');
   setTooltip(directionGroup, 'Direction used when applying Order values');
@@ -113,7 +109,7 @@ function buildOrderDirectionControls({ dom, applyOrder }) {
     'up',
     'Start from the bottom row',
     ORDER_DIRECTION_GROUP,
-    applyOrder,
+    applyButtonEl,
   );
   dom.order.direction.up = upDirection.radioInput;
   radioToggleWrap.append(upDirection.directionRow);
@@ -124,7 +120,7 @@ function buildOrderDirectionControls({ dom, applyOrder }) {
     'down',
     'Start from the top row',
     ORDER_DIRECTION_GROUP,
-    applyOrder,
+    applyButtonEl,
   );
   dom.order.direction.down = downDirection.radioInput;
   radioToggleWrap.append(downDirection.directionRow);
@@ -163,10 +159,10 @@ export function buildBulkOrderSection({
     applyRegistry,
   );
 
-  const startSpacingPair = buildOrderStartSpacingControls({ dom, applyOrder });
+  const startSpacingPair = buildOrderStartSpacingControls({ dom, applyButtonEl: applyOrder });
   orderContainer.append(startSpacingPair);
 
-  const directionGroup = buildOrderDirectionControls({ dom, applyOrder });
+  const directionGroup = buildOrderDirectionControls({ dom, applyButtonEl: applyOrder });
   orderContainer.append(directionGroup);
 
   orderContainer.append(applyOrder);

@@ -43,9 +43,8 @@ function appendBulkSelectSection(
   return refreshSelectionCount;
 }
 
-function appendBulkEditSections(
-  row,
-  {
+function appendBulkEditSections(row, options, applyRegistry) {
+  const {
     dom,
     cache,
     isEntryManagerRowSelected,
@@ -61,10 +60,11 @@ function appendBulkEditSections(
     syncEntryManagerOutletFilters,
     filterIndicatorRefs,
     applyEntryManagerRecursionFilterToRow,
-    applyRegistry,
     debounce,
-  },
-) {
+  } = options;
+  // Builders routed through this helper must return exactly one element; a
+  // section needing several elements or a cleanup is destructured at its call
+  // site instead, like buildBulkPositionSection below.
   const appendBulkSection = (buildSection, extraArgs = {}) => {
     const section = buildSection({
       dom,
@@ -75,6 +75,11 @@ function appendBulkEditSections(
       applyRegistry,
       ...extraArgs,
     });
+    if (!(section instanceof Node)) {
+      throw new Error(
+        `[STWID] Bulk section builder must return an element, got: ${String(section)} (${buildSection.name})`,
+      );
+    }
     row.append(section);
   };
 
@@ -123,55 +128,11 @@ function finalizeBulkEditRow(row, applyRegistry, refreshSelectionCount, cleanup)
   return { element: row, refreshSelectionCount, cleanup };
 }
 
-export function buildBulkEditRow({
-  dom,
-  cache,
-  saveWorldInfo,
-  buildSavePayload,
-  isEntryManagerRowSelected,
-  setAllEntryManagerRowSelected,
-  updateEntryManagerSelectAllButton,
-  getEntryManagerRows,
-  getStrategyOptions,
-  applyEntryManagerStrategyFilterToRow,
-  getPositionOptions,
-  applyEntryManagerPositionFilterToRow,
-  isOutletPosition,
-  getOutletOptions,
-  applyEntryManagerOutletFilterToRow,
-  syncEntryManagerOutletFilters,
-  filterIndicatorRefs,
-  applyEntryManagerRecursionFilterToRow,
-  debounce,
-}) {
+export function buildBulkEditRow(options) {
   const row = createBulkEditRowRoot();
-  const refreshSelectionCount = appendBulkSelectSection(row, {
-    dom,
-    getEntryManagerRows,
-    isEntryManagerRowSelected,
-    setAllEntryManagerRowSelected,
-    updateEntryManagerSelectAllButton,
-  });
+  const refreshSelectionCount = appendBulkSelectSection(row, options);
   const applyRegistry = [];
-  const cleanup = appendBulkEditSections(row, {
-    dom,
-    cache,
-    isEntryManagerRowSelected,
-    saveWorldInfo,
-    buildSavePayload,
-    getStrategyOptions,
-    applyEntryManagerStrategyFilterToRow,
-    getPositionOptions,
-    applyEntryManagerPositionFilterToRow,
-    isOutletPosition,
-    getOutletOptions,
-    applyEntryManagerOutletFilterToRow,
-    syncEntryManagerOutletFilters,
-    filterIndicatorRefs,
-    applyEntryManagerRecursionFilterToRow,
-    applyRegistry,
-    debounce,
-  });
+  const cleanup = appendBulkEditSections(row, options, applyRegistry);
 
   return finalizeBulkEditRow(row, applyRegistry, refreshSelectionCount, cleanup);
 }

@@ -324,7 +324,12 @@ const createEntryManagerOpeners = ({
     dom.order.toggle.classList.add(STATE_ACTIVE_CLASS);
     try {
       await renderEntryManager(book);
-      dom.drawer.body?.classList?.add(MOBILE_PANEL_OPEN_CLASS);
+      // The toggle may have been deactivated while the render was suspended
+      // (a concurrent close); only re-apply the mobile panel class when the
+      // open is still wanted.
+      if (dom.order.toggle.classList.contains(STATE_ACTIVE_CLASS)) {
+        dom.drawer.body?.classList?.add(MOBILE_PANEL_OPEN_CLASS);
+      }
     } catch (error) {
       dom.order.toggle.classList.remove(STATE_ACTIVE_CLASS);
       console.error('Failed to open Entry Manager.', error);

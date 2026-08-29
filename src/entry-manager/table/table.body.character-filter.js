@@ -29,6 +29,8 @@ import { registerCharacterFilterChangeHook } from '../../shared/wi-update-handle
 
 const CHARACTER_FILTER_COLLAPSED_CLASS = 'stwid--character-filter-options--collapsed';
 const CHARACTER_FILTER_MENU_CLASS = 'stwid--character-filter-menu';
+const CHARACTER_FILTER_ROW_CLASS = 'stwid--character-filter-row';
+const CHARACTER_FILTER_LABEL_CLASS = 'stwid--character-filter-label';
 // Scoped to #WorldInfo: the WorldInfoEngine extension runs on the same page and
 // uses the same `stwid--` prefix (CLAUDE.md §1).
 const ACTIVE_MENU_SELECTOR = `#WorldInfo .${CHARACTER_FILTER_MENU_CLASS}.stwid--state-active`;
@@ -45,6 +47,17 @@ const PLACEHOLDER_LABEL = 'No filter';
  * ticket 06 — reads it from here rather than repeating the string.
  */
 export const CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY = 'stwidFilterSearchText';
+
+/**
+ * Search-box texts shared by every character/tag picker menu — this cell's
+ * inline editor, the column header filter and the Bulk Editor row — so the
+ * wording cannot drift apart between them.
+ */
+export const CHARACTER_FILTER_MENU_SEARCH_TEXTS = {
+  placeholder: 'Search characters and tags…',
+  ariaLabel: 'Search characters and tags',
+  noResultsText: 'No matching character or tag.',
+};
 
 const defaultOptionTooltip = (option) =>
   option.stale
@@ -145,28 +158,41 @@ export const registerCharacterFilterUpdateHook = () => {
 /* Read-only rendering (ticket 04)                                            */
 /* -------------------------------------------------------------------------- */
 
-function buildCharacterFilterLine(line, { overflow }) {
+// The one row recipe every filter line shares: a row div holding an icon and a
+// label span. `buildCharacterFilterLine` and `buildCharacterFilterPlaceholder`
+// are both built on it so the two row types cannot drift apart.
+function buildCharacterFilterRow({ icon: iconClass, labelText, tooltip }) {
   const row = document.createElement('div');
-  row.classList.add('stwid--character-filter-row', `stwid--character-filter-row--${line.mode}`);
+  row.classList.add(CHARACTER_FILTER_ROW_CLASS);
+  const icon = document.createElement('i');
+  icon.classList.add('fa-solid', 'fa-fw', iconClass);
+  const text = document.createElement('span');
+  text.classList.add(CHARACTER_FILTER_LABEL_CLASS);
+  text.textContent = labelText;
+  row.append(icon, text);
+  if (tooltip) setTooltip(row, tooltip);
+  return row;
+}
+
+function buildCharacterFilterLine(line, { overflow }) {
+  const row = buildCharacterFilterRow({
+    icon: line.icon,
+    labelText: line.label,
+    tooltip: line.tooltip,
+  });
+  row.classList.add(`stwid--character-filter-row--${line.mode}`);
   if (line.stale) row.classList.add('stwid--character-filter-row--stale');
   if (overflow) row.classList.add('stwid--character-filter-row--overflow');
-  const icon = document.createElement('i');
-  icon.classList.add('fa-solid', 'fa-fw', line.icon);
-  const text = document.createElement('span');
-  text.classList.add('stwid--character-filter-label');
-  text.textContent = line.label;
-  row.append(icon, text);
-  setTooltip(row, line.tooltip);
   return row;
 }
 
 // R5 — in-place expand: every line is in the DOM, the overflow is collapsed by CSS.
-function buildCharacterFilterMoreButton(wrap, hiddenCount, totalCount) {
+function buildCharacterFilterMoreButton(optionsWrap, hiddenCount, totalCount) {
   const button = document.createElement('button');
   button.type = 'button';
   button.classList.add('stwid--character-filter-more', 'interactable');
   const applyState = (expanded) => {
-    wrap.classList.toggle(CHARACTER_FILTER_COLLAPSED_CLASS, !expanded);
+    optionsWrap.classList.toggle(CHARACTER_FILTER_COLLAPSED_CLASS, !expanded);
     button.setAttribute('aria-expanded', String(expanded));
     button.textContent = expanded ? 'Show less' : `+${hiddenCount} more`;
     setTooltip(
@@ -189,30 +215,27 @@ function buildCharacterFilterMoreButton(wrap, hiddenCount, totalCount) {
 // editing affordance, an empty one would be an invisible click target, so it
 // shows a subdued placeholder instead.
 function buildCharacterFilterPlaceholder() {
-  const row = document.createElement('div');
-  row.classList.add('stwid--character-filter-row', 'stwid--character-filter-row--placeholder');
-  const icon = document.createElement('i');
-  icon.classList.add('fa-solid', 'fa-fw', 'fa-plus');
-  const text = document.createElement('span');
-  text.classList.add('stwid--character-filter-label');
-  text.textContent = PLACEHOLDER_LABEL;
-  row.append(icon, text);
+  const row = buildCharacterFilterRow({ icon: 'fa-plus', labelText: PLACEHOLDER_LABEL });
+  row.classList.add('stwid--character-filter-row--placeholder');
   return row;
 }
 
-function renderCharacterFilterCell(wrap, entryData) {
-  wrap.textContent = '';
-  wrap.classList.remove(CHARACTER_FILTER_COLLAPSED_CLASS);
+function renderCharacterFilterCell(optionsWrap, entryData) {
+  optionsWrap.textContent = '';
+  optionsWrap.classList.remove(CHARACTER_FILTER_COLLAPSED_CLASS);
   const lines = formatCharacterFilter(entryData);
   if (!lines.length) {
-    wrap.append(buildCharacterFilterPlaceholder());
+    optionsWrap.append(buildCharacterFilterPlaceholder());
     return;
   }
 
   const { visible, overflow, hiddenCount } = truncateCharacterFilterLines(lines);
-  for (const line of visible) wrap.append(buildCharacterFilterLine(line, { overflow: false }));
-  for (const line of overflow) wrap.append(buildCharacterFilterLine(line, { overflow: true }));
-  if (hiddenCount > 0) wrap.append(buildCharacterFilterMoreButton(wrap, hiddenCount, lines.length));
+  for (const line of visible)
+    optionsWrap.append(buildCharacterFilterLine(line, { overflow: false }));
+  for (const line of overflow)
+    optionsWrap.append(buildCharacterFilterLine(line, { overflow: true }));
+  if (hiddenCount > 0)
+    optionsWrap.append(buildCharacterFilterMoreButton(optionsWrap, hiddenCount, lines.length));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -242,7 +265,7 @@ export function buildCharacterFilterOptionRow(option, onToggle, getTooltip = def
   const label = document.createElement('span');
   // Same class the cell's lines use: it carries the wrapping behaviour, and the
   // stale strike-through hangs off it so colour is never the only signal (R6).
-  label.classList.add('stwid--character-filter-label');
+  label.classList.add(CHARACTER_FILTER_LABEL_CLASS);
   label.textContent = option.label;
   row.append(control.input, control.checkbox, icon, label);
   // R10 — a character is reachable by display name or avatar key; the visible
@@ -253,6 +276,34 @@ export function buildCharacterFilterOptionRow(option, onToggle, getTooltip = def
     void onToggle(option, control.input.checked);
   });
   return row;
+}
+
+/**
+ * Replaces every option row in one character-filter dropdown's list with rows
+ * built from `options`.
+ *
+ * The rebuild recipe all three pickers run before each open (inline editor,
+ * column header filter, Bulk Editor row). Removal is scoped to the option
+ * selector so the message rows the wiring appends to the same container — the
+ * empty state and the no-results row, different classes — survive it, and the
+ * new rows are built into a fragment so the list reflows once, not per row.
+ *
+ * @param {HTMLElement} list The dropdown's scrolling option list.
+ * @param {Array<object>} options From `buildCharacterFilterOptions`.
+ * @param {(option: object, isChecked: boolean) => unknown} onToggle
+ * @param {(option: object) => string} [getTooltip] Passed through to
+ *   `buildCharacterFilterOptionRow`; omitting it keeps that row-builder's
+ *   default tooltip wording.
+ */
+export function repopulateCharacterFilterOptionList(list, options, onToggle, getTooltip) {
+  for (const option of list.querySelectorAll(MULTISELECT_DROPDOWN_OPTION_SELECTOR)) {
+    option.remove();
+  }
+  const fragment = document.createDocumentFragment();
+  for (const option of options) {
+    fragment.append(buildCharacterFilterOptionRow(option, onToggle, getTooltip));
+  }
+  list.append(fragment);
 }
 
 /**
@@ -315,7 +366,18 @@ export function buildCharacterFilterMenuShell({ excludeTooltip = EXCLUDE_TOOLTIP
  * @param {(bookName: string) => Promise<void>} args.enqueueSave Per-book save queue (R11).
  * @returns {HTMLTableCellElement}
  */
-export function buildCharacterFilterCell({ entryRow, cache, enqueueSave }) {
+/**
+ * Builds the frame of one character-filter cell: the `<td>`, its wrapper, the
+ * read-only options trigger rendered from the current entry, and the helpers
+ * later steps use to re-render it.
+ *
+ * @param {object} args
+ * @param {{book: string, data: object}} args.entryRow
+ * @param {object} args.cache Extension book cache.
+ * @returns {{td: HTMLTableCellElement, cellWrap: HTMLDivElement,
+ *   trigger: HTMLDivElement, getEntryData: Function, renderCell: Function}}
+ */
+function buildCharacterFilterTrigger({ entryRow, cache }) {
   const td = document.createElement('td');
   td.setAttribute('data-col', 'characterFilter');
 
@@ -335,19 +397,41 @@ export function buildCharacterFilterCell({ entryRow, cache, enqueueSave }) {
   const renderCell = (entryData = getEntryData()) => renderCharacterFilterCell(trigger, entryData);
   renderCell(entryRow.data);
 
-  const { menu, header, list, heading, excludeInput } = buildCharacterFilterMenuShell();
+  return { td, cellWrap, trigger, getEntryData, renderCell };
+}
 
-  let selection = readCharacterFilterSelection(entryRow.data);
-
-  const updateHeading = () => {
-    heading.textContent = selection.isExclude
-      ? CHARACTER_FILTER_EXCLUDE_LABEL
-      : CHARACTER_FILTER_INCLUDE_LABEL;
-  };
-
-  // R11 — same path as every other editable cell: write the cache, mirror the
-  // shadow copy, re-render this cell only (R14), then enqueue the book's save.
-  const commit = async () => {
+/**
+ * Builds the character-filter cell's commit path: apply the selection to the
+ * cached entry, mirror the shadow copy, re-render this cell only (R14), then
+ * enqueue the book's save.
+ *
+ * The selection is read through `getSelection()` because `refreshMenu`
+ * reassigns that binding on every dropdown open, and the dropdown's close
+ * function through `getCloseMenu()` because it only comes into existence once
+ * the dropdown is wired, after this factory runs.
+ *
+ * @param {object} args
+ * @param {{book: string, data: object}} args.entryRow
+ * @param {object} args.cache Extension book cache.
+ * @param {(bookName: string) => Promise<void>} args.enqueueSave Per-book save queue (R11).
+ * @param {HTMLTableCellElement} args.td The cell whose row filters may need re-applying.
+ * @param {(entryData?: object) => void} args.renderCell Re-renders this cell only (R14).
+ * @param {() => object} args.getSelection The current include/exclude selection.
+ * @param {() => Function} args.getCloseMenu The dropdown's close function, late-bound.
+ * @returns {() => Promise<void>}
+ */
+function createCharacterFilterCommit({
+  entryRow,
+  cache,
+  enqueueSave,
+  td,
+  renderCell,
+  getSelection,
+  getCloseMenu,
+}) {
+  return async () => {
+    // Read late so the factory can exist before the dropdown is wired.
+    const closeMenu = getCloseMenu();
     const entryData = cache[entryRow.book]?.entries?.[entryRow.data.uid];
     if (!entryData) {
       // The entry went away between the menu opening and this tick. Nothing to
@@ -362,7 +446,7 @@ export function buildCharacterFilterCell({ entryRow, cache, enqueueSave }) {
       closeMenu();
       return;
     }
-    const next = applyCharacterFilterSelection(entryData, selection);
+    const next = applyCharacterFilterSelection(entryData, getSelection());
     // The row holds its own snapshot of the entry; keep it in step, as the
     // other editable cells do.
     if (entryRow.data !== entryData) setCharacterFilterValue(entryRow.data, next);
@@ -376,6 +460,90 @@ export function buildCharacterFilterCell({ entryRow, cache, enqueueSave }) {
     if (td.closest('tr')?.classList.contains('stwid--state-filtered')) closeMenu();
     await enqueueSave(entryRow.book);
   };
+}
+
+/**
+ * Wires one character-filter cell's inline editing dropdown (the shared
+ * multiselect dropdown in its opt-in in-cell mode) and registers the cell for
+ * external updates.
+ *
+ * @param {object} args
+ * @param {HTMLElement} args.menu The dropdown panel from `buildCharacterFilterMenuShell`.
+ * @param {HTMLElement} args.trigger The read-only options element that opens the dropdown.
+ * @param {HTMLElement} args.cellWrap Wrapper holding trigger and menu.
+ * @param {HTMLElement} args.list The dropdown's scrolling option list.
+ * @param {HTMLElement} args.header The dropdown's sticky header, hosting the search box.
+ * @param {HTMLInputElement} args.excludeInput The include/exclude toggle input.
+ * @param {() => void} args.refreshMenu Rebuilds the pickable list before each open.
+ * @param {{book: string, data: object}} args.entryRow
+ * @param {(entryData?: object) => void} args.renderCell Re-renders this cell only (R14).
+ * @param {HTMLTableCellElement} args.td The cell whose row filters may need re-applying.
+ * @returns {Function} The dropdown's close function.
+ */
+function wireCharacterFilterCellDropdown({
+  menu,
+  trigger,
+  cellWrap,
+  list,
+  header,
+  excludeInput,
+  refreshMenu,
+  entryRow,
+  renderCell,
+  td,
+}) {
+  const closeMenu = wireMultiselectDropdown(menu, trigger, cellWrap, {
+    listContainer: list,
+    inCell: true,
+    onBeforeOpen: refreshMenu,
+    // The mode toggle is not an option, so Tab would skip it inside the trap.
+    getExtraTabStops: () => [excludeInput],
+    // E3 — with nothing to pick the list is empty, but the header (and so the
+    // include/exclude toggle) stays usable.
+    emptyStateText: CHARACTER_FILTER_EMPTY_STATE,
+    search: {
+      ...CHARACTER_FILTER_MENU_SEARCH_TEXTS,
+      container: header,
+      getOptionSearchText: (option) =>
+        option.dataset[CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY] ?? '',
+    },
+  });
+
+  characterFilterCells.set(cellKey(entryRow.book, entryRow.data.uid), {
+    isConnected: () => cellWrap.isConnected,
+    close: closeMenu,
+    render: renderCell,
+    refreshRowFilters: (entryData) => refreshCharacterFilterRowFilters(td, entryData),
+  });
+
+  return closeMenu;
+}
+
+export function buildCharacterFilterCell({ entryRow, cache, enqueueSave }) {
+  const { td, cellWrap, trigger, getEntryData, renderCell } = buildCharacterFilterTrigger({
+    entryRow,
+    cache,
+  });
+
+  const { menu, header, list, heading, excludeInput } = buildCharacterFilterMenuShell();
+
+  let selection = readCharacterFilterSelection(entryRow.data);
+
+  const updateHeading = () => {
+    heading.textContent = selection.isExclude
+      ? CHARACTER_FILTER_EXCLUDE_LABEL
+      : CHARACTER_FILTER_INCLUDE_LABEL;
+  };
+
+  const commit = createCharacterFilterCommit({
+    entryRow,
+    cache,
+    enqueueSave,
+    td,
+    renderCell,
+    getSelection: () => selection,
+    getCloseMenu: () => closeMenu,
+  });
 
   const onToggleOption = async (option, isChecked) => {
     const bucket = option.kind === 'character' ? 'names' : 'tags';
@@ -401,41 +569,24 @@ export function buildCharacterFilterCell({ entryRow, cache, enqueueSave }) {
     selection = readCharacterFilterSelection(entryData);
     excludeInput.checked = selection.isExclude;
     updateHeading();
-    for (const option of list.querySelectorAll(MULTISELECT_DROPDOWN_OPTION_SELECTOR)) {
-      option.remove();
-    }
-    const fragment = document.createDocumentFragment();
-    for (const option of buildCharacterFilterOptions(entryData)) {
-      fragment.append(buildCharacterFilterOptionRow(option, onToggleOption));
-    }
-    list.append(fragment);
+    // Building the option list does no DOM work, so computing it before the
+    // rebuild is a safe order flip.
+    const options = buildCharacterFilterOptions(entryData);
+    repopulateCharacterFilterOptionList(list, options, onToggleOption);
   };
   updateHeading();
 
-  const closeMenu = wireMultiselectDropdown(menu, trigger, cellWrap, {
-    listContainer: list,
-    inCell: true,
-    onBeforeOpen: refreshMenu,
-    // The mode toggle is not an option, so Tab would skip it inside the trap.
-    getExtraTabStops: () => [excludeInput],
-    // E3 — with nothing to pick the list is empty, but the header (and so the
-    // include/exclude toggle) stays usable.
-    emptyStateText: CHARACTER_FILTER_EMPTY_STATE,
-    search: {
-      placeholder: 'Search characters and tags…',
-      ariaLabel: 'Search characters and tags',
-      noResultsText: 'No matching character or tag.',
-      container: header,
-      getOptionSearchText: (option) =>
-        option.dataset[CHARACTER_FILTER_SEARCH_TEXT_DATASET_KEY] ?? '',
-    },
-  });
-
-  characterFilterCells.set(cellKey(entryRow.book, entryRow.data.uid), {
-    isConnected: () => cellWrap.isConnected,
-    close: closeMenu,
-    render: renderCell,
-    refreshRowFilters: (entryData) => refreshCharacterFilterRowFilters(td, entryData),
+  const closeMenu = wireCharacterFilterCellDropdown({
+    menu,
+    trigger,
+    cellWrap,
+    list,
+    header,
+    excludeInput,
+    refreshMenu,
+    entryRow,
+    renderCell,
+    td,
   });
 
   cellWrap.append(trigger, menu);
