@@ -66,7 +66,7 @@ let refreshWorkerGeneration = 0;
 const SOURCE_ICON_DEFINITIONS = Object.freeze([
   { key: 'character', icon: 'fa-user', label: 'Character' },
   { key: 'chat', icon: 'fa-comments', label: 'Chat' },
-  { key: 'persona', icon: 'fa-id-badge', label: 'Persona' },
+  { key: 'persona', icon: 'fa-face-smile', label: 'Persona' },
 ]);
 
 const setCollapseState = (name, isCollapsed) => {

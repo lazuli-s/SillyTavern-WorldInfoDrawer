@@ -18,7 +18,7 @@ const BOOK_VISIBILITY_OPTIONS = Object.freeze([
   { mode: BOOK_VISIBILITY_MODES.ALL_ACTIVE, icon: 'fa-layer-group', label: 'All Active' },
   { mode: BOOK_VISIBILITY_MODES.GLOBAL, icon: 'fa-globe', label: 'Global' },
   { mode: BOOK_VISIBILITY_MODES.CHAT, icon: 'fa-comments', label: 'Chat' },
-  { mode: BOOK_VISIBILITY_MODES.PERSONA, icon: 'fa-id-badge', label: 'Persona' },
+  { mode: BOOK_VISIBILITY_MODES.PERSONA, icon: 'fa-face-smile', label: 'Persona' },
   { mode: BOOK_VISIBILITY_MODES.CHARACTER, icon: 'fa-user', label: 'Character' },
 ]);
 

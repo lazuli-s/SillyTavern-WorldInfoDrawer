@@ -1,4 +1,5 @@
-﻿import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
+﻿import { applyEntryToggleA11y, syncEntryToggleChecked } from '../../shared/entry-toggle-a11y.js';
+import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
 
 let context = null;
 
@@ -166,6 +167,10 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
     const applyEnabledIcon = (disabled) => {
       isEnabled.classList.toggle('fa-toggle-off', Boolean(disabled));
       isEnabled.classList.toggle('fa-toggle-on', !Boolean(disabled));
+      // Keeps `aria-checked` in step on every path that moves the icon —
+      // including the rollback below, which runs after the click listener that
+      // would otherwise be the only thing syncing it.
+      syncEntryToggleChecked(isEnabled);
     };
 
     applyEnabledIcon(worldEntry.disable);
@@ -192,6 +197,11 @@ function buildEntryStatusControls({ entryName, world, worldEntry }) {
         isEnabled.disabled = false;
       }
     });
+    // After the click handler above, so this element's listeners fire in the
+    // same order as the editor panel's: the state change first, the
+    // `aria-checked` re-sync second. The `aria-label` set above survives, since
+    // the treatment only fills one in where there is none.
+    applyEntryToggleA11y(isEnabled);
     status.append(isEnabled);
   }
 

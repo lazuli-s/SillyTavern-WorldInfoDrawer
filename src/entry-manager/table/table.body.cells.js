@@ -3,6 +3,7 @@ import { ENTRY_MANAGER_RECURSION_OPTIONS } from '../../shared/constants.js';
 import { createMoveButton } from './table.body.row-sorting.js';
 import { mirrorEntryFieldsToOriginalData } from '../../shared/original-data.js';
 import { buildCharacterFilterCell } from './table.body.character-filter.js';
+import { syncEntryToggleChecked } from '../../shared/entry-toggle-a11y.js';
 
 const TEXT_POLE_CLASS = 'text_pole';
 const ORDER_INPUT_TIGHT_CLASS = 'stwid--order-input';
@@ -181,6 +182,10 @@ export function buildEntryManagerRow({
     const listToggle = cache[entryRow.book].dom.entry?.[entryRow.data.uid]?.isEnabled;
     if (listToggle) {
       applyEnabledIcon(listToggle, nextDisabled);
+      // That row toggle is a `role="switch"` (src/shared/entry-toggle-a11y.js),
+      // so its `aria-checked` has to move with the classes or a screen reader
+      // keeps announcing the state this click just left behind.
+      syncEntryToggleChecked(listToggle);
     }
     await enqueueSave(entryRow.book);
   });

@@ -9,6 +9,7 @@ import {
 import { Settings } from './settings.js';
 import { mirrorRawBookFieldsToOriginalData } from './original-data.js';
 import { registerBookReloadHooks } from './book-reload.js';
+import { syncEntryToggleChecked } from './entry-toggle-a11y.js';
 import { cloneMetadata, getSortFromMetadata, sortEntries } from './sort-helpers.js';
 import { createDeferred } from './utils.js';
 
@@ -231,6 +232,9 @@ export const applyEntryFieldDiff = ({
         cache[bookName].dom.entry[entryUid].isEnabled.classList[newValue ? 'add' : 'remove'](
           'fa-toggle-off',
         );
+        // The row toggle is a `role="switch"`; keep its `aria-checked` with the
+        // classes, or a change made elsewhere leaves the announced state stale.
+        syncEntryToggleChecked(cache[bookName].dom.entry[entryUid].isEnabled);
         break;
       }
       case 'constant':
@@ -388,7 +392,10 @@ export const syncBookEntriesAndDom = async ({
   }
 };
 
-const createWorldInfoUpdateWaiter = ({
+// Builds the wait-for-update-finished primitive from the cycle's start/finish
+// deferreds. Exported for the unit tests only — production reaches it through
+// initWIUpdateHandler.
+export const createWorldInfoUpdateWaiter = ({
   waitDelay,
   getUpdateWIChangeToken,
   isUpdateInProgress,
@@ -427,7 +434,11 @@ const createWorldInfoUpdateWaiter = ({
   };
 };
 
-const createEditorDuplicateRefreshWorker = ({
+// Builds the duplicate-refresh queue worker: a single-flight worker that
+// drains refresh requests one at a time, reopening whatever entry was open in
+// the editor when each update lands. Exported for the unit tests only —
+// production reaches it through initWIUpdateHandler.
+export const createEditorDuplicateRefreshWorker = ({
   getCurrentEditor,
   refreshBookList,
   reopenEditorEntry,
@@ -608,7 +619,9 @@ export const initWIUpdateHandler = ({
   );
 
   const reopenEditorEntry = (editorState) => {
-    if (!editorState?.name || !editorState?.uid) return;
+    // Use a non-falsy check on `uid`: entry UIDs include 0, which `!uid`
+    // would treat as "missing" and silently skip the reopen.
+    if (!editorState?.name || editorState?.uid === null || editorState?.uid === undefined) return;
     const entryDom = cache[editorState.name]?.dom?.entry?.[editorState.uid]?.root;
     if (entryDom) {
       entryDom.click();

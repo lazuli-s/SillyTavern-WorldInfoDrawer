@@ -1,3 +1,5 @@
+import { applyEntryToggleA11y } from '../shared/entry-toggle-a11y.js';
+
 import { applyMobileHeaderLayout, MOBILE_EDITOR_MEDIA_QUERY } from './editor-panel-mobile.js';
 
 const ACTIVE_STATE_CLASS = 'stwid--state-active';
@@ -117,6 +119,9 @@ const createActivationSettingsController = ({
 const createFocusControls = ({ createFocusToggleButton, dom }) => {
   const appendUnfocusButton = () => {
     const unfocus = createFocusToggleButton('stwid--unfocus-toggle', 'fa-compress', 'Unfocus');
+    // Keeps ST's `menu_button` look: this toggle is not one of the three icon
+    // squares gallery decision 8C names, and it lives outside `.world_entry`.
+    unfocus.classList.add('menu_button');
     dom.editor.append(unfocus);
   };
 
@@ -125,6 +130,13 @@ const createFocusControls = ({ createFocusToggleButton, dom }) => {
       entryEditorDom.querySelector('label[for="content"] > small > span > span') ??
       entryEditorDom.querySelector('label[for="content "] > small > span > span');
     if (!focusContainer) return;
+    // No `menu_button`: gallery decision 8C makes this button one of the editor
+    // panel's three bare icon squares, sharing a shape with the host's maximize
+    // icon beside it. Keeping the class would mean overriding the whole
+    // `.menu_button` cascade, and on a page running the Moonlit Echoes theme
+    // that cascade carries `background-color: … !important`, which no
+    // unflagged rule of ours can beat. `style.css` section 4 gives it its
+    // shape and section 4.1 its hover, focus and disabled states.
     const focusToggleButton = createFocusToggleButton('stwid--focus-toggle', 'fa-expand', 'Focus');
     focusContainer.append(focusToggleButton);
   };
@@ -190,6 +202,12 @@ const buildEntryEditDom = async ({
   const payloadEntry = payload?.entries?.[entry.uid];
   if (!payloadEntry) return null;
   const entryEditorDom = (await getWorldEntry(name, payload, payloadEntry))[0];
+  // The host builds a fresh active-state toggle on every `getWorldEntry`, with
+  // no event to hang a re-apply on — so the keyboard treatment goes on here,
+  // where the rebuild happens, before the DOM is appended. `applyMobileHeaderLayout`
+  // later moves this same node into the mobile header slot, which keeps its
+  // attributes and listeners.
+  applyEntryToggleA11y(entryEditorDom?.querySelector?.('div[name="entryKillSwitch"]'));
   const drawerToggle = entryEditorDom?.querySelector?.('.inline-drawer');
   if (drawerToggle) {
     $(drawerToggle).trigger('inline-drawer-toggle');
@@ -414,9 +432,7 @@ export const initEditorPanel = ({
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-label', title);
-    button.classList.add(toggleClass);
-    button.classList.add('menu_button');
-    button.classList.add('fa-solid', 'fa-fw', iconClass);
+    button.classList.add(toggleClass, 'fa-solid', 'fa-fw', iconClass);
     button.title = title;
     button.addEventListener('click', () => {
       dom.editor.classList.toggle(FOCUS_CLASS);

@@ -102,9 +102,19 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 @media screen and (width <= 1000px) {
+  /* The host's `.drawer-content` rule sets `top: var(--topBarBlockSize)` so the
+     drawer sits below the top bar. The mobile override below switches the
+     height to a full 100dvh — but leaves the top offset in place, so the
+     drawer's bottom edge hangs topBarBlockSize (~35px) below the viewport. At
+     412×915 the Entry Manager ended at y=944 against a viewport bottom of 915;
+     at 360×640 the same 35px overhang cut off the Bulk Editor's last control.
+     Pull the drawer to the top of the viewport so height: 100dvh and the
+     actual bottom line up. The top bar itself is part of the host chrome
+     above the drawer, not of the drawer itself, so it does not overlap. */
   body.stwid-- #WorldInfo {
     width: 100vw;
     height: 100dvh;
+    top: 0;
   }
 
   body.stwid-- #WorldInfo > .stwid--body {
@@ -142,7 +152,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 /* -------------------------------------------------------------------------- */
 
 /* Flex-column fill shell - grows to fill parent, scrolls internally */
-.stwid--editor {
+.stwid--editor,
+.stwid--entry-manager {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -176,23 +187,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 /* Scrollable fill wrapper - grows to fill remaining height, scrolls */
-.stwid--list .stwid--books {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-}
-
-/* Flex-column fill shell - grows to fill parent, scrolls internally */
-.stwid--entry-manager {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Scrollable fill wrapper - grows to fill remaining height, scrolls */
+.stwid--list .stwid--books,
 .stwid--order-table-wrap {
   flex: 1 1 auto;
   min-height: 0;
@@ -291,7 +286,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--browser-row {
-  /* --stwid-control-height: 2.35em; */
   display: flex;
   gap: 1em;
   margin-top: 1em;
@@ -372,14 +366,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 /* Search / active filter row */
 .stwid--list .stwid--filter {
   display: flex;
-
-  /* flex-direction: column; */
   gap: 0.45em;
   align-items: stretch;
-}
-
-.stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row {
-  /* padding-top: 0.1em; */
 }
 
 .stwid--icon-tab__content[data-tab-id='search'] .stwid--browser-row .stwid--search {
@@ -395,9 +383,18 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   font-size: 0.9em;
 }
 
+/* Decisions 1D and 4C - see 2026-08-17_Rework_browser-tab-strip-restyle. */
 .stwid--icon-tab {
-  padding-top: 0.6em;
-  margin-bottom: 0.8em;
+  /* A container query, not @media: the panel is not the window. */
+  container-type: inline-size;
+  padding-top: 0.35em;
+  margin-bottom: 0.6em;
+}
+
+/* Without this, containment collapses the strip to 0 as a flex item of .stwid--filter. */
+.stwid--list .stwid--filter .stwid--icon-tab {
+  flex: 1;
+  min-width: 0;
 }
 
 .stwid--entry-manager .stwid--icon-tab {
@@ -405,24 +402,32 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--icon-tab__bar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+
+  /* auto-fit, not a fixed count: a hidden tab must leave no empty track. */
+  grid-template-columns: repeat(auto-fit, minmax(min(10em, 100%), 1fr));
   border-bottom: 1px solid var(--SmartThemeBorderColor);
-  margin-bottom: 1.3em;
+  margin-bottom: 0.85em;
+}
+
+/* Nested on purpose: 48em moves with the font scale, so it can match on a phone too. */
+@media screen and (width > 768px) {
+  @container (min-width: 48em) {
+    .stwid--icon-tab__bar {
+      grid-template-columns: repeat(auto-fit, minmax(8em, 1fr));
+    }
+  }
 }
 
 .stwid--icon-tab__button {
-  flex: 1;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   gap: 0.8em;
-  padding: 0.5em 0.7em;
+  padding: 0.6em 0.8em;
   border: none;
   border-bottom: 2px solid transparent;
-
-  /* margin-bottom: 0.3em; */
   background: none;
   cursor: pointer;
   color: var(--SmartThemeBodyColor);
@@ -441,6 +446,13 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 .stwid--icon-tab__button.active {
   opacity: 1;
   border-bottom-color: var(--SmartThemeBodyColor);
+}
+
+/* Decision 6B - the negative offset keeps the ring inside the tab's own cell. */
+.stwid--icon-tab__button:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: calc(var(--stwid-focus-ring-offset) * -1);
+  border-radius: var(--stwid-radius-s);
 }
 
 .stwid--icon-tab__button[hidden],
@@ -479,22 +491,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row {
-  /* position: relative; */
-
-  /* display: flex; */
-
-  /* align-items: flex-start; */
-
-  /* gap: 0.35em; */
-
-  /* flex-wrap: nowrap; */
-
-  /* justify-content: flex-start; */
-
-  /* width: 100%; */
   margin-top: 1em;
-
-  /* flex: 1 1 auto; */
 }
 
 .stwid--multiselect-dropdown__wrap {
@@ -616,10 +613,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   justify-content: center;
   line-height: 1;
   width: 1em;
-
-  /* margin-right: 0.1em; */
-
-  /* padding-left: 0.5em; */
 }
 
 .stwid--multiselect-dropdown__option .stwid--multiselect-dropdown__option-checkbox {
@@ -645,8 +638,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   margin: 0;
   opacity: 0;
   pointer-events: none;
-
-  /* margin-right: 2em; */
 }
 
 /* opt-in: type-to-filter search box, off unless the caller asks for it */
@@ -697,6 +688,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   .stwid--multiselect-dropdown__menu--in-cell {
     max-height: 50vh;
     max-width: calc(100vw - 1rem);
+    overscroll-behavior: contain; /* fixed positioning puts this menu's scroll parent at the viewport, so contain it here */
   }
 }
 
@@ -766,9 +758,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 /* Folders */
 .stwid--folder {
-  /* border-bottom: 2px solid var(--SmartThemeBorderColor); */
-
-  /* border-radius: 8px; */
   margin: 0.5em 0;
 }
 
@@ -871,7 +860,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   padding: 0;
 }
 
-.stwid--folder :is(.stwid--folder-active-toggle, .stwid--action):focus-visible {
+.stwid--folder :is(.stwid--folder-active-toggle, .stwid--action):focus-visible,
+.stwid--blocker .stwid--list-dropdown__item:focus-visible {
   outline: var(--stwid-focus-ring);
   outline-offset: var(--stwid-focus-ring-offset);
   opacity: 1;
@@ -1063,19 +1053,12 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     height: auto;
   }
 
+  /* Bare token on purpose: wrapping it in rgb() drops the declaration and the bar goes transparent. */
   .stwid--icon-tab__bar {
-    display: flex;
-    flex-wrap: nowrap;
     position: sticky;
     top: 0;
     z-index: 1;
-    background-color: rgb(var(--primaryBgCol, var(--SmartThemeBlurTintColor)));
-  }
-
-  .stwid--icon-tab__button {
-    flex: 1 1 0;
-    min-width: 0;
-    justify-content: center;
+    background-color: var(--SmartThemeBlurTintColor);
   }
 
   .stwid--browser-row,
@@ -1105,13 +1088,25 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 @media screen and (width <= 768px) {
-  .stwid--icon-tab__button > span {
-    display: none;
+  /* Decisions 3C + 5B, implicit columns rather than the spec's fixed 6 - see its Decision 3 + 5. */
+  .stwid--icon-tab__bar {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
   }
 
   .stwid--icon-tab__button {
-    gap: 0;
-    padding: 0.5em;
+    flex-direction: column;
+    gap: 0.25em;
+    padding: 0.45em 0.1em;
+
+    /* Tap-target floor: px on purpose, never em - it must not follow the font scale. */
+    min-height: 44px;
+  }
+
+  .stwid--icon-tab__button > span {
+    font-size: 0.72em;
+    line-height: 1.1;
   }
 
   .stwid--icon-tab__content[data-tab-id='sorting']
@@ -1159,7 +1154,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 /* focus mode: hides all WI entry controls except the content field and stwim-- micromenu elements */
-.stwid--editor.stwid--focus #WIEntryHeaderTitlesPC,
 .stwid--editor.stwid--focus
   .world_entry
   *:not(:has([name='content']), [name='content'], :has([class*='stwim--']), [class*='stwim--']) {
@@ -1291,6 +1285,151 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   display: none;
 }
 
+/* Make truncation honest on the panel's single-line fields: the initial
+   `text-overflow: clip` cuts a too-long placeholder mid-word with nothing on
+   screen to say text is missing, and no box measurement catches it - placeholder
+   text adds nothing to `scrollWidth`. Written for every entry input as a group,
+   not for the one field that was reported. Round-2 ticket 06, which also filed
+   the narrow-width follow-up this does not fix. */
+.stwid--editor .world_entry input.text_pole {
+  text-overflow: ellipsis;
+}
+
+/* These are select2's own class names, not SillyTavern's: select2 is third-party
+   markup vendored by the host, so an upgrade can stop this rule matching with no
+   error anywhere and no test here to catch it. Zeroing the inline search field's
+   `margin-left` is what stops the trigger-filter box clipping its own typing
+   area. Round-2 ticket 12. */
+.stwid--editor .select2-search--inline .select2-search__field {
+  margin-left: 0;
+}
+
+/* The same vendored-select2 caveat as the block above. Levels the chip row's four
+   controls to one height through `--stwid-select2-chip-height`. The `1.4` is the
+   chip's measured height over `--mainFontSize` at font-scale 1, not a figure
+   derived from select2's own sizing - round-2 ticket 13 has the measurements, and
+   the inbox note on deriving it instead of fitting it. */
+.stwid--editor .select2-container .select2-selection--multiple {
+  --stwid-select2-chip-height: calc(var(--mainFontSize) * 1.4);
+}
+
+.stwid--editor .select2-container .select2-selection--multiple .select2-selection__choice,
+.stwid--editor .select2-container .select2-selection--multiple .select2-selection__choice__remove,
+.stwid--editor .select2-container .select2-selection--multiple .select2-selection__clear,
+.stwid--editor .select2-container .select2-selection--multiple .select2-search__field {
+  height: var(--stwid-select2-chip-height);
+  min-height: var(--stwid-select2-chip-height);
+}
+
+/* A real hit target for the entry's active-state toggle, the smallest control in
+   the panel: padding grows the box the pointer hits, an equal negative margin
+   holds the row's height. Scoped through `.world_entry` because `div.killSwitch`
+   is the host's and is reused across the page. Round-2 ticket 14, finding F's CSS
+   half - the keyboard half is ticket 15. */
+.stwid--editor .world_entry .killSwitch {
+  padding-block: calc((var(--stwid-control-height) - 1lh) / 2);
+  padding-inline: var(--stwid-hit-padding-x);
+  margin-block: calc((var(--stwid-control-height) - 1lh) / -2);
+  margin-inline: calc(var(--stwid-hit-padding-x) * -1);
+
+  /* Invisible at rest - neither we nor the host paints a background or a border
+     here. This is the corner the hover tint and the focus ring in section 4.1
+     take, so it has to be unconditional: those states reach this element at
+     every width, and its three sibling icon squares get the same radius
+     unconditionally above. Round-2 tickets 10 and 18, decision 8C. */
+  border-radius: var(--stwid-radius-s);
+}
+
+/* One label convention for the whole editor panel: `start`, overriding the
+   `textAlignCenter` class ST puts on some of these labels and not others. Scoped
+   through `.world_entry` because that class is the host's and is reused outside
+   this panel. Round-2 ticket 07, finding C, gallery decision 9C. */
+.stwid--editor .world_entry .world_entry_form_control > small.textAlignCenter {
+  text-align: start;
+}
+
+/* Decision 7C: the desktop heading strip `#WIEntryHeaderTitlesPC` can never ride
+   out of register with its controls, because it is hidden at every width and the
+   host's per-control mobile labels show instead. The label rule is scoped through
+   `.world_entry` - `WIEntryHeaderTitleMobile` is the host's class; the strip rule
+   needs only `.stwid--editor`, the strip being an id. Round-2 ticket 09,
+   findings A and A'. */
+.stwid--editor #WIEntryHeaderTitlesPC {
+  display: none;
+}
+
+.stwid--editor .world_entry .WIEntryHeaderTitleMobile {
+  display: block;
+}
+
+/* Finding A': no label over a control that paints nothing. The host disables
+   `input[name='depth']` and hides it with `visibility: hidden` in the same branch
+   unless the position is *At Depth*, so the label goes on the same condition.
+   Round-2 ticket 09. */
+.stwid--editor
+  .world_entry
+  .world_entry_form_control:has(> input[name='depth']:disabled)
+  > label[for='depth'] {
+  display: none;
+}
+
+/* One icon-button convention for the whole editor panel: the host's maximize
+   icon, our Focus toggle and the host's key-input toggle all become the same
+   `--stwid-control-height` square, bare at rest, taking their states from
+   section 4.1. The two that sit in the Content label's line give the growth
+   straight back with an equal negative margin, so the row keeps its height; the
+   key field's `padding-right` is widened so the absolutely-positioned toggle
+   stops reaching into its text. Scoped through `.world_entry` because two of the
+   three classes are the host's and are reused across the page. `font-size` is
+   pinned separately below because `--stwid-control-height` is `2.35em` and the
+   three controls inherit different sizes. Round-2 ticket 10, finding B, gallery
+   decision 8C with 5C and 5C-i-A - measurements, rejected options and the cost
+   to the Focus toggle's look are all recorded there. */
+.stwid--editor .world_entry .editor_maximize,
+.stwid--editor .world_entry .stwid--focus-toggle,
+.stwid--editor .world_entry .switch_input_type_icon {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--stwid-control-height);
+  min-width: var(--stwid-control-height);
+  height: var(--stwid-control-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--stwid-radius-s);
+  background-color: transparent;
+  cursor: pointer;
+  transition: none;
+}
+
+/* The one declaration that has to outrank a theme, and the only one carrying an
+   id - see the block comment above. Split off so the rest of the convention
+   stays at three classes: a rule at (1,3,0) would also outrank section 4.1's
+   hover tint at (0,4,0), and the icons would be left with no hover state at
+   all. Measured that way round first, on 13-09-2026. */
+#WorldInfo .stwid--editor .world_entry .editor_maximize,
+#WorldInfo .stwid--editor .world_entry .stwid--focus-toggle,
+#WorldInfo .stwid--editor .world_entry .switch_input_type_icon {
+  font-size: var(--mainFontSize);
+}
+
+.stwid--editor .world_entry .editor_maximize,
+.stwid--editor .world_entry .stwid--focus-toggle {
+  margin-block: calc((var(--stwid-control-height) - 1lh) / -2);
+  margin-inline: calc((var(--stwid-control-height) - 1.25em) / -2);
+}
+
+.stwid--editor .world_entry .switch_input_type_icon {
+  margin-inline: 0;
+}
+
+.stwid--editor .world_entry .world_entry_form_control .keyprimarytextpole,
+.stwid--editor .world_entry .world_entry_form_control .keysecondarytextpole,
+.stwid--editor .world_entry .keyselect + .select2-container .select2-selection--multiple {
+  padding-right: calc(var(--stwid-control-height) + var(--stwid-gap-xs));
+}
+
 @media screen and (width <= 1000px) {
   .stwid--editor {
     width: 100%;
@@ -1306,10 +1445,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex-flow: column wrap;
   }
 
-  .stwid--editor #WIEntryHeaderTitlesPC {
-    display: none;
-  }
-
   .stwid--editor .world_entry,
   .stwid--editor .world_entry_form,
   .stwid--editor .inline-drawer,
@@ -1323,10 +1458,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   /* Mobile card sizing: let the bordered wi-card-entry box grow with the full
      editor content instead of inheriting the desktop fill-height slot. */
-  .stwid--editor .world_entry {
-    /* overflow: visible; */
-  }
-
   .stwid--editor .world_entry > .world_entry_form.wi-card-entry {
     display: flex;
     flex-direction: column;
@@ -1416,16 +1547,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     white-space: nowrap;
   }
 
-  .stwid--editor
-    [name='contentAndCharFilterBlock']
-    > .world_entry_form_control
-    > label
-    > small
-    > span
-    > .flex-container:last-child {
-    width: 100%;
-  }
-
   .stwid--editor .stwid--editor-content-body-section {
     width: 100%;
     min-width: 0;
@@ -1475,13 +1596,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex-direction: column;
     min-width: 0;
     align-items: stretch;
-  }
-
-  .stwid--editor .stwid--editor-header-context-row input[name='depth'],
-  .stwid--editor .stwid--editor-header-context-row input[name='outletName'] {
-    /* width: 100%; */
-
-    /* min-width: 1rem; */
   }
 
   .stwid--editor .stwid--editor-header-context-position {
@@ -1543,8 +1657,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     align-self: center;
     min-width: 1rem;
     align-items: center;
-
-    /* align-content: stretch; */
     flex-wrap: nowrap;
   }
 
@@ -1642,28 +1754,10 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--editor .stwid--editor-actions-row {
     display: flex;
-
-    /* grid-template-columns: repeat(3, minmax(0, 1fr)); */
     gap: 1.1rem;
     width: 100%;
     flex-flow: row wrap;
     place-content: center center;
-  }
-
-  .stwid--editor .stwid--editor-actions-row > .menu_button {
-    /* display: flex; */
-
-    /* flex: 1 1 0; */
-
-    /* align-items: center; */
-
-    /* justify-content: center; */
-
-    /* min-height: 2.5rem; */
-  }
-
-  .stwid--editor .stwid--editor-keywords-and-filters-section {
-    /* gap: 0.75rem; */
   }
 
   .stwid--editor .stwid--editor-keywords-and-filters-section > .world_entry_form_control {
@@ -1675,45 +1769,30 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     display: flex;
     flex-flow: row wrap;
     align-items: stretch;
-
-    /* gap: 0.75rem; */
   }
 
   .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control {
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editor-content-settings-section {
+  .stwid--editor .stwid--editor-content-settings-section,
+  .stwid--editor .stwid--editor-content-settings-section > .stwid--editor-recursion-section,
+  .stwid--editor .stwid--editor-group-section-secondary > * {
     display: flex;
     flex-direction: column;
-
-    /* gap: 0.75rem; */
-    width: 100%;
-    min-width: 0;
-
-    /* margin-top: 0.75rem; */
-
-    /* padding: 0.75rem; */
-
-    /* border: 1px solid var(--SmartThemeBorderColor); */
-
-    /* border-radius: 0.5rem; */
-
-    /* background: var(--black30a); */
-  }
-
-  .stwid--editor .stwid--editor-content-settings-section > .stwid--editor-recursion-section {
-    display: flex;
-    flex-direction: column;
-
-    /* gap: 0.75rem; */
     width: 100%;
     min-width: 0;
   }
 
+  /* Flex on purpose — do not re-add a grid track list here. The rule was born
+     in a95a1a3d (12-03-2026) with `display: flex` and `grid-template-columns`
+     side by side, so no grid layout was ever lost: the track list, and a
+     ≤768px override that changed only it, were inert from the first day and
+     were removed by ticket 05. Making the row a real grid would be a layout
+     change (a forced 58/42 split, stacking below 768px), so it is a visual
+     decision, not a cleanup. Measurements: round-2 spec, finding I. */
   .stwid--editor .stwid--editor-recursion-delay-row {
     display: flex;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     gap: 0.75rem;
     width: 100%;
     min-width: 0;
@@ -1723,7 +1802,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   .stwid--editor .stwid--editor-recursion-toggle-row,
-  .stwid--editor .stwid--editor-recursion-level-control {
+  .stwid--editor .stwid--editor-recursion-level-control,
+  .stwid--editor .stwid--editor-recursion-meta-row > *,
+  .stwid--editor .stwid--editor-timing-row > * {
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -1735,8 +1816,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--editor .stwid--editor-recursion-guards-row {
     display: flex;
-
-    /* gap: 0.5rem; */
     min-width: 0;
     flex-flow: column nowrap;
     justify-content: center;
@@ -1744,8 +1823,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--editor .stwid--editor-recursion-guards-row > label {
     min-width: 0;
-
-    /* text-overflow: ellipsis; */
   }
 
   .stwid--editor .stwid--editor-budget-row {
@@ -1764,12 +1841,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
     flex: 1 1 100%;
-    min-width: 0;
-  }
-
-  .stwid--editor .stwid--editor-recursion-meta-row > * {
-    display: flex;
-    flex-direction: column;
     min-width: 0;
   }
 
@@ -1887,10 +1958,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     .stwid--editor [name='perEntryOverridesBlock'] > .stwid--editor-recursion-meta-row {
       gap: 1rem;
     }
-
-    .stwid--editor .stwid--editor-recursion-delay-row {
-      grid-template-columns: minmax(0, 1fr);
-    }
   }
 
   .stwid--editor [name='contentAndCharFilterBlock'] > .world_entry_form_control {
@@ -1921,14 +1988,18 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     width: 100%;
   }
 
+  /* Same as `.stwid--editor-recursion-delay-row` above: flex with an inert grid
+     track list from a95a1a3d, removed by ticket 05. The selector is also
+     unreachable in practice — `applyMobileHeaderLayout()` in
+     `src/editor-panel/editor-panel-mobile.js` builds this row, empties it into
+     the recursion rows and then drops it in `cleanupMobileContentFlags()`, all
+     in one synchronous pass; it was absent from the DOM at every width probed
+     for ticket 05. Ticket 16 left both rules standing: they carry live
+     declarations, and reachability cannot be settled from the stylesheet. */
   .stwid--editor .stwid--editor-content-flags-section {
     display: flex;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem 1rem;
     width: 100%;
-
-    /* margin-top: 0.75rem; */
-    grid-auto-flow: row;
     flex-direction: row;
   }
 
@@ -1943,8 +2014,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     > .flex-container.wide100p.flexGap10:nth-child(2) {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-
-    /* gap: 0.75rem; */
     align-items: start;
   }
 
@@ -1966,29 +2035,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     > .flex-container.wide100p.flexGap10:nth-child(2)
     > :nth-child(1) {
     grid-column: span 3;
-  }
-
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(2),
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(3),
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(4),
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(5) {
-    /* grid-column: span 1; */
   }
 
   .stwid--editor
@@ -2019,13 +2065,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editor-group-section-secondary > * {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    width: 100%;
-  }
-
   .stwid--editor .stwid--editor-group-section-secondary input,
   .stwid--editor .stwid--editor-group-section-secondary select {
     width: 100%;
@@ -2040,20 +2079,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
-  .stwid--editor .stwid--editor-timing-row > * {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
   .stwid--editor
     .inline-drawer-content
     > .world_entry_edit
     > .flex-container.wide100p.flexGap10:nth-child(3) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-
-    /* gap: 0.75rem; */
     align-items: start;
   }
 
@@ -2170,8 +2201,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     > .world_entry_edit
     > .flex-container.wide100p.flexGap10:nth-child(2) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-
-    /* gap: 0.5rem; */
   }
 
   .stwid--editor
@@ -2180,29 +2209,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     > .flex-container.wide100p.flexGap10:nth-child(2)
     > :nth-child(1) {
     grid-column: span 3;
-  }
-
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(2),
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(3),
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(4),
-  .stwid--editor
-    .inline-drawer-content
-    > .world_entry_edit
-    > .flex-container.wide100p.flexGap10:nth-child(2)
-    > :nth-child(5) {
-    /* grid-column: span 1; */
   }
 
   .stwid--editor
@@ -2221,6 +2227,43 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     > .flex-container.wide100p.flexGap10:nth-child(3) {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 4.1) Editor panel - interaction states                                     */
+
+/* -------------------------------------------------------------------------- */
+
+/* Hover and keyboard-focus feedback for the controls this extension owns in the
+   editor panel, written once so decision 8C's icon buttons join these selector
+   lists instead of growing rules of their own. The tint sits inside
+   `@media (hover: hover)` so it cannot latch after a finger tap (5C-i-A); the
+   ring sits outside it, because keyboard focus is pointer-independent. Every
+   value is an existing `--stwid-*` token. The `[disabled]` rule is the
+   convention's third state and no code path reaches it today - it is NOT dead
+   CSS to remove. Round-2 tickets 03 and 08. */
+
+@media (hover: hover) {
+  .stwid--editor .world_entry .killSwitch:hover,
+  .stwid--editor .world_entry .editor_maximize:hover,
+  .stwid--editor .world_entry .stwid--focus-toggle:hover,
+  .stwid--editor .world_entry .switch_input_type_icon:hover {
+    background-color: var(--stwid-state-hover-bg);
+  }
+}
+
+.stwid--editor .world_entry .killSwitch:focus-visible,
+.stwid--editor .world_entry .editor_maximize:focus-visible,
+.stwid--editor .world_entry .stwid--focus-toggle:focus-visible,
+.stwid--editor .world_entry .switch_input_type_icon:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+.stwid--editor .world_entry .stwid--focus-toggle[disabled],
+.stwid--editor .world_entry .switch_input_type_icon[disabled] {
+  opacity: var(--stwid-state-disabled-opacity);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2300,8 +2343,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   gap: 0.9em;
   justify-content: flex-start;
   align-items: center;
-
-  /* background-color: var(--SmartThemeBlurTintColor); */
   padding: 0 0.5em;
   margin-bottom: 1em;
 }
@@ -2542,9 +2583,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 .stwid--script-filter .stwid--script .stwid--input {
   caret-color: var(--ac-style-color-text);
-}
-
-.stwid--script-filter .stwid--script .stwid--input {
   scrollbar-width: none; /* Firefox */
 }
 
@@ -3072,6 +3110,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     max-width: none;
     overflow: hidden auto; /* override: make the entry manager root the single touch-scroll container on mobile */
     touch-action: pan-y;
+
+    /* Contain the scroll at this boundary: reaching either end of the panel must
+       not hand the gesture to the chat page behind the drawer, and a downward pull
+       from the top of the list must not reach the browser's pull-to-refresh.
+       Containment only - the page behind is never locked or frozen. */
+    overscroll-behavior: contain;
   }
 
   .stwid--script-filter {
@@ -3091,6 +3135,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex: 0 0 auto; /* override: no longer the flex-shrink target now the root scrolls; take natural content height instead of collapsing */
     overflow-x: auto;
     touch-action: pan-x pan-y;
+
+    /* x only: the table's horizontal ends must not chain outward, but y is left
+       free so a vertical swipe over the table still reaches the entry-manager
+       root, which is the axis's containment boundary. */
+    overscroll-behavior-x: contain;
   }
 
   .stwid--bulk-edit-row {
@@ -3112,6 +3161,23 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
   .stwid--order-table thead th[data-col='drag'] {
     z-index: 3;
+  }
+
+  /* Pin the entry column beside the drag column so the drag cell never sits
+     on top of entry data while the table pans sideways. The entry cell sticks
+     to the right edge of the drag cell, which keeps its book icon, title and
+     key list visible at every scroll position — the spec's "must not overlap
+     or obscure" rule. The header sits above the body so it does not show
+     through during scroll. */
+  .stwid--order-table tr :is(th, td)[data-col='entry'] {
+    position: sticky;
+    left: 36.95px;
+    z-index: 1;
+    background-color: var(--primaryBgCol, var(--SmartThemeBlurTintColor));
+  }
+
+  .stwid--order-table thead th[data-col='entry'] {
+    z-index: 2;
   }
 }
 
@@ -3166,12 +3232,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   z-index: 30000;
 }
 
-.stwid--blocker .stwid--list-dropdown__item:focus-visible {
-  outline: var(--stwid-focus-ring);
-  outline-offset: var(--stwid-focus-ring-offset);
-  opacity: 1;
-}
-
 /* Move Book to Folder dialog layout */
 .stwid--move-book-content {
   display: flex;
@@ -3214,7 +3274,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 
 /* Context menu container */
 .stwid--blocker .stwid--list-dropdown__menu {
-  /* --stwid-menu-item-height: 2.05em; */
+  /* note: --stwid-menu-item-height is used below but defined nowhere; the item height falls back to auto. */
   position: fixed;
   position-anchor: --stwid--ctx-anchor;
   position-area: bottom right;
@@ -3236,28 +3296,14 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 .stwid--blocker .stwid--list-dropdown__menu .stwid--list-dropdown__item {
   min-height: var(--stwid-menu-item-height);
   height: var(--stwid-menu-item-height);
-
-  /* opacity: 1; */
   color: var(--SmartThemeBodyColor);
-
-  /* background-color: var(--SmartThemeBlurTintColor); */
   cursor: pointer;
   transition: color 150ms ease;
   flex-direction: row;
   box-sizing: border-box;
   padding: 0.4em;
-
-  /* border-radius: var(--stwid-radius-m); */
   display: block;
   overflow: hidden;
-
-  /* border: 1px solid var(--SmartThemeBorderColor); */
-
-  /* border-radius: 6px; */
-
-  /* background-color: var(--SmartThemeBlurTintColor); */
-
-  /* backdrop-filter: blur(var(--SmartThemeBlurStrength)); */
 
   &:hover {
     color: var(--customThemeColor);
@@ -3271,7 +3317,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   &.stwid--book-sort {
-    /* opacity: 1; */
     cursor: default;
   }
 
@@ -3283,8 +3328,6 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     height: 100%;
     margin-left: 1em;
     font-size: 1em;
-
-    /* padding: 0em 0em 0em 0em; */
     margin-block: 0;
   }
 }
@@ -3377,5 +3420,28 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--books .stwid--book .stwid--head,
   .stwid--folder .stwid--folder-header {
     transition: none;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* 9) Host compatibility - rules that exist only because of another extension */
+
+/* -------------------------------------------------------------------------- */
+
+/* Host-compatibility section: every rule below compensates for a *different*
+   extension's stylesheet and is gated on a body class set by
+   `src/shared/host-compat.js`, which records how each host is detected and why. A
+   rule belongs here only if it would be *wrong*, not merely unnecessary, on a
+   page without that extension. Round-2 ticket 11. */
+
+/* Round 1 decision 1B - Moonlit sets `.wi-card-entry { margin: 2px }` while our
+   mobile rule sets the same card to `width: 100%`; 100% + 4px does not fit, so
+   the column's `overflow-x: hidden` shaves the card's right border. Round-2
+   ticket 11. */
+
+@media screen and (width <= 1000px) {
+  body.stwid--host-moonlit .stwid--editor .world_entry > .world_entry_form.wi-card-entry {
+    margin-inline: 0;
   }
 }

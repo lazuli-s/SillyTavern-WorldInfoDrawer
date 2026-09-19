@@ -349,6 +349,7 @@ export const buildEntryManagerTable = async ({
     entries,
     dom,
     cache,
+    entryManagerState,
     refreshOutletFilterIndicator,
     refreshAutomationIdFilterIndicator,
     refreshGroupFilterIndicator,

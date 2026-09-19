@@ -4,6 +4,7 @@ import { refreshList, waitForListRefreshIdle } from './src/book-browser/book-bro
 import { entryState, renderEntry } from './src/book-browser/book-list/book-list.world-entry.js';
 import { initWIUpdateHandler, registerUiRefreshHooks } from './src/shared/wi-update-handler.js';
 import { Settings } from './src/shared/settings.js';
+import { initHostCompatibility } from './src/shared/host-compat.js';
 
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
 const DISPLAY_STYLE_PROPERTY = 'display';
@@ -45,6 +46,10 @@ const watchCss = async () => {
   }
 };
 watchCss();
+
+// Marks <body> with the host-compatibility classes section 9 of style.css gates
+// its cross-extension rules on, and keeps them true for the life of the page.
+initHostCompatibility();
 
 /** @type {Record<string, { dom?: Record<string, Record<string, { root?: HTMLElement }> }}>} */
 const cache = {};
