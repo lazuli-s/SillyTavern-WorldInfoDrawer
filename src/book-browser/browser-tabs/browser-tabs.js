@@ -13,9 +13,7 @@ import {
 
 const CSS_VISIBILITY_CHIP = 'stwid--visibility-chip';
 const TAB_IDS = Object.freeze({
-  SETTINGS: 'settings',
   LOREBOOKS: 'lorebooks',
-  FOLDERS: 'folders',
   VISIBILITY: 'visibility',
   SORTING: 'sorting',
   SEARCH: 'search',
@@ -57,11 +55,20 @@ const createTabPanel = ({ tabId }) => {
   return content;
 };
 
-const appendRuntimeTabContent = (tabContentsById, tabId, runtimeDomNode) => {
-  const tabContent = tabContentsById.get(tabId);
-  if (tabContent && runtimeDomNode instanceof HTMLElement) {
-    tabContent.append(runtimeDomNode);
+// The Lorebooks panel holds the Lorebooks group, then the Folders group, in one
+// shared row: each builder returns its bare group, because a row per group
+// would stack them instead of laying them side by side.
+const mountLorebooksTabContent = ({ tabContentsById, lorebooksGroup, foldersGroup }) => {
+  const tabContent = tabContentsById.get(TAB_IDS.LOREBOOKS);
+  if (!tabContent) return;
+  const row = document.createElement('div');
+  row.classList.add('stwid--browser-row');
+  for (const group of [lorebooksGroup, foldersGroup]) {
+    if (group instanceof HTMLElement) {
+      row.append(group);
+    }
   }
+  tabContent.append(row);
 };
 
 const mountRuntimeTabContent = ({
@@ -71,13 +78,11 @@ const mountRuntimeTabContent = ({
   sortingRow,
   searchRow,
 }) => {
-  appendRuntimeTabContent(
+  mountLorebooksTabContent({
     tabContentsById,
-    TAB_IDS.LOREBOOKS,
-    runtimeState?.dom?.lorebooksTabContent,
-  );
-  appendRuntimeTabContent(tabContentsById, TAB_IDS.FOLDERS, runtimeState?.dom?.foldersTabContent);
-  appendRuntimeTabContent(tabContentsById, TAB_IDS.SETTINGS, runtimeState?.dom?.settingsTabContent);
+    lorebooksGroup: runtimeState?.dom?.lorebooksGroup,
+    foldersGroup: runtimeState?.dom?.folderControls?.group,
+  });
   mountVisibilityTabContent({ tabContentsById, visibilityRow });
   mountSortingTabContent({ tabContentsById, sortingRow });
   mountSearchTabContent({ tabContentsById, searchRow });
@@ -160,9 +165,7 @@ const buildIconTabBar = (runtimeState, visibilityRow, sortingRow, searchRow) => 
   iconTabBar.setAttribute('role', 'tablist');
   iconTabBar.setAttribute('aria-label', 'List panel tabs');
   const panelTabs = [
-    { id: TAB_IDS.SETTINGS, icon: 'fa-cog', label: 'Settings' },
     { id: TAB_IDS.LOREBOOKS, icon: 'fa-book', label: 'Lorebooks' },
-    { id: TAB_IDS.FOLDERS, icon: 'fa-folder', label: 'Folders' },
     { id: TAB_IDS.VISIBILITY, icon: 'fa-eye', label: 'Visibility' },
     { id: TAB_IDS.SORTING, icon: 'fa-arrow-down-wide-short', label: 'Sorting' },
     { id: TAB_IDS.SEARCH, icon: 'fa-magnifying-glass', label: 'Search' },
@@ -197,7 +200,7 @@ const buildIconTabBar = (runtimeState, visibilityRow, sortingRow, searchRow) => 
     searchRow,
   });
   iconTab.prepend(iconTabBar);
-  const defaultTabId = panelTabs[0]?.id ?? TAB_IDS.SETTINGS;
+  const defaultTabId = panelTabs[0]?.id ?? TAB_IDS.LOREBOOKS;
   setActivePlaceholderTab(defaultTabId);
   for (const tabId of Settings.instance.hiddenTabs) {
     applyTabHidden(tabId, true);

@@ -9,9 +9,7 @@ import { initHostCompatibility } from './src/shared/host-compat.js';
 const NAME = new URL(import.meta.url).pathname.split('/').at(-2);
 const DISPLAY_STYLE_PROPERTY = 'display';
 const HIDDEN_TAB_SETTINGS = Object.freeze([
-  { id: 'settings', selector: '#stwid-hidden-tab-settings' },
   { id: 'lorebooks', selector: '#stwid-hidden-tab-lorebooks' },
-  { id: 'folders', selector: '#stwid-hidden-tab-folders' },
   { id: 'visibility', selector: '#stwid-hidden-tab-visibility' },
   { id: 'sorting', selector: '#stwid-hidden-tab-sorting' },
   { id: 'search', selector: '#stwid-hidden-tab-search' },

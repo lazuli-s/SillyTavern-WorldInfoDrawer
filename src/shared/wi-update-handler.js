@@ -570,6 +570,8 @@ export const initWIUpdateHandler = ({
         loadWorldInfoForBook: loadWorldInfo,
         listPanelApi,
       });
+      // Book-list changes bypass setBookCollapsed, so refresh the toggle here.
+      listPanelApi?.updateCollapseAllToggle?.();
       if (name && cache[name]) {
         await syncBookEntriesAndDom({
           bookName: name,

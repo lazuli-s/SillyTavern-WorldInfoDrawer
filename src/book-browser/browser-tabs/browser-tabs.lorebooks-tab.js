@@ -135,6 +135,8 @@ function createCollapseAllToggle({ dom, cache, getListPanelApi }) {
   return collapseAllToggle;
 }
 
+// Returns the bare Lorebooks group: the Lorebooks panel owns the row it shares
+// with the Folders group (browser-tabs.js).
 export const createLorebooksTabContent = ({
   dom,
   cache,
@@ -144,9 +146,6 @@ export const createLorebooksTabContent = ({
   wiHandlerApi,
   getListPanelApi,
 }) => {
-  const root = document.createElement('div');
-  root.classList.add('stwid--browser-row');
-
   const lorebooksGroup = document.createElement('div');
   lorebooksGroup.classList.add('stwid--field-group');
   lorebooksGroup.append(createLorebooksGroupLabel());
@@ -163,6 +162,5 @@ export const createLorebooksTabContent = ({
   lorebooksGroup.append(createImportBookButton());
   lorebooksGroup.append(createCollapseAllToggle({ dom, cache, getListPanelApi }));
 
-  root.append(lorebooksGroup);
-  return root;
+  return lorebooksGroup;
 };

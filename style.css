@@ -65,6 +65,7 @@ body.stwid-- #WorldInfo {
 /* Show drawer when ST sets openDrawer */
 body.stwid-- #WorldInfo.openDrawer {
   display: flex !important; /* override: ST's inline-drawer sets display:none by default; must force flex when openDrawer class is applied */
+  z-index: 3001; /* above the host's pinned side panels (z-index 3000) */
 }
 
 /* Hide the vanilla WI UI when drawer is active */
@@ -251,6 +252,20 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   align-items: stretch;
 }
 
+/* Decision 1D - see 2026-09-19_Rework_browser-toolbar-and-merged-lorebooks-tab.
+   Wraps only under a large font scale; at the narrowest panel it is one line. */
+.stwid--browser-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stwid-gap-m);
+  align-items: center;
+  padding: 0.1em 0.2em;
+}
+
+.stwid--browser-toolbar__refresh {
+  margin-left: auto;
+}
+
 .stwid--field-group {
   display: flex;
   align-items: center;
@@ -359,6 +374,7 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--controls .stwid--state-active,
+.stwid--browser-toolbar .stwid--state-active,
 .stwid--list .stwid--filter .stwid--state-active {
   color: var(--SmartThemeQuoteColor);
 }
@@ -399,6 +415,25 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 
 .stwid--entry-manager .stwid--icon-tab {
   background-color: var(--SmartThemeBlurTintColor);
+
+  /* The dock supplies the top spacing now, or the gap above the panels doubles. */
+  padding-top: 0;
+}
+
+/* Holds the bar outside .stwid--icon-tab so it can stick to the scrollport - see
+   2026-09-13_Issue_sticky-tab-bar-releases-with-its-parent. */
+.stwid--entry-manager .stwid--icon-tab__dock {
+  /* Here and not on .stwid--entry-manager: contain: layout would capture the fixed menu. */
+  container-type: inline-size;
+  padding-top: 0.35em;
+
+  /* The bar's margin, as padding: a margin leaves a transparent strip under the pinned bar. */
+  padding-bottom: 0.85em;
+  background-color: var(--SmartThemeBlurTintColor);
+}
+
+.stwid--entry-manager .stwid--icon-tab__dock .stwid--icon-tab__bar {
+  margin-bottom: 0;
 }
 
 .stwid--icon-tab__bar {
@@ -410,12 +445,33 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   margin-bottom: 0.85em;
 }
 
-/* Nested on purpose: 48em moves with the font scale, so it can match on a phone too. */
+/* Nested on purpose: 48em moves with the font scale, so it can match on a phone too.
+   Only the Entry Manager's strip reaches it now; the Book Browser's is set below. */
 @media screen and (width > 768px) {
   @container (min-width: 48em) {
     .stwid--icon-tab__bar {
       grid-template-columns: repeat(auto-fit, minmax(8em, 1fr));
     }
+  }
+}
+
+/* Decision 2B - see 2026-09-19_Rework_browser-toolbar-and-merged-lorebooks-tab.
+   Implicit columns cannot wrap, so four tabs stay on one line at every width.
+   Scoped to the Book Browser: the Entry Manager builds its strip from the same classes. */
+.stwid--list .stwid--filter .stwid--icon-tab__bar {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+/* Decision 4B - an emptied strip keeps its line and loses its air.
+   Scoped to the Book Browser; the Entry Manager's tabs cannot be hidden. */
+.stwid--list .stwid--filter .stwid--icon-tab:not(:has(.stwid--icon-tab__button:not([hidden]))) {
+  padding-top: 0;
+  margin-bottom: 0;
+
+  .stwid--icon-tab__bar {
+    margin-bottom: 0;
   }
 }
 
@@ -439,6 +495,24 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     border-color 0.2s ease;
 }
 
+/* Decision 2B - the strip, not the window, decides when a tab stacks: a split
+   panel can be narrow on a large monitor. 30em follows the font scale on purpose. */
+@container (max-width: 30em) {
+  .stwid--list .stwid--filter .stwid--icon-tab__button {
+    flex-direction: column;
+    gap: 0.25em;
+    padding: 0.45em 0.1em;
+
+    /* Tap-target floor: px on purpose, never em - it must not follow the font scale. */
+    min-height: 44px;
+  }
+
+  .stwid--list .stwid--filter .stwid--icon-tab__button > span {
+    font-size: 0.72em;
+    line-height: 1.1;
+  }
+}
+
 .stwid--icon-tab__button:hover {
   opacity: 0.8;
 }
@@ -456,8 +530,9 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--icon-tab__button[hidden],
-.stwid--icon-tab__content[hidden] {
-  display: none !important; /* override: tab button/content classes set display explicitly; hidden state must win */
+.stwid--icon-tab__content[hidden],
+.stwid--field-group[hidden] {
+  display: none !important; /* override: tab button/content and field-group classes set display explicitly; hidden state must win */
 }
 
 .stwid--settings-panel .stwid--settings-checkbox-grid {
@@ -1053,8 +1128,31 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     height: auto;
   }
 
-  /* Bare token on purpose: wrapping it in rgb() drops the declaration and the bar goes transparent. */
-  .stwid--icon-tab__bar {
+  /* One sticky element per strip: the dock here, a direct child of the scrollport. */
+
+  /* 4, not 1: the order table's horizontally-sticky cells are siblings in this same
+     stacking context and go up to 3 (thead th[data-col='drag']), so a lower dock is
+     painted over and the user taps an entry row instead of the tab. Above 3 and far
+     below the 30000 overlay band, which is for blockers and menus, not a docked strip. */
+  .stwid--entry-manager .stwid--icon-tab__dock {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+
+    /* The tint token is a BLUR tint and is semi-transparent in every theme preset
+       (0.61 here, 0.65 in Moonlit Echoes), so on its own the list stays readable
+       through the pinned strip. Pairing it with the host's blur is what the token is
+       for - same pairing as .stwid--inline-multiselect and the host's own surfaces.
+       Here and not in the base rule: only a sticky dock has content passing beneath
+       it, and .stwid--entry-manager does not scroll above 1000px. No stacking or
+       containing-block risk - container-type: inline-size already makes the dock a
+       containing block for fixed descendants. */
+    backdrop-filter: blur(var(--SmartThemeBlurStrength));
+  }
+
+  /* The Book Browser's list scrolls in a sibling, so its bar can stick on its own.
+     Bare token on purpose: wrapping it in rgb() drops the declaration and the bar goes transparent. */
+  .stwid--list .stwid--icon-tab__bar {
     position: sticky;
     top: 0;
     z-index: 1;

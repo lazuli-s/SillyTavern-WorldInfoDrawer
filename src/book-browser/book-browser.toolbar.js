@@ -1,4 +1,11 @@
+// The browser toolbar: the permanent row above the Book Browser's tab strip
+// holding Activation, Entry Manager and Refresh. It builds no tab, so it lives
+// here and not among the per-tab modules in browser-tabs/.
+
 const ICON_BUTTON_BASE_CLASSES = ['menu_button', 'fa-solid', 'fa-fw'];
+// `menu_button_icon` is required with a label: `.menu_button` alone is
+// `width: min-content`, which wraps "Entry Manager" one word per line.
+const LABELLED_BUTTON_BASE_CLASSES = ['menu_button', 'menu_button_icon'];
 const ACTIVE_STATE_CLASS = 'stwid--state-active';
 const MOBILE_PANEL_OPEN_CLASS = 'stwid--mobile-panel-open';
 
@@ -16,32 +23,24 @@ function warnIfUnsavedEdits(getCurrentEditor, getEditorPanelApi, message) {
   return false;
 }
 
-function createSettingsGroupLabel() {
-  const settingsGroupLabel = document.createElement('span');
-  settingsGroupLabel.classList.add('stwid--field-group__label');
-  settingsGroupLabel.textContent = 'Settings';
+function createLabelledButton(iconClass, label) {
+  const button = document.createElement('div');
+  button.classList.add(...LABELLED_BUTTON_BASE_CLASSES);
 
-  const settingsGroupHint = document.createElement('i');
-  settingsGroupHint.classList.add(
-    'fa-solid',
-    'fa-fw',
-    'fa-circle-question',
-    'stwid--field-group__label-hint',
-  );
-  settingsGroupHint.title = 'Open activation settings or refresh the list';
-  settingsGroupLabel.append(settingsGroupHint);
+  const icon = document.createElement('i');
+  icon.classList.add('fa-solid', 'fa-fw', iconClass);
 
-  return settingsGroupLabel;
+  const text = document.createElement('span');
+  text.textContent = label;
+
+  button.append(icon, text);
+  return button;
 }
 
 function createActivationSettingsButton({ dom, getCurrentEditor, getEditorPanelApi }) {
-  const activationSettingsButton = document.createElement('div');
+  const activationSettingsButton = createLabelledButton('fa-cog', 'Activation');
   dom.activationToggle = activationSettingsButton;
-  activationSettingsButton.classList.add(
-    'stwid--activation',
-    ...ICON_BUTTON_BASE_CLASSES,
-    'fa-cog',
-  );
+  activationSettingsButton.classList.add('stwid--activation');
   activationSettingsButton.title = 'Global Activation Settings';
   activationSettingsButton.setAttribute('aria-label', 'Global Activation Settings');
   activationSettingsButton.addEventListener('click', () => {
@@ -63,7 +62,11 @@ function createActivationSettingsButton({ dom, getCurrentEditor, getEditorPanelA
 
 function createRefreshButton({ getListPanelApi, getCurrentEditor, getEditorPanelApi }) {
   const refreshButton = document.createElement('div');
-  refreshButton.classList.add(...ICON_BUTTON_BASE_CLASSES, 'fa-arrows-rotate');
+  refreshButton.classList.add(
+    ...ICON_BUTTON_BASE_CLASSES,
+    'fa-arrows-rotate',
+    'stwid--browser-toolbar__refresh',
+  );
   refreshButton.title = 'Refresh';
   refreshButton.setAttribute('aria-label', 'Refresh');
   refreshButton.addEventListener('click', async () => {
@@ -94,9 +97,8 @@ function createEntryManagerToggleButton({
   getEditorPanelApi,
   getCurrentEditor,
 }) {
-  const entryManagerToggleButton = document.createElement('div');
+  const entryManagerToggleButton = createLabelledButton('fa-pen-to-square', 'Entry Manager');
   dom.order.toggle = entryManagerToggleButton;
-  entryManagerToggleButton.classList.add(...ICON_BUTTON_BASE_CLASSES, 'fa-pen-to-square');
   entryManagerToggleButton.title = 'Open Entry Manager (Book Visibility scope)';
   entryManagerToggleButton.setAttribute(
     'aria-label',
@@ -147,7 +149,7 @@ function createEntryManagerToggleButton({
   return entryManagerToggleButton;
 }
 
-export const createSettingsTabContent = ({
+export const createBrowserToolbar = ({
   dom,
   openEntryManager,
   getListPanelApi,
@@ -155,25 +157,14 @@ export const createSettingsTabContent = ({
   getCurrentEditor,
 }) => {
   const root = document.createElement('div');
-  root.classList.add('stwid--browser-row');
-
-  const settingsGroup = document.createElement('div');
-  settingsGroup.classList.add('stwid--field-group');
-  settingsGroup.append(createSettingsGroupLabel());
+  root.classList.add('stwid--browser-toolbar');
 
   const activationSettingsButton = createActivationSettingsButton({
     dom,
     getCurrentEditor,
     getEditorPanelApi,
   });
-  settingsGroup.append(activationSettingsButton);
-
-  const refreshButton = createRefreshButton({
-    getListPanelApi,
-    getCurrentEditor,
-    getEditorPanelApi,
-  });
-  settingsGroup.append(refreshButton);
+  root.append(activationSettingsButton);
 
   const entryManagerToggleButton = createEntryManagerToggleButton({
     dom,
@@ -182,9 +173,16 @@ export const createSettingsTabContent = ({
     getEditorPanelApi,
     getCurrentEditor,
   });
-  settingsGroup.append(entryManagerToggleButton);
+  root.append(entryManagerToggleButton);
 
-  root.append(settingsGroup);
+  // Last, because it is the one pushed to the right edge.
+  const refreshButton = createRefreshButton({
+    getListPanelApi,
+    getCurrentEditor,
+    getEditorPanelApi,
+  });
+  root.append(refreshButton);
+
   const setToggleVisible = (visible) => {
     entryManagerToggleButton.hidden = !visible;
   };

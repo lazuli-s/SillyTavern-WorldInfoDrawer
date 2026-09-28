@@ -1,13 +1,13 @@
-// Drawer control-row builders: the Book Browser list container (tabs +
-// sorting row) and the editor panel container (mobile back button + editor
-// mount point). Extracted from drawer.js, which now stays focused on
-// bootstrap + DOM map.
+// Drawer control-row builders: the Book Browser list container (browser
+// toolbar, tabs + sorting row) and the editor panel container (mobile back
+// button + editor mount point). Extracted from drawer.js, which now stays
+// focused on bootstrap + DOM map.
 
 import { createNewWorldInfo, getFreeWorldName } from './shared/st-host.js';
 import { registerFolderName } from './book-browser/book-list/book-folders/book-folders.lorebook-folders.js';
 import { createLorebooksTabContent } from './book-browser/browser-tabs/browser-tabs.lorebooks-tab.js';
 import { createFoldersTabContent } from './book-browser/browser-tabs/browser-tabs.folders-tab.js';
-import { createSettingsTabContent } from './book-browser/browser-tabs/browser-tabs.settings-tab.js';
+import { createBrowserToolbar } from './book-browser/book-browser.toolbar.js';
 import { createSortingTabContent } from './book-browser/browser-tabs/browser-tabs.sorting-tab.js';
 import { getEventTargetElement } from './drawer.interactions.js';
 
@@ -24,7 +24,9 @@ export const buildDrawerListContainer = ({
   const list = document.createElement('div');
   list.classList.add('stwid--list');
 
-  dom.lorebooksTabContent = createLorebooksTabContent({
+  // Both groups land in the Lorebooks panel, which owns their shared row; the
+  // Folders group reaches it through dom.folderControls.group, set by its builder.
+  dom.lorebooksGroup = createLorebooksTabContent({
     dom,
     cache,
     getFreeWorldName,
@@ -33,29 +35,29 @@ export const buildDrawerListContainer = ({
     wiHandlerApi,
     getListPanelApi,
   });
-  dom.foldersTabContent = createFoldersTabContent({
+  createFoldersTabContent({
     dom,
     registerFolderName,
     Popup,
     getListPanelApi,
   });
 
-  const { root: settingsTabRoot, setToggleVisible: setOrderToggleVisible } =
-    createSettingsTabContent({
-      dom,
-      openEntryManager,
-      getListPanelApi,
-      getEditorPanelApi,
-      getCurrentEditor,
-    });
-  dom.settingsTabContent = settingsTabRoot;
+  const { root: browserToolbar, setToggleVisible: setOrderToggleVisible } = createBrowserToolbar({
+    dom,
+    openEntryManager,
+    getListPanelApi,
+    getEditorPanelApi,
+    getCurrentEditor,
+  });
   dom.setOrderToggleVisible = setOrderToggleVisible;
 
   const controls = document.createElement('div');
   controls.classList.add('stwid--controls');
   dom.sortingRow = createSortingTabContent({ cache, getListPanelApi });
   controls.append(dom.sortingRow);
-  list.append(controls);
+  // A direct child of the list, above the tab strip that setupFilter appends
+  // later: never inside .stwid--filter (a flex row) or .stwid--icon-tab.
+  list.append(controls, browserToolbar);
 
   return list;
 };

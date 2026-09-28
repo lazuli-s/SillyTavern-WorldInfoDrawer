@@ -63,9 +63,7 @@ const createDrawerRuntimeState = ({ saveWorldInfo, wiHandlerApi }) => {
     collapseAllToggle: undefined,
     collapseAllFoldersToggle: undefined,
     activationToggle: undefined,
-    lorebooksTabContent: undefined,
-    foldersTabContent: undefined,
-    settingsTabContent: undefined,
+    lorebooksGroup: undefined,
     folderControls: {
       group: undefined,
       add: undefined,

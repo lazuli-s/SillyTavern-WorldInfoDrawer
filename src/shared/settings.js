@@ -16,14 +16,7 @@ const KNOWN_SETTINGS_KEYS = [
   'hiddenTabs',
 ];
 
-const VALID_HIDDEN_TAB_IDS = Object.freeze([
-  'settings',
-  'lorebooks',
-  'folders',
-  'visibility',
-  'sorting',
-  'search',
-]);
+const VALID_HIDDEN_TAB_IDS = Object.freeze(['lorebooks', 'visibility', 'sorting', 'search']);
 
 function ensureEnumValue(value, enumObject, defaultValue) {
   return Object.values(enumObject).includes(value) ? value : defaultValue;

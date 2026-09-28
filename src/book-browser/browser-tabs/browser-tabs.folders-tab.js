@@ -1,8 +1,8 @@
 const MENU_BUTTON_CLASS = 'menu_button';
 
+// Returns the bare Folders group: it has no tab of its own, and the Lorebooks
+// panel owns the row it shares with the Lorebooks group (browser-tabs.js).
 export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getListPanelApi }) => {
-  const root = document.createElement('div');
-  root.classList.add('stwid--browser-row');
   const foldersGroup = document.createElement('div');
   foldersGroup.classList.add('stwid--field-group', 'stwid--foldersGroup');
   dom.folderControls.group = foldersGroup;
@@ -109,6 +109,5 @@ export const createFoldersTabContent = ({ dom, registerFolderName, Popup, getLis
   });
   foldersGroup.append(collapseAllFoldersToggle);
 
-  root.append(foldersGroup);
-  return root;
+  return foldersGroup;
 };
