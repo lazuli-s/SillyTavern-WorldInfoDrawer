@@ -80,7 +80,7 @@ export async function reloadBooksFromDisk(
       // `worldInfoCache` immediately (before its own save completes); when the
       // reload response then arrives, the host overwrites that cache slot with
       // the older disk state (`worldInfoCache.set(name, data)`,
-      // world-info.js:2054), leaving the cache stale until the next write or
+      // `loadWorldInfo` in world-info.js), leaving the cache stale until the next write or
       // invalidation for that name. Closing the window needs coordination with
       // the callers' per-book save serializers, which shared/ must not depend
       // on — a deliberate decision left to a ticket-level discussion, not made

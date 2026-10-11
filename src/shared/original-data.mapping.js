@@ -15,13 +15,15 @@ const LOG_PREFIX = '[STWID][ORIGINAL-DATA]';
 /**
  * Fields SillyTavern mirrors into `originalData` from bespoke handlers rather
  * than through `originalWIDataKeyMap`, so they are absent from that map even
- * though the host does keep them in sync. Each entry cites the host line it was
- * read from (vendor/SillyTavern/public/scripts/world-info.js).
+ * though the host does keep them in sync. Each entry names the host handler it
+ * was read from (vendor/SillyTavern/public/scripts/world-info.js).
  */
 export const ORIGINAL_DATA_SUPPLEMENTAL_KEY_MAP = Object.freeze({
-  characterFilter: 'character_filter', // world-info.js:1414, 3160, 3657
-  group: 'extensions.group', // world-info.js:3733
-  outletName: 'extensions.outlet_name', // world-info.js:3697
+  // `setEntryFieldCallback` (slash command), `handleCharacterFilterChangeHelper`
+  // and the `character_exclusion` input handler
+  characterFilter: 'character_filter',
+  group: 'extensions.group', // the `group` input handler
+  outletName: 'extensions.outlet_name', // the `outletName` input handler
 });
 
 /**
@@ -30,16 +32,16 @@ export const ORIGINAL_DATA_SUPPLEMENTAL_KEY_MAP = Object.freeze({
  * `[key, value]` pairs SillyTavern writes for that field.
  */
 const COMPOSITE_FIELD_WRITES = Object.freeze({
-  // handleEntryKillSwitchHelper — world-info.js:3333. The live field is the
+  // handleEntryKillSwitchHelper in world-info.js. The live field is the
   // inverted `disable`; the shadow key is `enabled`.
   disable: (entry) => [['enabled', !entry.disable]],
 
-  // position select handler — world-info.js:3434-3435. One live field, two
+  // the `select[name="position"]` input handler in world-info.js. One live field, two
   // shadow keys: the v2-spec string form and the numeric extension form.
   //
-  // The host writes a third key there, `extensions.role` (world-info.js:3436),
+  // The host writes a third key there, `extensions.role` (same position handler),
   // because its own handler also *reassigns* `entry.role` on every position
-  // change (3426-3431). This extension's position controls never touch `role`,
+  // change. This extension's position controls never touch `role`,
   // so mirroring it here would write a role the live entry no longer agrees
   // with — a shadow record neither the host nor the pre-change extension would
   // produce. `role` is mirrored only when something actually writes it.
@@ -49,7 +51,7 @@ const COMPOSITE_FIELD_WRITES = Object.freeze({
   ],
 
   // originalWIDataKeyMap maps 'displayIndex', but the extension stores the
-  // value at entry.extensions.display_index (world-info.js:2675 does the same).
+  // value at entry.extensions.display_index (the sortable `stop` handler in `displayWorldEntries` does the same).
   displayIndex: (entry) => [['extensions.display_index', entry.extensions?.display_index]],
 });
 

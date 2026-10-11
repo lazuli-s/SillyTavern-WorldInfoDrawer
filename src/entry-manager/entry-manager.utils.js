@@ -41,7 +41,7 @@ const INERT_FILTER_TOOLTIP =
   'The setting is left exactly as stored.';
 
 // The avatar filename with its extension stripped — what lorebook data stores (CONTEXT.md).
-// This mirrors the host's `getCharaFilename` (vendor utils.js:1342, same regex) rather than
+// This mirrors the host's `getCharaFilename` (vendor utils.js `getCharaFilename`, same regex) rather than
 // calling it: that helper calls `getContext()` even when handed a manual avatar key, which
 // would drag this pure-logic module onto the host and through the st-host test stub. If the
 // host ever changes how it derives the key, this line must change with it or every stored
@@ -218,9 +218,9 @@ export const readCharacterFilterSelection = (entry) => {
  * The value a selection must be stored as — matching the host exactly (R12).
  *
  * `undefined` means "delete the key": an empty selection with exclude off is
- * what SillyTavern deletes (`world-info.js:3144`) rather than leaving an empty
+ * what SillyTavern deletes (the host's `handleCharacterFilterChangeHelper` in `world-info.js`) rather than leaving an empty
  * object behind. Exclude on with an empty selection keeps the host's
- * `{ isExclude: true, names: [], tags: [] }` shape (`world-info.js:3648`),
+ * `{ isExclude: true, names: [], tags: [] }` shape (the host's `character_exclusion` input handler in `world-info.js`),
  * which gates nothing but is a setting the user asked for.
  *
  * @param {{isExclude?: boolean, names?: Array, tags?: Array}} [selection]

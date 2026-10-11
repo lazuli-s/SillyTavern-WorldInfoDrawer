@@ -1150,28 +1150,16 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
     backdrop-filter: blur(var(--SmartThemeBlurStrength));
   }
 
-  /* The Book Browser's list scrolls in a sibling, so its bar can stick on its own.
-     Bare token on purpose: wrapping it in rgb() drops the declaration and the bar goes transparent. */
-  .stwid--list .stwid--icon-tab__bar {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background-color: var(--SmartThemeBlurTintColor);
-  }
-
   .stwid--browser-row,
   .stwid--list .stwid--browser-row,
   .stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row {
     flex-wrap: wrap;
   }
 
-  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row {
-    justify-content: flex-start;
-  }
-
+  /* A cap, not a floor: the groups stay their desktop size and wrap only when they must. */
   .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--field-group,
   .stwid--icon-tab__content[data-tab-id='visibility'] .stwid--browser-row .stwid--field-group {
-    min-width: 100%;
+    max-width: 100%;
   }
 
   .stwid--multiselect-dropdown__menu,
@@ -1205,22 +1193,6 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   .stwid--icon-tab__button > span {
     font-size: 0.72em;
     line-height: 1.1;
-  }
-
-  .stwid--icon-tab__content[data-tab-id='sorting']
-    .stwid--browser-row
-    .stwid--per-book-sort-buttons {
-    width: 100%;
-  }
-
-  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--book-sort-toggle,
-  .stwid--icon-tab__content[data-tab-id='sorting'] .stwid--browser-row .stwid--clear-book-sorts {
-    flex: 1 1 auto;
-  }
-
-  .stwid--icon-tab__content[data-tab-id='search'] .stwid--browser-row .stwid--search {
-    flex-basis: 100%;
-    min-width: 0;
   }
 }
 
@@ -2221,7 +2193,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     overflow: hidden !important; /* override: parent rule above sets overflow:hidden auto !important; in focus mode the card fills the column so the column itself should not scroll */
   }
 
-  /* !important on the height chain: the mobile rules above (lines 1325-1355)
+  /* !important on the height chain: the mobile rules above (the mobile card-chain release)
      release the card chain to `height: auto` / `flex: 0 0 auto` so the column
      scrolls as one for touch. Several of those selectors have HIGHER
      specificity (e.g. `.stwid--editor .world_entry > .world_entry_form.wi-card-entry`
@@ -2245,7 +2217,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 
   /* Flex-fill: the mobile release sets `flex: 0 0 auto` on the same chain
-     (lines 1340, 1352-1355) so the column scrolls as one for touch. In focus
+     (the mobile card-chain release rules above) so the column scrolls as one for touch. In focus
      mode we need the inner blocks to flex-fill their parent so the textarea
      grows to fill the column. `!important` is required to beat the mobile
      release, which uses `!important` on its own selectors. */

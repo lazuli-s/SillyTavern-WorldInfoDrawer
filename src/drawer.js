@@ -394,7 +394,7 @@ const wireCloseButton = ({ dom, drawerContent }) => {
   // sole direct-child span (the "Worlds/Lorebooks" title). The selector is
   // positional by host design — see SILLYTAVERN_OWNERSHIP_BOUNDARY.md and the
   // vendored reference markup in vendor/SillyTavern/public/index.html
-  // (Worlds/Lorebooks header, ~line 4699).
+  // (the `Worlds/Lorebooks` header span inside the #WorldInfo drawer).
   const closeButton = drawerContent?.querySelector('h3 > span');
   if (closeButton) {
     closeButton.addEventListener('click', () => {

@@ -31,8 +31,8 @@ const CHARACTER_FILTER_COLLAPSED_CLASS = 'stwid--character-filter-options--colla
 const CHARACTER_FILTER_MENU_CLASS = 'stwid--character-filter-menu';
 const CHARACTER_FILTER_ROW_CLASS = 'stwid--character-filter-row';
 const CHARACTER_FILTER_LABEL_CLASS = 'stwid--character-filter-label';
-// Scoped to #WorldInfo: the WorldInfoEngine extension runs on the same page and
-// uses the same `stwid--` prefix (CLAUDE.md §1).
+// Scoped to #WorldInfo: not every `stwid--` element is the drawer
+// (docs/agents/browser-check.md §Scoping your probes).
 const ACTIVE_MENU_SELECTOR = `#WorldInfo .${CHARACTER_FILTER_MENU_CLASS}.stwid--state-active`;
 
 const EXCLUDE_TOOLTIP =
