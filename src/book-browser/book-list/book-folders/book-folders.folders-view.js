@@ -1,3 +1,4 @@
+import { isBookDomFilteredOut as isBookRowFilteredOut } from '../../../shared/utils.js';
 import { getFolderFromMetadata } from './book-folders.lorebook-folders.js';
 import { createFolderDom, setFolderCollapsed } from './book-folders.folder-dom.js';
 import {
@@ -130,11 +131,7 @@ const createFoldersViewSlice = ({ listPanelState, runtime, selectionDnDSlice }) 
 
   const setFolderGroupingVisibility = (enabled) => {
     folderGroupingVisible = Boolean(enabled);
-    updateFolderVisibility({
-      isBookDomFilteredOut: (bookRoot) =>
-        bookRoot.classList.contains('stwid--filter-query') ||
-        bookRoot.classList.contains('stwid--filter-visibility'),
-    });
+    updateFolderVisibility({ isBookDomFilteredOut: isBookRowFilteredOut });
   };
 
   const getVisibleFolderBooks = ({ isBookDomFilteredOut }) => {

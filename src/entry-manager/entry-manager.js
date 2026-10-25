@@ -64,12 +64,16 @@ const getEntryManagerRowData = ({ entryBook, row, cache }) => {
   };
 };
 
-const createEntryAccessors = ({
+// The rows are the scoped books' entries that pass the Book Browser's entry-tag
+// filter (`getEntryTagFilterPredicate`, read on every call). Custom sort
+// numbering still counts the entries the filter hides, so it never repeats one.
+export const createEntryAccessors = ({
   cache,
   getSelectedWorldInfo,
   sortEntries,
   entryManagerState,
   getScopedBookNames,
+  getEntryTagFilterPredicate,
 }) => {
   const getEntryDisplayIndex = (entry) => {
     const displayIndex = Number(entry?.extensions?.display_index);
@@ -83,7 +87,7 @@ const createEntryAccessors = ({
     return String(a.uid).localeCompare(String(b.uid));
   };
 
-  const getEntryManagerSourceEntries = (book = entryManagerState.book) => {
+  const getScopedEntries = (book) => {
     const scopeSet = new Set(getScopedBookNames() ?? getSelectedWorldInfo());
     if (book) {
       if (!scopeSet.has(book) || !cache[book]) return [];
@@ -97,8 +101,13 @@ const createEntryAccessors = ({
       .flat();
   };
 
+  const getEntryManagerSourceEntries = (book = entryManagerState.book) => {
+    const entryPasses = getEntryTagFilterPredicate();
+    return getScopedEntries(book).filter((entry) => entryPasses(entry.data));
+  };
+
   const ensureCustomDisplayIndex = (book = entryManagerState.book) => {
-    const source = getEntryManagerSourceEntries(book);
+    const source = getScopedEntries(book);
     const entriesByBook = new Map();
     for (const entry of source) {
       if (!entriesByBook.has(entry.book)) {
@@ -291,7 +300,7 @@ const initEntryManagerFilters = (args) => createEntryManagerFilters(args);
 
 const initEntryManagerRenderer = (args) => createEntryManagerRenderer(args);
 
-const createEntryManagerOpeners = ({
+export const createEntryManagerOpeners = ({
   dom,
   entryManagerState,
   getCurrentEditor,
@@ -346,7 +355,13 @@ const createEntryManagerOpeners = ({
     renderEntryManager(null);
   };
 
-  return { openEntryManager, refreshEntryManagerScope };
+  // The tag filter narrows a single-book Entry Manager too, unlike the book scope.
+  const refreshEntryManagerEntryTags = () => {
+    if (!dom.order.toggle?.classList.contains(STATE_ACTIVE_CLASS)) return;
+    renderEntryManager(entryManagerState.book);
+  };
+
+  return { openEntryManager, refreshEntryManagerScope, refreshEntryManagerEntryTags };
 };
 
 export const initEntryManager = ({
@@ -362,6 +377,7 @@ export const initEntryManager = ({
   getListPanelApi,
   getEditorPanelApi,
   getCurrentEditor,
+  getEntryTagFilterPredicate,
   debounce,
   isTrueBoolean,
   SlashCommandParser,
@@ -394,6 +410,7 @@ export const initEntryManager = ({
     sortEntries,
     entryManagerState,
     getScopedBookNames,
+    getEntryTagFilterPredicate,
   });
   const getEntryManagerEntries = (book = entryManagerState.book, includeDom = false) =>
     getBaseEntryManagerEntries(book, includeDom, dom);
@@ -601,19 +618,20 @@ export const initEntryManager = ({
     getEditorPanelApi,
   });
 
-  const { openEntryManager, refreshEntryManagerScope } = createEntryManagerOpeners({
-    dom,
-    entryManagerState,
-    getCurrentEditor,
-    getEditorPanelApi,
-    renderEntryManager,
-    normalizeScope,
-    isSameScope,
-    syncEntryManagerStrategyFilters,
-    syncEntryManagerPositionFilters,
-    getScopedBookNames,
-    setScopedBookNames,
-  });
+  const { openEntryManager, refreshEntryManagerScope, refreshEntryManagerEntryTags } =
+    createEntryManagerOpeners({
+      dom,
+      entryManagerState,
+      getCurrentEditor,
+      getEditorPanelApi,
+      renderEntryManager,
+      normalizeScope,
+      isSameScope,
+      syncEntryManagerStrategyFilters,
+      syncEntryManagerPositionFilters,
+      getScopedBookNames,
+      setScopedBookNames,
+    });
 
-  return { openEntryManager, refreshEntryManagerScope };
+  return { openEntryManager, refreshEntryManagerScope, refreshEntryManagerEntryTags };
 };

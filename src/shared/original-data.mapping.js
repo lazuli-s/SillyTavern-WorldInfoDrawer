@@ -10,6 +10,8 @@
 // authoritative key map (`originalWIDataKeyMap`) is passed in by the caller —
 // it is read from the host, never re-declared here (R25).
 
+import { ENTRY_TAGS_EXTENSION_KEY, ENTRY_TAGS_FIELD } from './entry-tags.js';
+
 const LOG_PREFIX = '[STWID][ORIGINAL-DATA]';
 
 /**
@@ -53,6 +55,15 @@ const COMPOSITE_FIELD_WRITES = Object.freeze({
   // originalWIDataKeyMap maps 'displayIndex', but the extension stores the
   // value at entry.extensions.display_index (the sortable `stop` handler in `displayWorldEntries` does the same).
   displayIndex: (entry) => [['extensions.display_index', entry.extensions?.display_index]],
+
+  // Entry tags are this extension's own field, so the host has no handler to
+  // copy. The id list lives under `extensions` on the live entry and goes to the
+  // same path in the shadow copy, which the host's card export reads. Copied,
+  // so the shadow never shares the live entry's array.
+  [ENTRY_TAGS_FIELD]: (entry) => {
+    const ids = entry.extensions?.[ENTRY_TAGS_EXTENSION_KEY];
+    return [[`extensions.${ENTRY_TAGS_EXTENSION_KEY}`, Array.isArray(ids) ? [...ids] : ids]];
+  },
 });
 
 const warnedFields = new Set();

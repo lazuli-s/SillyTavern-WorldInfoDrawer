@@ -14,8 +14,8 @@ body #WorldInfo > .stwid--body {
   display: none;
 }
 
-/* Drawer root sizing + layout */
-body.stwid-- #WorldInfo {
+/* Design tokens: declared on body so the drawer and host popups (<dialog class="popup"> sit outside #WorldInfo) both resolve them */
+body.stwid-- {
   /* Spacing and radius tokens */
   --stwid-gap-xs: 0.25em;
   --stwid-gap-s: 0.35em;
@@ -51,7 +51,10 @@ body.stwid-- #WorldInfo {
   /* Semantic tokens */
   --stwid-warning-color: var(--warning-color, var(--SmartThemeQuoteColor));
   --stwid-exclude-color: var(--SmartThemeErrorColor, var(--fullred));
+}
 
+/* Drawer root sizing + layout */
+body.stwid-- #WorldInfo {
   /* Layout */
   width: 100vw;
   height: calc(100dvh - var(--topBarBlockSize));
@@ -569,6 +572,106 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   margin-top: 1em;
 }
 
+/* Visibility tab - Entry tags group (src/book-browser/browser-tabs/browser-tabs.entry-tags-filter.js),
+   entry tags gallery decisions 3B (own line, pills wrap), 4D (Untagged pill) and 10D (excluded
+   look). The pills are the host's `.tag` inside its `.rm_tag_filter`, so the off (dimmed) and
+   included (full colour) looks are the host's own. */
+.stwid--icon-tab__content[data-tab-id='visibility']
+  .stwid--browser-row
+  .stwid--field-group.stwid--entry-tags-filter {
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5em;
+  min-width: 0;
+  padding-left: 0.65em;
+  padding-right: 0.65em;
+}
+
+.stwid--entry-tags-filter__pills {
+  flex: 1 1 0;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* The host hides every non-round pill in `.rm_tag_filter` until its own "Show tag list"
+   toggle reveals them; this group has no such toggle, so its pills always show. */
+.stwid--entry-tags-filter__pills.rm_tag_filter .tag:not(.actionable) {
+  display: flex;
+}
+
+.stwid--entry-tags-filter__pills .tag {
+  max-width: 100%;
+}
+
+.tag.stwid--entry-tags__untagged {
+  background-color: rgba(100, 100, 100, 0.5); /* host ACTIONABLE_TAGS grey - no token exists */
+}
+
+.tag.stwid--entry-tags__untagged .tag_name i {
+  margin-right: 0.2em;
+  font-size: 0.9em;
+}
+
+.stwid--entry-tags-filter .tag.excluded::after {
+  content: none;
+}
+
+.stwid--entry-tags-filter .tag.excluded {
+  filter: saturate(0.35) brightness(0.85) !important; /* beats the host's .tag.excluded !important */
+  border: 1px solid var(--stwid-tag-color, var(--white50a));
+}
+
+.stwid--entry-tags-filter .tag.excluded .tag_name {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.stwid--entry-tags-filter .tag.excluded:hover {
+  filter: saturate(0.6) !important; /* beats the host's .tag.excluded !important */
+}
+
+/* Many tags fold to three lines behind a dashed expander - gallery decision 5B. The hidden
+   rule out-ranks the always-show rule above. */
+.stwid--entry-tags-filter__pills.rm_tag_filter .tag.stwid--state-hidden {
+  display: none;
+}
+
+/* Unfolded, the pills scroll inside a short box instead of pushing the books (or the
+   "nothing matches" message) out of the non-scrolling Book Browser - Decision 5, unfolded height. */
+.stwid--entry-tags-filter__pills--unfolded {
+  max-height: 25dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tag.stwid--entry-tags-filter__more {
+  background-color: var(--black30a);
+  color: var(--SmartThemeEmColor);
+  border: 1px dashed var(--SmartThemeEmColor);
+  cursor: pointer;
+  opacity: 1;
+  filter: none;
+}
+
+.rm_tag_filter .tag.stwid--entry-tags-filter__more:hover {
+  color: var(--SmartThemeBodyColor);
+  border-color: var(--SmartThemeBodyColor);
+}
+
+/* The gear opening Manage entry tags, top-aligned at the group's right edge - decision 3B. */
+.menu_button.stwid--entry-tags-filter__manage {
+  align-self: flex-start;
+  margin: 0;
+  background-color: var(--black30a);
+  filter: none;
+  height: var(--stwid-control-height);
+  aspect-ratio: 1;
+  font-size: 0.9em;
+}
+
 .stwid--multiselect-dropdown__wrap {
   position: relative;
   display: inline-flex;
@@ -970,8 +1073,37 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
 }
 
 .stwid--books .stwid--book.stwid--filter-visibility,
-.stwid--books .stwid--book.stwid--filter-query {
+.stwid--books .stwid--book.stwid--filter-query,
+.stwid--books .stwid--book.stwid--filter-entry-tags {
   display: none;
+}
+
+/* Where the books would be, when the Entry tags filter hides them all - entry tags gallery
+   decision 6A (src/book-browser/book-browser.js, updateBooksEmptyState). */
+.stwid--books-empty {
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--books-empty--center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4em;
+  padding: 2em 1em;
+  text-align: center;
+}
+
+.stwid--books-empty[hidden] {
+  display: none;
+}
+
+.stwid--books-empty__icon {
+  font-size: 2em;
+  opacity: 0.5;
+}
+
+.stwid--books-empty--center .menu_button {
+  color: var(--SmartThemeBodyColor);
 }
 
 .stwid--books .stwid--book:has(.stwid--entry-list .stwid--entry.stwid--state-active) .stwid--head {
@@ -1051,7 +1183,8 @@ body.stwid-- #WorldInfo > .stwid--body.stwid--state-loading::after {
   pointer-events: none;
 }
 
-.stwid--books .stwid--entry.stwid--filter-query {
+.stwid--books .stwid--entry.stwid--filter-query,
+.stwid--books .stwid--entry.stwid--filter-entry-tags {
   display: none;
 }
 
@@ -1375,20 +1508,206 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
 }
 
 /* The same vendored-select2 caveat as the block above. Levels the chip row's four
-   controls to one height through `--stwid-select2-chip-height`. The `1.4` is the
-   chip's measured height over `--mainFontSize` at font-scale 1, not a figure
-   derived from select2's own sizing - round-2 ticket 13 has the measurements, and
-   the inbox note on deriving it instead of fitting it. */
-.stwid--editor .select2-container .select2-selection--multiple {
-  --stwid-select2-chip-height: calc(var(--mainFontSize) * 1.4);
-}
-
+   controls to one height, gallery decision 2B's `--stwid-editor-chip-height`
+   (round-2 ticket 13 first did it with a measured `1.4`) - the token and its
+   reasoning are in the 2B block below. */
 .stwid--editor .select2-container .select2-selection--multiple .select2-selection__choice,
 .stwid--editor .select2-container .select2-selection--multiple .select2-selection__choice__remove,
 .stwid--editor .select2-container .select2-selection--multiple .select2-selection__clear,
 .stwid--editor .select2-container .select2-selection--multiple .select2-search__field {
-  height: var(--stwid-select2-chip-height);
-  min-height: var(--stwid-select2-chip-height);
+  height: var(--stwid-editor-chip-height);
+  min-height: var(--stwid-editor-chip-height);
+}
+
+/* One control look across the entry editor, gallery decisions 2B, 3A, 4A and
+   5A: one height, one font, one hint style, one corner. "Controls" are the text
+   and number boxes, the dropdowns, the keyword boxes, the select2 chip boxes and
+   the Entry tags box; the Content box keeps the host's line height and its own
+   height. Every selector naming a `select2-*` class reaches select2's own
+   markup, third-party and vendored by the host, so an upgrade can stop it
+   matching with no error anywhere. */
+.stwid--editor .world_entry {
+  --stwid-editor-hint-color: color-mix(in srgb, var(--SmartThemeBodyColor) 70%, transparent);
+  --stwid-editor-control-radius: 5px; /* the host's `.text_pole` corner */
+
+  /* 2B: 30px at font scale 1, Moonlit's own `.text_pole` floor. */
+  --stwid-editor-control-height: calc(var(--mainFontSize) * 2);
+  --stwid-editor-chip-height: calc(var(--stwid-editor-control-height) * 0.76);
+
+  /* The block padding that centres one row of chips in a one-line chip box:
+     what is left of the control height once the chip and the 1px top and
+     bottom borders are taken out, split in two. */
+  --stwid-editor-chip-inset: calc(
+    (var(--stwid-editor-control-height) - var(--stwid-editor-chip-height) - 2px) / 2
+  );
+}
+
+/* 3A: the theme font at the theme size. select2's search field otherwise falls
+   back to the generic `sans-serif` (select2.min.css) and the host's
+   `.drawer-content select` draws dropdowns at 0.95x. */
+.stwid--editor
+  .world_entry
+  :is(input.text_pole, select.text_pole, textarea.text_pole):not([name='content']),
+.stwid--editor .world_entry .select2-selection--multiple,
+.stwid--editor .world_entry .select2-selection--multiple .select2-selection__choice,
+.stwid--editor .world_entry .select2-container .select2-search--inline .select2-search__field,
+.stwid--editor .world_entry .stwid--entry-tags__box,
+.stwid--editor .world_entry .stwid--entry-tags__input {
+  font-family: var(--mainFontFamily);
+  font-size: var(--mainFontSize);
+  line-height: 1.2;
+}
+
+/* 4A: every hint dimmed once. The host's placeholder colour is `!important`
+   (`.text_pole::placeholder`, `textarea::placeholder`), so only `!important`
+   replaces it. select2's search field carries a second 0.8 opacity of its own
+   (select2-overrides.css), which is what dimmed "All types (default)" twice. */
+.stwid--editor .world_entry :is(input, textarea)::placeholder {
+  color: var(--stwid-editor-hint-color) !important;
+  opacity: 1;
+  font-size: inherit;
+}
+
+.stwid--editor
+  .world_entry
+  .select2-container
+  .select2-search--inline
+  textarea.select2-search__field {
+  opacity: 1;
+}
+
+/* 4A: the three dropdowns whose `null` option means "Use global" take the hint
+   colour only while it is selected. Read from the option's value, not its text,
+   so a translation cannot break it. The opened list keeps the host's own option
+   colours, which are set on `select option` and do not inherit this one. */
+.stwid--editor
+  .world_entry
+  select:is([name='caseSensitive'], [name='matchWholeWords'], [name='useGroupScoring']):has(
+    > option[value='null']:checked
+  ) {
+  color: var(--stwid-editor-hint-color);
+}
+
+/* 5A: the host's 5px corner on every control and the three action buttons, one
+   pixel less on the chips inside a chip box. The chip-box rule stays at three
+   classes so select2's open-state rule (four classes) still squares the edge
+   that meets its dropdown. */
+.stwid--editor .world_entry :is(input.text_pole, select.text_pole, textarea.text_pole),
+.stwid--editor .world_entry .select2-selection--multiple,
+.stwid--editor .world_entry .stwid--entry-tags__box,
+.stwid--editor .world_entry :is(.move_entry_button, .duplicate_entry_button, .delete_entry_button) {
+  border-radius: var(--stwid-editor-control-radius);
+}
+
+.stwid--editor .world_entry .select2-selection--multiple .select2-selection__choice,
+.stwid--editor .world_entry .stwid--entry-tags__box > .tag {
+  border-radius: calc(var(--stwid-editor-control-radius) - 1px);
+}
+
+/* 2B: every single-line control at the control height, so a row of fields lines
+   up along its bottom edge. Dropdowns and inputs centre their own text, so the
+   block padding (the host's 3px, Moonlit's 5px on `select`) goes. */
+.stwid--editor .world_entry :is(input.text_pole, select.text_pole) {
+  height: var(--stwid-editor-control-height);
+  padding-block: 0;
+}
+
+/* 2B: the keyword boxes in plaintext mode grow with their text, and the host
+   sizes them inline - its `resetScrollHeight` on every change, our
+   `fixTextpoleHeights` on open - as `height = scrollHeight + 3`, which beats any
+   stylesheet height. So the padding is chosen to make that formula land on the
+   control height for one line: one line plus both paddings is the control
+   height less 3px. The floor sits 1px under the control height on purpose:
+   `scrollHeight` never reads below the box's own inner height, so a floor at the
+   full control height would push the formula to one pixel over it - and it
+   overrides Moonlit's 30px `.text_pole` floor for the same reason. `height` is
+   only the size before the host's first measurement. */
+.stwid--editor .world_entry :is(textarea.keyprimarytextpole, textarea.keysecondarytextpole) {
+  height: var(--stwid-editor-control-height);
+  min-height: calc(var(--stwid-editor-control-height) - 1px);
+  padding-block: calc((var(--stwid-editor-control-height) - 1lh - 3px) / 2);
+}
+
+/* The same for the title box on desktop, which the host resizes by the same
+   formula on every keystroke. At 1000px and below it keeps its two lines (the
+   phone header's `min-height: calc(2lh + 0.75rem)`), so this stays out of that
+   width band entirely. */
+@media screen and (width > 1000px) {
+  .stwid--editor .world_entry textarea.text_pole[name='comment'] {
+    height: var(--stwid-editor-control-height);
+    min-height: calc(var(--stwid-editor-control-height) - 1px);
+    padding-block: calc((var(--stwid-editor-control-height) - 1lh - 3px) / 2);
+  }
+}
+
+/* 2B: the select2 chip boxes (both keyword boxes in fancy mode, the character
+   and trigger filters) start at the control height and grow only when their
+   chips wrap. select2 lays them out as inline flow - margins on every chip, a
+   5px bottom padding, a 32px floor - which is where today's 34.6px came from;
+   a wrapping flex row with one gap replaces it. The chip list goes
+   `display: contents` so the search field keeps following the last chip on its
+   line instead of dropping below the whole list. Right padding stays select2's
+   and round 2's: it holds the room for the clear button and the key-input
+   toggle. */
+.stwid--editor .world_entry .select2-container .select2-selection--multiple {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stwid-gap-xs);
+  min-height: var(--stwid-editor-control-height);
+  padding-block: var(--stwid-editor-chip-inset);
+  padding-inline-start: 5px;
+}
+
+.stwid--editor .world_entry .select2-selection--multiple .select2-selection__rendered {
+  display: contents;
+}
+
+/* The chip's text centred by equal block padding inside the chip height; the
+   remove button is absolutely placed at the chip's corner and keeps its own. */
+.stwid--editor .world_entry .select2-selection--multiple .select2-selection__choice {
+  margin: 0;
+  padding-block: calc((var(--stwid-editor-chip-height) - 2px - 1lh) / 2);
+}
+
+.stwid--editor .world_entry .select2-selection--multiple .select2-search--inline {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* select2-overrides.css pushes the field down 7px "to the center" of select2's
+   own layout; in the flex row that only offsets it. It has no border, so its
+   text centres on padding alone. */
+.stwid--editor
+  .world_entry
+  .select2-container
+  .select2-search--inline
+  textarea.select2-search__field {
+  margin: 0;
+  padding-block: calc((var(--stwid-editor-chip-height) - 1lh) / 2);
+}
+
+/* The clear button is absolutely placed; this lines it up with the first row of
+   chips instead of select2's 5px from the top. */
+.stwid--editor .world_entry .select2-selection--multiple .select2-selection__clear {
+  top: var(--stwid-editor-chip-inset);
+  margin-top: 0;
+}
+
+/* 2B: the Entry tags box the same way - it is a wrapping flex row already. */
+.stwid--editor .world_entry .stwid--entry-tags__box {
+  min-height: var(--stwid-editor-control-height);
+  padding: var(--stwid-editor-chip-inset) 5px;
+}
+
+.stwid--editor .world_entry .stwid--entry-tags__box > .tag {
+  height: var(--stwid-editor-chip-height);
+}
+
+.stwid--editor .world_entry .stwid--entry-tags__input {
+  height: var(--stwid-editor-chip-height);
+  padding-block: 0;
 }
 
 /* A real hit target for the entry's active-state toggle, the smallest control in
@@ -1432,15 +1751,311 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   display: block;
 }
 
-/* Finding A': no label over a control that paints nothing. The host disables
-   `input[name='depth']` and hides it with `visibility: hidden` in the same branch
-   unless the position is *At Depth*, so the label goes on the same condition.
-   Round-2 ticket 09. */
+/* Depth takes no space while it does not apply, so Order and Trigger % sit next
+   to Position. The host disables `input[name='depth']` and hides it with
+   `visibility: hidden` in the same branch unless the position is *At Depth*, so
+   the whole field goes on the same condition - which also covers round 2's
+   finding A' rule, which hid only its title. At 1000px and below the phone's
+   own Position rules hide it on the same condition. Gallery decision 6A. */
+.stwid--editor .world_entry .world_entry_form_control:has(> input[name='depth']:disabled) {
+  display: none;
+}
+
+/* Gallery decision 6A: the move / duplicate / delete buttons are squares of the
+   control height, side by side under their Actions title, at every width.
+   Their look and their `--white30a` hover tint stay the host's `.menu_button`;
+   the focus ring is in section 4.1. */
+.stwid--editor .world_entry .stwid--editor-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stwid-gap-xs);
+  height: var(--stwid-editor-control-height);
+}
+
+.stwid--editor .world_entry :is(.move_entry_button, .duplicate_entry_button, .delete_entry_button) {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: var(--stwid-editor-control-height);
+  min-width: var(--stwid-editor-control-height);
+  height: var(--stwid-editor-control-height);
+  margin: 0;
+  padding: 0;
+}
+
+/* Gallery decision 6A on desktop: one header line at one height - the toggle,
+   Title (which grows), Strategy, Position, Depth while it applies, Order,
+   Trigger % and Actions. Every control is the control height and they share a
+   bottom edge, so under titles of one height they share a top edge too. The
+   host nests the line in five flex rows, each aligned here; the gap is
+   `!important` because two of them carry the host's `.gap5px`. When the editor
+   is too narrow for one line, the host's `.flex-container` still wraps the
+   header controls onto a second line, and the title box's floor makes that
+   happen before the box is squeezed. */
+@media screen and (width > 1000px) {
+  .stwid--editor .world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header,
+  .stwid--editor .world_entry .inline-drawer-header > .world_entry_thin_controls,
+  .stwid--editor .world_entry .inline-drawer-header > .world_entry_thin_controls > .flex-container,
+  .stwid--editor .world_entry .WIEntryTitleAndStatus,
+  .stwid--editor .world_entry .WIEnteryHeaderControls {
+    align-items: flex-end;
+    gap: var(--stwid-gap-m) !important; /* override: the host's !important .gap5px */
+  }
+
+  /* The toggle has no title: a box of the control height centres it on the
+     controls instead of on the row with their titles. */
+  .stwid--editor .world_entry .world_entry_thin_controls > .killSwitch {
+    display: flex;
+    align-items: center;
+    height: var(--stwid-editor-control-height);
+    padding-block: 0;
+    margin-block: 0;
+  }
+
+  .stwid--editor .world_entry .stwid--editor-header-title-field {
+    min-width: calc(var(--mainFontSize) * 8);
+  }
+
+  /* Fixed fields are at least as wide as their title and its ? (the gallery's
+     4.8x and 5.4x the font), so "Trigger % ?" never runs into "Actions". */
+  .stwid--editor .world_entry .stwid--editor-header-strategy,
+  .stwid--editor .world_entry .WIEnteryHeaderControls > .world_entry_form_control:has(> input),
+  .stwid--editor .world_entry .stwid--editor-actions {
+    flex: none;
+  }
+
+  .stwid--editor .world_entry .stwid--editor-header-strategy {
+    width: calc(var(--mainFontSize) * 5.4);
+  }
+
+  .stwid--editor .world_entry .WIEnteryHeaderControls > .world_entry_form_control:has(> input) {
+    width: calc(var(--mainFontSize) * 4.8);
+  }
+
+  .stwid--editor .world_entry .WIEnteryHeaderControls > .world_entry_form_control > input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .stwid--editor .world_entry .stwid--editor-header-strategy > select {
+    width: 100% !important; /* override: the host's !important .widthNatural */
+    min-width: 0 !important; /* override: the host's !important .widthNatural */
+  }
+}
+
+/* Gallery decision 1C: one gap, `--stwid-gap-s`, from the bottom of every field
+   title to the top of its control - set on the field wrapper, because the token
+   is in `em` and the wrapper is at `--mainFontSize` while the title is not. The
+   wrappers are the host's `.world_entry_form_control` (and the ones
+   `editor-panel-mobile.js` mints), the host's titled columns around a
+   `.range-block-range`, and the Entry tags row. `!important` because several
+   carry the host's `.flexNoGap`, which is `gap: unset !important`. */
+.stwid--editor .world_entry .world_entry_form_control,
+.stwid--editor .world_entry :has(> .range-block-range),
+.stwid--editor .world_entry .stwid--entry-tags {
+  gap: var(--stwid-gap-s) !important; /* override: the host's !important .flexNoGap */
+}
+
+/* The header's wrappers draw their titles at 0.8x through the host's
+   `.wi-enter-footer-text`, which would shrink the em gap with them; the title
+   size is set on the title itself below. */
+.stwid--editor .world_entry .world_entry_form_control.wi-enter-footer-text {
+  font-size: var(--mainFontSize);
+}
+
+/* The Trigger filter's column is a plain block in the host's markup. */
+.stwid--editor .world_entry :has(> .range-block-range) {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A column's title row: the title sits at its bottom whatever stands beside it
+   (Prioritize, Exclude, the host's invisible spacer), so a checkbox never adds
+   to the gap. The host's `marginBot5` on the timing titles goes - it is
+   `!important`, hence this one. */
+.stwid--editor .world_entry :has(> .range-block-range) > .flex-container {
+  align-items: flex-end;
+  margin-bottom: 0 !important; /* override: the host's !important .marginBot5 */
+}
+
+/* Content's head row: the title, its tools and the token count sit at the
+   bottom of the row the recursion checkboxes make tall, instead of centred in
+   it, so the same gap applies below the title. */
 .stwid--editor
   .world_entry
-  .world_entry_form_control:has(> input[name='depth']:disabled)
-  > label[for='depth'] {
+  [name='contentAndCharFilterBlock']
+  > .world_entry_form_control
+  > label
+  > small
+  > span,
+.stwid--editor
+  .world_entry
+  [name='contentAndCharFilterBlock']
+  > .world_entry_form_control
+  > label
+  > small
+  > span
+  > span:first-child {
+  align-items: flex-end;
+}
+
+/* Rows of fields share a bottom edge, so a taller title row (a checkbox beside
+   the title) lifts its own title rather than dropping its control. At 1000px
+   and below the phone layout's grids set this themselves - and stack the
+   keyword block into a column, which `flex-end` would shrink to the right. */
+@media screen and (width > 1000px) {
+  .stwid--editor
+    .world_entry
+    :is(
+      [name='keywordsAndLogicBlock'],
+      [name='perEntryOverridesBlock'],
+      .world_entry_edit > .flex-container.wide100p.flexGap10
+    ) {
+    align-items: flex-end;
+  }
+}
+
+/* Gallery decision 9A: every field title and checkbox label at one size and one
+   dim - the header's titles, the ones the phone layout and this extension mint,
+   Content's head (title, token count and the recursion checkboxes on desktop),
+   Prioritize and Exclude, the recursion checkboxes the phone moves out of that
+   head, and Additional Matching Sources. Dimmed by colour, the same 70% as the
+   hint colour (4A), never by the host's `small { opacity: 0.7 }`: opacity would
+   dim the ? and the checkbox inside a title a second time. */
+.stwid--editor
+  .world_entry
+  :is(
+    .world_entry_form_control > small,
+    .world_entry_form_control > label.WIEntryHeaderTitleMobile,
+    .stwid--editor-header-label,
+    :has(> .range-block-range) > .flex-container > small,
+    .stwid--entry-tags > .flex-container > small,
+    [name='contentAndCharFilterBlock'] > .world_entry_form_control > label > small,
+    .checkbox_label,
+    .checkbox_label small,
+    label.checkbox,
+    .stwid--ams > .inline-drawer-content > small
+  ) {
+  font-size: calc(var(--mainFontSize) * 0.8333);
+  line-height: 1.2;
+  color: var(--stwid-editor-hint-color);
+  opacity: 1;
+}
+
+/* The Focus toggle in Content's head is a `<button>`, which the host colours
+   outright; it takes the head's dim like the maximize icon beside it, which the
+   head's opacity used to give both. */
+.stwid--editor .world_entry .stwid--focus-toggle {
+  color: inherit;
+}
+
+/* Help icons, gallery decision 7D: one quiet ? after every field title and
+   checkbox (`editor-panel.field-help.js`). Inclusion Group keeps the host's own
+   ? link, so its `.note-link-span` takes the same look over the host's accent
+   colour. Hover and focus states are in section 4.1. */
+.stwid--editor .world_entry .stwid--field-help,
+.stwid--editor .world_entry .stwid--field-help-link > .note-link-span {
+  flex: none;
+  font-size: 0.9em;
+  color: var(--SmartThemeBodyColor);
+  opacity: 0.5;
+  margin: 0 5px;
+  border-radius: 50%;
+  transition: opacity var(--animation-duration-2x);
+}
+
+.stwid--editor .world_entry .stwid--field-help {
+  cursor: help;
+}
+
+/* The host's (i) icons on Prioritize, Exclude, Outlet Name and Recursion Level
+   give way to the ?: hidden, not removed, since the markup is the host's. */
+.stwid--editor .world_entry :has(> .stwid--field-help) > .fa-circle-info {
   display: none;
+}
+
+/* "💬 Sticky ?": the host's `fa-comments` moves before the title text through
+   its flex title's order, without moving the host markup. */
+.stwid--editor .world_entry small:has(> .stwid--field-help) > .fa-comments {
+  order: -1;
+}
+
+/* A header title truncates its text, never its ?: the text sits in its own span
+   and carries the ellipsis, and the title stops clipping. */
+.stwid--editor
+  .world_entry
+  :is(.WIEntryHeaderTitleMobile, .stwid--editor-header-label):has(> .stwid--field-help) {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.stwid--editor .world_entry .stwid--field-help-title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Help bubble, gallery decision 8H: a light bubble under the tapped ? (a finger,
+   a pen, or Enter / Space on a focused ?), the field's name in bold first. It
+   is a child of the editor column, never of a title, so no title clips it;
+   `editor-panel.field-help.js` sets its left and top from the ?'s box, picks
+   the side, and keeps it inside the editor through the room it passes in. Text
+   is the panel colour without its alpha, since many themes tint the panel
+   translucent. */
+.stwid--editor > .stwid--field-help-bubble {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(
+    calc(var(--mainFontSize) * 17),
+    var(--stwid-field-help-bubble-room, calc(var(--mainFontSize) * 17))
+  );
+  padding: var(--stwid-gap-m) calc(var(--stwid-gap-m) * 1.4);
+  font-size: calc(var(--mainFontSize) * 0.8667);
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: break-word;
+  color: rgb(from var(--SmartThemeBlurTintColor) r g b);
+  background-color: var(--SmartThemeBodyColor);
+  border: 1px solid var(--SmartThemeBodyColor);
+  border-radius: var(--stwid-radius-m);
+  box-shadow: 0 2px 10px var(--SmartThemeShadowColor);
+}
+
+.stwid--editor > .stwid--field-help-bubble strong {
+  display: block;
+  margin-bottom: var(--stwid-gap-xs);
+}
+
+/* The 45-degree arrow points at the ?: its x comes from the script, so it stays
+   on the ? when the bubble is pinned against an editor edge. */
+.stwid--editor > .stwid--field-help-bubble::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--stwid-gap-m) * -1);
+  left: calc(
+    var(--stwid-field-help-bubble-arrow-x, calc(var(--stwid-gap-m) * 2.7)) - var(--stwid-gap-m) / 2
+  );
+  width: var(--stwid-gap-m);
+  height: var(--stwid-gap-m);
+  background: inherit;
+  border-left: 1px solid var(--SmartThemeBodyColor);
+  border-top: 1px solid var(--SmartThemeBodyColor);
+  transform: translateY(50%) rotate(45deg);
+}
+
+/* Opened above the ? when it does not fit below: the arrow moves to the bottom. */
+.stwid--editor > .stwid--field-help-bubble--above::before {
+  top: auto;
+  bottom: calc(var(--stwid-gap-m) * -1);
+  border: none;
+  border-right: 1px solid var(--SmartThemeBodyColor);
+  border-bottom: 1px solid var(--SmartThemeBodyColor);
+  transform: translateY(-50%) rotate(45deg);
 }
 
 /* One icon-button convention for the whole editor panel: the host's maximize
@@ -1598,9 +2213,9 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     flex-wrap: wrap;
   }
 
+  /* Its cross-axis alignment is the 1C bottom rule in the field-title block. */
   .stwid--editor .stwid--editor-content-header-row {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
     padding-inline: 1em;
   }
@@ -1822,12 +2437,11 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     max-width: none;
   }
 
-  .stwid--editor .stwid--editor-actions-row {
-    display: flex;
-    gap: 1.1rem;
+  /* The Actions field takes a row of its own, its buttons starting under its
+     title (the 6A phone drawing); the buttons themselves are the 6A squares. */
+  .stwid--editor .stwid--editor-actions {
+    flex: 1 1 100%;
     width: 100%;
-    flex-flow: row wrap;
-    place-content: center center;
   }
 
   .stwid--editor .stwid--editor-keywords-and-filters-section > .world_entry_form_control {
@@ -1835,10 +2449,12 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     min-width: 0;
   }
 
+  /* Rows of fields share a bottom edge (gallery decision 1C), here and in the
+     phone rows below. */
   .stwid--editor [name='perEntryOverridesBlock'] {
     display: flex;
     flex-flow: row wrap;
-    align-items: stretch;
+    align-items: flex-end;
   }
 
   .stwid--editor [name='perEntryOverridesBlock'] > .world_entry_form_control {
@@ -1909,6 +2525,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     order: 3;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
     gap: 0.75rem;
     flex: 1 1 100%;
     min-width: 0;
@@ -2131,7 +2748,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.45rem 0.75rem;
     grid-column: span 2;
-    align-items: start;
+    align-items: end;
     min-width: 0;
   }
 
@@ -2144,6 +2761,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--editor .stwid--editor-timing-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
     gap: 0.75rem;
     grid-column: span 3;
     min-width: 0;
@@ -2155,7 +2773,7 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
     > .flex-container.wide100p.flexGap10:nth-child(3) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
+    align-items: end;
   }
 
   .stwid--editor
@@ -2299,6 +2917,335 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   }
 }
 
+/* Entry tags row (src/editor-panel/editor-panel.entry-tags.js) - entry tags
+   gallery decisions 1A (box, dropdown, create row, "already exists" line),
+   2C (stale pill) and 9G (pill border). The pills are the host's `.tag`. */
+.stwid--entry-tags {
+  position: relative; /* anchors the dropdown under the box */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.stwid--entry-tags .tag_remove {
+  opacity: 0.75;
+}
+
+.stwid--entry-tags .tag {
+  max-width: 100%;
+}
+
+/* A long name stays on one line inside its pill. */
+.stwid--entry-tags .tag_name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stwid--entry-tags__box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--black30a);
+  border: 1px solid var(--SmartThemeBorderColor);
+  cursor: text;
+}
+
+.stwid--entry-tags__box:focus-within {
+  outline: var(--stwid-focus-ring);
+  outline-offset: 1px;
+}
+
+.stwid--entry-tags__input {
+  flex: 1 1 8em;
+  min-width: 6em;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 2px 4px;
+  font: inherit;
+  color: var(--SmartThemeBodyColor);
+}
+
+.stwid--entry-tags__menu {
+  max-width: min(24em, 100%);
+  max-height: min(20em, 50vh); /* 45 tags must not run off the editor */
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+}
+
+.stwid--entry-tags__menu .stwid--multiselect-dropdown__option {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.stwid--entry-tags__exists {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 2px 4px;
+  font-size: 0.9em;
+  color: var(--stwid-warning-color);
+}
+
+.stwid--entry-tags .tag:has(.tag_remove:hover) {
+  opacity: 1;
+}
+
+.stwid--entry-tags .tag:has(.tag_remove:hover) .tag_name {
+  opacity: 0.6;
+}
+
+.stwid--entry-tags .tag_remove:focus-visible {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+.tag.stwid--entry-tags__stale--unknown {
+  background-color: var(--black30a);
+  border-style: dashed;
+  border-color: var(--SmartThemeEmColor);
+  color: var(--SmartThemeEmColor);
+}
+
+.tag.stwid--entry-tags__stale .tag_name i {
+  margin-right: 0.15em;
+}
+
+/* Entry tag pills only - they carry --stwid-tag-color in their inline style. */
+.tag[style*='--stwid-tag-color'] {
+  border-color: var(--stwid-tag-color);
+}
+
+/* Manage entry tags popup (src/entry-tag-manager/entry-tag-manager.js) - entry tags gallery
+   decision 7A, a copy of the host's Manage tags. Rows are the host's `.tag_view_item`. */
+.stwid--tag-manager__head {
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.stwid--tag-manager__head h3 {
+  margin: 0;
+}
+
+.stwid--tag-manager__sort {
+  text-align: left;
+  margin-bottom: 0.6em;
+}
+
+.stwid--tag-manager__sort-row {
+  align-items: baseline;
+  flex-wrap: nowrap;
+}
+
+.stwid--tag-manager__sort-row .text_pole {
+  flex: 1;
+  min-width: 0;
+}
+
+.stwid--tag-manager__list {
+  text-align: left;
+}
+
+.stwid--tag-manager__empty {
+  color: var(--SmartThemeEmColor);
+}
+
+.stwid--tag-manager__handle {
+  opacity: 0.6;
+  width: 1em;
+  text-align: center;
+}
+
+.stwid--tag-manager__handle.stwid--state-hidden {
+  visibility: hidden;
+}
+
+/* The swatch is the host's toolcool-color-picker; its own button is drawn through the
+   picker's custom properties as the gallery's 1.5em square. */
+.stwid--tag-manager__swatch {
+  --tool-cool-color-picker-btn-bg: transparent;
+  --tool-cool-color-picker-btn-border-color: var(--white50a);
+  --tool-cool-color-picker-btn-border-color-inner: transparent;
+  --tool-cool-color-picker-btn-border-radius: 5px;
+  --tool-cool-color-picker-btn-border-radius-inner: 4px;
+
+  flex: 0 0 auto;
+  display: flex;
+}
+
+.stwid--tag-manager__swatch:hover {
+  --tool-cool-color-picker-btn-border-color: var(--SmartThemeBodyColor);
+
+  filter: brightness(1.2);
+}
+
+.stwid--tag-manager__emoji {
+  width: 1.9em;
+  height: 1.9em;
+  flex: 0 0 auto;
+  padding: 0;
+  cursor: pointer;
+  font-size: 1.05em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--SmartThemeBodyColor);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 5px;
+  background-color: var(--black30a);
+}
+
+.stwid--tag-manager__emoji:hover,
+.stwid--tag-manager__emoji.stwid--state-active {
+  background-color: var(--white20a);
+}
+
+.stwid--tag-manager__emoji.stwid--state-active {
+  border-color: var(--SmartThemeQuoteColor);
+}
+
+.stwid--tag-manager__no-emoji {
+  opacity: 0.45;
+  font-size: 0.8em;
+}
+
+.stwid--tag-manager__swatch:focus-within,
+.stwid--tag-manager__emoji:focus-visible,
+.stwid--tag-manager__delete:focus-visible,
+.tag_view_item .stwid--tag-manager__name.tag:focus {
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
+}
+
+/* Own names, not the host's `.tag_delete` / `.tag_view_name` (see entry-tag-manager.js),
+   so the host's look for those two is copied here. */
+.stwid--tag-manager .stwid--tag-manager__delete {
+  padding: 2px 4px;
+  color: var(--SmartThemeBodyColor);
+}
+
+.stwid--tag-manager .tag_view_item .stwid--tag-manager__name.tag {
+  text-align: left;
+  cursor: text;
+  display: block;
+  min-width: 0;
+  max-width: 22em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stwid--tag-manager .tag_view_item .tag_view_counter {
+  color: var(--SmartThemeEmColor);
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* Emoji picker (src/entry-tag-manager/entry-tag-manager.emoji-grid.js) - entry tags gallery
+   decision 8A, WorldInfoEngine's emoji grid. Fixed, because the host popup clips its content;
+   JS sets left/top (and a smaller max-height when the viewport is short) from the button. */
+.stwid--emoji-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  max-width: min(24em, calc(100vw - 1rem));
+  padding: 0.5em;
+  background-color: var(--SmartThemeBlurTintColor);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: var(--stwid-radius-m);
+  box-shadow: 0 0 15px var(--black70a);
+}
+
+.stwid--emoji-popover .stwid--emoji-grid {
+  max-height: 15em;
+  min-height: 0;
+}
+
+.stwid--emoji-grid {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  text-align: left;
+}
+
+.stwid--emoji-grid__group-label {
+  margin: 0.6em 0 0.2em;
+  color: var(--SmartThemeEmColor);
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stwid--emoji-grid__group {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 2.6em));
+  justify-content: start;
+  gap: 0.3em;
+}
+
+@media screen and (width <= 768px) {
+  .stwid--emoji-grid__group {
+    grid-template-columns: repeat(5, minmax(0, 2.6em));
+  }
+}
+
+.stwid--emoji-grid__cell {
+  display: flex;
+  aspect-ratio: 1 / 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background-color: transparent;
+  color: inherit;
+  font-size: 1.5em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stwid--emoji-grid__cell:hover {
+  background-color: var(--white20a);
+}
+
+.stwid--emoji-grid__cell:focus-visible {
+  border-color: var(--stwid-focus-ring-color);
+  outline: var(--stwid-focus-ring);
+  outline-offset: 1px;
+}
+
+.stwid--emoji-grid__cell--selected {
+  border-color: var(--SmartThemeQuoteColor);
+  background-color: var(--white20a);
+}
+
+.stwid--emoji-grid__group.stwid--emoji-grid__group--none {
+  display: flex;
+  margin-bottom: 0.2em;
+}
+
+.stwid--emoji-grid__cell.stwid--emoji-grid__cell--none {
+  aspect-ratio: auto;
+  gap: 0.4em;
+  padding: 0.3em 0.6em;
+  font-size: 0.85em;
+  white-space: nowrap;
+  border-color: var(--SmartThemeBorderColor);
+  color: var(--SmartThemeEmColor);
+}
+
 /* -------------------------------------------------------------------------- */
 
 /* 4.1) Editor panel - interaction states                                     */
@@ -2321,9 +3268,25 @@ body.stwid--ams-disabled .stwid--editor .inline-drawer:has(> .userSettingsInnerE
   .stwid--editor .world_entry .switch_input_type_icon:hover {
     background-color: var(--stwid-state-hover-bg);
   }
+
+  .stwid--editor .world_entry .stwid--field-help:hover,
+  .stwid--editor .world_entry .stwid--field-help-link:hover > .note-link-span {
+    opacity: 1;
+    color: var(--SmartThemeQuoteColor);
+  }
+}
+
+.stwid--editor .world_entry .stwid--field-help:focus-visible,
+.stwid--editor .world_entry .stwid--field-help-link:focus-visible > .note-link-span {
+  opacity: 1;
+  outline: var(--stwid-focus-ring);
+  outline-offset: var(--stwid-focus-ring-offset);
 }
 
 .stwid--editor .world_entry .killSwitch:focus-visible,
+.stwid--editor
+  .world_entry
+  :is(.move_entry_button, .duplicate_entry_button, .delete_entry_button):focus-visible,
 .stwid--editor .world_entry .editor_maximize:focus-visible,
 .stwid--editor .world_entry .stwid--focus-toggle:focus-visible,
 .stwid--editor .world_entry .switch_input_type_icon:focus-visible {

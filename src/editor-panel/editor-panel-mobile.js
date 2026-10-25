@@ -6,6 +6,7 @@ const EDITOR_HEADER_SELECTOR =
   '.world_entry > .world_entry_form > .inline-drawer > .inline-drawer-header';
 const CONTENT_CONTROL_SELECTOR = "[name='contentAndCharFilterBlock'] > .world_entry_form_control";
 
+/** The entry editor's header row: toggle, title box, Strategy, the header controls and the actions. */
 const getEditorHeader = (editDom) => editDom.querySelector(EDITOR_HEADER_SELECTOR);
 
 const findToggleByName = (editDom, name) =>
@@ -25,10 +26,14 @@ const shouldUseMobileEditorLayout = () => {
   return window.matchMedia?.(MOBILE_EDITOR_MEDIA_QUERY)?.matches ?? false;
 };
 
-const createMobileHeaderLabel = (text) => {
+/** A header title's text without the host's trailing colon ("Position:" → "Position"). */
+export const stripHeaderTitleColon = (text) => text.replace(/:\s*$/, '');
+
+/** A header field title minted by this extension, at every width. */
+export const createEditorHeaderLabel = (text) => {
   const label = document.createElement('small');
   label.classList.add('textAlignCenter', 'stwid--editor-header-label');
-  label.textContent = text.replace(/:\s*$/, '');
+  label.textContent = stripHeaderTitleColon(text);
   return label;
 };
 
@@ -44,7 +49,7 @@ const normalizeMobileHeaderControl = (control) => {
   const existingLabel = control.querySelector('.WIEntryHeaderTitleMobile');
   if (!existingLabel || control.querySelector('.stwid--editor-header-label')) return control;
 
-  const label = createMobileHeaderLabel(existingLabel.textContent ?? '');
+  const label = createEditorHeaderLabel(existingLabel.textContent ?? '');
   existingLabel.remove();
   control.prepend(label);
   return control;
@@ -78,26 +83,38 @@ const moveMobileContextualHeaderControls = (editDom) => {
   outletControl.classList.add('stwid--editor-header-context-outlet');
   contextRow.append(positionControl, depthControl, outletControl);
 
-  const firstHeaderButton = header.querySelector(':scope > .menu_button');
-  if (firstHeaderButton) {
-    header.insertBefore(contextRow, firstHeaderButton);
+  // The actions are loose buttons on a first open, or already the titled Actions
+  // field when the editor crosses into this layout from desktop.
+  const firstHeaderAction = header.querySelector(
+    ':scope > :is(.menu_button, .stwid--editor-actions)',
+  );
+  if (firstHeaderAction) {
+    header.insertBefore(contextRow, firstHeaderAction);
     return;
   }
 
   header.append(contextRow);
 };
 
-const moveMobileHeaderActions = (editDom) => {
+/**
+ * The row holding the header's move / duplicate / delete buttons, grouped once
+ * at the end of the header and reused afterwards; `null` when the host renders
+ * no buttons.
+ */
+export const ensureHeaderActionsRow = (editDom) => {
   const header = getEditorHeader(editDom);
-  if (!header || header.querySelector('.stwid--editor-actions-row')) return;
+  if (!header) return null;
+  const existingRow = header.querySelector('.stwid--editor-actions-row');
+  if (existingRow) return existingRow;
 
   const actionButtons = Array.from(header.querySelectorAll(':scope > .menu_button'));
-  if (!actionButtons.length) return;
+  if (!actionButtons.length) return null;
 
   const actionsRow = document.createElement('div');
   actionsRow.classList.add('stwid--editor-actions-row');
   actionsRow.append(...actionButtons);
   header.append(actionsRow);
+  return actionsRow;
 };
 
 const moveMobileContentFlags = (editDom) => {
@@ -349,13 +366,13 @@ const buildMobileEditorTitleBar = (
   const titleControl = document.createElement('div');
   titleControl.classList.add('world_entry_form_control', 'stwid--editor-header-title-control');
   titleTextarea.rows = 2;
-  titleControl.append(createMobileHeaderLabel('Title/Memo'), titleTextarea);
+  titleControl.append(createEditorHeaderLabel('Title'), titleTextarea);
 
   topRow.append(toggleSlot, titleControl);
 
   const strategyControl = document.createElement('div');
   strategyControl.classList.add('world_entry_form_control', 'stwid--editor-header-strategy');
-  strategyControl.append(createMobileHeaderLabel('Strategy'), strategySelect);
+  strategyControl.append(createEditorHeaderLabel('Strategy'), strategySelect);
 
   headerControls.classList.add('stwid--editor-main-settings-row');
   headerControls.prepend(strategyControl);
@@ -400,7 +417,7 @@ export const applyMobileHeaderLayout = (editDom) => {
     killSwitch,
   );
   moveMobileContextualHeaderControls(editDom);
-  moveMobileHeaderActions(editDom);
+  ensureHeaderActionsRow(editDom);
   moveMobileContentFlags(editDom);
   annotateMobileContentSections(editDom);
   moveMobileRecursionControls(editDom);

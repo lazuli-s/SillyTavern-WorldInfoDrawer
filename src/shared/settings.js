@@ -1,4 +1,6 @@
 import { SORT, SORT_DIRECTION } from './constants.js';
+import { ENTRY_TAG_SORT, normalizeStoredEntryTags, restoreDefaultEntryTags } from './entry-tags.js';
+import { createEmptyEntryTagFilter, normalizeEntryTagFilter } from './entry-tags.filter.js';
 import { parseBooleanSetting } from './utils.js';
 
 export { SORT, SORT_DIRECTION } from './constants.js';
@@ -14,6 +16,10 @@ const KNOWN_SETTINGS_KEYS = [
   'featureFolderGrouping',
   'featureAdditionalMatchingSources',
   'hiddenTabs',
+  'entryTags',
+  'entryTagSort',
+  'entryTagsSeeded',
+  'entryTagFilter',
 ];
 
 const VALID_HIDDEN_TAB_IDS = Object.freeze(['lorebooks', 'visibility', 'sorting', 'search']);
@@ -43,6 +49,20 @@ function applyBooleanSettingDefaults() {
   );
 }
 
+// The ten default entry tags are seeded once ever: after that the flag stays
+// set, so a list the user emptied stays empty (Restore defaults brings them back).
+function applyEntryTagDefaults() {
+  this.entryTags = normalizeStoredEntryTags(this.entryTags);
+  this.entryTagSort = ensureEnumValue(this.entryTagSort, ENTRY_TAG_SORT, ENTRY_TAG_SORT.MANUAL);
+  this.entryTagsSeeded = parseBooleanSetting(this.entryTagsSeeded, false);
+  if (!this.entryTagsSeeded) {
+    this.entryTags = restoreDefaultEntryTags(this.entryTags).tags;
+    this.entryTagsSeeded = true;
+  }
+  // Read after the tags: a remembered pill whose tag was deleted is dropped.
+  this.entryTagFilter = normalizeEntryTagFilter(this.entryTagFilter, this.entryTags);
+}
+
 function getSettingsContext() {
   const { saveSettingsDebounced, extensionSettings } = SillyTavern.getContext();
   return { saveSettingsDebounced, extensionSettings };
@@ -67,6 +87,13 @@ export class Settings {
   featureAdditionalMatchingSources = true;
   hiddenTabs = [];
 
+  /** Entry tag definitions; the list order is the manual order. */
+  entryTags = [];
+  entryTagSort = ENTRY_TAG_SORT.MANUAL;
+  entryTagsSeeded = false;
+  /** The Visibility tab's Entry tags pills: `{ include, exclude, untagged }`. */
+  entryTagFilter = createEmptyEntryTagFilter();
+
   constructor() {
     const { extensionSettings } = getSettingsContext();
     const savedSettings = extensionSettings[WORLD_INFO_DRAWER_SETTINGS_KEY];
@@ -87,6 +114,7 @@ export class Settings {
       this.hiddenTabs = [];
     }
     this.hiddenTabs = this.hiddenTabs.filter((tabId) => VALID_HIDDEN_TAB_IDS.includes(tabId));
+    applyEntryTagDefaults.call(this);
   }
 
   toJSON() {
@@ -97,6 +125,10 @@ export class Settings {
       featureFolderGrouping: this.featureFolderGrouping,
       featureAdditionalMatchingSources: this.featureAdditionalMatchingSources,
       hiddenTabs: this.hiddenTabs,
+      entryTags: this.entryTags,
+      entryTagSort: this.entryTagSort,
+      entryTagsSeeded: this.entryTagsSeeded,
+      entryTagFilter: this.entryTagFilter,
     };
   }
 

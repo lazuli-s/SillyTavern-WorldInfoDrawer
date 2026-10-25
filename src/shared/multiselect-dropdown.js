@@ -277,6 +277,38 @@ export const computeInCellDropdownPosition = ({
   return { left, top, maxHeight: Math.max(0, viewport.height - top - margin) };
 };
 
+/**
+ * Places a `position: fixed` menu next to its trigger, inside the viewport:
+ * measures the menu, asks `computeInCellDropdownPosition` where it goes, and
+ * writes `left` / `top` (and a `max-height` when it fits on neither side).
+ * Shared by the in-cell menu and the tag emoji panel.
+ * @param {HTMLElement} menu
+ * @param {HTMLElement} trigger
+ */
+export const placeFixedMenu = (menu, trigger) => {
+  // Measure from a known origin, then correct by the delta: an ancestor with
+  // a transform/filter/backdrop-filter makes a fixed element's coordinates
+  // relative to that ancestor rather than the viewport, and this cancels it
+  // out without having to find the ancestor.
+  menu.style.left = '0px';
+  menu.style.top = '0px';
+  // Measure unclamped, so the stylesheet's cap - not last call's clamp - is
+  // what the placement decision sees.
+  menu.style.maxHeight = '';
+  const menuRect = menu.getBoundingClientRect();
+  const { left, top, maxHeight } = computeInCellDropdownPosition({
+    triggerRect: trigger.getBoundingClientRect(),
+    menuSize: { width: menuRect.width, height: menuRect.height },
+    viewport: {
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+    },
+  });
+  menu.style.left = `${left - menuRect.left}px`;
+  menu.style.top = `${top - menuRect.top}px`;
+  if (menuRect.height > maxHeight) menu.style.maxHeight = `${maxHeight}px`;
+};
+
 /** Builds the search box; the caller decides where it is mounted. */
 const createSearchBox = ({ placeholder, ariaLabel }) => {
   const wrap = document.createElement('div');
@@ -659,27 +691,7 @@ export const wireMultiselectDropdown = (menu, menuButton, menuWrap, options = {}
     if (!inCell || !menu.classList.contains(CSS_STATE_ACTIVE)) return;
     const trigger = menuButton ?? menuWrap;
     if (!trigger?.getBoundingClientRect) return;
-    // Measure from a known origin, then correct by the delta: an ancestor with
-    // a transform/filter/backdrop-filter makes a fixed element's coordinates
-    // relative to that ancestor rather than the viewport, and this cancels it
-    // out without having to find the ancestor.
-    menu.style.left = '0px';
-    menu.style.top = '0px';
-    // Measure unclamped, so the stylesheet's cap - not last call's clamp - is
-    // what the placement decision sees.
-    menu.style.maxHeight = '';
-    const menuRect = menu.getBoundingClientRect();
-    const { left, top, maxHeight } = computeInCellDropdownPosition({
-      triggerRect: trigger.getBoundingClientRect(),
-      menuSize: { width: menuRect.width, height: menuRect.height },
-      viewport: {
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight,
-      },
-    });
-    menu.style.left = `${left - menuRect.left}px`;
-    menu.style.top = `${top - menuRect.top}px`;
-    if (menuRect.height > maxHeight) menu.style.maxHeight = `${maxHeight}px`;
+    placeFixedMenu(menu, trigger);
   };
 
   const handleReposition = () => {

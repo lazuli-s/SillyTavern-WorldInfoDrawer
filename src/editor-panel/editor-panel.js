@@ -1,6 +1,11 @@
 import { applyEntryToggleA11y } from '../shared/entry-toggle-a11y.js';
+import { debounce_timeout } from '../shared/st-host.js';
 
 import { applyMobileHeaderLayout, MOBILE_EDITOR_MEDIA_QUERY } from './editor-panel-mobile.js';
+import { createEditorClearer } from './editor-panel.clearer.js';
+import { createEntryTagsRowController } from './editor-panel.entry-tags.js';
+import { createFieldHelpBubble, decorateFieldHelp } from './editor-panel.field-help.js';
+import { createPendingEditorSave } from './editor-panel.pending-save.js';
 
 const ACTIVE_STATE_CLASS = 'stwid--state-active';
 const FOCUS_CLASS = 'stwid--focus';
@@ -10,6 +15,8 @@ const AMS_WIRED_DATASET_VALUE = '1';
 const EDITOR_EVENT_INPUT = 'input';
 const EDITOR_EVENT_CHANGE = 'change';
 const EDITOR_EVENT_KEYDOWN = 'keydown';
+const LAST_EDIT_SAVE_FAILED_MESSAGE =
+  'The last edit to the previous entry could not be saved. Reopen it and check its text.';
 
 const NON_EDITING_KEYS = new Set([
   'Shift',
@@ -44,11 +51,28 @@ const hasValidEditorKey = (name, uid) => {
   return Boolean(name && uid !== null && uid !== undefined);
 };
 
+/**
+ * Whether an editor key (`{ name, uid }`) is the given book and entry. The key
+ * holds the entry's `uid` as a number; the update handler passes the `entries`
+ * object key, a string — so the uid is compared as text, as `isCurrentEditor`
+ * in `wi-update-handler.js` does. The book name must match exactly.
+ */
+export const isEditorKeyFor = (key, name, uid) =>
+  Boolean(key) && key.name === name && String(key.uid) === String(uid);
+
+// A control injected into the editor that saves its own changes (the Entry tags
+// row) carries `data-stwid-no-dirty` — typing there leaves nothing unsaved.
+const NO_DIRTY_SELECTOR = '[data-stwid-no-dirty]';
+const isFromNoDirtyControl = (evt) =>
+  evt.target instanceof Element && Boolean(evt.target.closest(NO_DIRTY_SELECTOR));
+
 const wireEditorDirtyTracking = ({ dom, markEditorDirtyIfCurrent, shouldMarkDirtyOnKeydown }) => {
-  const onEditorInput = markEditorDirtyIfCurrent;
-  const onEditorChange = markEditorDirtyIfCurrent;
+  const onEditorInput = (evt) => {
+    if (!isFromNoDirtyControl(evt)) markEditorDirtyIfCurrent();
+  };
+  const onEditorChange = onEditorInput;
   const onEditorKeydown = (evt) => {
-    if (shouldMarkDirtyOnKeydown(evt)) {
+    if (!isFromNoDirtyControl(evt) && shouldMarkDirtyOnKeydown(evt)) {
       markEditorDirtyIfCurrent();
     }
   };
@@ -213,7 +237,9 @@ const buildEntryEditDom = async ({
     $(drawerToggle).trigger('inline-drawer-toggle');
   }
   if (!isTokenCurrent()) return null;
-  return entryEditorDom;
+  // The payload goes back with the DOM: the host's field handlers write into it
+  // and save it, so the Entry tags row has to write there too.
+  return { entryEditorDom, payload, payloadEntry };
 };
 
 const renderEntryEditorDom = ({
@@ -263,7 +289,7 @@ const fixTextpoleHeights = (entryEditorDom) => {
   });
 };
 
-const createDirtyTracker = ({ dom }) => {
+const createDirtyTracker = ({ dom, noteEdit }) => {
   let isEditorDirty = false;
   let currentEditorKey = null;
 
@@ -276,6 +302,9 @@ const createDirtyTracker = ({ dom }) => {
   const markEditorDirtyIfCurrent = () => {
     if (!currentEditorKey) return;
     isEditorDirty = true;
+    // Not undone by markClean / markEditorClean: the host's own save of this
+    // edit can still be waiting after the editor stops being 'dirty'.
+    noteEdit();
   };
 
   const shouldMarkDirtyOnKeydown = (evt) => {
@@ -310,43 +339,30 @@ const createDirtyTracker = ({ dom }) => {
   };
 };
 
-const createEditorClearer = ({ dom, resetEditorOwnership }) => {
-  let activeEntryDom = null;
-
-  const clearEntryHighlights = () => {
-    if (activeEntryDom) {
-      activeEntryDom.classList.remove(ACTIVE_STATE_CLASS);
-      activeEntryDom = null;
-    }
-  };
-
-  const clearEditor = ({ resetCurrent = true } = {}) => {
-    dom.editor.innerHTML = '';
-    dom.editor.classList.remove(FOCUS_CLASS);
-    if (resetCurrent) {
-      dom.drawer.body?.classList?.remove(MOBILE_PANEL_OPEN_CLASS);
-      resetEditorOwnership();
-    }
-  };
-
-  const setActiveEntryDom = (entryRowDom) => {
-    activeEntryDom = entryRowDom;
-  };
-
-  return { clearEntryHighlights, clearEditor, setActiveEntryDom };
-};
-
 export const initEditorPanel = ({
   dom,
   activationBlock,
   activationBlockParent,
   renderTemplateAsync,
   getWorldEntry,
-  buildSavePayload,
+  wiHandlerApi,
+  cache,
+  enqueueBookSave,
+  saveWorldInfo,
   setCurrentEditor,
   getSelectFrom,
   selectEnd,
 }) => {
+  const { buildSavePayload, waitForWorldInfoUpdate, waitForWorldInfoUpdateWithTimeout } = wiHandlerApi;
+  const pendingSave = createPendingEditorSave({
+    enqueueBookSave,
+    saveWorldInfo,
+    waitForWorldInfoUpdate,
+    waitForWorldInfoUpdateWithTimeout,
+    hostSaveDelayMs: debounce_timeout.relaxed,
+    onSaveFailed: () => toastr.error(LAST_EDIT_SAVE_FAILED_MESSAGE),
+  });
+
   const {
     cleanup,
     markEditorClean,
@@ -354,7 +370,7 @@ export const initEditorPanel = ({
     setIsEditorDirty,
     getIsEditorDirty,
     getCurrentEditorKey,
-  } = createDirtyTracker({ dom });
+  } = createDirtyTracker({ dom, noteEdit: pendingSave.noteEdit });
 
   const resetEditorOwnership = () => {
     resetEditorOwnershipState({
@@ -364,9 +380,16 @@ export const initEditorPanel = ({
     });
   };
 
+  // The touch and keyboard help bubble lives in the editor column, so clearing
+  // or rebuilding the editor closes it.
+  const fieldHelpBubble = createFieldHelpBubble(dom.editor);
+
   const { clearEntryHighlights, clearEditor, setActiveEntryDom } = createEditorClearer({
+    closeFieldHelp: fieldHelpBubble.close,
     dom,
+    flushPendingSave: () => pendingSave.flush(),
     resetEditorOwnership,
+    resetPendingSave: pendingSave.reset,
   });
 
   // Responsive lifecycle for the open entry editor. The mobile header transform only runs
@@ -381,11 +404,14 @@ export const initEditorPanel = ({
     if (!currentEntryEditorDom || !document.contains(currentEntryEditorDom)) return;
     const nowMobileLayout = editorLayoutMedia?.matches ?? false;
     if (nowMobileLayout === openEditorIsMobileLayout) return;
+    fieldHelpBubble.close();
 
     if (nowMobileLayout) {
       // Entering mobile: restructure the live editor in place. applyMobileHeaderLayout
       // relocates existing nodes (it does not rebuild them), so unsaved edits survive.
       applyMobileHeaderLayout(currentEntryEditorDom);
+      // The rebuild re-mints the header titles and drops their ? icons.
+      decorateFieldHelp(currentEntryEditorDom);
       openEditorIsMobileLayout = true;
       return;
     }
@@ -399,6 +425,13 @@ export const initEditorPanel = ({
   };
 
   editorLayoutMedia?.addEventListener?.('change', handleEditorLayoutBreakpointChange);
+
+  const entryTagsRow = createEntryTagsRowController({
+    cache,
+    buildSavePayload,
+    enqueueBookSave,
+    saveWorldInfo,
+  });
 
   const resetEditorState = () => {
     if (dom.activationToggle.classList.contains(ACTIVE_STATE_CLASS)) {
@@ -459,15 +492,29 @@ export const initEditorPanel = ({
     closeCompetingPanels();
     const header = await fetchEntryHeaderElement(renderTemplateAsync, isTokenCurrent);
     if (!isTokenCurrent()) return;
-    const entryEditorDom = await buildEntryEditDom({
+    // Save the entry being left before this one's copy of the book is built, so
+    // the copy contains that edit and the host's pending save is not replaced.
+    await pendingSave.flush({ nextBookName: name });
+    if (!isTokenCurrent()) return;
+    const editDom = await buildEntryEditDom({
       buildSavePayload,
       getWorldEntry,
       isTokenCurrent,
       name,
       entry,
     });
-    if (!entryEditorDom) return;
+    if (!editDom) return;
+    const { entryEditorDom, payload, payloadEntry } = editDom;
+    pendingSave.track(name, payload);
     applyMobileHeaderLayout(entryEditorDom);
+    entryTagsRow.mount({
+      entryEditorDom,
+      bookName: name,
+      uid: entry.uid,
+      editorPayload: payload,
+      editorEntry: payloadEntry,
+    });
+    decorateFieldHelp(entryEditorDom);
     appendFocusButton(entryEditorDom);
     setActiveEntryDom(
       renderEntryEditorDom({
@@ -497,21 +544,19 @@ export const initEditorPanel = ({
 
   const isDirty = (name, uid) => {
     if (!hasValidEditorKey(name, uid)) return false;
-    return Boolean(
-      getIsEditorDirty() &&
-      getCurrentEditorKey()?.name === name &&
-      getCurrentEditorKey()?.uid === uid,
-    );
+    return Boolean(getIsEditorDirty() && isEditorKeyFor(getCurrentEditorKey(), name, uid));
   };
 
   const markClean = (name, uid) => {
     if (!hasValidEditorKey(name, uid)) return;
-    if (getCurrentEditorKey()?.name !== name || getCurrentEditorKey()?.uid !== uid) return;
+    if (!isEditorKeyFor(getCurrentEditorKey(), name, uid)) return;
     setIsEditorDirty(false);
   };
 
   const cleanupEditorPanel = () => {
     cleanup();
+    entryTagsRow.cleanup();
+    fieldHelpBubble.cleanup();
     editorLayoutMedia?.removeEventListener?.('change', handleEditorLayoutBreakpointChange);
   };
 
@@ -526,5 +571,7 @@ export const initEditorPanel = ({
     openEntryEditor,
     isDirty,
     markClean,
+    /** Redraws the open entry's tag row after the tag definitions changed. */
+    refreshEntryTags: () => entryTagsRow.refresh(),
   };
 };

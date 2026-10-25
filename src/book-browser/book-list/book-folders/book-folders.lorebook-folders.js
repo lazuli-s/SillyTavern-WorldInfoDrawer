@@ -1,3 +1,5 @@
+import { isBookDomFilteredOut } from '../../../shared/utils.js';
+
 const FOLDER_METADATA_KEY = 'folder';
 const FOLDER_REGISTRY_STORAGE_KEY = 'stwid--folder-registry';
 
@@ -133,11 +135,7 @@ const getFolderBookNames = (cache, folderName) => {
 const getVisibleFolderBookNames = (cache, folderName) =>
   getFolderBookNames(cache, folderName).filter((name) => {
     const bookRoot = cache?.[name]?.dom?.root;
-    if (!bookRoot) return false;
-    const isFilteredOut =
-      bookRoot.classList.contains('stwid--filter-query') ||
-      bookRoot.classList.contains('stwid--filter-visibility');
-    return !isFilteredOut;
+    return Boolean(bookRoot) && !isBookDomFilteredOut(bookRoot);
   });
 
 const summarizeBookNames = (bookNames, { max = 3 } = {}) => {

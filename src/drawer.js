@@ -23,6 +23,7 @@ import { initSplitter } from './drawer.splitter.js';
 import { initEditorPanel } from './editor-panel/editor-panel.js';
 import { initBookBrowser } from './book-browser/book-browser.js';
 import { initEntryManager } from './entry-manager/entry-manager.js';
+import { createSavedEntryTagFilterPredicate } from './shared/entry-tags.filter.js';
 import {
   METADATA_NAMESPACE,
   METADATA_SORT_KEY,
@@ -151,6 +152,8 @@ const initDrawerEntryManager = ({
     getListPanelApi,
     getEditorPanelApi,
     getCurrentEditor,
+    // The Book Browser's tag filter narrows the Entry Manager's rows by the same rule.
+    getEntryTagFilterPredicate: () => createSavedEntryTagFilterPredicate(Settings.instance),
     debounce,
     isTrueBoolean,
     SlashCommandParser,
@@ -246,6 +249,7 @@ const buildAndAttachDrawerDom = ({
   uuidv4,
   openEntryManager,
   refreshEntryManagerScope,
+  refreshEntryManagerEntryTags,
   enqueueEntryStateSave,
   enqueueBookSave,
   deleteWorldInfoEntryRuntime,
@@ -285,9 +289,17 @@ const buildAndAttachDrawerDom = ({
     activationBlockParent,
     renderTemplateAsync,
     getWorldEntry,
-    buildSavePayload: wiHandlerApi.buildSavePayload,
+    wiHandlerApi,
     cache,
-    setCurrentEditor,
+    enqueueBookSave,
+    saveWorldInfo,
+    // The Book Browser's tag filter keeps the open entry visible until another
+    // one is opened, so it re-applies whenever an entry is opened. Clearing the
+    // editor (null) keeps the kept entry as it was, so it skips the pass.
+    setCurrentEditor: (value) => {
+      setCurrentEditor(value);
+      if (value) setListPanelApi.current?.applyEntryTagFilter?.();
+    },
     getSelectFrom: () => setSelectionState.current?.selectFrom,
     selectEnd: () => setListPanelApi.current.selectEnd(),
   });
@@ -314,6 +326,7 @@ const buildAndAttachDrawerDom = ({
     executeSlashCommand,
     extensionNames,
     fillEmptyTitlesWithKeywords: wiHandlerApi.fillEmptyTitlesWithKeywords,
+    getCurrentEditor,
     getRequestHeaders,
     getSortFromMetadata,
     getSortLabel,
@@ -322,6 +335,9 @@ const buildAndAttachDrawerDom = ({
     loadWorldInfo,
     onWorldInfoChange,
     onBookVisibilityScopeChange: (scope) => refreshEntryManagerScope(scope),
+    onEntryTagFilterChange: () => refreshEntryManagerEntryTags(),
+    // A tag renamed, recoloured, reordered, created or deleted in Manage entry tags.
+    onEntryTagsChange: () => editorPanelApi.refreshEntryTags(),
     openEntryManager,
     Popup,
     POPUP_RESULT,
@@ -458,16 +474,17 @@ const mountDrawerUI = ({
     saveWorldInfo,
     uuidv4,
   } = context;
-  const { openEntryManager, refreshEntryManagerScope } = initDrawerEntryManager({
-    dom,
-    cache,
-    saveWorldInfo,
-    wiHandlerApi,
-    getListPanelApi: () => listPanelApiRef.current,
-    getEditorPanelApi: () => editorPanelApiRef.current,
-    getCurrentEditor,
-    SlashCommandParser,
-  });
+  const { openEntryManager, refreshEntryManagerScope, refreshEntryManagerEntryTags } =
+    initDrawerEntryManager({
+      dom,
+      cache,
+      saveWorldInfo,
+      wiHandlerApi,
+      getListPanelApi: () => listPanelApiRef.current,
+      getEditorPanelApi: () => editorPanelApiRef.current,
+      getCurrentEditor,
+      SlashCommandParser,
+    });
 
   document.body.classList.add(DRAWER_ACTIVE_CLASS);
   const {
@@ -493,6 +510,7 @@ const mountDrawerUI = ({
     uuidv4,
     openEntryManager,
     refreshEntryManagerScope,
+    refreshEntryManagerEntryTags,
     enqueueEntryStateSave,
     enqueueBookSave,
     deleteWorldInfoEntryRuntime,

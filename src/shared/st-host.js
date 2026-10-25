@@ -28,6 +28,9 @@ export {
   worldInfoCache,
 } from '../../../../../world-info.js';
 
+// constants.js — the host's debounce delays (`relaxed` is the form-save debounce)
+export { debounce_timeout } from '../../../../../constants.js';
+
 // utils.js — general-purpose helpers with no getContext() equivalent (COMPAT-01)
 export {
   debounce,

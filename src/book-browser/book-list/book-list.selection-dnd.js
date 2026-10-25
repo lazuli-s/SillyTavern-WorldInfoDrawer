@@ -146,7 +146,9 @@ const transferSelectedEntries = async (
     if (!srcEntry) continue;
     result.attemptedMoveCount += 1;
 
-    const entryPayload = Object.assign({}, srcEntry);
+    // A deep copy: a shallow one would leave the copy sharing `extensions` —
+    // and the entry tag list inside it — with the source entry in memory.
+    const entryPayload = structuredClone(srcEntry);
     delete entryPayload.uid;
 
     const dstEntry = runtime.createWorldInfoEntry(null, dstBook);

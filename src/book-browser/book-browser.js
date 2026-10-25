@@ -1,4 +1,10 @@
 import { cloneMetadata } from '../shared/sort-helpers.js';
+import { shouldShowEntryTagEmptyState } from '../shared/entry-tags.filter.js';
+import {
+  isBookDomFilteredOut,
+  isBookDomFilteredOutByEntryTags,
+  isBookDomFilteredOutBySearchOrVisibility,
+} from '../shared/utils.js';
 import {
   getFolderFromMetadata,
   getFolderRegistry,
@@ -37,6 +43,9 @@ const COLLAPSED_STATE_CLASS = 'stwid--state-collapsed';
 const SOURCE_ICON_CLASS = 'stwid--source-icon';
 const LOADING_STATE_CLASS = 'stwid--state-loading';
 const BOOKS_CONTAINER_CLASS = 'stwid--books';
+const BOOKS_EMPTY_CLASSES = ['stwid--books-empty', 'stwid--books-empty--center'];
+const BOOKS_EMPTY_TEXT = 'No entries match the tag filter';
+const BOOKS_EMPTY_BUTTON_LABEL = 'Clear tag filter';
 // How many consecutive list refreshes `waitForListRefreshIdle` will sit through
 // before giving up. See the comment on that function for why giving up is safe.
 const MAX_LIST_REFRESH_WAITS = 5;
@@ -101,6 +110,7 @@ const setFolderGroupingVisibility = (enabled) =>
 const setEntryManagerToggleVisibility = (enabled) =>
   filterBarSlice?.setEntryManagerToggleVisibility(enabled);
 const applyHiddenTabs = (hiddenTabIds) => filterBarSlice?.applyHiddenTabs(hiddenTabIds);
+const applyEntryTagFilter = () => filterBarSlice?.applyEntryTagFilter();
 
 const applyCollapseState = (name) => {
   const isCollapsed = listPanelState.getCollapseState(name);
@@ -573,12 +583,50 @@ const waitForListRefreshIdle = async () => {
   }
 };
 
-const isBookDomFilteredOut = (bookRoot) =>
-  bookRoot.classList.contains('stwid--filter-query') ||
-  bookRoot.classList.contains('stwid--filter-visibility');
+// Shown where the books would be when the Entry tags filter — not Search or the
+// book Visibility filter — is why every book is hidden (entry tags spec,
+// Decision 6, 6A).
+const updateBooksEmptyState = () => {
+  const emptyState = state.dom?.booksEmpty;
+  if (!emptyState) return;
+  const books = [];
+  for (const book of Object.values(state.cache ?? {})) {
+    const root = book?.dom?.root;
+    if (!root?.isConnected) continue;
+    books.push({
+      hiddenByTags: isBookDomFilteredOutByEntryTags(root),
+      hiddenByOther: isBookDomFilteredOutBySearchOrVisibility(root),
+    });
+  }
+  emptyState.hidden = !shouldShowEntryTagEmptyState(books);
+};
 
-const updateFolderActiveToggles = () =>
+// Every filter pass — Search, Visibility, Entry tags, a list load — ends here.
+const updateFolderActiveToggles = () => {
   foldersViewSlice?.updateFolderActiveToggles({ isBookDomFilteredOut });
+  updateBooksEmptyState();
+};
+
+const createBooksEmptyState = () => {
+  const emptyState = document.createElement('div');
+  emptyState.classList.add(...BOOKS_EMPTY_CLASSES);
+  emptyState.hidden = true;
+  const icon = document.createElement('i');
+  icon.classList.add('fa-solid', 'fa-filter', 'stwid--books-empty__icon');
+  icon.setAttribute('aria-hidden', 'true');
+  const text = document.createElement('span');
+  text.textContent = BOOKS_EMPTY_TEXT;
+  const button = document.createElement('div');
+  button.classList.add('menu_button', 'menu_button_icon');
+  const buttonIcon = document.createElement('i');
+  buttonIcon.classList.add('fa-solid', 'fa-filter-circle-xmark');
+  const buttonText = document.createElement('span');
+  buttonText.textContent = BOOKS_EMPTY_BUTTON_LABEL;
+  button.append(buttonIcon, buttonText);
+  button.addEventListener('click', () => filterBarSlice?.clearEntryTagFilter?.());
+  emptyState.append(icon, text, button);
+  return emptyState;
+};
 
 const setupBooks = (list) => {
   const booksContainer = document.createElement('div');
@@ -589,7 +637,9 @@ const setupBooks = (list) => {
     booksRootDropHandler = async (evt) => selectionDnDSlice?.onRootDropTargetDrop(evt);
     booksContainer.addEventListener('dragover', booksRootDragOverHandler);
     booksContainer.addEventListener('drop', booksRootDropHandler);
-    list.append(booksContainer);
+    // Before the books, not inside them: a list load empties the books container.
+    state.dom.booksEmpty = createBooksEmptyState();
+    list.append(state.dom.booksEmpty, booksContainer);
   }
 };
 
@@ -604,6 +654,7 @@ const teardownListPanel = () => {
   }
   booksRootDragOverHandler = null;
   booksRootDropHandler = null;
+  state.dom?.booksEmpty?.remove();
 
   foldersViewSlice?.resetFolderDoms?.();
   for (const filter of state.list?.querySelectorAll?.('.stwid--filter') ?? []) {
@@ -642,6 +693,8 @@ const createFilterBarSliceConfig = () => ({
   runtime: state,
   onBookVisibilityScopeChange: (visibleBookNames) =>
     state.onBookVisibilityScopeChange?.(visibleBookNames),
+  onEntryTagFilterChange: () => state.onEntryTagFilterChange?.(),
+  onEntryTagsChange: () => state.onEntryTagsChange?.(),
   setApplyActiveFilter: (applyActiveFilter) => {
     state.applyActiveFilter = applyActiveFilter;
   },
@@ -704,6 +757,7 @@ const wireSlices = () => {
 
 const getListPanelApi = () => ({
   applyActiveFilter: state.applyActiveFilter,
+  applyEntryTagFilter,
   applyHiddenTabs,
   clearBookSortPreferences,
   destroyListPanel: teardownListPanel,

@@ -3,9 +3,12 @@
 // Extracted from drawer.js, which now stays focused on bootstrap + DOM map.
 
 import { deleteWIOriginalDataValue } from './shared/st-host.js';
-import { maybeYieldToEventLoop } from './shared/utils.js';
+import {
+  isBookDomFilteredOut,
+  isEntryDomFilteredOut,
+  maybeYieldToEventLoop,
+} from './shared/utils.js';
 
-const FILTER_QUERY_CLASS = 'stwid--filter-query';
 const STYLE_ATTRIBUTE = 'style';
 const CLASS_ATTRIBUTE = 'class';
 const DRAWER_CLOSED_CLASS = 'closedDrawer';
@@ -44,18 +47,12 @@ const shouldHandleDrawerKeydown = (evt) => {
 
 const isEntryVisible = (cache, bookName, uid) => {
   const entryRoot = cache[bookName]?.dom?.entry?.[uid]?.root;
-  return Boolean(entryRoot) && !entryRoot.classList.contains(FILTER_QUERY_CLASS);
+  return Boolean(entryRoot) && !isEntryDomFilteredOut(entryRoot);
 };
 
 const isSelectionVisible = (cache, bookName, selectedUids) => {
   const bookRoot = cache[bookName]?.dom?.root;
-  if (!bookRoot) return false;
-  if (
-    bookRoot.classList.contains('stwid--filter-visibility') ||
-    bookRoot.classList.contains(FILTER_QUERY_CLASS)
-  ) {
-    return false;
-  }
+  if (!bookRoot || isBookDomFilteredOut(bookRoot)) return false;
   return selectedUids.every((uid) => isEntryVisible(cache, bookName, uid));
 };
 

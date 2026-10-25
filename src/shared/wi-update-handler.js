@@ -584,6 +584,9 @@ export const initWIUpdateHandler = ({
           shouldAutoRefreshEditor,
         });
       }
+      // Rows rendered or re-read above (a new book, a new entry, a tag change
+      // saved from the editor or made elsewhere) have not met the tag filter yet.
+      listPanelApi?.applyEntryTagFilter?.();
       getRefreshBookSourceLinks()?.('worldinfo_updated');
     } finally {
       isWIUpdateInProgress = false;

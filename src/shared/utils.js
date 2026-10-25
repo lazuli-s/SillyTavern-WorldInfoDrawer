@@ -137,12 +137,45 @@ const isOutletPosition = (position) => {
   return String(position) === String(outletValue);
 };
 
+const QUERY_FILTERED_CLASS = 'stwid--filter-query';
+const ENTRY_TAGS_FILTERED_CLASS = 'stwid--filter-entry-tags';
+const SEARCH_OR_VISIBILITY_FILTERED_CLASSES = Object.freeze([
+  QUERY_FILTERED_CLASS,
+  'stwid--filter-visibility',
+]);
+const BOOK_FILTERED_OUT_CLASSES = Object.freeze([
+  ...SEARCH_OR_VISIBILITY_FILTERED_CLASSES,
+  ENTRY_TAGS_FILTERED_CLASS,
+]);
+
+/** True when the Search, Visibility or Entry tags filter has hidden this book row. */
+const isBookDomFilteredOut = (bookRoot) =>
+  BOOK_FILTERED_OUT_CLASSES.some((className) => bookRoot.classList.contains(className));
+
+/** True when the Entry tags filter has hidden this book row. */
+const isBookDomFilteredOutByEntryTags = (bookRoot) =>
+  bookRoot.classList.contains(ENTRY_TAGS_FILTERED_CLASS);
+
+/** True when Search or the book Visibility filter has hidden this book row. */
+const isBookDomFilteredOutBySearchOrVisibility = (bookRoot) =>
+  SEARCH_OR_VISIBILITY_FILTERED_CLASSES.some((className) => bookRoot.classList.contains(className));
+
+/** True when Search or the Entry tags filter has hidden this entry row. */
+const isEntryDomFilteredOut = (entryRoot) =>
+  entryRoot.classList.contains(QUERY_FILTERED_CLASS) ||
+  entryRoot.classList.contains(ENTRY_TAGS_FILTERED_CLASS);
+
 export {
+  ENTRY_TAGS_FILTERED_CLASS,
   appendSortOptions,
   createDeferred,
   executeSlashCommand,
   getOutletPositionValue,
   getSortLabel,
+  isBookDomFilteredOut,
+  isBookDomFilteredOutByEntryTags,
+  isBookDomFilteredOutBySearchOrVisibility,
+  isEntryDomFilteredOut,
   isOutletPosition,
   maybeYieldToEventLoop,
   parseBooleanSetting,

@@ -5,6 +5,7 @@ import {
   mountVisibilityTabContent,
 } from './browser-tabs.visibility-tab.js';
 import { mountSortingTabContent } from './browser-tabs.sorting-tab.js';
+import { createEntryTagsFilterSlice } from './browser-tabs.entry-tags-filter.js';
 import { Settings } from '../../shared/settings.js';
 import {
   closeOpenMultiselectDropdownMenus,
@@ -236,14 +237,29 @@ const createFilterBarSlice = ({
   updateFolderActiveToggles,
   setApplyActiveFilter,
   onBookVisibilityScopeChange,
+  onEntryTagFilterChange,
+  onEntryTagsChange,
 }) => {
   ensureValidBookVisibilityMode(listPanelState);
+  const entryTagsFilterSlice = createEntryTagsFilterSlice({
+    runtime,
+    updateFolderActiveToggles,
+    onEntryTagFilterChange,
+    onEntryTagsChange,
+  });
   const visibilitySlice = createVisibilitySlice({
     listPanelState,
     runtime,
     updateFolderActiveToggles,
     onBookVisibilityScopeChange,
-    setApplyActiveFilter,
+    // Every path that re-applies the book Visibility filter (a list load, a
+    // settings or source-link change) re-applies the tag filter first, so the
+    // folder refresh at the end of the Visibility pass sees both.
+    setApplyActiveFilter: (applyActiveFilter) =>
+      setApplyActiveFilter(() => {
+        entryTagsFilterSlice.applyEntryTagFilterClasses();
+        applyActiveFilter();
+      }),
     closeOpenMultiselectDropdownMenus,
     setMultiselectDropdownOptionCheckboxState,
     visibilityChipClass: CSS_VISIBILITY_CHIP,
@@ -268,6 +284,7 @@ const createFilterBarSlice = ({
       applyTabHidden = builtTabBar.applyTabHidden;
       const onDocClickCloseMenu = visibilitySlice.setupVisibilitySection(visibilityRow);
       documentClickSubscription.set(onDocClickCloseMenu);
+      entryTagsFilterSlice.setupEntryTagsFilterSection(visibilityRow);
       filter.append(builtTabBar.iconTab);
       runtime.applyActiveFilter?.();
       bookListContainer.append(filter);
@@ -284,9 +301,12 @@ const createFilterBarSlice = ({
   return {
     cleanup: () => {
       documentClickSubscription.cleanup();
+      entryTagsFilterSlice.cleanup();
       applyTabHidden = null;
     },
     applyHiddenTabs,
+    applyEntryTagFilter: () => entryTagsFilterSlice.applyEntryTagFilter(),
+    clearEntryTagFilter: () => entryTagsFilterSlice.clearEntryTagFilter(),
     getBookVisibilityScope: (...args) => visibilitySlice.getBookVisibilityScope(...args),
     setEntryManagerToggleVisibility: (enabled) => {
       runtime?.dom?.setOrderToggleVisible?.(Boolean(enabled));
